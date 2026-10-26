@@ -17,7 +17,7 @@ void main() {
         idGenerator: () => 'golden-agent-${nextId++}',
         now: () => DateTime(2026, 7, 22, 1, 24),
       );
-      for (int index = 0; index < 7; index += 1) {
+      for (int index = 0; index < 26; index += 1) {
         activityController.record(
           source: 'Codex',
           message: 'Completed Agent task ${index + 1}',

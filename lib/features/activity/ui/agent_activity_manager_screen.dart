@@ -2,12 +2,14 @@ import 'dart:async';
 
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
+import 'package:dingdong/core/widgets/reminder_marker.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/activity/ui/activity_repeat_count.dart';
 import 'package:dingdong/features/activity/ui/agent_subagent_badge.dart';
 import 'package:dingdong/features/activity/ui/conversation_usage_tooltip.dart';
+import 'package:dingdong/features/activity/ui/recent_agent_feed.dart';
 import 'package:flutter/material.dart';
 
 /// Full-detail Agent completion history for the manager window.
@@ -73,29 +75,16 @@ class AgentActivityManagerScreen extends StatelessWidget {
               ),
               const Divider(height: 1),
               Expanded(
-                child: activities.isEmpty
-                    ? Center(
-                        child: Text(
-                          context.l10n.noAgentCompletionsYet,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: colors.onSurfaceVariant),
-                        ),
-                      )
-                    : ListView.separated(
-                        key: const Key('agent-activity-manager-list'),
-                        padding: const EdgeInsets.fromLTRB(14, 8, 14, 18),
-                        itemCount: activities.length,
-                        separatorBuilder: (_, _) => const Divider(height: 1),
-                        itemBuilder: (BuildContext context, int index) =>
-                            _ActivityHistoryRow(
-                              activity: activities[index],
-                              conversationLauncher: conversationLauncher,
-                              showConversationTokenUsage:
-                                  showConversationTokenUsage,
-                              onOpen: (AgentConversationTarget target) =>
-                                  unawaited(_openConversation(context, target)),
-                            ),
-                      ),
+                child: RecentAgentFeed(
+                  controller: controller,
+                  rowBuilder: (context, activity) => _ActivityHistoryRow(
+                    activity: activity,
+                    conversationLauncher: conversationLauncher,
+                    showConversationTokenUsage: showConversationTokenUsage,
+                    onOpen: (target) =>
+                        unawaited(_openConversation(context, target)),
+                  ),
+                ),
               ),
             ],
           );
@@ -218,10 +207,6 @@ class _ActivityHistoryRow extends StatelessWidget {
                                 ?.copyWith(fontWeight: FontWeight.w600),
                           ),
                         ),
-                        if (activity.needsUserAttention) ...<Widget>[
-                          const SizedBox(width: 7),
-                          const AgentAttentionBadge(compact: true),
-                        ],
                         if (activity.repeatCount > 1) ...<Widget>[
                           const SizedBox(width: 6),
                           Tooltip(
@@ -252,6 +237,11 @@ class _ActivityHistoryRow extends StatelessWidget {
                           const SizedBox(width: 6),
                         ] else
                           const SizedBox(width: 12),
+                        ReminderMarker(
+                          key: Key('manager-reminder-${activity.id}'),
+                          profile: activity.reminder,
+                        ),
+                        const SizedBox(width: 8),
                         SizedBox(
                           width: 150,
                           child: Text(

@@ -492,11 +492,12 @@ final class McpServer {
       name: 'dingdong_upsert_reminder',
       title: 'Save DingDong Reminder',
       description:
-          'Create or edit a named reminder when authorized by the user. Existing IDs are patched; a new ID needs name. Colors and sounds may be reused. At most 32 custom profiles. Built-in kind is fixed. Description is a short condition hint for the Agent, not executable rules. Custom sound paths must first be imported. Disabled reminders never alert.',
+          'Create or edit a named reminder when authorized by the user. Existing IDs are patched; a new ID needs name. Colors and sounds may be reused. At most 32 custom profiles. Built-in kind is fixed. Reuse a fitting fixed profile. For a user request applying only to the next notification, create a unique ID with temporary=true; it is consumed once and removed. Never change a built-in to temporary. Description is a short condition hint for the Agent, not executable rules. Custom sound paths must first be imported. Disabled reminders never alert.',
       properties: <String, Object?>{
         'id': _stringProperty(),
         'name': _stringProperty(),
         'description': _stringProperty(),
+        'temporary': _booleanProperty(),
         'enabled': _booleanProperty(),
         'toPhone': _booleanProperty(),
         'kind': _enumProperty(['completion', 'attention']),

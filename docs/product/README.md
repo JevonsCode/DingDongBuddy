@@ -1,6 +1,6 @@
 # DingDong user guides · 使用文档
 
-These guides describe the DingDong 1.9.2-beta.1 release candidate features. Start with
+These guides describe the DingDong 1.10.0 release candidate features. Start with
 [first-run onboarding](onboarding.md) or the [中文项目介绍](../../README.zh.md).
 
 | Feature / 功能 | Guide / 说明 |
@@ -10,6 +10,7 @@ These guides describe the DingDong 1.9.2-beta.1 release candidate features. Star
 | Skill versions / Skill 版本历史 | [Compare and restore complete packages](skill-version-history.md) |
 | Reminders / 自定义提醒 | [Completion, needs-input, named reminders and sounds](agent-reminders.md) |
 | Devices / 在线设备与传输历史 | [Pairing, sharing, routes and file records](connected-devices.md) |
+| Reminders and recent Agents / 临时提醒与最近 Agents | [One-use reminders, filters and paging](reminders.md) |
 | Token usage / 用量热力图与导出 | [Agent history](../../README.md#local-daily-token-history), [DingDong internal usage](ai-companion.md#internal-token-accounting) |
 | Bridge / 资源交付与去重 | [Acknowledged snapshots and Skill versions](bridge-context-delivery.md) |
 | Claude Code status line / 状态栏 | [Setup alongside an existing HUD](claude-code-statusline.md) |
@@ -29,4 +30,4 @@ Design proposals, development previews and regression reports in this directory
 are engineering records; use the guides above for current product behavior.
 
 Windows plugins: [Windows screenshot plugin and plugin details](screenshot-plugin.md).
-Available in 1.9.2-beta.1; screenshot capture and the new selection toolbar are Windows-only.
+Available in 1.10.0; screenshot capture and the new selection toolbar are Windows-only.

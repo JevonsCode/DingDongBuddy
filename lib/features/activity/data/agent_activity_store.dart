@@ -7,9 +7,11 @@ import 'package:dingdong/features/activity/domain/agent_activity.dart';
 final class AgentActivityHistory {
   const AgentActivityHistory({
     this.activities = const <AgentActivity>[],
+    this.recentPageSize = 21,
     this.completionTimes = const <DateTime>[],
   });
 
+  final int recentPageSize;
   final List<AgentActivity> activities;
   final List<DateTime> completionTimes;
 }
@@ -55,6 +57,9 @@ final class FileAgentActivityStore implements AgentActivityStore {
                 .map((AgentActivity item) => item.completedAt.toUtc())
                 .toList(growable: false);
       return AgentActivityHistory(
+        recentPageSize: decoded['recentPageSize'] is int
+            ? (decoded['recentPageSize'] as int).clamp(1, 500)
+            : 21,
         activities: List<AgentActivity>.unmodifiable(activities),
         completionTimes: List<DateTime>.unmodifiable(completionTimes),
       );
@@ -71,6 +76,7 @@ final class FileAgentActivityStore implements AgentActivityStore {
     temporary.writeAsStringSync(
       const JsonEncoder.withIndent('  ').convert(<String, Object?>{
         'version': 2,
+        'recentPageSize': history.recentPageSize,
         'activities': history.activities
             .map((AgentActivity item) => item.toJson())
             .toList(growable: false),
@@ -128,6 +134,7 @@ final class InMemoryAgentActivityStore implements AgentActivityStore {
   @override
   void save(AgentActivityHistory history) {
     this.history = AgentActivityHistory(
+      recentPageSize: history.recentPageSize,
       activities: List<AgentActivity>.unmodifiable(history.activities),
       completionTimes: List<DateTime>.unmodifiable(history.completionTimes),
     );

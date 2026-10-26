@@ -298,10 +298,7 @@ void main() {
       );
       expect(find.text('资源'), findsOneWidget);
       expect(find.text('剪贴板'), findsOneWidget);
-      expect(
-        find.byKey(const Key('agent-activity-manager-list')),
-        findsOneWidget,
-      );
+      expect(find.byKey(const Key('recent-agent-feed-list')), findsOneWidget);
       expect(find.text('Resumable result'), findsOneWidget);
       expect(
         find.byKey(const Key('agent-activity-manager-open-conversation')),

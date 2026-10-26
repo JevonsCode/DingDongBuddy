@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/widgets/desktop_action_button.dart';
 import 'package:dingdong/core/widgets/desktop_dialog.dart';
+import 'package:dingdong/core/widgets/desktop_icon_button.dart';
 import 'package:dingdong/core/widgets/desktop_input_field.dart';
 import 'package:dingdong/features/device_link/domain/lan_computer_management.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +19,9 @@ class LanComputerPairingDialog extends StatefulWidget {
 
 class _LanComputerPairingDialogState extends State<LanComputerPairingDialog> {
   final _code = TextEditingController();
+  final _address = TextEditingController();
+  String? _addressError;
+  String? _generalError;
   String? _selected;
   String? _error;
   bool _busy = false;
@@ -30,6 +34,7 @@ class _LanComputerPairingDialogState extends State<LanComputerPairingDialog> {
   @override
   void dispose() {
     _code.dispose();
+    _address.dispose();
     unawaited(
       widget.controller.cancelComputerPairing().catchError((Object _) {}),
     );
@@ -39,21 +44,39 @@ class _LanComputerPairingDialogState extends State<LanComputerPairingDialog> {
   Future<void> _run(
     Future<void> Function() action, {
     bool finish = false,
+    bool address = false,
   }) async {
     if (_busy) return;
     setState(() {
       _busy = true;
       _error = null;
+      _generalError = null;
+      _addressError = null;
     });
     try {
       await action();
       if (mounted && finish) Navigator.pop(context);
-    } on Object {
-      if (mounted) setState(() => _error = context.l10n.lanPairingFailed);
+    } catch (failure) {
+      if (mounted) {
+        setState(() {
+          if (address && failure is FormatException) {
+            _addressError = context.l10n.deviceAddressInvalid;
+          } else {
+            _generalError = finish
+                ? context.l10n.lanPairingFailed
+                : context.l10n.lanNetworkHelp;
+          }
+        });
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
+
+  Future<void> _find() => _run(
+    () => widget.controller.discoverComputerAddress(_address.text.trim()),
+    address: true,
+  );
 
   Future<void> _join() async {
     if (_selected == null || !RegExp(r'^\d{6}$').hasMatch(_code.text)) {
@@ -164,6 +187,38 @@ class _LanComputerPairingDialogState extends State<LanComputerPairingDialog> {
                         }),
                 ),
               const SizedBox(height: 12),
+              if (widget.controller.localComputerAddresses.isNotEmpty) ...[
+                SelectableText(
+                  l.deviceLocalAddresses(
+                    widget.controller.localComputerAddresses.join(' · '),
+                  ),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 12),
+              ],
+              DesktopTextField(
+                key: const Key('device-computer-find-address'),
+                controller: _address,
+                enabled: !_busy,
+                autocorrect: false,
+                enableSuggestions: false,
+                textInputAction: TextInputAction.search,
+                decoration: InputDecoration(
+                  labelText: l.deviceLanAddress,
+                  helperText: l.lanFindByIpHelp,
+                  helperMaxLines: 2,
+                  errorText: _addressError,
+                  errorMaxLines: 3,
+                  suffixIcon: DesktopIconButton(
+                    key: const Key('device-computer-find-address-submit'),
+                    icon: const Icon(Icons.search),
+                    tooltip: l.lanFindByIp,
+                    onPressed: _busy ? null : () => unawaited(_find()),
+                  ),
+                ),
+                onSubmitted: (_) => unawaited(_find()),
+              ),
+              const SizedBox(height: 16),
               DesktopTextField(
                 key: const Key('device-computer-pairing-input'),
                 controller: _code,
@@ -175,13 +230,26 @@ class _LanComputerPairingDialogState extends State<LanComputerPairingDialog> {
                   labelText: l.lanSixDigitCode,
                   hintText: '000000',
                   errorText: _error,
+                  errorMaxLines: 3,
                   counterText: '',
                 ),
                 onSubmitted: (_) => unawaited(_join()),
               ),
               if (widget.controller.computerDiscoveryError != null) ...[
                 const SizedBox(height: 8),
-                Text(l.lanNetworkHelp),
+                Text(switch (widget.controller.computerDiscoveryError) {
+                  'address_in_use' => l.lanPortBusy,
+                  'access_denied' => l.lanNetworkAccessDenied,
+                  _ => l.lanNetworkHelp,
+                }),
+              ],
+              if (_generalError != null &&
+                  widget.controller.computerDiscoveryError == null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  _generalError!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
               ],
               const SizedBox(height: 12),
               Text(

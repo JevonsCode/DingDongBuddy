@@ -1,8 +1,10 @@
 import 'dart:convert';
+
 import 'package:dingdong/core/utils/text.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
 import 'package:dingdong/features/agent_api/domain/conversation_token_usage.dart';
+import 'package:dingdong/features/settings/domain/reminder_profile.dart';
 
 /// Sound values retained for compatibility with existing API clients.
 enum DingSound {
@@ -56,6 +58,7 @@ final class DingRequest {
     this.message = 'Task complete',
     this.detail,
     this.reminderId,
+    this.reminder,
     this.source,
     this.sound = DingSound.defaultSound,
     this.flashCount = 8,
@@ -103,6 +106,9 @@ final class DingRequest {
   final String message;
   final String? detail;
   final String? reminderId;
+
+  /// Trusted immutable definition resolved by DingDong, never parsed from the client.
+  final ReminderProfile? reminder;
   final String? source;
   final DingSound sound;
   final int flashCount;
@@ -119,6 +125,7 @@ final class DingRequest {
 
   DingRequest copyWith({
     String? message,
+    ReminderProfile? reminder,
     DingSound? sound,
     AgentNotificationKind? notificationKind,
     ConversationTokenUsage? tokenUsage,
@@ -129,6 +136,7 @@ final class DingRequest {
       message: message ?? this.message,
       detail: detail,
       reminderId: reminderId,
+      reminder: reminder ?? this.reminder,
       source: source,
       sound: sound ?? this.sound,
       flashCount: flashCount,

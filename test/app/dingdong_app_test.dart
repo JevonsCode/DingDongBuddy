@@ -221,12 +221,8 @@ void main() {
       72,
     );
     expect(
-      tester
-          .getSize(
-            find.byKey(const Key('today-enabled-compact-today-resource')),
-          )
-          .height,
-      92,
+      find.byKey(const Key('today-enabled-compact-today-resource')),
+      findsNothing,
     );
   });
 
@@ -795,7 +791,7 @@ void main() {
     activityController.dispose();
   });
 
-  testWidgets('recent Agent preview shows six items and opens the full list', (
+  testWidgets('recent Agent preview defaults to 21 and opens the full list', (
     WidgetTester tester,
   ) async {
     tester.view.devicePixelRatio = 1;
@@ -807,7 +803,7 @@ void main() {
       idGenerator: () => 'overflow-${nextId++}',
       now: () => DateTime.utc(2026, 7, 22, 10),
     );
-    for (int index = 0; index < 7; index += 1) {
+    for (int index = 0; index < 26; index += 1) {
       activityController.record(
         source: 'Codex',
         message: 'Recent activity $index',
@@ -824,10 +820,9 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.byKey(const Key('activity-overflow-0')), findsNothing);
-    for (int index = 1; index < 7; index += 1) {
-      expect(find.byKey(Key('activity-overflow-$index')), findsOneWidget);
-    }
+    expect(activityController.recentPageSize, 21);
+    expect(find.byKey(const Key('activity-overflow-0')), findsOneWidget);
+    expect(find.byKey(const Key('activity-overflow-25')), findsNothing);
     expect(find.byKey(const Key('recent-agent-more')), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('recent-agent-more')));

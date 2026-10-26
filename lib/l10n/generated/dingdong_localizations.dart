@@ -7933,6 +7933,174 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'Waiting to discover IP'**
   String get deviceAddressUnknown;
+
+  /// Desktop history filters and reminder definitions.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get dateFilterYesterday;
+
+  /// Desktop history filters and reminder definitions.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 3 days'**
+  String get dateFilterLastThreeDays;
+
+  /// Desktop history filters and reminder definitions.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get dateFilterThisWeek;
+
+  /// Desktop history filters and reminder definitions.
+  ///
+  /// In en, this message translates to:
+  /// **'This month'**
+  String get dateFilterThisMonth;
+
+  /// Desktop history filters and reminder definitions.
+  ///
+  /// In en, this message translates to:
+  /// **'Last month'**
+  String get dateFilterLastMonth;
+
+  /// Desktop history filters and reminder definitions.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 3 months'**
+  String get dateFilterLastThreeMonths;
+
+  /// Desktop history filters and reminder definitions.
+  ///
+  /// In en, this message translates to:
+  /// **'This year'**
+  String get dateFilterThisYear;
+
+  /// Desktop history filters and reminder definitions.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom range'**
+  String get dateFilterCustom;
+
+  /// Desktop history filters and reminder definitions.
+  ///
+  /// In en, this message translates to:
+  /// **'All time'**
+  String get dateFilterAll;
+
+  /// Desktop history filters and reminder definitions.
+  ///
+  /// In en, this message translates to:
+  /// **'Start date'**
+  String get dateFilterStart;
+
+  /// Desktop history filters and reminder definitions.
+  ///
+  /// In en, this message translates to:
+  /// **'End date'**
+  String get dateFilterEnd;
+
+  /// Desktop history filters and reminder definitions.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get dateFilterApply;
+
+  /// Desktop history filters and reminder definitions.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid date (yyyy-MM-dd)'**
+  String get dateFilterInvalidDate;
+
+  /// Desktop history filters and reminder definitions.
+  ///
+  /// In en, this message translates to:
+  /// **'End date must be on or after start date'**
+  String get dateFilterInvalidRange;
+
+  /// Desktop history filters and reminder definitions.
+  ///
+  /// In en, this message translates to:
+  /// **'Sources'**
+  String get activitySourceFilter;
+
+  /// Desktop history filters and reminder definitions.
+  ///
+  /// In en, this message translates to:
+  /// **'Page size'**
+  String get activityPageSize;
+
+  /// Desktop history filters and reminder definitions.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin'**
+  String get activityPin;
+
+  /// Desktop history filters and reminder definitions.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpin'**
+  String get activityUnpin;
+
+  /// Desktop history filters and reminder definitions.
+  ///
+  /// In en, this message translates to:
+  /// **'Load more'**
+  String get activityLoadMore;
+
+  /// Desktop history filters and reminder definitions.
+  ///
+  /// In en, this message translates to:
+  /// **'No reminders match these filters'**
+  String get activityNoMatches;
+
+  /// Desktop history filters and reminder definitions.
+  ///
+  /// In en, this message translates to:
+  /// **'Temporary · next use only'**
+  String get reminderTemporary;
+
+  /// Desktop history filters and reminder definitions.
+  ///
+  /// In en, this message translates to:
+  /// **'This older record has no saved reminder definition'**
+  String get reminderDefinitionUnavailable;
+
+  /// Desktop history filters and reminder definitions.
+  ///
+  /// In en, this message translates to:
+  /// **'Used for the next reminder, then removed automatically.'**
+  String get reminderTemporaryHelp;
+
+  /// Manual LAN discovery and actionable connection errors.
+  ///
+  /// In en, this message translates to:
+  /// **'Find computer by IP'**
+  String get lanFindByIp;
+
+  /// Manual LAN discovery and actionable connection errors.
+  ///
+  /// In en, this message translates to:
+  /// **'If discovery finds nothing, enter the other computer’s LAN IP, then pair with its code.'**
+  String get lanFindByIpHelp;
+
+  /// Manual LAN discovery and actionable connection errors.
+  ///
+  /// In en, this message translates to:
+  /// **'Another DingDong instance is using the LAN discovery port. Quit duplicate instances, then refresh.'**
+  String get lanPortBusy;
+
+  /// Scroll the virtual recent Agent list back to its top.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to top'**
+  String get activityBackToTop;
+
+  /// Actionable local-network access-denied or exclusive-bind error.
+  ///
+  /// In en, this message translates to:
+  /// **'Local network access was denied. Check DingDong’s local-network permission and private-network firewall, quit duplicate instances, then refresh.'**
+  String get lanNetworkAccessDenied;
 }
 
 class _DingDongLocalizationsDelegate

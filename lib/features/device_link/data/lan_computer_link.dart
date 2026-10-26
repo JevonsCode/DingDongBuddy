@@ -42,6 +42,7 @@ final class LanComputerLink extends ChangeNotifier {
   static final _group = InternetAddress('239.255.68.68');
   static const _lifetime = Duration(minutes: 5);
   final Map<String, _Endpoint> _endpoints = {};
+  final Set<String> _manualDiscoveryAddresses = {};
   final Map<String, LanComputerSession> _sessions = {};
   final Set<LanWire> _handshakes = {};
   RawDatagramSocket? _udp;
@@ -191,12 +192,12 @@ final class LanComputerLink extends ChangeNotifier {
       );
       error = null;
       _announce();
-    } on Object {
+    } catch (failure) {
       _udp?.close();
       _udp = null;
       await _server?.close();
       _server = null;
-      error = 'network';
+      error = lanDiscoveryFailureCode(failure);
       notifyListeners();
       rethrow;
     }
@@ -313,6 +314,17 @@ final class LanComputerLink extends ChangeNotifier {
         // The next discovery tick will retry while the endpoint stays fresh.
       }
     }
+    for (final text in _manualDiscoveryAddresses) {
+      final address = InternetAddress(text);
+      if (!_allowedHint(address) || !sent.add((text, _unicastDiscoveryPort))) {
+        continue;
+      }
+      try {
+        socket.send(bytes, address, _unicastDiscoveryPort);
+      } on SocketException {
+        /* Retry on the next tick. */
+      }
+    }
     // Bootstrap discovery from a saved IP even when multicast is unavailable.
     // The peer still supplies its current TCP port and proves the original key.
     for (final session in _sessions.values) {
@@ -367,6 +379,18 @@ final class LanComputerLink extends ChangeNotifier {
     } on Object {
       /* Untrusted LAN datagram. */
     }
+  }
+
+  /// Initial pairing fallback for networks that block multicast discovery.
+  /// This only exchanges public discovery metadata; pairing still requires SRP.
+  Future<void> discoverAddress(String value) async {
+    final address = await validateLocalAddress(value);
+    if (_manualDiscoveryAddresses.length >= 16) {
+      _manualDiscoveryAddresses.remove(_manualDiscoveryAddresses.first);
+    }
+    _manualDiscoveryAddresses.add(address);
+    _announce();
+    notifyListeners();
   }
 
   Future<void> refresh() async {

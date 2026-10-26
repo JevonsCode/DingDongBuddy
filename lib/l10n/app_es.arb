@@ -1,22 +1,40 @@
 {
   "pluginOpenSource": "Componentes de código abierto",
-  "@pluginOpenSource": {"description": "Embedded plugin attribution and upstream update status."},
+  "@pluginOpenSource": {
+    "description": "Embedded plugin attribution and upstream update status."
+  },
   "pluginViewSource": "Ver código",
-  "@pluginViewSource": {"description": "Embedded plugin attribution and upstream update status."},
+  "@pluginViewSource": {
+    "description": "Embedded plugin attribution and upstream update status."
+  },
   "pluginCheckUpstream": "Comprobar origen",
-  "@pluginCheckUpstream": {"description": "Embedded plugin attribution and upstream update status."},
+  "@pluginCheckUpstream": {
+    "description": "Embedded plugin attribution and upstream update status."
+  },
   "pluginLicenses": "Licencias",
-  "@pluginLicenses": {"description": "Embedded plugin attribution and upstream update status."},
+  "@pluginLicenses": {
+    "description": "Embedded plugin attribution and upstream update status."
+  },
   "pluginScreenshotSourceNote": "Utiliza el editor mediante una dependencia fijada. DingDong aporta captura, atajos y adaptación de la interfaz.",
-  "@pluginScreenshotSourceNote": {"description": "Embedded plugin attribution and upstream update status."},
+  "@pluginScreenshotSourceNote": {
+    "description": "Embedded plugin attribution and upstream update status."
+  },
   "pluginSelectionSourceNote": "La lectura de selecciones de Windows adapta código de este proyecto. DingDong implementa la barra, los ajustes y las solicitudes al modelo.",
-  "@pluginSelectionSourceNote": {"description": "Embedded plugin attribution and upstream update status."},
+  "@pluginSelectionSourceNote": {
+    "description": "Embedded plugin attribution and upstream update status."
+  },
   "pluginUpstreamChanged": "Hay cambios en el proyecto original. Requieren adaptación y pruebas antes de una actualización de DingDong; esta comprobación no los instala.",
-  "@pluginUpstreamChanged": {"description": "Embedded plugin attribution and upstream update status."},
+  "@pluginUpstreamChanged": {
+    "description": "Embedded plugin attribution and upstream update status."
+  },
   "pluginUpstreamCurrent": "No se encontraron versiones ni cambios más recientes.",
-  "@pluginUpstreamCurrent": {"description": "Embedded plugin attribution and upstream update status."},
+  "@pluginUpstreamCurrent": {
+    "description": "Embedded plugin attribution and upstream update status."
+  },
   "pluginUpstreamUnavailable": "No se pudo consultar el origen. Inténtalo más tarde.",
-  "@pluginUpstreamUnavailable": {"description": "Embedded plugin attribution and upstream update status."},
+  "@pluginUpstreamUnavailable": {
+    "description": "Embedded plugin attribution and upstream update status."
+  },
   "@screenshotPluginTitle": {
     "description": "Screenshot extension or plugin platform availability."
   },
@@ -5418,17 +5436,29 @@
     "description": "Named reminder settings label"
   },
   "trayBuddyWaiting": "¡Te toca!",
-  "@trayBuddyWaiting": {"description": "Friendly tray hover heading when an agent needs user input."},
+  "@trayBuddyWaiting": {
+    "description": "Friendly tray hover heading when an agent needs user input."
+  },
   "trayBuddyReady": "Hay novedades",
-  "@trayBuddyReady": {"description": "Friendly tray hover heading for completed work."},
+  "@trayBuddyReady": {
+    "description": "Friendly tray hover heading for completed work."
+  },
   "trayBuddyUnread": "Avisos sin leer",
-  "@trayBuddyUnread": {"description": "Caption for the Windows hover card total count."},
+  "@trayBuddyUnread": {
+    "description": "Caption for the Windows hover card total count."
+  },
   "trayBuddyOpen": "Haz clic para abrir DingDong",
-  "@trayBuddyOpen": {"description": "Action hint on the native tray hover card."},
+  "@trayBuddyOpen": {
+    "description": "Action hint on the native tray hover card."
+  },
   "devAttentionDescription": "Crea un aviso DEV que necesita tu respuesta. Pasa el cursor sobre el icono para ver el contador.",
-  "@devAttentionDescription": {"description": "Development panel attention preview description."},
+  "@devAttentionDescription": {
+    "description": "Development panel attention preview description."
+  },
   "devAttentionCreated": "Creado: necesita tu respuesta",
-  "@devAttentionCreated": {"description": "Development panel attention action success status."},
+  "@devAttentionCreated": {
+    "description": "Development panel attention action success status."
+  },
   "devReminderColors": "Colores y contadores de avisos",
   "@devReminderColors": {
     "description": "Development panel reminder color preview."
@@ -5772,5 +5802,117 @@
   "deviceAddressUnknown": "Esperando detectar la IP",
   "@deviceAddressUnknown": {
     "description": "Device connection address and route controls."
+  },
+  "dateFilterYesterday": "Ayer",
+  "dateFilterLastThreeDays": "Últimos 3 días",
+  "dateFilterThisWeek": "Esta semana",
+  "dateFilterThisMonth": "Este mes",
+  "dateFilterLastMonth": "Mes pasado",
+  "dateFilterLastThreeMonths": "Últimos 3 meses",
+  "dateFilterThisYear": "Este año",
+  "dateFilterCustom": "Intervalo personalizado",
+  "dateFilterAll": "Todo el tiempo",
+  "dateFilterStart": "Fecha de inicio",
+  "dateFilterEnd": "Fecha de fin",
+  "dateFilterApply": "Aplicar",
+  "dateFilterInvalidDate": "Introduce una fecha válida (yyyy-MM-dd)",
+  "dateFilterInvalidRange": "La fecha de fin no puede ser anterior al inicio",
+  "activitySourceFilter": "Fuentes",
+  "activityPageSize": "Elementos por página",
+  "activityPin": "Fijar",
+  "activityUnpin": "Desfijar",
+  "activityLoadMore": "Cargar más",
+  "activityNoMatches": "Ningún recordatorio coincide con estos filtros",
+  "reminderTemporary": "Temporal · solo el próximo uso",
+  "reminderDefinitionUnavailable": "Este registro antiguo no tiene una definición guardada",
+  "reminderTemporaryHelp": "Se usa para el próximo recordatorio y se elimina automáticamente.",
+  "lanFindByIp": "Buscar equipo por IP",
+  "lanFindByIpHelp": "Si no aparece el equipo, introduce su IP local y enlázalo con su código.",
+  "lanPortBusy": "Otra instancia de DingDong usa el puerto de descubrimiento local. Cierra las instancias duplicadas y actualiza.",
+  "activityBackToTop": "Volver arriba",
+  "@dateFilterYesterday": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@dateFilterLastThreeDays": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@dateFilterThisWeek": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@dateFilterThisMonth": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@dateFilterLastMonth": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@dateFilterLastThreeMonths": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@dateFilterThisYear": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@dateFilterCustom": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@dateFilterAll": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@dateFilterStart": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@dateFilterEnd": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@dateFilterApply": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@dateFilterInvalidDate": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@dateFilterInvalidRange": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@activitySourceFilter": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@activityPageSize": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@activityPin": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@activityUnpin": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@activityLoadMore": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@activityNoMatches": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@reminderTemporary": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@reminderDefinitionUnavailable": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@reminderTemporaryHelp": {
+    "description": "Desktop history filters and reminder definitions."
+  },
+  "@lanFindByIp": {
+    "description": "Manual LAN discovery and actionable connection errors."
+  },
+  "@lanFindByIpHelp": {
+    "description": "Manual LAN discovery and actionable connection errors."
+  },
+  "@lanPortBusy": {
+    "description": "Manual LAN discovery and actionable connection errors."
+  },
+  "@activityBackToTop": {
+    "description": "Scroll the virtual recent Agent list back to its top."
+  },
+  "lanNetworkAccessDenied": "Se denegó el acceso a la red local. Revisa los permisos de DingDong y el cortafuegos de la red privada, cierra las instancias duplicadas y actualiza.",
+  "@lanNetworkAccessDenied": {
+    "description": "Actionable local-network access-denied or exclusive-bind error."
   }
 }

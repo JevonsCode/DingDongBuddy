@@ -1,3 +1,5 @@
+import 'package:dingdong/features/settings/domain/reminder_profile.dart';
+
 /// Durable monotonic state for the tray unread counter.
 final class TrayUnreadState {
   const TrayUnreadState({
@@ -7,6 +9,7 @@ final class TrayUnreadState {
     this.latestReminderId,
     this.latestAttentionReminderId,
     this.reminderEvents = const {},
+    this.reminderSnapshots = const {},
     this.reminderEventHistory = const {},
   });
 
@@ -17,10 +20,12 @@ final class TrayUnreadState {
       latestReminderId = null,
       latestAttentionReminderId = null,
       reminderEvents = const {},
+      reminderSnapshots = const {},
       reminderEventHistory = const {};
 
   /// Last event for each reminder type; counts still use the monotonic cursor.
   final Map<String, int> reminderEvents;
+  final Map<String, ReminderProfile> reminderSnapshots;
 
   /// Positive event IDs; a negative ID marks unknown legacy history through that ID.
   final Map<String, List<int>> reminderEventHistory;

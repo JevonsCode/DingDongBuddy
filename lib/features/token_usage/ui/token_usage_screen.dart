@@ -1,10 +1,13 @@
 import 'dart:async';
 
 import 'package:dingdong/app/app_localizations.dart';
+import 'package:dingdong/core/models/date_filter_range.dart';
 import 'package:dingdong/core/widgets/compact_switch.dart';
 import 'package:dingdong/core/widgets/desktop_action_button.dart';
 import 'package:dingdong/core/widgets/desktop_choice_chip.dart';
+import 'package:dingdong/core/widgets/desktop_date_range_picker.dart';
 import 'package:dingdong/core/widgets/desktop_icon_button.dart';
+import 'package:dingdong/core/widgets/desktop_select_field.dart';
 import 'package:dingdong/features/token_usage/domain/token_usage_csv_export.dart';
 import 'package:dingdong/features/token_usage/domain/token_usage_models.dart';
 import 'package:dingdong/features/token_usage/ui/token_usage_controller.dart';
@@ -67,64 +70,12 @@ class _TokenUsageScreenState extends State<TokenUsageScreen>
     super.dispose();
   }
 
-  _TokenUsageRange _range = _TokenUsageRange.year;
+  DateFilterPreset _range = DateFilterPreset.thisYear;
   DateTimeRange? _customRange;
-  int _rangeFieldGeneration = 0;
   bool _isExporting = false;
 
-  /// Inclusive local calendar bounds of the selected range, or null for the
-  /// whole selected year.
-  DateTimeRange? get _rangeBounds {
-    final DateTime today = _today;
-    return switch (_range) {
-      _TokenUsageRange.year => null,
-      _TokenUsageRange.last7 => DateTimeRange(
-        start: DateTime(today.year, today.month, today.day - 6),
-        end: today,
-      ),
-      _TokenUsageRange.last30 => DateTimeRange(
-        start: DateTime(today.year, today.month, today.day - 29),
-        end: today,
-      ),
-      _TokenUsageRange.thisMonth => DateTimeRange(
-        start: DateTime(today.year, today.month),
-        end: today,
-      ),
-      _TokenUsageRange.custom => _customRange,
-    };
-  }
-
-  Future<void> _selectRange(_TokenUsageRange? range) async {
-    if (range == null) return;
-    if (range != _TokenUsageRange.custom) {
-      setState(() => _range = range);
-      return;
-    }
-    final DateTime today = _today;
-    final DateTimeRange? picked = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime(2020),
-      lastDate: today,
-      initialDateRange:
-          _customRange ??
-          DateTimeRange(
-            start: DateTime(today.year, today.month, today.day - 6),
-            end: today,
-          ),
-    );
-    if (!mounted) return;
-    if (picked == null) {
-      setState(() => _rangeFieldGeneration += 1);
-      return;
-    }
-    setState(() {
-      _rangeFieldGeneration += 1;
-      _range = _TokenUsageRange.custom;
-      _customRange = picked;
-      _year = picked.end.year;
-      _selectedDay = picked.end;
-    });
-  }
+  DateTimeRange? get _rangeBounds =>
+      _range == DateFilterPreset.custom ? _customRange : _range.bounds(_today);
 
   Future<void> _export() async {
     if (_isExporting || widget.controller.isLoading) return;
@@ -185,8 +136,11 @@ class _TokenUsageScreenState extends State<TokenUsageScreen>
           ..sort((TokenUsageDay a, TokenUsageDay b) => a.day.compareTo(b.day));
     setState(() {
       _year = year;
-      _range = _TokenUsageRange.year;
-      _rangeFieldGeneration += 1;
+      _range = DateFilterPreset.custom;
+      _customRange = DateTimeRange(
+        start: DateTime(year),
+        end: year == _today.year ? _today : DateTime(year, 12, 31),
+      );
       _selectedDay = year == _today.year
           ? _today
           : recorded.isNotEmpty
@@ -398,53 +352,33 @@ class _TokenUsageScreenState extends State<TokenUsageScreen>
                 children: <Widget>[
                   SizedBox(
                     width: 130,
-                    child: DropdownButtonFormField<int>(
+                    child: DesktopSelectField<int>(
                       key: const Key('token-usage-year-filter'),
-                      initialValue: _year,
-                      decoration: InputDecoration(
-                        labelText: context.l10n.tokenUsageYear,
-                        isDense: true,
-                      ),
-                      items: <DropdownMenuItem<int>>[
-                        for (final int year in years)
-                          DropdownMenuItem<int>(
-                            value: year,
-                            child: Text('$year'),
-                          ),
+                      value: _year,
+                      semanticLabel: context.l10n.tokenUsageYear,
+                      items: [
+                        for (final year in years)
+                          DesktopSelectItem(value: year, label: '$year'),
                       ],
                       onChanged: _selectYear,
                     ),
                   ),
                   SizedBox(
                     key: const Key('token-usage-range-filter'),
-                    width: 190,
-                    child: DropdownButtonFormField<_TokenUsageRange>(
-                      // Form fields keep their own value; rebuild on every
-                      // committed or cancelled range change.
-                      key: ValueKey<int>(_rangeFieldGeneration),
-                      initialValue: _range,
-                      isExpanded: true,
-                      decoration: InputDecoration(
-                        labelText: context.l10n.tokenUsageRange,
-                        isDense: true,
-                      ),
-                      items: <DropdownMenuItem<_TokenUsageRange>>[
-                        for (final _TokenUsageRange range
-                            in _TokenUsageRange.values)
-                          DropdownMenuItem<_TokenUsageRange>(
-                            value: range,
-                            child: Text(
-                              range == _TokenUsageRange.custom &&
-                                      _customRange != null
-                                  ? _formatRange(context, _customRange!)
-                                  : _rangeLabel(context, range),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                      ],
-                      onChanged: (_TokenUsageRange? range) =>
-                          unawaited(_selectRange(range)),
+                    width: 210,
+                    child: DesktopDateFilter(
+                      value: _range,
+                      customRange: _customRange,
+                      now: widget.now,
+                      onChanged: (preset, custom) => setState(() {
+                        _range = preset!;
+                        _customRange = custom;
+                        final bounds = _rangeBounds;
+                        if (bounds != null) {
+                          _year = bounds.end.year;
+                          _selectedDay = bounds.end;
+                        }
+                      }),
                     ),
                   ),
                   _AgentFilter(
@@ -570,19 +504,6 @@ class _TokenUsageScreenState extends State<TokenUsageScreen>
     );
   }
 }
-
-/// Summary scopes for the Token usage cards and CSV export. The heatmap
-/// shows the selected year within the selected period.
-enum _TokenUsageRange { year, last7, last30, thisMonth, custom }
-
-String _rangeLabel(BuildContext context, _TokenUsageRange range) =>
-    switch (range) {
-      _TokenUsageRange.year => context.l10n.tokenUsageRangeYear,
-      _TokenUsageRange.last7 => context.l10n.tokenUsageRangeLast7,
-      _TokenUsageRange.last30 => context.l10n.tokenUsageRangeLast30,
-      _TokenUsageRange.thisMonth => context.l10n.tokenUsageRangeThisMonth,
-      _TokenUsageRange.custom => context.l10n.tokenUsageRangeCustom,
-    };
 
 String _formatRange(BuildContext context, DateTimeRange range) {
   final DateFormat format = DateFormat.yMd(_locale(context));

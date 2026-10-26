@@ -22,10 +22,12 @@ public class TrayIcon: NSView {
         var rect: NSRect
         var text: NSAttributedString
         var textX: CGFloat
+        var temporary: Bool = false
         var color: NSColor
         var alpha: CGFloat = 1
     }
     private var badgeId = "primary"
+    private var badgeTemporary = false
     private var transitionFrom: [BadgeFrame] = []
     private var transitionProgress: CGFloat = 1
     private var transitionWidth: CGFloat = 0
@@ -36,6 +38,7 @@ public class TrayIcon: NSView {
         var result = [BadgeFrame(id: badgeId,
             rect: NSRect(x: 0, y: 0, width: badgeWidth, height: bounds.height),
             text: title, textX: 31 + title.size().width / 2,
+            temporary: badgeTemporary,
             color: NSColor(cgColor: badgeBackgroundColor(badgeDisplayRgb(badgeRgb, dimmed: bubbleDimmed && badgePulse)))!)]
         var x = badgeWidth + bubbleSpacing
         for (index, bubble) in displayedBubbles.enumerated() {
@@ -46,6 +49,7 @@ public class TrayIcon: NSView {
             result.append(BadgeFrame(id: bubble["id"] as? String ?? "tail-\(index)",
                 rect: NSRect(x: x, y: 1, width: width, height: bounds.height - 2),
                 text: bubbleText(bubble), textX: x + width / 2,
+                temporary: bubble["temporary"] as? Bool ?? false,
                 color: NSColor(cgColor: badgeBackgroundColor(color))!))
             x += width + bubbleSpacing
         }
@@ -149,7 +153,8 @@ public class TrayIcon: NSView {
             let badgeWidth = bubbleWidth(item)
             let badge = TrayOverflowBadge(frame: NSRect(x: (width - 4 - badgeWidth) / 2,
                 y: 4, width: badgeWidth, height: diameter), title: title,
-                color: badgeBackgroundColor((item["colorRgb"] as? NSNumber)?.uint32Value))
+                color: badgeBackgroundColor((item["colorRgb"] as? NSNumber)?.uint32Value),
+                temporary: item["temporary"] as? Bool ?? false)
             row.addSubview(badge)
             let name = item["name"] as? String ?? item["id"] as? String ?? ""
             row.setAccessibilityElement(true)
@@ -549,9 +554,11 @@ public class TrayIcon: NSView {
         _ bubbles: [[String: Any]] = [],
         _ badgeDimmed: Bool = false,
         _ primaryId: String? = nil,
-        _ primaryPulse: Bool = false
+        _ primaryPulse: Bool = false,
+        _ primaryTemporary: Bool = false
     ) {
         guard let button = statusItem?.button else { return }
+        badgeTemporary = primaryTemporary
         let countText = title.trimmingCharacters(in: .whitespacesAndNewlines)
         let isUnreadBadge = style == "unreadBadge" && !countText.isEmpty
         button.wantsLayer = true
@@ -619,6 +626,14 @@ public class TrayIcon: NSView {
             badge.color.setFill()
             NSBezierPath(roundedRect: badge.rect, xRadius: badge.rect.height / 2,
                 yRadius: badge.rect.height / 2).fill()
+            if badge.temporary {
+                let outline = NSBezierPath(roundedRect: badge.rect.insetBy(dx: 1, dy: 1),
+                    xRadius: badge.rect.height / 2, yRadius: badge.rect.height / 2)
+                outline.lineWidth = 1.5
+                outline.setLineDash([3, 2], count: 2, phase: 0)
+                NSColor.white.setStroke()
+                outline.stroke()
+            }
             if badge.id == "@overflow" {
                 NSColor.white.setFill()
                 for offset in [-4.0, 0.0, 4.0] {
@@ -788,15 +803,24 @@ private final class TrayOverflowHoverView: NSView {
 private final class TrayOverflowBadge: NSView {
     private let title: NSAttributedString
     private let color: CGColor
-    init(frame: NSRect, title: NSAttributedString, color: CGColor) {
+    private let temporary: Bool
+    init(frame: NSRect, title: NSAttributedString, color: CGColor, temporary: Bool = false) {
         self.title = title
         self.color = color
+        self.temporary = temporary
         super.init(frame: frame)
     }
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
     override func draw(_ dirtyRect: NSRect) {
         NSColor(cgColor: color)?.setFill()
         NSBezierPath(roundedRect: bounds, xRadius: bounds.height / 2, yRadius: bounds.height / 2).fill()
+        if temporary {
+            let outline = NSBezierPath(ovalIn: bounds.insetBy(dx: 1, dy: 1))
+            outline.lineWidth = 1.5
+            outline.setLineDash([3, 2], count: 2, phase: 0)
+            NSColor.white.setStroke()
+            outline.stroke()
+        }
         guard let context = NSGraphicsContext.current?.cgContext else { return }
         let line = CTLineCreateWithAttributedString(title)
         let glyphBounds = CTLineGetBoundsWithOptions(line, .useGlyphPathBounds)

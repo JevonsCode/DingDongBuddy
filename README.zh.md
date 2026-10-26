@@ -23,8 +23,8 @@ DingDong 是一个免费开源的桌面小伙伴，帮你整理内容、用好�
 只维护一份；接入的 Agent 消息统一收好，桌面提示声由你选。重要提醒和选中的
 剪贴板内容，也能送到你配对的可信手机。
 
-> **DingDong 1.9.2-beta.1 候选版本（构建 79）。** 新增 Windows 截图编辑与划词插件，
-> 增加插件详情，并优化托盘动画与分组提醒数量。
+> **DingDong 1.10.0（构建 80）。** 新增 Windows 截图编辑与划词插件，
+> 新增一次性临时提醒、最近 Agents 分页与筛选、桌面日期日历，以及局域网 IP 查找和重连。
 
 配置方式和数据边界见 [AI+ 使用说明](docs/product/ai-companion.md)，完整入口见[使用文档](docs/product/README.md)。
 
@@ -102,7 +102,7 @@ AI+ 不再分析剪贴板、生成洞察或安排主动关怀；打开页面、�
 
 ## 可选的 Windows 截图与划词插件
 
-DingDong 1.9.2-beta.1 在“**资源管理 → 插件**”中提供可选的 Windows 截图与划词。
+DingDong 1.10.0 在“**资源管理 → 插件**”中提供可选的 Windows 截图与划词。
 启用截图后按 **Ctrl+Alt+A** 框选，在内置编辑器标注，再复制或保存 PNG。
 划词提供复制、翻译、解释和润色，只有主动点击模型动作才发送文字，
 密码框和无法读取的选区不触发。插件详情展示来源、许可与上游版本；
@@ -249,11 +249,11 @@ Android Chrome 链路已经完成包括后台通知在内的端到端实测。iP
 [INSTALL_WITH_AGENT.md](INSTALL_WITH_AGENT.md)。它安装官方 Release，不会克隆
 或编译仓库。
 
-已发布的稳定安装包 · 1.9.1：
+已发布的稳定安装包 · 1.10.0：
 
-- [macOS · Apple 芯片 · 1.9.1](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.9.1/DingDong-1.9.1-macos-arm64.dmg)
-- [macOS · Intel · 1.9.1](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.9.1/DingDong-1.9.1-macos-x64.dmg)
-- [Windows x64 · 1.9.1](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.9.1/DingDong-1.9.1-windows-x64-Setup.exe)
+- [macOS · Apple 芯片 · 1.10.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.0/DingDong-1.10.0-macos-arm64.dmg)
+- [macOS · Intel · 1.10.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.0/DingDong-1.10.0-macos-x64.dmg)
+- [Windows x64 · 1.10.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.0/DingDong-1.10.0-windows-x64-Setup.exe)
 
 macOS 需要 13 或更高版本。快速粘贴需要辅助功能权限；普通剪贴板历史不需要
 “完全磁盘访问”或“屏幕录制”权限。

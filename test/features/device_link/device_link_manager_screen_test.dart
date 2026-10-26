@@ -18,6 +18,28 @@ void main() {
     DeviceLinkActiveTransport.localNetwork,
     DeviceLinkActiveTransport.serviceRelay,
   ]) {
+    testWidgets(
+      'LAN permission failures show actionable help without blaming the pairing code',
+      (tester) async {
+        final controller = _FakeManagement(includeDevice: false)
+          ..discoveryError = 'access_denied';
+        await _pumpManager(
+          tester,
+          controller: controller,
+          locale: const Locale('en'),
+        );
+        await tester.tap(find.byKey(const Key('device-join-computer')));
+        await tester.pumpAndSettle();
+        expect(
+          find.textContaining('Local network access was denied.'),
+          findsOneWidget,
+        );
+        final input = tester.widget<TextField>(
+          find.byKey(const Key('device-computer-pairing-input')),
+        );
+        expect(input.decoration?.errorText, isNull);
+      },
+    );
     testWidgets('phone shows the active $route route', (tester) async {
       final controller = _FakeManagement(
         connectionStatus: DeviceConnectionStatus.connected,
@@ -380,6 +402,16 @@ void main() {
         findsWidgets,
       );
 
+      await tester.enterText(
+        find.byKey(const Key('device-computer-find-address')),
+        '192.168.31.153',
+      );
+      await tester.tap(
+        find.byKey(const Key('device-computer-find-address-submit')),
+      );
+      await tester.pumpAndSettle();
+      expect(controller.discoveredAddress, '192.168.31.153');
+
       await tester.tap(find.byKey(const Key('device-computer-generate-code')));
       await tester.pumpAndSettle();
       expect(find.text('012 345'), findsOneWidget);
@@ -601,10 +633,17 @@ final class _FakeManagement extends ChangeNotifier
   ];
   @override
   String? computerPairingCode;
+  String? discoveryError;
   @override
-  String? get computerDiscoveryError => null;
+  String? get computerDiscoveryError => discoveryError;
   @override
   Future<void> refreshComputers() async {}
+  String? discoveredAddress;
+  @override
+  Future<void> discoverComputerAddress(String address) async {
+    discoveredAddress = address;
+  }
+
   @override
   Future<void> beginComputerPairing() async {
     computerPairingCode = '012345';

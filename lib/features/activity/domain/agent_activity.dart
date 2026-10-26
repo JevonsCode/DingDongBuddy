@@ -1,6 +1,7 @@
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
 import 'package:dingdong/features/agent_api/domain/conversation_token_usage.dart';
+import 'package:dingdong/features/settings/domain/reminder_profile.dart';
 
 /// One locally observed Agent update shown in the Dynamic workspace.
 final class AgentActivity {
@@ -18,6 +19,8 @@ final class AgentActivity {
     this.notificationKind = AgentNotificationKind.completion,
     this.conversationTarget,
     this.tokenUsage,
+    this.reminder,
+    this.pinned = false,
   }) : unseenReminderCount = unseenReminderCount ?? (unseen ? 1 : 0);
 
   factory AgentActivity.fromJson(Map<String, Object?> json) {
@@ -42,6 +45,12 @@ final class AgentActivity {
             )
           : null,
       tokenUsage: ConversationTokenUsage.tryParse(json['tokenUsage']),
+      pinned: json['pinned'] == true,
+      reminder: json['reminder'] is Map
+          ? ReminderProfile.fromJson(
+              Map<String, Object?>.from(json['reminder'] as Map),
+            )
+          : null,
     );
   }
 
@@ -58,9 +67,14 @@ final class AgentActivity {
   final AgentNotificationKind notificationKind;
   final AgentConversationTarget? conversationTarget;
   final ConversationTokenUsage? tokenUsage;
+  final ReminderProfile? reminder;
+  final bool pinned;
 
   bool get needsUserAttention =>
       notificationKind == AgentNotificationKind.attention;
+
+  AgentActivity withPinned(bool value) =>
+      AgentActivity.fromJson({...toJson(), 'pinned': value});
 
   AgentActivity seen() => AgentActivity(
     id: id,
@@ -76,6 +90,8 @@ final class AgentActivity {
     notificationKind: notificationKind,
     conversationTarget: conversationTarget,
     tokenUsage: tokenUsage,
+    reminder: reminder,
+    pinned: pinned,
   );
 
   AgentActivity repeated({
@@ -88,6 +104,7 @@ final class AgentActivity {
     AgentConversationTarget? conversationTarget,
     AgentNotificationKind? notificationKind,
     ConversationTokenUsage? tokenUsage,
+    ReminderProfile? reminder,
     bool preserveLifecycle = false,
     bool countAsReminder = true,
   }) {
@@ -113,11 +130,15 @@ final class AgentActivity {
       notificationKind: notificationKind ?? this.notificationKind,
       conversationTarget: mergedTarget,
       tokenUsage: tokenUsage ?? this.tokenUsage,
+      reminder: reminder ?? this.reminder,
+      pinned: pinned,
     );
   }
 
   Map<String, Object?> toJson() => <String, Object?>{
     'id': id,
+    if (pinned) 'pinned': true,
+    if (reminder != null) 'reminder': reminder!.toJson(),
     'source': source,
     'message': message,
     'completedAt': completedAt.toUtc().toIso8601String(),

@@ -8,6 +8,7 @@ import 'package:dingdong/core/widgets/desktop_dialog.dart';
 import 'package:dingdong/core/widgets/desktop_icon_button.dart';
 import 'package:dingdong/core/widgets/desktop_input_field.dart';
 import 'package:dingdong/core/widgets/desktop_select_field.dart';
+import 'package:dingdong/core/widgets/reminder_marker.dart';
 import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
 import 'package:dingdong/features/settings/data/reminder_audio_importer.dart';
 import 'package:dingdong/features/settings/domain/app_settings.dart';
@@ -104,13 +105,18 @@ class ReminderProfilesEditor extends StatelessWidget {
                         ),
                       ),
                     ),
-                    _dot(profile.color),
+                    _profileDot(profile),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(_profileName(context, profile)),
+                          if (profile.temporary)
+                            Text(
+                              context.l10n.reminderTemporary,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
                           Text(
                             profile.description.isEmpty
                                 ? profile.id
@@ -263,7 +269,11 @@ class ReminderUsageDots extends StatelessWidget {
                   ),
                 ),
               for (int i = 0; i < shown.length; i++)
-                Positioned(left: i * step, top: 2, child: _dot(shown[i].color)),
+                Positioned(
+                  left: i * step,
+                  top: 2,
+                  child: _profileDot(shown[i]),
+                ),
             ],
           ),
         ),
@@ -272,15 +282,18 @@ class ReminderUsageDots extends StatelessWidget {
   }
 }
 
-Widget _dot(TrayNotificationColor color) => Container(
-  width: 16,
-  height: 16,
-  decoration: BoxDecoration(
-    shape: BoxShape.circle,
-    color: Color(0xff000000 | color.rgbValue),
-    border: Border.all(color: const Color(0xfffafafa), width: 1.5),
-  ),
-);
+Widget _profileDot(ReminderProfile profile) => profile.temporary
+    ? ReminderMarker(profile: profile, diameter: 16)
+    : Container(
+        width: 16,
+        height: 16,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Color(0xff000000 | profile.color.rgbValue),
+          border: Border.all(color: const Color(0xfffafafa), width: 1.5),
+        ),
+      );
+
 String _profileName(BuildContext context, ReminderProfile profile) =>
     switch (profile.id) {
       'completion' => context.l10n.agentCompletionNotifications,
@@ -391,6 +404,16 @@ class _ReminderDialogState extends State<_ReminderDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (!profile.builtIn)
+                CompactSwitchListTile(
+                  key: const Key('reminder-temporary'),
+                  title: Text(strings.reminderTemporary),
+                  subtitle: Text(strings.reminderTemporaryHelp),
+                  value: profile.temporary,
+                  onChanged: (value) => setState(
+                    () => profile = profile.copyWith(temporary: value),
+                  ),
+                ),
               if (!profile.builtIn)
                 field(
                   strings.name,
