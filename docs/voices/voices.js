@@ -59,13 +59,13 @@ function card(voice) {
     } catch(error){audioStatus.textContent=error.name==='TimeoutError'?'验证超时，请稍后重试。':error instanceof TypeError?'浏览器无法安全读取附件，可能是网络或跨域限制。未播放或下载未经验证的文件。':error.message;}
     finally {activeButtons.forEach(b=>b.disabled=false);}
   }
-  controls.append(button('▶ 试听',()=>audioAction(false)),button('↓ 下载',()=>audioAction(true)),button('订阅',()=>openSubscribe(voice),'subscribe-button'));
+  controls.append(button('▶ 试听',()=>audioAction(false)),button('↓ 下载',()=>audioAction(true)),button('使用方法',()=>openSubscribe(voice),'subscribe-button'));
   const bottom=node('div',undefined,'card-bottom');bottom.append(link(`👍 ${voice.up}`,voice.issueUrl,'vote-link'),link(`👎 ${voice.down}`,voice.issueUrl,'vote-link'),link('投稿详情 ↗',voice.issueUrl,'issue-link'));
   for(const vote of bottom.querySelectorAll('.vote-link')){vote.title='打开 GitHub Issue 点赞 / 点踩，需要 GitHub 登录';vote.setAttribute('aria-label',`${vote.textContent}；打开 GitHub Issue 添加反应，需登录`);}
   article.append(top,node('h3',voice.title.replace(/^🕵🏻‍♀️\[DOT\]\s*/,'')),node('p',voice.description,'description'),meta,node('p',`授权：${voice.license}`,'license'),controls,audio,audioStatus,bottom);return article;
 }
 async function copy(text,statusId) {try{await navigator.clipboard.writeText(text);$(statusId).textContent='已复制。';}catch{$(statusId).textContent='浏览器未允许复制，请手动选中并复制文字。';}}
-function openSubscribe(voice){$('subscribe-url').value=voice.issueUrl;$('subscribe-status').textContent='';$('subscribe-dialog').showModal();copy(voice.issueUrl,'subscribe-status');}
+function openSubscribe(voice){$('subscribe-url').value=voice.issueUrl;$('subscribe-status').textContent='';$('subscribe-dialog').showModal();}
 $('copy-subscribe').addEventListener('click',()=>copy($('subscribe-url').value,'subscribe-status'));
 $('close-dialog').addEventListener('click',()=>$('subscribe-dialog').close());
 $('copy-prompt').addEventListener('click',()=>copy($('agent-prompt').textContent,'prompt-status'));
