@@ -88,6 +88,7 @@ class _RecentAgentMoreButton extends StatelessWidget {
 class _AgentActivityCard extends StatefulWidget {
   const _AgentActivityCard({
     required this.activity,
+    required this.now,
     required this.animate,
     required this.isSubagent,
     required this.showConversationTokenUsage,
@@ -96,6 +97,7 @@ class _AgentActivityCard extends StatefulWidget {
   });
 
   final AgentActivity activity;
+  final DateTime now;
   final bool animate;
   final bool isSubagent;
   final bool showConversationTokenUsage;
@@ -153,10 +155,23 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
 
   @override
   Widget build(BuildContext context) {
+    final completedAt = widget.activity.completedAt.toLocal();
+    final time = TimeOfDay.fromDateTime(completedAt).format(context);
+    final date =
+        '${completedAt.year.toString().padLeft(4, '0')}'
+        '${completedAt.month.toString().padLeft(2, '0')}'
+        '${completedAt.day.toString().padLeft(2, '0')}';
+    final timestamp = DateUtils.isSameDay(completedAt, widget.now.toLocal())
+        ? time
+        : '$date\n$time';
     return AnimatedBuilder(
       animation: _controller,
       builder: (BuildContext context, Widget? child) {
         final double pulse = Curves.easeInOut.transform(_controller.value);
+        final reminder = widget.activity.reminder;
+        final reminderColor = reminder == null
+            ? null
+            : Color(0xff000000 | reminder.color.rgbValue);
         return Transform.scale(
           scale: 1 + pulse * 0.012,
           child: MouseRegion(
@@ -172,21 +187,26 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
                   horizontal: 11,
                   vertical: 9,
                 ),
-                decoration: BoxDecoration(
+                decoration: ShapeDecoration(
                   color: Color.lerp(
                     PopupStyle.of(context).surface,
                     PopupStyle.of(context).accentSoft,
                     pulse * 0.72,
                   ),
-                  borderRadius: BorderRadius.circular(9),
-                  border: Border.all(
-                    color: Color.lerp(
-                      PopupStyle.of(context).border,
-                      PopupStyle.of(context).accent,
-                      pulse * 0.42,
-                    )!,
+                  shape: ReminderCardBorder(
+                    temporary: reminder?.temporary ?? false,
+                    borderRadius: BorderRadius.circular(9),
+                    side: BorderSide(
+                      color:
+                          reminderColor ??
+                          Color.lerp(
+                            PopupStyle.of(context).border,
+                            PopupStyle.of(context).accent,
+                            pulse * 0.42,
+                          )!,
+                    ),
                   ),
-                  boxShadow: pulse == 0
+                  shadows: pulse == 0
                       ? const <BoxShadow>[]
                       : <BoxShadow>[
                           BoxShadow(
@@ -199,10 +219,13 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
                 ),
                 child: Row(
                   children: <Widget>[
-                    PopupSymbolIcon(
-                      'today',
-                      size: 18,
-                      color: PopupStyle.of(context).accent,
+                    Tooltip(
+                      message: reminderDescription(context, reminder),
+                      child: PopupSymbolIcon(
+                        'today',
+                        size: 18,
+                        color: reminderColor ?? PopupStyle.of(context).accent,
+                      ),
                     ),
                     const SizedBox(width: 9),
                     Expanded(
@@ -277,21 +300,15 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
                       ),
                       const SizedBox(width: 5),
                     ],
-                    ReminderMarker(
-                      key: Key('activity-reminder-${widget.activity.id}'),
-                      profile: widget.activity.reminder,
-                    ),
-                    const SizedBox(width: 6),
-                    SizedBox(
-                      width: 52,
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(minWidth: 52),
                       child: Text(
-                        TimeOfDay.fromDateTime(
-                          widget.activity.completedAt.toLocal(),
-                        ).format(context),
+                        timestamp,
                         key: Key(
                           'activity-completed-time-${widget.activity.id}',
                         ),
-                        maxLines: 1,
+                        maxLines: 2,
+                        softWrap: false,
                         textAlign: TextAlign.end,
                         overflow: TextOverflow.clip,
                         style: TextStyle(
@@ -380,6 +397,7 @@ class _MetricCard extends StatelessWidget {
         child: ExcludeSemantics(
           child: Material(
             color: PopupStyle.of(context).surface,
+            borderOnForeground: false,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
               side: BorderSide(color: PopupStyle.of(context).border),
@@ -390,6 +408,7 @@ class _MetricCard extends StatelessWidget {
               child: SizedBox(
                 height: 72,
                 child: Stack(
+                  clipBehavior: Clip.none,
                   children: <Widget>[
                     Padding(
                       padding: const EdgeInsets.symmetric(
@@ -442,7 +461,9 @@ class _MetricCard extends StatelessWidget {
                     if (badge != null)
                       Positioned(
                         key: badge!.key,
-                        top: 6,
+                        top: badge!.tone == _MetricCardBadgeTone.attention
+                            ? -6
+                            : 6,
                         right: 6,
                         child: Container(
                           padding: const EdgeInsets.symmetric(

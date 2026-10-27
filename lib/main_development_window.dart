@@ -111,6 +111,24 @@ Future<void> _runDevelopmentTestAction({
         detail: strings.devCrossDeviceTaskCompletedDetail,
       );
       return;
+    case DevelopmentTestAction.agentTemporary:
+      await _postDevelopmentDing(
+        dependencies,
+        message: 'DEV · ${strings.devTemporaryNotification}',
+        detail: strings.devTemporaryNotificationDescription,
+        notificationKind: 'attention',
+        temporaryReminder: {
+          'id': 'dev-temporary-${DateTime.now().microsecondsSinceEpoch}',
+          'name': strings.devTemporaryNotification,
+          'description': strings.devTemporaryNotificationDescription,
+          'temporary': true,
+          'kind': 'attention',
+          'color': 'green',
+          'sound': 'dingBright',
+          'toPhone': false,
+        },
+      );
+      return;
     case DevelopmentTestAction.agentBurst:
       for (var index = 1; index <= 3; index += 1) {
         await _postDevelopmentDing(
@@ -202,31 +220,39 @@ Future<void> _postDevelopmentDing(
   String source = 'DingDong DEV',
   String sound = 'default',
   String notificationKind = 'completion',
+  Map<String, Object?>? temporaryReminder,
 }) async {
   final HttpClient client = HttpClient()
     ..connectionTimeout = const Duration(seconds: 3);
-  try {
+  Future<void> post(String path, Map<String, Object?> body) async {
     final HttpClientRequest request = await client.postUrl(
-      dependencies.agentHttpServer.baseUri.resolve('/ding'),
+      dependencies.agentHttpServer.baseUri.resolve(path),
     );
     request.headers.contentType = ContentType.json;
-    request.write(
-      jsonEncode(<String, Object?>{
-        'message': message,
-        'detail': detail,
-        'source': source,
-        'sound': sound,
-        'notificationKind': notificationKind,
-        'flashCount': 4,
-      }),
-    );
+    request.write(jsonEncode(body));
     final HttpClientResponse response = await request.close();
     await response.drain<void>();
     if (response.statusCode != HttpStatus.ok) {
-      throw HttpException(
-        'DEV notification returned HTTP ${response.statusCode}.',
-      );
+      throw HttpException('DEV $path returned HTTP ${response.statusCode}.');
     }
+  }
+
+  try {
+    if (temporaryReminder != null) {
+      await post('/settings/reminders', {
+        ...temporaryReminder,
+        'action': 'upsert',
+      });
+    }
+    await post('/ding', <String, Object?>{
+      'message': message,
+      'detail': detail,
+      'source': source,
+      'sound': sound,
+      'notificationKind': notificationKind,
+      'flashCount': 4,
+      if (temporaryReminder != null) 'reminderId': temporaryReminder['id'],
+    });
     await Future<void>.delayed(const Duration(milliseconds: 120));
   } finally {
     client.close(force: true);

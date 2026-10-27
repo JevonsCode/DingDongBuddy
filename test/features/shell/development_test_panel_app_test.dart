@@ -117,6 +117,15 @@ void main() {
     expect(actions.last, DevelopmentTestAction.agentRichCompletion);
     expect(find.text('已创建：手机端长描述 Agent 提醒'), findsOneWidget);
 
+    final Finder temporaryAlert = find.byKey(
+      const Key('dev-test-panel-agent-temporary'),
+    );
+    await tester.ensureVisible(temporaryAlert);
+    await tester.tap(temporaryAlert);
+    await tester.pumpAndSettle();
+    expect(actions.last.id, 'agent-temporary');
+    expect(find.text('已创建：临时通知'), findsOneWidget);
+
     final Finder phoneText = find.byKey(const Key('dev-test-panel-phone-text'));
     await tester.ensureVisible(phoneText);
     await tester.tap(phoneText);

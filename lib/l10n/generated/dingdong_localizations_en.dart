@@ -2384,6 +2384,9 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
       'Select a configuration to inspect or edit';
 
   @override
+  String get selectLoadedItems => 'Select loaded items';
+
+  @override
   String get selectAll => 'Select all';
 
   @override
@@ -4523,6 +4526,16 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   }
 
   @override
+  String get devicePeerLanAddress => 'Other computer’s LAN IP';
+
+  @override
+  String get deviceLocalAddressLoading => 'Getting this computer’s IP…';
+
+  @override
+  String get deviceLocalAddressUnavailable =>
+      'This computer’s IP is unavailable. Refresh to retry.';
+
+  @override
   String get deviceLanAddress => 'LAN IP';
 
   @override
@@ -4607,6 +4620,24 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   String get activityNoMatches => 'No reminders match these filters';
 
   @override
+  String get devTemporaryNotification => 'Temporary notification';
+
+  @override
+  String get quickPanelAgentCount => 'Quick panel Agent count';
+
+  @override
+  String get quickPanelAgentCountDescription =>
+      'Number of recent Agent reminders shown in the quick panel. Default: 21.';
+
+  @override
+  String get devTemporaryNotificationDescription =>
+      'Create one green local reminder with a bright sound; its temporary configuration is removed after use.';
+
+  @override
+  String get devTemporaryNotificationCreated =>
+      'Created: temporary notification';
+
+  @override
   String get reminderTemporary => 'Temporary · next use only';
 
   @override
@@ -4622,7 +4653,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get lanFindByIpHelp =>
-      'If discovery finds nothing, enter the other computer’s LAN IP, then pair with its code.';
+      'If discovery finds nothing, enter the other computer’s LAN IP. No port is needed; use its pairing code for the first connection.';
 
   @override
   String get lanPortBusy =>

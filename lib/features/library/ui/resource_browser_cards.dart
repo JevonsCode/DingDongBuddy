@@ -37,6 +37,7 @@ class _ResourceCards extends StatelessWidget {
         final Resource resource = resources[index];
         return _ResourceCard(
           resource: resource,
+          showDivider: index < resources.length - 1,
           onToggleEnabled: () => unawaited(_toggleEnabled(resource)),
           onCopy: clipboardGateway == null
               ? null
@@ -89,6 +90,7 @@ class _ResourceCards extends StatelessWidget {
 class _ResourceCard extends StatelessWidget {
   const _ResourceCard({
     required this.resource,
+    required this.showDivider,
     required this.onToggleEnabled,
     required this.onCopy,
     required this.onEdit,
@@ -96,6 +98,7 @@ class _ResourceCard extends StatelessWidget {
   });
 
   final Resource resource;
+  final bool showDivider;
   final VoidCallback onToggleEnabled;
   final Future<void> Function()? onCopy;
   final Future<void> Function()? onEdit;
@@ -112,7 +115,9 @@ class _ResourceCard extends StatelessWidget {
     final PopupPalette palette = PopupStyle.of(context);
     final BoxDecoration decoration = BoxDecoration(
       color: palette.surface,
-      border: Border(bottom: BorderSide(color: palette.border)),
+      border: showDivider
+          ? Border(bottom: BorderSide(color: palette.border))
+          : null,
     );
     return Opacity(
       opacity: resource.enabled ? 1 : 0.58,

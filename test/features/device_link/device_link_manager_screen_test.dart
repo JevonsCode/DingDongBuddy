@@ -14,6 +14,38 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets(
+    'LAN address input keeps this computer IP visible and distinct from peer input',
+    (tester) async {
+      final controller = _FakeManagement(includeDevice: false)
+        ..localAddresses = [];
+      await _pumpManager(
+        tester,
+        controller: controller,
+        size: const Size(620, 700),
+        locale: const Locale('zh'),
+      );
+      await tester.tap(find.byKey(const Key('device-join-computer')));
+      await tester.pumpAndSettle();
+      final local = find.byKey(const Key('device-computer-local-addresses'));
+      final input = find.byKey(const Key('device-computer-find-address'));
+      expect(local, findsOneWidget);
+      expect(find.text('本机 IP · 暂未获取，点击刷新重试'), findsOneWidget);
+      controller.localAddresses = ['192.168.31.180', '10.0.0.20'];
+      controller.notifyListeners();
+      await tester.pumpAndSettle();
+      expect(find.text('本机 IP · 192.168.31.180 · 10.0.0.20'), findsWidgets);
+      final field = tester.widget<TextField>(input);
+      expect(field.controller!.text, isEmpty);
+      expect(field.decoration!.labelText, '另一台电脑的局域网 IP');
+      expect(
+        tester.getRect(local).bottom,
+        lessThanOrEqualTo(tester.getRect(input).top),
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   for (final route in [
     DeviceLinkActiveTransport.localNetwork,
     DeviceLinkActiveTransport.serviceRelay,
@@ -662,8 +694,9 @@ final class _FakeManagement extends ChangeNotifier
 
   String address = '192.168.31.153';
   String? editedAddress;
+  List<String> localAddresses = const ['192.168.31.180'];
   @override
-  List<String> get localComputerAddresses => const ['192.168.31.180'];
+  List<String> get localComputerAddresses => localAddresses;
   @override
   String? computerAddressOf(String deviceId) => address;
   @override

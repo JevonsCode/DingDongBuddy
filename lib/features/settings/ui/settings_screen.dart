@@ -652,6 +652,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       .viewModel
                                       .setGroupRepeatedAgentSessions,
                                 ),
+                                _SettingRow(
+                                  label: context.l10n.quickPanelAgentCount,
+                                  child: _NumberField(
+                                    key: const Key(
+                                      'settings-agent-quick-panel-count',
+                                    ),
+                                    initialValue: settings.quickPanelAgentCount,
+                                    onChanged: widget
+                                        .viewModel
+                                        .setQuickPanelAgentCount,
+                                  ),
+                                ),
+                                Text(
+                                  context.l10n.quickPanelAgentCountDescription,
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
+                                      ),
+                                ),
                                 CompactSwitchListTile(
                                   key: const Key(
                                     'settings-agent-activity-remember',

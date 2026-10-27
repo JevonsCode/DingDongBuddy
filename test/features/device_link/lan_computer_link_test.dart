@@ -59,6 +59,36 @@ void main() {
     },
   );
   test(
+    'refresh keeps local IP metadata available when discovery startup fails',
+    () async {
+      var reads = 0;
+      final link =
+          LanComputerLink.loopbackTest(
+              subnetReader: () async {
+                if (++reads == 1) {
+                  throw const SocketException(
+                    'Discovery fixture failure',
+                    osError: OSError('access denied', 13),
+                  );
+                }
+                return [LanSubnet(InternetAddress('192.168.31.180'), 24)];
+              },
+            )
+            ..identity = const LocalDeviceIdentity(
+              id: 'failed-discovery',
+              name: 'Discovery fixture',
+              platform: 'test',
+            );
+      addTearDown(link.close);
+
+      await expectLater(link.refresh(), throwsA(isA<SocketException>()));
+
+      expect(link.localAddresses, ['192.168.31.180']);
+      expect(link.error, 'access_denied');
+      expect(link.pairingCode, isNull);
+    },
+  );
+  test(
     'manual IP discovers and pairs two unpaired computers without multicast',
     () async {
       final host = _service('manual-host');

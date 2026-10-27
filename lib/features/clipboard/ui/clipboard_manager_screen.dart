@@ -17,6 +17,7 @@ import 'package:dingdong/features/clipboard/ui/clipboard_category_rules_dialog.d
 import 'package:dingdong/features/clipboard/ui/clipboard_copy_count.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_group_context_menu.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_group_dialog.dart';
+import 'package:dingdong/features/clipboard/ui/clipboard_history_pagination.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_pinned_indicator.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_timestamp_label.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
@@ -57,7 +58,14 @@ class ClipboardManagerScreen extends StatefulWidget {
 
 class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
   final Set<String> _selectedIds = <String>{};
+  final ScrollController _scrollController = ScrollController();
   bool _categoryDialogOpen = false;
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -135,7 +143,7 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
                         ),
                         const SizedBox(width: 9),
                         Text(
-                          '${records.length}',
+                          '${records.length}${widget.viewModel.hasMoreHistory ? '+' : ''}',
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
                                 color: Theme.of(
@@ -163,6 +171,8 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
                               _selectedIds.length == records.length &&
                                   records.isNotEmpty
                               ? context.l10n.clearSelection
+                              : widget.viewModel.hasMoreHistory
+                              ? context.l10n.selectLoadedItems
                               : context.l10n.selectAll,
                           compact: true,
                         ),
@@ -226,38 +236,61 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
                   onDelete: _deleteSelected,
                 ),
               Expanded(
-                child: Builder(
-                  builder: (BuildContext context) {
-                    Widget buildRow(BuildContext context, int index) {
-                      final ClipboardRecord record = records[index];
-                      return _ManagerRow(
-                        key: ValueKey<String>(
-                          'clipboard-manager-row-${record.id}',
-                        ),
-                        record: record,
-                        categoryLabel:
-                            widget.viewModel.categoryFor(record)?.name ??
-                            context.l10n.uncategorized,
-                        selected: _selectedIds.contains(record.id),
-                        showReorderHandle: canReorder,
-                        showPinnedIndicator: archiveWorkspace,
-                        reorderIndex: index,
-                        onChanged: (bool selected) => setState(() {
-                          selected
-                              ? _selectedIds.add(record.id)
-                              : _selectedIds.remove(record.id);
-                        }),
-                        onOpenDetails: () {
-                          widget.viewModel.select(record);
-                          unawaited(_showDetails(record));
-                        },
-                        onSecondaryTapUp: (TapUpDetails details) =>
-                            _showItemMenu(record, details.globalPosition),
-                      );
-                    }
+                child: ClipboardHistoryPagination(
+                  viewModel: widget.viewModel,
+                  controller: _scrollController,
+                  child: Builder(
+                    builder: (BuildContext context) {
+                      Widget buildRow(BuildContext context, int index) {
+                        final ClipboardRecord record = records[index];
+                        return _ManagerRow(
+                          key: ValueKey<String>(
+                            'clipboard-manager-row-${record.id}',
+                          ),
+                          record: record,
+                          categoryLabel:
+                              widget.viewModel.categoryFor(record)?.name ??
+                              context.l10n.uncategorized,
+                          selected: _selectedIds.contains(record.id),
+                          showReorderHandle: canReorder,
+                          showPinnedIndicator: archiveWorkspace,
+                          reorderIndex: index,
+                          onChanged: (bool selected) => setState(() {
+                            selected
+                                ? _selectedIds.add(record.id)
+                                : _selectedIds.remove(record.id);
+                          }),
+                          onOpenDetails: () {
+                            widget.viewModel.select(record);
+                            unawaited(_showDetails(record));
+                          },
+                          onSecondaryTapUp: (TapUpDetails details) =>
+                              _showItemMenu(record, details.globalPosition),
+                        );
+                      }
 
-                    if (canReorder) {
-                      return ReorderableListView.builder(
+                      if (canReorder) {
+                        return ReorderableListView.builder(
+                          scrollController: _scrollController,
+                          key: const Key('clipboard-manager-list'),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 8,
+                          ),
+                          itemExtent: 60,
+                          itemCount: records.length,
+                          buildDefaultDragHandles: false,
+                          onReorderItem: (int oldIndex, int newIndex) =>
+                              widget.viewModel.reorderVisibleRecords(
+                                oldIndex,
+                                newIndex,
+                                newIndexAlreadyAdjusted: true,
+                              ),
+                          itemBuilder: buildRow,
+                        );
+                      }
+                      return ListView.builder(
+                        controller: _scrollController,
                         key: const Key('clipboard-manager-list'),
                         padding: const EdgeInsets.symmetric(
                           horizontal: 10,
@@ -265,27 +298,10 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
                         ),
                         itemExtent: 60,
                         itemCount: records.length,
-                        buildDefaultDragHandles: false,
-                        onReorderItem: (int oldIndex, int newIndex) =>
-                            widget.viewModel.reorderVisibleRecords(
-                              oldIndex,
-                              newIndex,
-                              newIndexAlreadyAdjusted: true,
-                            ),
                         itemBuilder: buildRow,
                       );
-                    }
-                    return ListView.builder(
-                      key: const Key('clipboard-manager-list'),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 8,
-                      ),
-                      itemExtent: 60,
-                      itemCount: records.length,
-                      itemBuilder: buildRow,
-                    );
-                  },
+                    },
+                  ),
                 ),
               ),
             ],

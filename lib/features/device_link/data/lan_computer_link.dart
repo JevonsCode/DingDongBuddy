@@ -395,8 +395,21 @@ final class LanComputerLink extends ChangeNotifier {
 
   Future<void> refresh() async {
     final wasRunning = _server != null && _starting == null;
-    await start();
-    if (wasRunning) await _refreshInterfaces();
+    try {
+      await start();
+      if (wasRunning) await _refreshInterfaces();
+    } catch (failure) {
+      // Adapter metadata is useful even when the discovery socket cannot bind.
+      // Keep multicast membership separate so the next start can still join it.
+      try {
+        _subnets = await _readSubnets();
+      } on Object {
+        // Preserve the discovery failure when adapter metadata is unavailable.
+      }
+      error = lanDiscoveryFailureCode(failure);
+      if (!_closed) notifyListeners();
+      rethrow;
+    }
     _announce();
   }
 

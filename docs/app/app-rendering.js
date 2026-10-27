@@ -1,8 +1,8 @@
-import { imageMimeType } from "./app-file-actions.js?shell=55";
+import { imageMimeType } from "./app-file-actions.js?shell=56";
 import {
   agentEventNeedsAttention,
   agentNotificationTitle,
-} from "./notification-policy.js?shell=55";
+} from "./notification-policy.js?shell=56";
 import {
   computerPlatformLabel,
   formatBytes,
@@ -12,7 +12,7 @@ import {
   iconForKind,
   kindLabel,
   validDate,
-} from "./app-formatters.js?shell=55";
+} from "./app-formatters.js?shell=56";
 
 // Feed rendering and direct UI interactions. Network and persistence stay injected.
 export function createAppRenderer({

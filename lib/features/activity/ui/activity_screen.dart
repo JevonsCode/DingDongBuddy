@@ -5,6 +5,7 @@ import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/core/widgets/desktop_action_button.dart';
 import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
+import 'package:dingdong/core/widgets/reminder_card_border.dart';
 import 'package:dingdong/core/widgets/reminder_marker.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
@@ -79,6 +80,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
         return RecentAgentFeed(
           controller: widget.activityController,
           compact: true,
+          pageSize: widget.settingsViewModel.settings.quickPanelAgentCount,
           now: widget.now,
           header: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -152,7 +154,11 @@ class _ActivityScreenState extends State<ActivityScreen> {
                     count: widget.activityController.recentCount,
                     hours: widget.activityController.countWindowHours,
                   ),
-                  if (widget.activityController.activities.length > 21 &&
+                  if (widget.activityController.activities.length >
+                          widget
+                              .settingsViewModel
+                              .settings
+                              .quickPanelAgentCount &&
                       widget.resourceManagerLauncher != null) ...<Widget>[
                     const Spacer(),
                     _RecentAgentMoreButton(
@@ -206,6 +212,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
             return _AgentActivityCard(
               key: ValueKey<String>(activity.id),
               activity: activity,
+              now: (widget.now ?? DateTime.now)(),
               isSubagent: isSubagent,
               showConversationTokenUsage:
                   widget.settingsViewModel.settings.showConversationTokenUsage,

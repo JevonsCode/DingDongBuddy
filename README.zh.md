@@ -23,10 +23,14 @@ DingDong 是一个免费开源的桌面小伙伴，帮你整理内容、用好�
 只维护一份；接入的 Agent 消息统一收好，桌面提示声由你选。重要提醒和选中的
 剪贴板内容，也能送到你配对的可信手机。
 
-> **DingDong 1.10.0（构建 80）。** 新增 Windows 截图编辑与划词插件，
-> 新增一次性临时提醒、最近 Agents 分页与筛选、桌面日期日历，以及局域网 IP 查找和重连。
+**DingDong 1.10.2（构建 81）** 支持一次性临时提醒、剪贴板历史分页虚拟列表、
+精简的最近 Agents 面板、桌面日期筛选，以及局域网 IP 查找和重连。
 
 配置方式和数据边界见 [AI+ 使用说明](docs/product/ai-companion.md)，完整入口见[使用文档](docs/product/README.md)。
+
+快捷面板与资源管理中的剪贴板历史均每批加载 50 条，搜索和筛选覆盖完整历史。
+快捷面板默认显示最近 21 个 Agents，在“**设置 → 最近 Agent → 快捷面板显示条数**”
+修改。详见[剪贴板历史](docs/product/clipboard-history.md)和[提醒与最近 Agents](docs/product/reminders.md)。
 
 支持的 Agent 每次完整回复后，DingDong 还会附上一行“资源小票”：本轮生效的
 Prompt、匹配到的 Skill 和可用 MCP 一眼可见；加载过的 Skill 或调用过的 MCP 带 `*`。
@@ -102,7 +106,7 @@ AI+ 不再分析剪贴板、生成洞察或安排主动关怀；打开页面、�
 
 ## 可选的 Windows 截图与划词插件
 
-DingDong 1.10.0 在“**资源管理 → 插件**”中提供可选的 Windows 截图与划词。
+DingDong 1.10.2 在“**资源管理 → 插件**”中提供可选的 Windows 截图与划词。
 启用截图后按 **Ctrl+Alt+A** 框选，在内置编辑器标注，再复制或保存 PNG。
 划词提供复制、翻译、解释和润色，只有主动点击模型动作才发送文字，
 密码框和无法读取的选区不触发。插件详情展示来源、许可与上游版本；
@@ -249,11 +253,11 @@ Android Chrome 链路已经完成包括后台通知在内的端到端实测。iP
 [INSTALL_WITH_AGENT.md](INSTALL_WITH_AGENT.md)。它安装官方 Release，不会克隆
 或编译仓库。
 
-已发布的稳定安装包 · 1.10.0：
+已发布的稳定安装包 · 1.10.2：
 
-- [macOS · Apple 芯片 · 1.10.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.0/DingDong-1.10.0-macos-arm64.dmg)
-- [macOS · Intel · 1.10.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.0/DingDong-1.10.0-macos-x64.dmg)
-- [Windows x64 · 1.10.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.0/DingDong-1.10.0-windows-x64-Setup.exe)
+- [macOS · Apple 芯片 · 1.10.2](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.2/DingDong-1.10.2-macos-arm64.dmg)
+- [macOS · Intel · 1.10.2](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.2/DingDong-1.10.2-macos-x64.dmg)
+- [Windows x64 · 1.10.2](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.2/DingDong-1.10.2-windows-x64-Setup.exe)
 
 macOS 需要 13 或更高版本。快速粘贴需要辅助功能权限；普通剪贴板历史不需要
 “完全磁盘访问”或“屏幕录制”权限。

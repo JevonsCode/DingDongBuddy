@@ -857,7 +857,7 @@ description: Use when product decisions should follow saved preferences.
     );
     final BoxDecoration cardDecoration = card.decoration! as BoxDecoration;
     expect(cardDecoration.color, PopupStyle.light.surface);
-    expect(cardDecoration.border!.bottom.color, PopupStyle.light.border);
+    expect(cardDecoration.border, isNull);
     expect(find.text('STDIO · npx local-mcp'), findsOneWidget);
     final Finder tags = find.byKey(
       const Key('resource-card-tags-mcp-resource'),
@@ -894,10 +894,7 @@ description: Use when product decisions should follow saved preferences.
       );
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('today-enabled-enabled-mcp')), findsNothing);
-      expect(
-        find.byKey(const Key('recent-agent-source-filter')),
-        findsOneWidget,
-      );
+      expect(find.byKey(const Key('recent-agent-source-filter')), findsNothing);
       expect((await store.load()).single.enabled, true);
       controller.open(1);
       await tester.pumpAndSettle();

@@ -3111,6 +3111,8 @@
   "@selectAConfigurationToInspectOrEdit": {
     "description": "DingDong built-in interface copy."
   },
+  "selectLoadedItems": "选择已加载项",
+  "@selectLoadedItems": {"description": "Select only loaded clipboard history pages, without affecting unloaded items."},
   "selectAll": "全选",
   "@selectAll": {
     "description": "DingDong built-in interface copy."
@@ -5775,6 +5777,12 @@
       }
     }
   },
+  "devicePeerLanAddress": "另一台电脑的局域网 IP",
+  "@devicePeerLanAddress": {"description": "Computer LAN pairing: distinguish this device address from the peer input."},
+  "deviceLocalAddressLoading": "正在获取本机 IP…",
+  "@deviceLocalAddressLoading": {"description": "Computer LAN pairing: distinguish this device address from the peer input."},
+  "deviceLocalAddressUnavailable": "本机 IP · 暂未获取，点击刷新重试",
+  "@deviceLocalAddressUnavailable": {"description": "Computer LAN pairing: distinguish this device address from the peer input."},
   "deviceLanAddress": "局域网 IP",
   "@deviceLanAddress": {
     "description": "Device connection address and route controls."
@@ -5823,11 +5831,21 @@
   "activityUnpin": "取消置顶",
   "activityLoadMore": "加载更多",
   "activityNoMatches": "没有符合筛选条件的提醒",
+  "devTemporaryNotification": "临时通知",
+  "quickPanelAgentCount": "快捷面板显示条数",
+  "@quickPanelAgentCount": { "description": "Recent Agent quick panel count setting" },
+  "quickPanelAgentCountDescription": "控制快捷唤起面板中最近 Agent 的显示数量，默认 21 条。",
+  "@quickPanelAgentCountDescription": { "description": "Recent Agent quick panel count setting" },
+  "@devTemporaryNotification": { "description": "DEV test panel temporary reminder title" },
+  "devTemporaryNotificationDescription": "创建一次绿色本地提醒，播放清亮声；使用后自动移除临时配置。",
+  "@devTemporaryNotificationDescription": { "description": "Explains the one-use local DEV reminder fixture" },
+  "devTemporaryNotificationCreated": "已创建：临时通知",
+  "@devTemporaryNotificationCreated": { "description": "DEV test panel result after a temporary reminder" },
   "reminderTemporary": "临时 · 仅下一次",
   "reminderDefinitionUnavailable": "此历史记录未保存提醒定义",
   "reminderTemporaryHelp": "仅用于下一次提醒，使用后自动移除。",
   "lanFindByIp": "按 IP 查找电脑",
-  "lanFindByIpHelp": "自动发现找不到时，输入另一台电脑的局域网 IP，再使用配对码连接。",
+  "lanFindByIpHelp": "自动发现找不到时，输入另一台电脑的局域网 IP，无需填写端口；首次连接使用配对码。",
   "lanPortBusy": "局域网发现端口正被另一个叮咚实例占用，请退出重复打开的叮咚后刷新。",
   "activityBackToTop": "回到顶部",
   "@dateFilterYesterday": {

@@ -229,7 +229,7 @@ test("pairing never promises or displays unsent host history", () => {
 test("PWA settings can check and apply an update without replacing pairings", () => {
   assert.match(pageSource, /id="pwa-update-button"[\s\S]*检查更新/);
   assert.match(pageSource, /id="pwa-update-status"[\s\S]*aria-live="polite"/);
-  assert.match(appSource, /const currentPwaVersion = "1.10.0"/);
+  assert.match(appSource, /const currentPwaVersion = "1.10.2"/);
   // The running shell version comes from the module URL instead of a second,
   // hand-maintained constant that can drift from version.json.
   assert.match(
@@ -245,7 +245,7 @@ test("PWA settings can check and apply an update without replacing pairings", ()
   assert.match(appSource, /await persistPairingsForWorker\(\)/);
   assert.match(appSource, /location\.reload\(\)/);
   assert.match(serviceWorkerSource, /version\.json/);
-  assert.equal(pwaVersion.version, "1.10.0");
+  assert.equal(pwaVersion.version, "1.10.2");
 });
 
 test("every PWA shell reference and precache entry matches version.json", () => {

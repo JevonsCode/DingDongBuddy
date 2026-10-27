@@ -89,6 +89,7 @@ final class AppSettings {
     this.showConversationTokenUsage = true,
     this.agentActivityMaxItems = 500,
     this.agentActivityCountHours = 24,
+    this.quickPanelAgentCount = 21,
     this.conversationFooterSymbols = ConversationFooterSymbols.defaultValue,
     this.selectedSound = 'default',
     this.customSoundPath,
@@ -125,6 +126,7 @@ final class AppSettings {
   final bool showConversationTokenUsage;
   final int agentActivityMaxItems;
   final int agentActivityCountHours;
+  final int quickPanelAgentCount;
   final ConversationFooterSymbols conversationFooterSymbols;
   final String selectedSound;
   final String? customSoundPath;
@@ -286,6 +288,7 @@ final class AppSettings {
       showConversationTokenUsage: showConversationTokenUsage,
       agentActivityMaxItems: agentActivityMaxItems.clamp(1, 5000),
       agentActivityCountHours: agentActivityCountHours.clamp(1, 24 * 365),
+      quickPanelAgentCount: quickPanelAgentCount.clamp(1, 500),
       conversationFooterSymbols: conversationFooterSymbols.sanitized(),
       selectedSound: notificationSoundValues.contains(selectedSound)
           ? selectedSound
@@ -326,6 +329,7 @@ final class AppSettings {
     bool? showConversationTokenUsage,
     int? agentActivityMaxItems,
     int? agentActivityCountHours,
+    int? quickPanelAgentCount,
     ConversationFooterSymbols? conversationFooterSymbols,
     String? selectedSound,
     Object? customSoundPath = _notSet,
@@ -371,6 +375,7 @@ final class AppSettings {
           agentActivityMaxItems ?? this.agentActivityMaxItems,
       agentActivityCountHours:
           agentActivityCountHours ?? this.agentActivityCountHours,
+      quickPanelAgentCount: quickPanelAgentCount ?? this.quickPanelAgentCount,
       conversationFooterSymbols:
           conversationFooterSymbols ?? this.conversationFooterSymbols,
       selectedSound: selectedSound ?? this.selectedSound,

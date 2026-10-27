@@ -24,9 +24,72 @@ import 'package:dingdong/features/shell/ui/shell_controller.dart';
 import 'package:dingdong/platform/native_agent_conversation_launcher.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('quick Agent timestamps include YYYYMMDD outside today', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 760);
+    tester.platformDispatcher.textScaleFactorTestValue = 1.4;
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    var id = 0;
+    final now = DateTime(2026, 10, 27, 12);
+    final controller = ActivityController(idGenerator: () => 'date-${id++}');
+    controller.record(
+      source: 'DEV',
+      message: 'Yesterday',
+      completedAt: DateTime(2026, 10, 26, 11, 29),
+    );
+    controller.record(
+      source: 'DEV',
+      message: 'Today',
+      completedAt: DateTime(2026, 10, 27, 11, 29),
+    );
+    await tester.pumpWidget(
+      DingDongApp(
+        activityController: controller,
+        now: () => now,
+        settingsRepository: SettingsRepository(
+          MemoryPreferencesBackend({'dingdong.language': 'zh'}),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final yesterday = tester.widget<Text>(
+      find.byKey(const Key('activity-completed-time-date-0')),
+    );
+    final today = tester.widget<Text>(
+      find.byKey(const Key('activity-completed-time-date-1')),
+    );
+    expect(yesterday.data, startsWith('20261026\n'));
+    expect(yesterday.data!.split('\n').last, today.data);
+    expect(today.data, isNot(contains('\n')));
+    expect(today.data, endsWith('11:29'));
+    for (final id in ['date-0', 'date-1']) {
+      final finder = find.byKey(Key('activity-completed-time-$id'));
+      final paragraph = tester.renderObject<RenderParagraph>(finder);
+      expect(
+        paragraph.size.width,
+        greaterThanOrEqualTo(paragraph.getMaxIntrinsicWidth(double.infinity)),
+      );
+      final trailing = find.byKey(
+        Key('activity-open-conversation-placeholder-$id'),
+      );
+      expect(
+        tester.getRect(finder).right,
+        lessThanOrEqualTo(tester.getRect(trailing).left),
+      );
+    }
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    controller.dispose();
+  });
+
   testWidgets('DingDong exposes its desktop context menu controller', (
     WidgetTester tester,
   ) async {
@@ -460,11 +523,11 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 200));
 
-    BoxDecoration cardDecoration() {
+    ShapeDecoration cardDecoration() {
       final Container card = tester.widget<Container>(
         find.byKey(const Key('activity-activity-0')),
       );
-      return card.decoration! as BoxDecoration;
+      return card.decoration! as ShapeDecoration;
     }
 
     expect(cardDecoration().color, PopupStyle.surface);
@@ -478,7 +541,10 @@ void main() {
     final Container laterCard = tester.widget<Container>(
       find.byKey(const Key('activity-activity-1')),
     );
-    expect((laterCard.decoration! as BoxDecoration).color, PopupStyle.surface);
+    expect(
+      (laterCard.decoration! as ShapeDecoration).color,
+      PopupStyle.surface,
+    );
 
     await tester.pump(const Duration(milliseconds: 50));
     await tester.pumpWidget(const SizedBox.shrink());
@@ -795,7 +861,7 @@ void main() {
     WidgetTester tester,
   ) async {
     tester.view.devicePixelRatio = 1;
-    tester.view.physicalSize = const Size(390, 1400);
+    tester.view.physicalSize = const Size(390, 760);
     addTearDown(tester.view.resetDevicePixelRatio);
     addTearDown(tester.view.resetPhysicalSize);
     int nextId = 0;

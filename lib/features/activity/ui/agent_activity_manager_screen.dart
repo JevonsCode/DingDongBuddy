@@ -154,6 +154,10 @@ class _ActivityHistoryRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
     final DateTime localTime = activity.completedAt.toLocal();
+    final reminder = activity.reminder;
+    final reminderColor = reminder == null
+        ? colors.primary
+        : Color(0xff000000 | reminder.color.rgbValue);
     final String date = MaterialLocalizations.of(
       context,
     ).formatShortDate(localTime);
@@ -177,18 +181,21 @@ class _ActivityHistoryRow extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Container(
-                width: 30,
-                height: 30,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: colors.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(7),
-                ),
-                child: Icon(
-                  Icons.smart_toy_outlined,
-                  size: 16,
-                  color: colors.primary,
+              Tooltip(
+                message: reminderDescription(context, reminder),
+                child: Container(
+                  width: 30,
+                  height: 30,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: reminderColor.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(7),
+                  ),
+                  child: Icon(
+                    Icons.smart_toy_outlined,
+                    size: 16,
+                    color: reminderColor,
+                  ),
                 ),
               ),
               const SizedBox(width: 11),
@@ -204,7 +211,12 @@ class _ActivityHistoryRow extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(fontWeight: FontWeight.w600),
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: reminder == null
+                                      ? null
+                                      : reminderColor,
+                                ),
                           ),
                         ),
                         if (activity.repeatCount > 1) ...<Widget>[
@@ -237,11 +249,6 @@ class _ActivityHistoryRow extends StatelessWidget {
                           const SizedBox(width: 6),
                         ] else
                           const SizedBox(width: 12),
-                        ReminderMarker(
-                          key: Key('manager-reminder-${activity.id}'),
-                          profile: activity.reminder,
-                        ),
-                        const SizedBox(width: 8),
                         SizedBox(
                           width: 150,
                           child: Text(

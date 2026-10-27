@@ -24,11 +24,20 @@ maintain Prompts, Skills, and MCP connections in one place; and review events
 from connected Agents with the notification sound you choose. Selected content
 and important reminders can also reach a trusted phone through the mobile PWA.
 
+**DingDong 1.10.2 (build 81)** adds one-use reminders, paginated virtual clipboard
+history, a simpler recent Agents panel, desktop date filters and LAN IP discovery.
+
 > **AI+** selects Prompts, Skills and MCP resources for an Agent’s current task.
 > Configure a model once; resource selection runs only when an Agent requests it.
 > Internal model Token usage is tracked separately.
 
 See the [AI+ setup and privacy boundaries](docs/product/ai-companion.md) or browse the [user guides](docs/product/README.md).
+
+Clipboard history loads 50 records at a time in both the quick panel and resource
+manager. Search and filters cover the complete saved history. The quick panel
+shows 21 recent Agents by default; change this under **Settings → Recent Agents →
+Quick panel Agent count**. See [clipboard history](docs/product/clipboard-history.md)
+and [reminders and recent Agents](docs/product/reminders.md).
 
 At the end of a supported Agent's final reply, DingDong can add a compact
 resource receipt: active Prompts, matching Skills, and available MCP connections
@@ -113,7 +122,7 @@ exact data boundaries.
 
 ## Optional Windows screenshot and selection plugins
 
-The DingDong 1.10.0 adds optional Windows plugins under **Resource Manager → Plugins**.
+The DingDong 1.10.2 adds optional Windows plugins under **Resource Manager → Plugins**.
 Capture with **Ctrl+Alt+A**, annotate in the embedded editor, then copy or save a
 PNG. Text selection offers Copy, Translate, Explain and Polish; text is sent to
 the configured model only after an explicit model action. Protected fields and
@@ -297,11 +306,11 @@ The executable, version-independent procedure lives in
 [INSTALL_WITH_AGENT.md](INSTALL_WITH_AGENT.md). It installs an official release;
 it does not clone or build the repository.
 
-Published stable downloads · 1.10.0:
+Published stable downloads · 1.10.2:
 
-- [macOS · Apple silicon · 1.10.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.0/DingDong-1.10.0-macos-arm64.dmg)
-- [macOS · Intel · 1.10.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.0/DingDong-1.10.0-macos-x64.dmg)
-- [Windows x64 · 1.10.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.0/DingDong-1.10.0-windows-x64-Setup.exe)
+- [macOS · Apple silicon · 1.10.2](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.2/DingDong-1.10.2-macos-arm64.dmg)
+- [macOS · Intel · 1.10.2](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.2/DingDong-1.10.2-macos-x64.dmg)
+- [Windows x64 · 1.10.2](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.2/DingDong-1.10.2-windows-x64-Setup.exe)
 
 macOS requires version 13 or newer. Quick Paste needs Accessibility permission;
 ordinary clipboard history does not require Full Disk Access or Screen Recording.

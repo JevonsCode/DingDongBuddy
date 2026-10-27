@@ -11,6 +11,7 @@ enum DevelopmentTestAction {
   trayClearColors('tray-clear-colors'),
   agentCompletion('agent-completion'),
   agentAttention('agent-attention'),
+  agentTemporary('agent-temporary'),
   agentRichCompletion('agent-rich-completion'),
   agentBurst('agent-burst'),
   phoneClipboardText('phone-clipboard-text'),

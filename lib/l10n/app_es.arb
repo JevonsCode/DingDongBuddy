@@ -3111,6 +3111,8 @@
   "@selectAConfigurationToInspectOrEdit": {
     "description": "DingDong built-in interface copy."
   },
+  "selectLoadedItems": "Seleccionar elementos cargados",
+  "@selectLoadedItems": {"description": "Select only loaded clipboard history pages, without affecting unloaded items."},
   "selectAll": "Seleccionar todo",
   "@selectAll": {
     "description": "DingDong built-in interface copy."
@@ -5775,6 +5777,12 @@
       }
     }
   },
+  "devicePeerLanAddress": "IP local del otro equipo",
+  "@devicePeerLanAddress": {"description": "Computer LAN pairing: distinguish this device address from the peer input."},
+  "deviceLocalAddressLoading": "Obteniendo la IP de este equipo…",
+  "@deviceLocalAddressLoading": {"description": "Computer LAN pairing: distinguish this device address from the peer input."},
+  "deviceLocalAddressUnavailable": "IP de este equipo no disponible. Actualiza para reintentar.",
+  "@deviceLocalAddressUnavailable": {"description": "Computer LAN pairing: distinguish this device address from the peer input."},
   "deviceLanAddress": "IP de red local",
   "@deviceLanAddress": {
     "description": "Device connection address and route controls."
@@ -5823,11 +5831,21 @@
   "activityUnpin": "Desfijar",
   "activityLoadMore": "Cargar más",
   "activityNoMatches": "Ningún recordatorio coincide con estos filtros",
+  "devTemporaryNotification": "Notificación temporal",
+  "quickPanelAgentCount": "Agents en el panel rápido",
+  "@quickPanelAgentCount": { "description": "Recent Agent quick panel count setting" },
+  "quickPanelAgentCountDescription": "Número de avisos recientes de Agents mostrados en el panel rápido. Predeterminado: 21.",
+  "@quickPanelAgentCountDescription": { "description": "Recent Agent quick panel count setting" },
+  "@devTemporaryNotification": { "description": "DEV test panel temporary reminder title" },
+  "devTemporaryNotificationDescription": "Crea un aviso local verde con un sonido brillante; su configuración temporal se elimina después de usarlo.",
+  "@devTemporaryNotificationDescription": { "description": "Explains the one-use local DEV reminder fixture" },
+  "devTemporaryNotificationCreated": "Creada: notificación temporal",
+  "@devTemporaryNotificationCreated": { "description": "DEV test panel result after a temporary reminder" },
   "reminderTemporary": "Temporal · solo el próximo uso",
   "reminderDefinitionUnavailable": "Este registro antiguo no tiene una definición guardada",
   "reminderTemporaryHelp": "Se usa para el próximo recordatorio y se elimina automáticamente.",
   "lanFindByIp": "Buscar equipo por IP",
-  "lanFindByIpHelp": "Si no aparece el equipo, introduce su IP local y enlázalo con su código.",
+  "lanFindByIpHelp": "Si no aparece el otro equipo, introduce su IP local. No hace falta el puerto; usa su código para la primera conexión.",
   "lanPortBusy": "Otra instancia de DingDong usa el puerto de descubrimiento local. Cierra las instancias duplicadas y actualiza.",
   "activityBackToTop": "Volver arriba",
   "@dateFilterYesterday": {

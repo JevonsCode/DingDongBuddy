@@ -3111,6 +3111,8 @@
   "@selectAConfigurationToInspectOrEdit": {
     "description": "DingDong built-in interface copy."
   },
+  "selectLoadedItems": "Select loaded items",
+  "@selectLoadedItems": {"description": "Select only loaded clipboard history pages, without affecting unloaded items."},
   "selectAll": "Select all",
   "@selectAll": {
     "description": "DingDong built-in interface copy."
@@ -5776,6 +5778,12 @@
       }
     }
   },
+  "devicePeerLanAddress": "Other computer’s LAN IP",
+  "@devicePeerLanAddress": {"description": "Computer LAN pairing: distinguish this device address from the peer input."},
+  "deviceLocalAddressLoading": "Getting this computer’s IP…",
+  "@deviceLocalAddressLoading": {"description": "Computer LAN pairing: distinguish this device address from the peer input."},
+  "deviceLocalAddressUnavailable": "This computer’s IP is unavailable. Refresh to retry.",
+  "@deviceLocalAddressUnavailable": {"description": "Computer LAN pairing: distinguish this device address from the peer input."},
   "deviceLanAddress": "LAN IP",
   "@deviceLanAddress": {
     "description": "Device connection address and route controls."
@@ -5824,6 +5832,16 @@
   "activityUnpin": "Unpin",
   "activityLoadMore": "Load more",
   "activityNoMatches": "No reminders match these filters",
+  "devTemporaryNotification": "Temporary notification",
+  "quickPanelAgentCount": "Quick panel Agent count",
+  "@quickPanelAgentCount": { "description": "Recent Agent quick panel count setting" },
+  "quickPanelAgentCountDescription": "Number of recent Agent reminders shown in the quick panel. Default: 21.",
+  "@quickPanelAgentCountDescription": { "description": "Recent Agent quick panel count setting" },
+  "@devTemporaryNotification": { "description": "DEV test panel temporary reminder title" },
+  "devTemporaryNotificationDescription": "Create one green local reminder with a bright sound; its temporary configuration is removed after use.",
+  "@devTemporaryNotificationDescription": { "description": "Explains the one-use local DEV reminder fixture" },
+  "devTemporaryNotificationCreated": "Created: temporary notification",
+  "@devTemporaryNotificationCreated": { "description": "DEV test panel result after a temporary reminder" },
   "reminderTemporary": "Temporary · next use only",
   "reminderDefinitionUnavailable": "This older record has no saved reminder definition",
   "reminderTemporaryHelp": "Used for the next reminder, then removed automatically.",
@@ -5897,7 +5915,7 @@
     "description": "Desktop history filters and reminder definitions."
   },
   "lanFindByIp": "Find computer by IP",
-  "lanFindByIpHelp": "If discovery finds nothing, enter the other computer’s LAN IP, then pair with its code.",
+  "lanFindByIpHelp": "If discovery finds nothing, enter the other computer’s LAN IP. No port is needed; use its pairing code for the first connection.",
   "lanPortBusy": "Another DingDong instance is using the LAN discovery port. Quit duplicate instances, then refresh.",
   "@lanFindByIp": {
     "description": "Manual LAN discovery and actionable connection errors."

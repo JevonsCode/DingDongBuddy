@@ -352,6 +352,16 @@ class _DevelopmentTestPanelState extends State<_DevelopmentTestPanel> {
                   ),
                 ),
                 _TestCard(
+                  title: context.l10n.devTemporaryNotification,
+                  description: context.l10n.devTemporaryNotificationDescription,
+                  buttonLabel: context.l10n.notify,
+                  buttonKey: const Key('dev-test-panel-agent-temporary'),
+                  icon: Icons.timer_outlined,
+                  running:
+                      _runningAction == DevelopmentTestAction.agentTemporary,
+                  onPressed: _callbackFor(DevelopmentTestAction.agentTemporary),
+                ),
+                _TestCard(
                   title: context.l10n.threeAlertBurst,
                   description: context
                       .l10n
@@ -681,6 +691,8 @@ String _successLabel(BuildContext context, DevelopmentTestAction action) {
     DevelopmentTestAction.agentCompletion =>
       context.l10n.createdBasicAgentCompletion,
     DevelopmentTestAction.agentAttention => context.l10n.devAttentionCreated,
+    DevelopmentTestAction.agentTemporary =>
+      context.l10n.devTemporaryNotificationCreated,
     DevelopmentTestAction.agentRichCompletion =>
       context.l10n.createdRichMobileAgentDetail,
     DevelopmentTestAction.agentBurst =>

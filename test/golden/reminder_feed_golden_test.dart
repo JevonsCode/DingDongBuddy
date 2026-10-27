@@ -49,7 +49,7 @@ void main() {
         .load();
   });
   for (final dark in [false, true]) {
-    testWidgets('reminder dots and desktop feed ${dark ? 'dark' : 'light'}', (
+    testWidgets('reminder borders and desktop feed ${dark ? 'dark' : 'light'}', (
       tester,
     ) async {
       // Synthetic fixtures for visual review; these are not user notifications.

@@ -2418,6 +2418,9 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
       'Seleccione una configuración para inspeccionar o editar';
 
   @override
+  String get selectLoadedItems => 'Seleccionar elementos cargados';
+
+  @override
   String get selectAll => 'Seleccionar todo';
 
   @override
@@ -4574,6 +4577,16 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   }
 
   @override
+  String get devicePeerLanAddress => 'IP local del otro equipo';
+
+  @override
+  String get deviceLocalAddressLoading => 'Obteniendo la IP de este equipo…';
+
+  @override
+  String get deviceLocalAddressUnavailable =>
+      'IP de este equipo no disponible. Actualiza para reintentar.';
+
+  @override
   String get deviceLanAddress => 'IP de red local';
 
   @override
@@ -4660,6 +4673,23 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
       'Ningún recordatorio coincide con estos filtros';
 
   @override
+  String get devTemporaryNotification => 'Notificación temporal';
+
+  @override
+  String get quickPanelAgentCount => 'Agents en el panel rápido';
+
+  @override
+  String get quickPanelAgentCountDescription =>
+      'Número de avisos recientes de Agents mostrados en el panel rápido. Predeterminado: 21.';
+
+  @override
+  String get devTemporaryNotificationDescription =>
+      'Crea un aviso local verde con un sonido brillante; su configuración temporal se elimina después de usarlo.';
+
+  @override
+  String get devTemporaryNotificationCreated => 'Creada: notificación temporal';
+
+  @override
   String get reminderTemporary => 'Temporal · solo el próximo uso';
 
   @override
@@ -4675,7 +4705,7 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get lanFindByIpHelp =>
-      'Si no aparece el equipo, introduce su IP local y enlázalo con su código.';
+      'Si no aparece el otro equipo, introduce su IP local. No hace falta el puerto; usa su código para la primera conexión.';
 
   @override
   String get lanPortBusy =>

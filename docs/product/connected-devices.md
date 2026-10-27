@@ -11,8 +11,13 @@ devices only. Disconnect, reconnect or delete each pairing independently.
   it without replacing existing pairings. On the phone, use the online status
   beside the header to switch the active computer. Its clipboard, files,
   reminders and drafts stay separate from the other computers.
-- **Computer:** paste the other computer's pairing link into **Connect another
-  computer**. Computer-to-computer notifications and automatic clipboard sync
+- **Computer:** open **Connect another computer** on both computers. Generate a
+  pairing code on one, select it on the other and enter its six-digit code.
+  If automatic discovery finds nothing, enter the other computer's LAN IPv4.
+  **This computer's IP** is shown above that field so it can be entered at the
+  other end. Enter the IP without a port; the discovery service exchanges the
+  connection port automatically. The local Agent API ports may differ.
+  Computer-to-computer notifications and automatic clipboard sync
   start off. Enable automatic sync separately for a trusted computer if wanted.
 - **Send one item:** choose **Send to Device** on a desktop clipboard item.
   On a phone, enter or paste text or select a file and tap **Send**. The PWA does
@@ -56,7 +61,10 @@ is connected.
 ## 中文操作速查
 
 从顶部或托盘打开“连接设备”。“在线设备”表示当前已连接，“连接历史”表示保留的
-配对；历史里有设备不代表它在线。手机扫码，电脑粘贴对方配对链接；自动同步按设备
+配对；历史里有设备不代表它在线。手机扫码；两台电脑都打开“连接另一台电脑”，
+一端生成配对码，另一端选择它并输入六位码。找不到时输入对方局域网 IP；输入框
+上方显示自己的 IP，方便在另一端填写。无需填写端口，两端 Agent API 端口可以不同。
+自动同步按设备
 单独开启。手机只会在你输入或选文件并点击发送后分享内容，不监听系统剪贴板。
 
 点击顶部“传输历史”查看最近 100 条已结束文件记录。记录保存在本机，重启后仍在，

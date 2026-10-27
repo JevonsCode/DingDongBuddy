@@ -187,15 +187,18 @@ class _LanComputerPairingDialogState extends State<LanComputerPairingDialog> {
                         }),
                 ),
               const SizedBox(height: 12),
-              if (widget.controller.localComputerAddresses.isNotEmpty) ...[
-                SelectableText(
-                  l.deviceLocalAddresses(
-                    widget.controller.localComputerAddresses.join(' · '),
-                  ),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                const SizedBox(height: 12),
-              ],
+              SelectableText(
+                widget.controller.localComputerAddresses.isNotEmpty
+                    ? l.deviceLocalAddresses(
+                        widget.controller.localComputerAddresses.join(' · '),
+                      )
+                    : _busy
+                    ? l.deviceLocalAddressLoading
+                    : l.deviceLocalAddressUnavailable,
+                key: const Key('device-computer-local-addresses'),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 12),
               DesktopTextField(
                 key: const Key('device-computer-find-address'),
                 controller: _address,
@@ -204,7 +207,7 @@ class _LanComputerPairingDialogState extends State<LanComputerPairingDialog> {
                 enableSuggestions: false,
                 textInputAction: TextInputAction.search,
                 decoration: InputDecoration(
-                  labelText: l.deviceLanAddress,
+                  labelText: l.devicePeerLanAddress,
                   helperText: l.lanFindByIpHelp,
                   helperMaxLines: 2,
                   errorText: _addressError,
@@ -256,26 +259,23 @@ class _LanComputerPairingDialogState extends State<LanComputerPairingDialog> {
                 l.computerSyncDefaultsNote,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
-              const SizedBox(height: 16),
-              Wrap(
-                alignment: WrapAlignment.end,
-                spacing: 8,
-                children: [
-                  DesktopActionButton(
-                    label: l.cancel,
-                    onPressed: _busy ? null : () => Navigator.pop(context),
-                  ),
-                  DesktopActionButton(
-                    key: const Key('device-computer-pairing-submit'),
-                    label: _busy ? l.lanWorking : l.connectComputer,
-                    icon: Icons.link_rounded,
-                    tone: DesktopActionTone.primary,
-                    onPressed: _busy ? null : () => unawaited(_join()),
-                  ),
-                ],
-              ),
             ],
           ),
+        ),
+        footer: DesktopDialogFooter(
+          actions: [
+            DesktopActionButton(
+              label: l.cancel,
+              onPressed: _busy ? null : () => Navigator.pop(context),
+            ),
+            DesktopActionButton(
+              key: const Key('device-computer-pairing-submit'),
+              label: _busy ? l.lanWorking : l.connectComputer,
+              icon: Icons.link_rounded,
+              tone: DesktopActionTone.primary,
+              onPressed: _busy ? null : () => unawaited(_join()),
+            ),
+          ],
         ),
       );
     },

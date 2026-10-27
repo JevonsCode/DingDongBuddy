@@ -30,6 +30,34 @@ void testWidgetsOnPlatform(
 }
 
 void main() {
+  testWidgets('quick panel count is configured in recent Agent settings', (
+    WidgetTester tester,
+  ) async {
+    final backend = MemoryPreferencesBackend();
+    final model = SettingsViewModel(SettingsRepository(backend));
+    addTearDown(model.dispose);
+    await model.load();
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: DingDongLocalizations.localizationsDelegates,
+        supportedLocales: DingDongLocalizations.supportedLocales,
+        home: SettingsScreen(viewModel: model),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('快捷面板显示条数'), findsOneWidget);
+    final input = find.descendant(
+      of: find.byKey(const Key('settings-agent-quick-panel-count')),
+      matching: find.byType(TextField),
+    );
+    await tester.ensureVisible(input);
+    await tester.enterText(input, '35');
+    await tester.pumpAndSettle();
+    expect(backend.values['dingdong.agentActivity.quickPanelCount'], 35);
+    expect((await SettingsRepository(backend).load()).quickPanelAgentCount, 35);
+  });
+
   testWidgets('version destination scrolls directly to release settings', (
     WidgetTester tester,
   ) async {

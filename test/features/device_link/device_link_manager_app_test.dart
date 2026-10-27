@@ -69,6 +69,46 @@ void main() {
     },
   );
 
+  test(
+    'child window reloads local IP and discovery error after a failed refresh',
+    () async {
+      const channels = MethodChannel('mixin.one/desktop_multi_window/channels');
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      messenger.setMockMethodCallHandler(channels, (call) async {
+        final method = (call.arguments as Map)['method'];
+        if (method == 'device_link_lan_refresh') {
+          throw PlatformException(code: 'discovery_failed');
+        }
+        if (method == deviceLinkManagerSnapshotMethod) {
+          return {
+            'localDevice': {
+              'id': 'fixture-local',
+              'name': 'Fixture host',
+              'platform': 'macos',
+            },
+            'localComputerAddresses': ['192.168.31.180'],
+            'computerDiscoveryError': 'address_in_use',
+          };
+        }
+        return null;
+      });
+      addTearDown(() => messenger.setMockMethodCallHandler(channels, null));
+      final controller = RemoteDeviceLinkManagement(
+        parentController: WindowController.fromWindowId('fixture-main'),
+      );
+      addTearDown(controller.dispose);
+
+      await expectLater(
+        controller.refreshComputers(),
+        throwsA(isA<WindowChannelException>()),
+      );
+
+      expect(controller.localComputerAddresses, ['192.168.31.180']);
+      expect(controller.computerDiscoveryError, 'address_in_use');
+    },
+  );
+
   testWidgets('Windows connection manager close hides without exiting', (
     WidgetTester tester,
   ) async {

@@ -4,13 +4,11 @@ import 'package:dingdong/core/models/date_filter_range.dart';
 import 'package:dingdong/core/widgets/desktop_action_button.dart';
 import 'package:dingdong/core/widgets/desktop_date_range_picker.dart';
 import 'package:dingdong/core/widgets/desktop_icon_button.dart';
-import 'package:dingdong/core/widgets/desktop_input_field.dart';
 import 'package:dingdong/core/widgets/desktop_multi_select_field.dart';
 import 'package:dingdong/core/widgets/desktop_select_field.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 /// Shared virtual viewport. Only requested pages are retained by the view;
 /// slivers construct rows on demand, including when the page size exceeds 21.
@@ -21,6 +19,7 @@ class RecentAgentFeed extends StatefulWidget {
     this.header,
     this.empty,
     this.compact = false,
+    this.pageSize = 21,
     this.now,
     super.key,
   });
@@ -28,6 +27,7 @@ class RecentAgentFeed extends StatefulWidget {
   final Widget Function(BuildContext, AgentActivity) rowBuilder;
   final Widget? header, empty;
   final bool compact;
+  final int pageSize;
   final DateTime Function()? now;
   @override
   State<RecentAgentFeed> createState() => _RecentAgentFeedState();
@@ -35,8 +35,6 @@ class RecentAgentFeed extends StatefulWidget {
 
 class _RecentAgentFeedState extends State<RecentAgentFeed> {
   final _scroll = ScrollController();
-  final _sizeFocus = FocusNode();
-  late final TextEditingController _size;
   List<AgentActivity> _items = const [];
   int _total = 0, _generation = 0;
   bool _loading = false;
@@ -47,10 +45,6 @@ class _RecentAgentFeedState extends State<RecentAgentFeed> {
   @override
   void initState() {
     super.initState();
-    _size = TextEditingController(text: '${widget.controller.recentPageSize}');
-    _sizeFocus.addListener(() {
-      if (!_sizeFocus.hasFocus) _saveSize(_size.text);
-    });
     widget.controller.addListener(_changed);
     _scroll.addListener(_onScroll);
     unawaited(_load(reset: true));
@@ -62,6 +56,9 @@ class _RecentAgentFeedState extends State<RecentAgentFeed> {
     if (oldWidget.controller != widget.controller) {
       oldWidget.controller.removeListener(_changed);
       widget.controller.addListener(_changed);
+    }
+    if (oldWidget.controller != widget.controller ||
+        oldWidget.pageSize != widget.pageSize) {
       _changed();
     }
   }
@@ -69,14 +66,11 @@ class _RecentAgentFeedState extends State<RecentAgentFeed> {
   @override
   void dispose() {
     widget.controller.removeListener(_changed);
-    _sizeFocus.dispose();
     _scroll.dispose();
-    _size.dispose();
     super.dispose();
   }
 
   void _changed() {
-    _size.text = '${widget.controller.recentPageSize}';
     unawaited(_load(reset: true));
   }
 
@@ -94,6 +88,7 @@ class _RecentAgentFeedState extends State<RecentAgentFeed> {
     // Keep the last page on screen until its replacement arrives.
     final page = await widget.controller.queryPage(
       offset: offset,
+      limit: widget.pageSize,
       sources: _sources,
       range: _preset == DateFilterPreset.custom
           ? _custom
@@ -113,14 +108,6 @@ class _RecentAgentFeedState extends State<RecentAgentFeed> {
     unawaited(_load(reset: true));
   }
 
-  void _saveSize(String value) {
-    final size = int.tryParse(value);
-    if (size != null && size >= 1 && size <= 500) {
-      widget.controller.setRecentPageSize(size);
-    }
-    _size.text = '${widget.controller.recentPageSize}';
-  }
-
   @override
   Widget build(BuildContext context) {
     final padding = widget.compact ? 16.0 : 24.0;
@@ -137,65 +124,49 @@ class _RecentAgentFeedState extends State<RecentAgentFeed> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     if (widget.header != null) widget.header!,
-                    const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        SizedBox(
-                          width: widget.compact ? 104 : 170,
-                          child: DesktopMultiSelectField<String>(
-                            key: const Key('recent-agent-source-filter'),
-                            label: context.l10n.activitySourceFilter,
-                            items: [
-                              for (final source in widget.controller.sources)
-                                DesktopSelectItem(value: source, label: source),
-                            ],
-                            selected: _sources,
-                            onChanged: (value) =>
-                                _filter(() => _sources = value),
-                          ),
-                        ),
-                        SizedBox(
-                          width: widget.compact ? 149 : 220,
-                          child: DesktopDateFilter(
-                            key: const Key('recent-agent-date-filter'),
-                            allowAll: true,
-                            value: _preset,
-                            customRange: _custom,
-                            now: widget.now,
-                            onChanged: (preset, range) => _filter(() {
-                              _preset = preset;
-                              _custom = range;
-                            }),
-                          ),
-                        ),
-                        SizedBox(
-                          width: widget.compact ? 84 : 102,
-                          height: 38,
-                          child: DesktopTextField(
-                            key: const Key('recent-agent-page-size'),
-                            controller: _size,
-                            focusNode: _sizeFocus,
-                            keyboardType: TextInputType.number,
-                            textInputAction: TextInputAction.done,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                              LengthLimitingTextInputFormatter(3),
-                            ],
-                            decoration: InputDecoration(
-                              labelText: context.l10n.activityPageSize,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 9,
-                                vertical: 8,
-                              ),
+                    if (!widget.compact) ...[
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 170,
+                            height: 38,
+                            child: DesktopMultiSelectField<String>(
+                              key: const Key('recent-agent-source-filter'),
+                              label: context.l10n.activitySourceFilter,
+                              items: [
+                                for (final source in widget.controller.sources)
+                                  DesktopSelectItem(
+                                    value: source,
+                                    label: source,
+                                  ),
+                              ],
+                              selected: _sources,
+                              onChanged: (value) =>
+                                  _filter(() => _sources = value),
                             ),
-                            onSubmitted: _saveSize,
                           ),
-                        ),
-                      ],
-                    ),
+                          SizedBox(
+                            width: 220,
+                            height: 38,
+                            child: DesktopDateFilter(
+                              key: const Key('recent-agent-date-filter'),
+                              allowAll: true,
+                              value: _preset,
+                              customRange: _custom,
+                              now: widget.now,
+                              onChanged: (preset, range) => _filter(() {
+                                _preset = preset;
+                                _custom = range;
+                              }),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -222,30 +193,9 @@ class _RecentAgentFeedState extends State<RecentAgentFeed> {
                     : const Divider(height: 1),
                 itemBuilder: (context, index) {
                   final activity = _items[index];
-                  return Row(
+                  return KeyedSubtree(
                     key: ValueKey('feed-row-${activity.id}'),
-                    children: [
-                      Expanded(child: widget.rowBuilder(context, activity)),
-                      const SizedBox(width: 4),
-                      DesktopIconButton(
-                        key: Key('pin-agent-${activity.id}'),
-                        icon: Icon(
-                          activity.pinned
-                              ? Icons.push_pin
-                              : Icons.push_pin_outlined,
-                        ),
-                        selected: activity.pinned,
-                        size: 28,
-                        iconSize: 15,
-                        tooltip: activity.pinned
-                            ? context.l10n.activityUnpin
-                            : context.l10n.activityPin,
-                        onPressed: () => widget.controller.setPinned(
-                          activity.id,
-                          !activity.pinned,
-                        ),
-                      ),
-                    ],
+                    child: widget.rowBuilder(context, activity),
                   );
                 },
               ),

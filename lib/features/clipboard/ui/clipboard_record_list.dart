@@ -122,71 +122,75 @@ class _ClipboardListState extends State<_ClipboardList> {
     final double itemExtent = _itemExtent(context);
     return Stack(
       children: <Widget>[
-        ListView.builder(
-          key: const Key('clipboard-list'),
+        ClipboardHistoryPagination(
+          viewModel: widget.viewModel,
           controller: _scrollController,
-          itemCount: records.length,
-          padding: callout ? const EdgeInsets.only(bottom: 8) : null,
-          itemExtent: itemExtent,
-          itemBuilder: (BuildContext context, int index) {
-            final ClipboardRecord record = records[index];
-            final int shortcutIndex = index - _shortcutStartIndex + 1;
-            return ClipboardListTile(
-              record: record,
-              showPinnedIndicator: showArchiveControls,
-              selected: widget.viewModel.selectedRecord?.id == record.id,
-              onSelected: () {
-                widget.viewModel.select(record);
-                widget.onPreview?.call(record);
-              },
-              onDoubleTap: () {
-                widget.viewModel.select(record);
-                unawaited(() async {
-                  await widget.onDismissPreview?.call();
-                  await widget.viewModel.restoreSelected();
-                }());
-              },
-              onOpenContent:
-                  widget.onOpenContent != null &&
-                      canOpenClipboardContent(record)
-                  ? () => unawaited(_openContent(record))
-                  : null,
-              onSecondaryTapUp: (TapUpDetails details) {
-                widget.viewModel.select(record);
-                unawaited(
-                  widget.contextMenuGateway == null
-                      ? _showClipboardContextMenu(
-                          context,
-                          details.globalPosition,
-                          record,
-                          widget.includeShare,
-                          showArchiveControls,
-                          widget.onAction,
-                        )
-                      : _showNativeClipboardContextMenu(
-                          context,
-                          details.globalPosition,
-                          widget.contextMenuGateway!,
-                          record,
-                          widget.includeShare,
-                          showArchiveControls,
-                          widget.onAction,
-                        ),
-                );
-              },
-              callout: callout,
-              shortcutIndex:
-                  widget.showShortcutHints &&
-                      shortcutIndex >= 1 &&
-                      shortcutIndex <= 9
-                  ? shortcutIndex
-                  : null,
-              plainTextShortcut:
-                  widget.showPlainTextShortcutHints &&
-                  record.canPasteAsPlainText,
-              now: widget.now,
-            );
-          },
+          child: ListView.builder(
+            key: const Key('clipboard-list'),
+            controller: _scrollController,
+            itemCount: records.length,
+            padding: callout ? const EdgeInsets.only(bottom: 8) : null,
+            itemExtent: itemExtent,
+            itemBuilder: (BuildContext context, int index) {
+              final ClipboardRecord record = records[index];
+              final int shortcutIndex = index - _shortcutStartIndex + 1;
+              return ClipboardListTile(
+                record: record,
+                showPinnedIndicator: showArchiveControls,
+                selected: widget.viewModel.selectedRecord?.id == record.id,
+                onSelected: () {
+                  widget.viewModel.select(record);
+                  widget.onPreview?.call(record);
+                },
+                onDoubleTap: () {
+                  widget.viewModel.select(record);
+                  unawaited(() async {
+                    await widget.onDismissPreview?.call();
+                    await widget.viewModel.restoreSelected();
+                  }());
+                },
+                onOpenContent:
+                    widget.onOpenContent != null &&
+                        canOpenClipboardContent(record)
+                    ? () => unawaited(_openContent(record))
+                    : null,
+                onSecondaryTapUp: (TapUpDetails details) {
+                  widget.viewModel.select(record);
+                  unawaited(
+                    widget.contextMenuGateway == null
+                        ? _showClipboardContextMenu(
+                            context,
+                            details.globalPosition,
+                            record,
+                            widget.includeShare,
+                            showArchiveControls,
+                            widget.onAction,
+                          )
+                        : _showNativeClipboardContextMenu(
+                            context,
+                            details.globalPosition,
+                            widget.contextMenuGateway!,
+                            record,
+                            widget.includeShare,
+                            showArchiveControls,
+                            widget.onAction,
+                          ),
+                  );
+                },
+                callout: callout,
+                shortcutIndex:
+                    widget.showShortcutHints &&
+                        shortcutIndex >= 1 &&
+                        shortcutIndex <= 9
+                    ? shortcutIndex
+                    : null,
+                plainTextShortcut:
+                    widget.showPlainTextShortcutHints &&
+                    record.canPasteAsPlainText,
+                now: widget.now,
+              );
+            },
+          ),
         ),
         if (_showScrollToTop)
           Positioned(

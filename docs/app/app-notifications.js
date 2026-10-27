@@ -1,12 +1,12 @@
 import {
   agentNotificationsAreActive,
   wantsAgentNotifications,
-} from "./notification-policy.js?shell=55";
+} from "./notification-policy.js?shell=56";
 import {
   pairingForRoom,
   pairingsMatch,
   shouldSkipPairingCleanup,
-} from "./pairing-state.js?shell=55";
+} from "./pairing-state.js?shell=56";
 import {
   apiUrl,
   base64UrlDecode,
@@ -15,8 +15,8 @@ import {
   pushToken,
   sealEnvelope,
   withTimeout,
-} from "./app-codecs.js?shell=55";
-import { idbDelete } from "./app-storage.js?shell=55";
+} from "./app-codecs.js?shell=56";
+import { idbDelete } from "./app-storage.js?shell=56";
 
 // Notification permission, Web Push registration, delivery checks, and help UI.
 export function createAgentNotificationController({

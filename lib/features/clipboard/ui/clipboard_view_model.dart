@@ -9,6 +9,7 @@ import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/core/utils/uuid.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_category_rule_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_group_order_store.dart';
+import 'package:dingdong/features/clipboard/data/clipboard_history_page.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_category_rule.dart';
@@ -65,6 +66,32 @@ final class ClipboardViewModel extends ChangeNotifier {
   final ClipboardCategoryRuleStore _categoryRuleStore;
   final ClipboardGroupOrderStore _groupOrderStore;
   List<ClipboardRecord> _records = const <ClipboardRecord>[];
+  static const int historyPageSize = 50;
+  ClipboardHistoryCursor? _historyCursor;
+  List<String> _historySources = const [];
+  bool _loadingPage = false;
+  int _paginationRevision = 0;
+
+  bool get hasMoreHistory => !showingArchivedRecords && _historyCursor != null;
+  int get paginationRevision => _paginationRevision;
+
+  void loadNextPage() {
+    if (!hasMoreHistory || _loadingPage) return;
+    _loadingPage = true;
+    try {
+      final page = _readHistoryPage(historyPageSize, after: _historyCursor);
+      final ids = _records.map((record) => record.id).toSet();
+      _records = List.unmodifiable([
+        ..._records,
+        ...page.records.where((record) => ids.add(record.id)),
+      ]);
+      _historyCursor = page.nextCursor;
+    } finally {
+      _loadingPage = false;
+    }
+    notifyListeners();
+  }
+
   List<ClipboardArchiveEntry> _archives = const <ClipboardArchiveEntry>[];
   List<ClipboardCategoryRule> _categoryRules = const <ClipboardCategoryRule>[];
   final List<String> _groupOrder = <String>[];
@@ -98,12 +125,13 @@ final class ClipboardViewModel extends ChangeNotifier {
   List<ClipboardSourceOption> get sourceOptions {
     final Map<String, ClipboardSourceOption> options =
         <String, ClipboardSourceOption>{};
-    for (final ClipboardRecord record in _activeRecords) {
-      for (final String source in record.sources) {
-        final ClipboardSourceOption? option = clipboardSourceOption(source);
-        if (option != null) {
-          options.putIfAbsent(option.id, () => option);
-        }
+    final sources = showingArchivedRecords
+        ? _archives.expand((entry) => entry.record.sources)
+        : _historySources;
+    for (final String source in sources) {
+      final ClipboardSourceOption? option = clipboardSourceOption(source);
+      if (option != null) {
+        options.putIfAbsent(option.id, () => option);
       }
     }
     return List<ClipboardSourceOption>.unmodifiable(options.values);
@@ -179,7 +207,7 @@ final class ClipboardViewModel extends ChangeNotifier {
 
   List<ClipboardRecord> get allRecords {
     final List<ClipboardRecord> records = <ClipboardRecord>[
-      ..._records,
+      ..._store.list(limit: 5000, includeProtectedBeyondLimit: true),
       ..._archives.map((ClipboardArchiveEntry entry) => entry.record),
     ]..sort(compareClipboardRecords);
     return List<ClipboardRecord>.unmodifiable(records);
@@ -204,52 +232,48 @@ final class ClipboardViewModel extends ChangeNotifier {
       _sortMode == ClipboardSortMode.defaultOrder;
 
   List<ClipboardRecord> get visibleRecords {
-    final String needle = _query.trim().toLowerCase();
-    final List<ClipboardRecord> records = _activeRecords
-        .where((ClipboardRecord record) {
-          if (_selectedCategoryId != null &&
-              categoryFor(record)?.id != _selectedCategoryId) {
-            return false;
-          }
-          if (_selectedGroup != null &&
-              !record.groupNames.any(
-                (String group) =>
-                    _groupKey(group) == _groupKey(_selectedGroup!),
-              )) {
-            return false;
-          }
-          final Set<String> sourceIds = record.sources
-              .map(clipboardSourceOption)
-              .whereType<ClipboardSourceOption>()
-              .map((ClipboardSourceOption source) => source.id)
-              .toSet();
-          if (_selectedSourceIds.isNotEmpty &&
-              sourceIds.intersection(_selectedSourceIds).isEmpty) {
-            return false;
-          }
-          return needle.isEmpty ||
-              record.title.toLowerCase().contains(needle) ||
-              record.content.toLowerCase().contains(needle) ||
-              record.sources.any(
-                (String source) => source.toLowerCase().contains(needle),
-              ) ||
-              record.groupNames.any(
-                (String group) => group.toLowerCase().contains(needle),
-              ) ||
-              record.tags.any(
-                (String tag) => tag.toLowerCase().contains(needle),
-              );
-        })
-        .toList(growable: false);
+    if (!showingArchivedRecords) return _records;
+    final records = _activeRecords.where(_matchesRecord).toList();
     if (_sortMode == ClipboardSortMode.copyCount) {
-      records.sort(_compareClipboardCopyCounts);
+      records.sort(compareClipboardCopyCounts);
     }
-    return List<ClipboardRecord>.unmodifiable(records);
+    return List.unmodifiable(records);
+  }
+
+  bool _matchesRecord(ClipboardRecord record) {
+    final String needle = _query.trim().toLowerCase();
+    if (_selectedCategoryId != null &&
+        categoryFor(record)?.id != _selectedCategoryId) {
+      return false;
+    }
+    if (_selectedGroup != null &&
+        !record.groupNames.any(
+          (String group) => _groupKey(group) == _groupKey(_selectedGroup!),
+        )) {
+      return false;
+    }
+    final Set<String> sourceIds = record.sources
+        .map(clipboardSourceOption)
+        .whereType<ClipboardSourceOption>()
+        .map((ClipboardSourceOption source) => source.id)
+        .toSet();
+    if (_selectedSourceIds.isNotEmpty &&
+        sourceIds.intersection(_selectedSourceIds).isEmpty) {
+      return false;
+    }
+    return needle.isEmpty ||
+        record.title.toLowerCase().contains(needle) ||
+        record.content.toLowerCase().contains(needle) ||
+        record.sources.any(
+          (String source) => source.toLowerCase().contains(needle),
+        ) ||
+        record.groupNames.any(
+          (String group) => group.toLowerCase().contains(needle),
+        ) ||
+        record.tags.any((String tag) => tag.toLowerCase().contains(needle));
   }
 
   void load() {
-    _records = _store.list(limit: 5000, includeProtectedBeyondLimit: true);
-    _archives = _archiveStore.listArchives();
     final List<ClipboardCategoryRule> loadedCategories = _categoryRuleStore
         .load();
     _categoryRules = loadedCategories.isEmpty
@@ -265,19 +289,25 @@ final class ClipboardViewModel extends ChangeNotifier {
         )) {
       _selectedCategoryId = null;
     }
+    _reloadRecords(resetPage: true);
+    _paginationRevision++;
     _pruneSelectedSources();
     _ensureSelectionVisible();
     notifyListeners();
   }
 
   void setQuery(String value) {
+    if (_query == value) return;
     _query = value;
+    _resetHistoryPage();
     _ensureSelectionVisible();
     notifyListeners();
   }
 
   void setCategory(String? value) {
+    if (_selectedCategoryId == value) return;
     _selectedCategoryId = value;
+    _resetHistoryPage();
     _ensureSelectionVisible();
     notifyListeners();
   }
@@ -287,6 +317,7 @@ final class ClipboardViewModel extends ChangeNotifier {
       return;
     }
     _sortMode = value;
+    _resetHistoryPage();
     _ensureSelectionVisible();
     notifyListeners();
   }
@@ -296,6 +327,8 @@ final class ClipboardViewModel extends ChangeNotifier {
     final ClipboardCategoryRule moved = _categoryRules.removeAt(oldIndex);
     _categoryRules.insert(newIndex.clamp(0, _categoryRules.length), moved);
     _categoryRuleStore.save(_categoryRules);
+    _resetHistoryPage();
+    _ensureSelectionVisible();
     notifyListeners();
   }
 
@@ -317,6 +350,8 @@ final class ClipboardViewModel extends ChangeNotifier {
       ];
     }
     _categoryRuleStore.save(_categoryRules);
+    _resetHistoryPage();
+    _ensureSelectionVisible();
     notifyListeners();
   }
 
@@ -328,6 +363,7 @@ final class ClipboardViewModel extends ChangeNotifier {
       _selectedCategoryId = null;
     }
     _categoryRuleStore.save(_categoryRules);
+    _resetHistoryPage();
     _ensureSelectionVisible();
     notifyListeners();
   }
@@ -390,6 +426,7 @@ final class ClipboardViewModel extends ChangeNotifier {
 
   void setGroup(String? value) {
     _selectedGroup = value;
+    _resetHistoryPage();
     _ensureSelectionVisible();
     notifyListeners();
   }
@@ -426,6 +463,7 @@ final class ClipboardViewModel extends ChangeNotifier {
     if (!_selectedSourceIds.add(id)) {
       _selectedSourceIds.remove(id);
     }
+    _resetHistoryPage();
     _ensureSelectionVisible();
     notifyListeners();
   }
@@ -435,6 +473,7 @@ final class ClipboardViewModel extends ChangeNotifier {
       return;
     }
     _selectedSourceIds.clear();
+    _resetHistoryPage();
     _ensureSelectionVisible();
     notifyListeners();
   }
@@ -446,6 +485,7 @@ final class ClipboardViewModel extends ChangeNotifier {
     _selectedCategoryId = null;
     _selectedGroup = null;
     _selectedSourceIds.clear();
+    _resetHistoryPage();
     _ensureSelectionVisible();
     notifyListeners();
   }
@@ -516,7 +556,7 @@ final class ClipboardViewModel extends ChangeNotifier {
   }
 
   void moveSelection(int offset) {
-    final List<ClipboardRecord> visible = visibleRecords;
+    List<ClipboardRecord> visible = visibleRecords;
     if (visible.isEmpty) {
       return;
     }
@@ -525,6 +565,10 @@ final class ClipboardViewModel extends ChangeNotifier {
         : visible.indexWhere(
             (ClipboardRecord record) => record.id == _selectedRecord?.id,
           );
+    if (current >= 0 && current + offset >= visible.length && hasMoreHistory) {
+      loadNextPage();
+      visible = visibleRecords;
+    }
     final int next = current < 0
         ? (offset < 0 ? visible.length - 1 : 0)
         : (current + offset).clamp(0, visible.length - 1);
@@ -872,19 +916,14 @@ final class ClipboardViewModel extends ChangeNotifier {
 
   void _restoreSelectedRecord(String? id) {
     if (id == null) return;
-    for (final ClipboardRecord record in allRecords) {
-      if (record.id == id) {
-        _selectedRecord = record;
-        return;
-      }
-    }
+    _selectedRecord = _archiveEntryForId(id)?.record ?? _recordForId(id);
   }
 
   ClipboardRecord? _recordForId(String id) {
     for (final ClipboardRecord record in _records) {
       if (record.id == id) return record;
     }
-    return null;
+    return _store.historyRecord(id);
   }
 
   ClipboardArchiveEntry? _archiveEntryForId(String id) {
@@ -894,19 +933,56 @@ final class ClipboardViewModel extends ChangeNotifier {
     return null;
   }
 
-  void _reloadRecords() {
-    _records = _store.list(limit: 5000, includeProtectedBeyondLimit: true);
+  void _reloadRecords({bool resetPage = false}) {
+    final limit = resetPage
+        ? historyPageSize
+        : _records.length.clamp(historyPageSize, 5000);
     _archives = _archiveStore.listArchives();
+    _historySources = _store.historySources();
+    _replaceHistoryPage(limit);
+  }
+
+  void _resetHistoryPage() {
+    _paginationRevision++;
+    _replaceHistoryPage(historyPageSize);
+  }
+
+  void _replaceHistoryPage(int limit) {
+    if (showingArchivedRecords) {
+      _records = const [];
+      _historyCursor = null;
+      return;
+    }
+    final page = _readHistoryPage(limit);
+    _records = page.records;
+    _historyCursor = page.nextCursor;
+  }
+
+  ClipboardHistoryPage _readHistoryPage(
+    int limit, {
+    ClipboardHistoryCursor? after,
+  }) {
+    final hasPredicate =
+        _query.trim().isNotEmpty ||
+        _selectedCategoryId != null ||
+        _selectedSourceIds.isNotEmpty;
+    return _store.readHistoryPage(
+      limit: limit,
+      after: after,
+      byCopyCount: _sortMode == ClipboardSortMode.copyCount,
+      matches: hasPredicate ? _matchesRecord : null,
+    );
   }
 
   void _deleteManagedImageIfUnreferenced(ClipboardRecord deleted) {
     final Directory? directory = _managedImageDirectory;
     if (directory == null ||
-        allRecords.any(
-          (ClipboardRecord record) =>
-              record.content == deleted.content &&
-              record.tags.contains('image') &&
-              record.tags.contains('file-url'),
+        _store.hasHistoryImageReference(deleted.content) ||
+        _archives.any(
+          (ClipboardArchiveEntry entry) =>
+              entry.record.content == deleted.content &&
+              entry.record.tags.contains('image') &&
+              entry.record.tags.contains('file-url'),
         )) {
       return;
     }
@@ -952,9 +1028,11 @@ final class ClipboardViewModel extends ChangeNotifier {
     final Set<String> availableSourceIds = sourceOptions
         .map((ClipboardSourceOption option) => option.id)
         .toSet();
+    final oldCount = _selectedSourceIds.length;
     _selectedSourceIds.removeWhere(
       (String id) => !availableSourceIds.contains(id),
     );
+    if (_selectedSourceIds.length != oldCount) _resetHistoryPage();
   }
 }
 
@@ -970,21 +1048,6 @@ List<String> _uniqueTags(List<String> tags) {
 }
 
 String _groupKey(String value) => value.trim().toLowerCase();
-
-int _compareClipboardCopyCounts(ClipboardRecord left, ClipboardRecord right) {
-  if (left.pinned != right.pinned) {
-    return left.pinned ? -1 : 1;
-  }
-  final int countComparison = right.copyCount.compareTo(left.copyCount);
-  if (countComparison != 0) {
-    return countComparison;
-  }
-  final int updatedComparison = right.updatedAt.compareTo(left.updatedAt);
-  if (updatedComparison != 0) {
-    return updatedComparison;
-  }
-  return left.id.compareTo(right.id);
-}
 
 List<String> _uniqueGroups(Iterable<String> values) {
   final Set<String> seen = <String>{};

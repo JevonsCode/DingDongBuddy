@@ -2296,6 +2296,9 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get selectAConfigurationToInspectOrEdit => '选择一项配置以查看或编辑';
 
   @override
+  String get selectLoadedItems => '选择已加载项';
+
+  @override
   String get selectAll => '全选';
 
   @override
@@ -4342,6 +4345,15 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   }
 
   @override
+  String get devicePeerLanAddress => '另一台电脑的局域网 IP';
+
+  @override
+  String get deviceLocalAddressLoading => '正在获取本机 IP…';
+
+  @override
+  String get deviceLocalAddressUnavailable => '本机 IP · 暂未获取，点击刷新重试';
+
+  @override
   String get deviceLanAddress => '局域网 IP';
 
   @override
@@ -4423,6 +4435,23 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get activityNoMatches => '没有符合筛选条件的提醒';
 
   @override
+  String get devTemporaryNotification => '临时通知';
+
+  @override
+  String get quickPanelAgentCount => '快捷面板显示条数';
+
+  @override
+  String get quickPanelAgentCountDescription =>
+      '控制快捷唤起面板中最近 Agent 的显示数量，默认 21 条。';
+
+  @override
+  String get devTemporaryNotificationDescription =>
+      '创建一次绿色本地提醒，播放清亮声；使用后自动移除临时配置。';
+
+  @override
+  String get devTemporaryNotificationCreated => '已创建：临时通知';
+
+  @override
   String get reminderTemporary => '临时 · 仅下一次';
 
   @override
@@ -4435,7 +4464,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get lanFindByIp => '按 IP 查找电脑';
 
   @override
-  String get lanFindByIpHelp => '自动发现找不到时，输入另一台电脑的局域网 IP，再使用配对码连接。';
+  String get lanFindByIpHelp => '自动发现找不到时，输入另一台电脑的局域网 IP，无需填写端口；首次连接使用配对码。';
 
   @override
   String get lanPortBusy => '局域网发现端口正被另一个叮咚实例占用，请退出重复打开的叮咚后刷新。';

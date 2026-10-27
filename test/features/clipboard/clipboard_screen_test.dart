@@ -7,6 +7,7 @@ import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
 import 'package:dingdong/core/widgets/desktop_icon_button.dart';
 import 'package:dingdong/features/activity/ui/activity_repeat_count.dart';
+import 'package:dingdong/features/clipboard/data/clipboard_history_page.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_context_menu.dart';
@@ -209,7 +210,10 @@ void main() {
       const Offset(0, -400000),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Clipboard 4999'), findsOneWidget);
+    expect(model.visibleRecords.length, greaterThan(50));
+    expect(model.visibleRecords.length, lessThan(5000));
+    expect(find.byType(ClipboardListTile).evaluate().length, lessThan(100));
+    expect(find.text('Clipboard 4999'), findsNothing);
   });
 
   testWidgets('return-to-top appears after one viewport and scrolls to start', (
@@ -1876,6 +1880,50 @@ final class _MemoryClipboardStore implements ClipboardStore {
   _MemoryClipboardStore(this.records);
 
   final List<ClipboardRecord> records;
+
+  @override
+  ClipboardHistoryPage readHistoryPage({
+    required int limit,
+    ClipboardHistoryCursor? after,
+    bool byCopyCount = false,
+    bool Function(ClipboardRecord)? matches,
+  }) {
+    final start = after == null
+        ? 0
+        : records.indexWhere((r) => r.id == after.record.id) + 1;
+    final rows = records
+        .skip(start)
+        .where((r) => matches?.call(r) ?? true)
+        .take(limit + 1)
+        .toList();
+    final page = rows.take(limit).toList();
+    return ClipboardHistoryPage(
+      page,
+      nextCursor: rows.length > limit
+          ? ClipboardHistoryCursor(page.last)
+          : null,
+    );
+  }
+
+  @override
+  List<String> historySources() =>
+      records.expand((r) => r.sources).toSet().toList();
+
+  @override
+  bool hasHistoryImageReference(String content) => records.any(
+    (r) =>
+        r.content == content &&
+        r.tags.contains('image') &&
+        r.tags.contains('file-url'),
+  );
+
+  @override
+  ClipboardRecord? historyRecord(String id) {
+    for (final r in records) {
+      if (r.id == id) return r;
+    }
+    return null;
+  }
 
   @override
   List<ClipboardRecord> list({

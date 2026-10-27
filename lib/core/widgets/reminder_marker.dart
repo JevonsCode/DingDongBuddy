@@ -6,6 +6,32 @@ import 'package:flutter/material.dart';
 /// Native macOS reminder bubbles are 22-point status-bar height minus 2.
 const double reminderMarkerDiameter = 20;
 
+String reminderDescription(BuildContext context, ReminderProfile? p) {
+  final strings = context.l10n;
+  final name = switch (p?.id) {
+    'completion' => strings.agentCompletionNotifications,
+    'attention' => strings.needsYourInput2,
+    _ => p?.name ?? strings.reminderDefinitionUnavailable,
+  };
+  final sound = switch (p?.sound) {
+    'default' => strings.dingdongClassic,
+    'dingSoft' => strings.dingdongSoft,
+    'dingBright' => strings.dingdongBright,
+    'dingCrisp' => strings.dingdongCrisp,
+    'dingDeep' => strings.dingdongDeep,
+    'system' => strings.systemSound,
+    'muted' => strings.muted,
+    'custom' => p?.customSoundPath?.split(RegExp(r'[/\\]')).last ?? 'custom',
+    _ => '',
+  };
+  return [
+    name,
+    if (p?.temporary == true) strings.reminderTemporary,
+    if (p?.description.isNotEmpty == true) p!.description,
+    if (sound.isNotEmpty) sound,
+  ].join('\n');
+}
+
 class ReminderMarker extends StatelessWidget {
   const ReminderMarker({
     this.profile,
@@ -18,29 +44,7 @@ class ReminderMarker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = profile;
-    final strings = context.l10n;
-    final name = switch (p?.id) {
-      'completion' => strings.agentCompletionNotifications,
-      'attention' => strings.needsYourInput2,
-      _ => p?.name ?? strings.reminderDefinitionUnavailable,
-    };
-    final sound = switch (p?.sound) {
-      'default' => strings.dingdongClassic,
-      'dingSoft' => strings.dingdongSoft,
-      'dingBright' => strings.dingdongBright,
-      'dingCrisp' => strings.dingdongCrisp,
-      'dingDeep' => strings.dingdongDeep,
-      'system' => strings.systemSound,
-      'muted' => strings.muted,
-      'custom' => p?.customSoundPath?.split(RegExp(r'[/\\]')).last ?? 'custom',
-      _ => '',
-    };
-    final definition = [
-      name,
-      if (p?.temporary == true) strings.reminderTemporary,
-      if (p?.description.isNotEmpty == true) p!.description,
-      if (sound.isNotEmpty) sound,
-    ].join('\n');
+    final definition = reminderDescription(context, p);
     return Tooltip(
       message: definition,
       child: Semantics(

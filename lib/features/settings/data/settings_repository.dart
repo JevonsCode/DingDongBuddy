@@ -65,6 +65,7 @@ final class SettingsRepository {
       _backend.read(_selectionUnloadLocalModelKey),
       _backend.read(_notificationRulesKey),
       _backend.read(_allowBetaUpdatesKey),
+      _backend.read(_quickPanelAgentCountKey),
     ]);
     final bool mcpAccessSeen = values[11] is bool ? values[11]! as bool : false;
     final int agentSetupAcknowledgedRevision =
@@ -118,6 +119,7 @@ final class SettingsRepository {
       conversationFooterSymbols: ConversationFooterSymbols.parse(values[23]),
       agentActivityMaxItems: values[13] is int ? values[13]! as int : 500,
       agentActivityCountHours: values[14] is int ? values[14]! as int : 24,
+      quickPanelAgentCount: values[38] is int ? values[38]! as int : 21,
       hideDockIcon: values[15] is bool ? values[15]! as bool : false,
       trayNotificationColor: TrayNotificationColor.parse(
         values[16],
@@ -203,6 +205,7 @@ final class SettingsRepository {
       ),
       _backend.write(_conversationTokenUsageDefaultOnMigrationKey, true),
       _backend.write(_agentActivityMaxItemsKey, settings.agentActivityMaxItems),
+      _backend.write(_quickPanelAgentCountKey, settings.quickPanelAgentCount),
       _backend.write(
         _agentActivityCountHoursKey,
         settings.agentActivityCountHours,
@@ -295,6 +298,8 @@ const String _conversationTokenUsageDefaultOnMigrationKey =
     'dingdong.migrations.conversationTokenUsageDefaultOn.v1';
 const String _agentActivityMaxItemsKey = 'dingdong.agentActivity.maxItems';
 const String _agentActivityCountHoursKey = 'dingdong.agentActivity.countHours';
+const String _quickPanelAgentCountKey =
+    'dingdong.agentActivity.quickPanelCount';
 const String _hideDockIconKey = 'dingdong.macos.hideDockIcon';
 const String _trayNotificationColorKey = 'dingdong.macos.trayNotificationColor';
 const String _globalHotKeyKey = 'dingdong.shortcut.openClipboard';

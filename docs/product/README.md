@@ -1,12 +1,13 @@
 # DingDong user guides · 使用文档
 
-These guides describe the DingDong 1.10.0 release candidate features. Start with
+These guides describe the DingDong 1.10.2 features. Start with
 [first-run onboarding](onboarding.md) or the [中文项目介绍](../../README.zh.md).
 
 | Feature / 功能 | Guide / 说明 |
 | --- | --- |
 | Install and connect / 安装与接入 | [Install with an Agent](../../INSTALL_WITH_AGENT.md), [Agent adapters](agent-adapter-configuration.md) |
 | AI+ / 按任务筛选资源 | [Model setup, selection rules and data boundaries](ai-companion.md) |
+| Clipboard history / 剪贴板历史 | [Paged virtual lists, search and filters](clipboard-history.md) |
 | Skill versions / Skill 版本历史 | [Compare and restore complete packages](skill-version-history.md) |
 | Reminders / 自定义提醒 | [Completion, needs-input, named reminders and sounds](agent-reminders.md) |
 | Devices / 在线设备与传输历史 | [Pairing, sharing, routes and file records](connected-devices.md) |
@@ -30,4 +31,4 @@ Design proposals, development previews and regression reports in this directory
 are engineering records; use the guides above for current product behavior.
 
 Windows plugins: [Windows screenshot plugin and plugin details](screenshot-plugin.md).
-Available in 1.10.0; screenshot capture and the new selection toolbar are Windows-only.
+Available in 1.10.2; screenshot capture and the new selection toolbar are Windows-only.

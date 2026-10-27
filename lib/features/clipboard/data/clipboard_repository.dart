@@ -2,10 +2,11 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dingdong/core/models/clipboard_record.dart';
+import 'package:dingdong/features/clipboard/data/clipboard_history_page.dart';
 import 'package:sqlite3/sqlite3.dart';
 
 /// SQLite-backed source of truth compatible with the native Core Data table.
-abstract interface class ClipboardStore {
+abstract interface class ClipboardStore implements PagedClipboardStore {
   List<ClipboardRecord> list({
     required int limit,
     bool includeProtectedBeyondLimit = false,
@@ -78,7 +79,7 @@ final class InMemoryClipboardArchiveStore implements ClipboardArchiveStore {
 
 /// Volatile clipboard store used by widget tests and previews.
 final class InMemoryClipboardStore
-    implements ClipboardStore, ClipboardArchiveStore {
+    implements ClipboardStore, ClipboardArchiveStore, PagedClipboardStore {
   InMemoryClipboardStore([
     List<ClipboardRecord> records = const <ClipboardRecord>[],
   ]) {
@@ -89,6 +90,52 @@ final class InMemoryClipboardStore
 
   final List<ClipboardRecord> _records = <ClipboardRecord>[];
   final List<ClipboardArchiveEntry> _archives = <ClipboardArchiveEntry>[];
+
+  @override
+  ClipboardHistoryPage readHistoryPage({
+    required int limit,
+    ClipboardHistoryCursor? after,
+    bool byCopyCount = false,
+    bool Function(ClipboardRecord)? matches,
+  }) {
+    final compare = byCopyCount
+        ? compareClipboardCopyCounts
+        : compareClipboardRecords;
+    final sorted = List<ClipboardRecord>.of(_records)..sort(compare);
+    final size = limit.clamp(1, 5000);
+    final rows = sorted
+        .where((record) => after == null || compare(record, after.record) > 0)
+        .where((record) => matches?.call(record) ?? true)
+        .take(size + 1)
+        .toList();
+    final records = List<ClipboardRecord>.unmodifiable(rows.take(size));
+    return ClipboardHistoryPage(
+      records,
+      nextCursor: rows.length > size
+          ? ClipboardHistoryCursor(records.last)
+          : null,
+    );
+  }
+
+  @override
+  List<String> historySources() =>
+      _records.expand((record) => record.sources).toSet().toList();
+
+  @override
+  bool hasHistoryImageReference(String content) => _records.any(
+    (record) =>
+        record.content == content &&
+        record.tags.contains('image') &&
+        record.tags.contains('file-url'),
+  );
+
+  @override
+  ClipboardRecord? historyRecord(String id) {
+    for (final record in _records) {
+      if (record.id == id) return record;
+    }
+    return null;
+  }
 
   @override
   List<ClipboardRecord> list({
@@ -195,8 +242,33 @@ final class InMemoryClipboardStore
 
 /// SQLite-backed source of truth compatible with the native Core Data table.
 final class ClipboardRepository
-    implements ClipboardStore, ClipboardArchiveStore {
-  ClipboardRepository._(this._database);
+    implements ClipboardStore, ClipboardArchiveStore, PagedClipboardStore {
+  ClipboardRepository._(this._database) {
+    _database.createFunction(
+      functionName: 'dingdong_history_matches',
+      argumentCount: const AllowedArgumentCount(5),
+      function: (arguments) {
+        final matches = _historyMatcher;
+        if (matches == null) return 1;
+        final groups = _decodeGroups(arguments[3] as String? ?? '');
+        final record = ClipboardRecord(
+          id: '',
+          group: groups.isEmpty ? '' : groups.first,
+          groups: groups,
+          title: arguments[0] as String? ?? '',
+          content: arguments[1] as String? ?? '',
+          tags: _decodeTags(arguments[2]),
+          sources: _decodeSources(arguments[4]),
+          pinned: false,
+          enabled: true,
+          activation: 'taskMatch',
+          createdAt: _appleReferenceDate,
+          updatedAt: _appleReferenceDate,
+        );
+        return matches(record) ? 1 : 0;
+      },
+    );
+  }
 
   factory ClipboardRepository.open(String path) {
     final Database database = sqlite3.open(path);
@@ -209,6 +281,91 @@ final class ClipboardRepository
   static final DateTime _appleReferenceDate = DateTime.utc(2001);
 
   final Database _database;
+  bool Function(ClipboardRecord)? _historyMatcher;
+
+  @override
+  ClipboardHistoryPage readHistoryPage({
+    required int limit,
+    ClipboardHistoryCursor? after,
+    bool byCopyCount = false,
+    bool Function(ClipboardRecord)? matches,
+  }) {
+    final size = limit.clamp(1, 5000);
+    // All keys ascend, so a single tuple comparison provides stable keyset
+    // pagination, including equal timestamps, pins and explicit ordering.
+    final keys = <String>[
+      '-COALESCE(ZPINNED, 0)',
+      if (byCopyCount)
+        '-MAX(1, COALESCE(ZCOPYCOUNT, 1))'
+      else ...[
+        'CASE WHEN ZPINNED = 1 AND ZSORTORDER IS NULL THEN 1 '
+            'WHEN COALESCE(ZPINNED, 0) = 0 AND ZSORTORDER IS NOT NULL THEN 1 ELSE 0 END',
+        'COALESCE(ZSORTORDER, 0)',
+      ],
+      '-COALESCE(ZUPDATEDAT, 0)',
+      "COALESCE(ZID, '')",
+    ];
+    final columns = [for (var i = 0; i < keys.length; i++) '${keys[i]} AS K$i'];
+    final cursor = after?.sqlKey;
+    final conditions = <String>[
+      if (cursor != null)
+        '(${keys.join(',')}) > (${List.filled(keys.length, '?').join(',')})',
+      if (matches != null)
+        'dingdong_history_matches(ZTITLE,ZCONTENT,ZTAGSDATA,ZGROUP,ZSOURCE) = 1',
+    ];
+    _historyMatcher = matches;
+    try {
+      final rows = _database.select(
+        'SELECT *, ${columns.join(',')} FROM ZCLIPBOARDRECORD '
+        '${conditions.isEmpty ? '' : 'WHERE ${conditions.join(' AND ')}'} '
+        'ORDER BY ${[for (var i = 0; i < keys.length; i++) 'K$i ASC'].join(',')} LIMIT ?',
+        [...?cursor, size + 1],
+      );
+      final visible = rows.take(size).toList();
+      final records = List<ClipboardRecord>.unmodifiable(
+        visible.map(_recordFromRow),
+      );
+      return ClipboardHistoryPage(
+        records,
+        nextCursor: rows.length > size
+            ? ClipboardHistoryCursor(
+                records.last,
+                sqlKey: [
+                  for (var i = 0; i < keys.length; i++) visible.last['K$i'],
+                ],
+              )
+            : null,
+      );
+    } finally {
+      _historyMatcher = null;
+    }
+  }
+
+  @override
+  List<String> historySources() => _database
+      .select('SELECT DISTINCT ZSOURCE FROM ZCLIPBOARDRECORD')
+      .expand((row) => _decodeSources(row['ZSOURCE']))
+      .toSet()
+      .toList();
+
+  @override
+  bool hasHistoryImageReference(String content) => _database
+      .select('SELECT ZTAGSDATA FROM ZCLIPBOARDRECORD WHERE ZCONTENT = ?', [
+        content,
+      ])
+      .any((row) {
+        final tags = _decodeTags(row['ZTAGSDATA']);
+        return tags.contains('image') && tags.contains('file-url');
+      });
+
+  @override
+  ClipboardRecord? historyRecord(String id) {
+    final rows = _database.select(
+      'SELECT * FROM ZCLIPBOARDRECORD WHERE ZID = ? LIMIT 1',
+      [id],
+    );
+    return rows.isEmpty ? null : _recordFromRow(rows.single);
+  }
 
   @override
   List<ClipboardRecord> list({
@@ -817,6 +974,20 @@ final class ClipboardRepository
       'ZCOPYCOUNT',
       'INTEGER DEFAULT 1',
     );
+    database.execute('''
+      CREATE INDEX IF NOT EXISTS Z_ClipboardRecord_history_page ON ZCLIPBOARDRECORD (
+        -COALESCE(ZPINNED, 0),
+        CASE WHEN ZPINNED = 1 AND ZSORTORDER IS NULL THEN 1
+          WHEN COALESCE(ZPINNED, 0) = 0 AND ZSORTORDER IS NOT NULL THEN 1 ELSE 0 END,
+        COALESCE(ZSORTORDER, 0), -COALESCE(ZUPDATEDAT, 0), COALESCE(ZID, '')
+      )
+    ''');
+    database.execute('''
+      CREATE INDEX IF NOT EXISTS Z_ClipboardRecord_copy_count_page ON ZCLIPBOARDRECORD (
+        -COALESCE(ZPINNED, 0), -MAX(1, COALESCE(ZCOPYCOUNT, 1)),
+        -COALESCE(ZUPDATEDAT, 0), COALESCE(ZID, '')
+      )
+    ''');
   }
 
   static void _ensureColumn(

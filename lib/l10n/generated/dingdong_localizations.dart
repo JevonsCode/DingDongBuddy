@@ -4269,6 +4269,12 @@ abstract class DingDongLocalizations {
   /// **'Select a configuration to inspect or edit'**
   String get selectAConfigurationToInspectOrEdit;
 
+  /// Select only loaded clipboard history pages, without affecting unloaded items.
+  ///
+  /// In en, this message translates to:
+  /// **'Select loaded items'**
+  String get selectLoadedItems;
+
   /// DingDong built-in interface copy.
   ///
   /// In en, this message translates to:
@@ -7892,6 +7898,24 @@ abstract class DingDongLocalizations {
   /// **'This computer’s IP: {addresses}'**
   String deviceLocalAddresses(String addresses);
 
+  /// Computer LAN pairing: distinguish this device address from the peer input.
+  ///
+  /// In en, this message translates to:
+  /// **'Other computer’s LAN IP'**
+  String get devicePeerLanAddress;
+
+  /// Computer LAN pairing: distinguish this device address from the peer input.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting this computer’s IP…'**
+  String get deviceLocalAddressLoading;
+
+  /// Computer LAN pairing: distinguish this device address from the peer input.
+  ///
+  /// In en, this message translates to:
+  /// **'This computer’s IP is unavailable. Refresh to retry.'**
+  String get deviceLocalAddressUnavailable;
+
   /// Device connection address and route controls.
   ///
   /// In en, this message translates to:
@@ -8054,6 +8078,36 @@ abstract class DingDongLocalizations {
   /// **'No reminders match these filters'**
   String get activityNoMatches;
 
+  /// DEV test panel temporary reminder title
+  ///
+  /// In en, this message translates to:
+  /// **'Temporary notification'**
+  String get devTemporaryNotification;
+
+  /// Recent Agent quick panel count setting
+  ///
+  /// In en, this message translates to:
+  /// **'Quick panel Agent count'**
+  String get quickPanelAgentCount;
+
+  /// Recent Agent quick panel count setting
+  ///
+  /// In en, this message translates to:
+  /// **'Number of recent Agent reminders shown in the quick panel. Default: 21.'**
+  String get quickPanelAgentCountDescription;
+
+  /// Explains the one-use local DEV reminder fixture
+  ///
+  /// In en, this message translates to:
+  /// **'Create one green local reminder with a bright sound; its temporary configuration is removed after use.'**
+  String get devTemporaryNotificationDescription;
+
+  /// DEV test panel result after a temporary reminder
+  ///
+  /// In en, this message translates to:
+  /// **'Created: temporary notification'**
+  String get devTemporaryNotificationCreated;
+
   /// Desktop history filters and reminder definitions.
   ///
   /// In en, this message translates to:
@@ -8081,7 +8135,7 @@ abstract class DingDongLocalizations {
   /// Manual LAN discovery and actionable connection errors.
   ///
   /// In en, this message translates to:
-  /// **'If discovery finds nothing, enter the other computer’s LAN IP, then pair with its code.'**
+  /// **'If discovery finds nothing, enter the other computer’s LAN IP. No port is needed; use its pairing code for the first connection.'**
   String get lanFindByIpHelp;
 
   /// Manual LAN discovery and actionable connection errors.

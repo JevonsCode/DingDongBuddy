@@ -137,6 +137,10 @@ void main() {
           matchesGoldenFile('goldens/$name.png'),
         );
       }
+
+      // Let the manager unregister its window channel before removing mocks.
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
     },
     tags: <String>['golden'],
   );

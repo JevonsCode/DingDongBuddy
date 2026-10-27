@@ -736,6 +736,12 @@ final class SettingsViewModel extends ChangeNotifier
     await _save();
   }
 
+  Future<void> setQuickPanelAgentCount(int value) async {
+    _settings = _settings.copyWith(quickPanelAgentCount: value.clamp(1, 500));
+    notifyListeners();
+    await _save();
+  }
+
   Future<void> setApiPort(int value) async {
     _settings = _settings.copyWith(apiPort: value);
     notifyListeners();

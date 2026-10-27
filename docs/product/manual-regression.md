@@ -1,4 +1,4 @@
-# DingDong 1.10.0 Manual Regression Checklist
+# DingDong 1.10.2 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -13,26 +13,33 @@ encrypted local relay and direct data-channel routes. Content, clipboard and set
 stores use explicit test fixtures; this does not claim that user API credentials,
 third-party Agent accounts or remote model availability have been verified.
 
-## Temporary reminders and recent Agents (1.10.0)
+## Temporary reminders and recent Agents (1.10.2)
 
 - Create a temporary green reminder with a chosen built-in or imported sound.
   Confirm its white dashed marker, then send two concurrent matching reminders:
   only one may claim the temporary profile. Voice/subagent-filtered notifications
   must leave it pending. Confirm history and tray retain its captured definition.
-- Check recent Agents in both windows: default page size 21, edited size saved,
-  source multi-selection, all eight date presets and typed custom dates. Scroll
-  through multiple pages without duplicates; pin/unpin and return to top.
+- Check Settings → Recent Agents: the quick-panel display quantity defaults to
+  21 and persists after editing. Check source multi-selection, all eight date
+  presets and typed custom dates in Resource Manager. Scroll through pages
+  without duplicates. Neither recent Agent view shows a pin button or color dot.
 - Confirm the duplicate enabled-resource section and input badges are absent.
-  Counts precede dots; hover reveals the saved definition, including temporary status.
+  Counts precede timestamps; hovering the leading icon reveals the saved
+  definition, including temporary status. Quick-panel temporary cards have a
+  dashed border. Earlier dates display YYYYMMDD above an unclipped time, including
+  narrow windows, larger text and localized AM/PM.
 - Verify both desktop calendar months, invalid/reversed date validation, Cancel,
   Apply and keyboard controls in light/dark themes. Token filters and exports
   must use the same local-date boundaries, including December/January.
 
-## LAN addresses, plugin tools and community sounds (1.10.0)
+## LAN addresses, plugin tools and community sounds (1.10.2)
 
 - Verify the connection page shows physical-adapter IPs and the actual connection route.
   Offline computer addresses must be identified as saved IPs. Check the gap between
   reconnect and expand controls in compact windows.
+- Check the local IP above the peer IP input, including when another instance
+  occupies the discovery port. The peer input stays empty and requests the other
+  computer's IP without a port; cancel/connect remain visible in a short window.
 - With multicast unavailable, find an unpaired computer by its LAN IPv4 and pair
   with its six-digit code. Wrong codes and off-subnet IPs must still fail.
 - Edit the IP of an already paired computer, save and reconnect without replacing
@@ -137,8 +144,8 @@ third-party Agent accounts or remote model availability have been verified.
 - In dark mode, the popup uses layered blue-black surfaces rather than pure or
   near-black gray, with a distinct header, workspace body, cards, fields, and
   footer.
-- Populate Dynamic with recent Agent events plus Prompt, Skill, and MCP cards;
-  no title, summary, or tag row clips, and badges remain legible.
+- Populate Dynamic with recent Agent events; no title, summary, timestamp or
+  count clips. The duplicated enabled-resource section remains absent.
 - Populate Resource Library with Prompt, Skill, and MCP cards; Manage, type and
   group filter counts, status actions, tags, and card text retain clear contrast
   without bottom overflow.
@@ -186,6 +193,13 @@ third-party Agent accounts or remote model availability have been verified.
 
 ## Clipboard
 
+- In both the quick panel and Resource Manager, start with more than 150 history
+  entries. Confirm the first load is 50 and later pages load near the bottom.
+  Search for a record outside the loaded pages, use Unicode and literal `%`/`_`,
+  filter by a source present only in later history, and sort by copy count.
+  Change and clear queries while loading; results must reset without duplicates
+  or stale matches. Check keyboard movement across a page boundary, refresh,
+  deletion backfill, selected previews and the loaded-items batch-action label.
 - The global shortcut opens Clipboard and remembers the previously focused application.
 - Settings → Keyboard shortcuts records a modified global shortcut, applies it
   immediately, updates the popup footer, and restores it after relaunch.
@@ -661,7 +675,8 @@ third-party Agent accounts or remote model availability have been verified.
 
 ## Recent Agents
 
-- Dynamic shows at most six recent Agent items.
+- Dynamic defaults to 21 recent Agent items; the quick-panel count setting
+  controls this quantity and leaves Resource Manager history browsing separate.
 - Repeated notifications with the same conversation ID are grouped into one
   item by default, play the notification sound, show a bottom-aligned `×N`
   watermark, and do not increase the recent-Agent count. A newly revealed

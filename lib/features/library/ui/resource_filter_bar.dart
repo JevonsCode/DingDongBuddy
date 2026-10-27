@@ -59,6 +59,7 @@ class ResourceFilterBar extends StatelessWidget {
                         onPressed: onShowAgentPlugins,
                         tone: DesktopActionTone.neutral,
                         compact: true,
+                        height: 32,
                       ),
                     if (constraints.maxWidth >= 520) ...[
                       const SizedBox(width: 10),
@@ -67,8 +68,10 @@ class ResourceFilterBar extends StatelessWidget {
                         icon: const Icon(Icons.add_rounded, size: 18),
                         label: context.l10n.newResource,
                         tone: DesktopActionTone.primary,
+                        height: 32,
                       ),
                     ],
+                    const SizedBox(width: 10),
                     DesktopMenuButton<_LibraryAction>(
                       key: const Key('library-actions'),
                       tooltip: context.l10n.resourceActions,
@@ -154,6 +157,7 @@ class ResourceFilterBar extends StatelessWidget {
                       onPressed: onShowAgentPlugins,
                       tone: DesktopActionTone.neutral,
                       compact: true,
+                      height: 32,
                     ),
                     const SizedBox(width: 10),
                   ],
@@ -191,6 +195,7 @@ class ResourceFilterBar extends StatelessWidget {
                     icon: const Icon(Icons.add_rounded, size: 18),
                     label: context.l10n.newResource,
                     tone: DesktopActionTone.primary,
+                    height: 32,
                   ),
                 ],
               );

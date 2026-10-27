@@ -289,8 +289,14 @@ final class RemoteDeviceLinkManagement extends ChangeNotifier
   @override
   String? computerDiscoveryError;
   @override
-  Future<void> refreshComputers() =>
-      _invokeAndReload('device_link_lan_refresh');
+  Future<void> refreshComputers() async {
+    try {
+      await _parentController.invokeMethod<void>('device_link_lan_refresh');
+    } finally {
+      await reload();
+    }
+  }
+
   @override
   Future<void> discoverComputerAddress(String address) async {
     final result = await _parentController.invokeMethod<Object?>(

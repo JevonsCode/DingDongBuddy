@@ -1,48 +1,48 @@
-# DingDong 1.10.0
+# DingDong 1.10.2
 
-- Adds temporary reminders with a chosen color and sound for the next use only; recent Agent events keep the original reminder definition.
-- Recent Agents loads 21 items per page by default, supports custom page size, source and date filters, pins and scrolling to load more. Removes the duplicate enabled-resource section.
-- Replaces input badges with reminder-color dots and hover details, with notification counts on the left. Temporary reminders use a white dashed border.
-- Adds shared date presets and a compact desktop range calendar; Token usage uses the same custom dropdowns.
-- Adds IP-based discovery for initial computer pairing when automatic discovery finds nothing, while retaining pairing-code verification.
-- Shows LAN connection type, this computer’s IP and each paired computer’s current or saved IP; lets you correct an IP and reconnect with the existing pairing.
-- Adds space between device connection controls and improves recovery when multicast discovery is unavailable.
-- Adds optional Windows screenshot capture and embedded editing with annotations, undo/redo, copy and PNG saving; fixes black bands and reopening the editor.
-- Adds Windows text selection with copy, translate, explain and polish actions, with model requests only after an explicit action.
-- Adds plugin details with source, license and upstream version information; keeps Agent client plugin inventories in Resources.
-- Adds community notification sounds with preview, subscription and locally saved selections.
-- Improves Windows tray reminder motion and per-group counts, and isolates DEV preferences and resource synchronization from the stable installation.
-
----
-
-# DingDong 1.10.0
-
-- 新增仅下一次生效的临时提醒，可指定颜色与声音；最近 Agents 保留提醒当时的定义。
-- 最近 Agents 默认每页加载 21 条，可修改条数，支持来源多选、时间筛选、置顶和滚动加载，移除重复的已启用资源区块。
-- 提醒类型文字改为颜色圆点，悬停可查看定义；提醒次数显示在圆点左侧，临时提醒使用白色虚线边框。
-- 统一日期筛选选项，新增紧凑的桌面日期范围日历；Token 用量使用相同的自定义下拉组件。
-- 自动发现找不到电脑时，首次配对可输入局域网 IP 查找，仍需使用配对码验证。
-- 连接页显示局域网连接方式、本机 IP 和配对电脑当前或已保存的 IP，支持手动修改 IP 并使用原配对重连。
-- 拉开设备操作按钮间距，并改善组播发现不可用时的重连。
-- 新增可选的 Windows 截图与内置编辑器，支持标注、撤销/重做、复制和保存 PNG，修复黑边及重新打开编辑器的问题。
-- 补齐 Windows 划词的复制、翻译、解释和润色操作，仅在主动点击模型动作后发送文字。
-- 新增插件详情，展示来源、许可与上游版本；其他 Agent 客户端的插件清单放在资源中。
-- 新增社区提醒声音，支持试听、订阅和保存本机选择。
-- 优化 Windows 托盘提醒动画与分组数量，并隔离 DEV 偏好设置和资源同步，避免影响正式安装。
+- Adds one-use temporary reminders with a chosen color and sound, and preserves their original definition in Agent history.
+- Keeps the quick panel focused on recent Agents; its default 21-item display setting is now under Settings → Recent Agents.
+- Colors recent Agent icons and resource-manager titles by reminder type. Quick-panel cards use matching borders, with dashed borders for temporary reminders; hovering the icon shows the reminder definition.
+- Loads clipboard history in 50-item pages in both the quick panel and resource manager, with virtual rows and search, source filters and sorting across the complete history.
+- Shows YYYYMMDD above the time for older Agent records and prevents dates and localized times from being clipped.
+- Unifies date presets and adds a desktop range calendar; Token usage uses the same custom dropdowns.
+- Shows this computer’s LAN IP beside the peer IP field, including when discovery cannot start. Find a peer by IP without entering a port, then verify the first connection with a pairing code.
+- Shows LAN routes and current or saved peer addresses, and supports correcting an IP and reconnecting with the existing pairing.
+- Aligns resource toolbar buttons and their hover areas, adds spacing before resource actions, removes the final resource divider and keeps long lists virtual.
+- Adds optional Windows screenshot editing and text-selection actions, with model requests only after an explicit action.
+- Adds plugin source, license and version details, community sound subscriptions and an independent sound website with accurate, non-overlapping previews.
+- Improves Windows tray reminders, keeps DEV preferences separate and prevents the Agent update badge from being obscured by its card border.
 
 ---
 
-# DingDong 1.10.0
+# DingDong 1.10.2
 
-- Añade recordatorios temporales con color y sonido para el próximo uso; los eventos recientes conservan la definición original.
-- Agentes recientes carga 21 elementos por página de forma predeterminada, permite cambiar la cantidad, filtrar fuentes y fechas, fijar y cargar más al desplazarse. Elimina la sección duplicada de recursos habilitados.
-- Sustituye las etiquetas de entrada por puntos de color con detalles al pasar el cursor. Los recuentos aparecen a la izquierda; los temporales usan un borde blanco discontinuo.
-- Unifica los filtros de fecha y añade un calendario compacto de escritorio. El uso de Tokens utiliza los mismos selectores personalizados.
-- Permite buscar por IP local al enlazar equipos cuando no aparecen automáticamente, manteniendo la verificación mediante código.
-- Muestra el tipo de conexión local y las IP actuales o guardadas de ambos equipos; permite corregir la IP y volver a conectar con el emparejamiento existente.
-- Añade espacio entre los controles de conexión y mejora la reconexión cuando no está disponible la detección por multidifusión.
-- Añade capturas opcionales en Windows y edición integrada con anotaciones, deshacer y rehacer, copia y guardado PNG; corrige las bandas negras y la reapertura del editor.
-- Añade selección de texto en Windows para copiar, traducir, explicar y pulir, con solicitudes al modelo solo tras una acción explícita.
-- Añade detalles de plugins con origen, licencia y versión; mantiene los inventarios de clientes Agent en Recursos.
-- Añade sonidos comunitarios con vista previa, suscripción y selección guardada localmente.
-- Mejora el movimiento y los recuentos de avisos de Windows, y aísla las preferencias y la sincronización DEV de la instalación estable.
+- 新增仅下一次生效的临时提醒，可指定颜色与声音，Agent 历史保留提醒当时的定义。
+- 快捷面板专注展示最近 Agents；默认显示 21 条，条数设置移至“设置 → 最近 Agent”。
+- 最近 Agent 的图标及资源管理中的标题使用对应提醒颜色；快捷面板卡片使用同色边框，临时提醒使用虚线边框，悬停图标可查看提醒说明。
+- 快捷面板和资源管理的剪贴板历史均按每批 50 条分页，结合虚拟列表按需显示；搜索、来源筛选和排序覆盖完整历史。
+- 非当天的 Agent 记录在时间上方显示 YYYYMMDD 日期，修复日期和不同语言时间被截断的问题。
+- 统一日期筛选选项，新增桌面日期范围日历；Token 用量使用相同的自定义下拉组件。
+- 在对方 IP 输入框上方显示本机局域网 IP，发现服务启动失败时仍可显示；输入对方 IP 无需填写端口，首次连接使用配对码验证。
+- 显示局域网连接方式及对方当前或已保存的 IP，支持修改 IP 并使用原配对重连。
+- 统一资源工具栏按钮与悬停区域高度，拉开资源操作间距；移除资源列表最后一条底部分隔线，长列表按需构建。
+- 新增可选 Windows 截图编辑和划词操作，仅在主动点击模型动作后发送文字。
+- 新增插件来源、许可和版本详情、社区声音订阅与独立声音网站；试听状态准确，切换试听时停止上一段声音。
+- 优化 Windows 托盘提醒，隔离 DEV 偏好设置，并修复 Agent 接入更新标签被卡片边框遮挡的问题。
+
+---
+
+# DingDong 1.10.2
+
+- Añade recordatorios temporales de un solo uso con color y sonido, y conserva su definición original en el historial de Agents.
+- Mantiene el panel rápido centrado en Agents recientes; la cantidad predeterminada de 21 se configura en Ajustes → Agents recientes.
+- Aplica el color del aviso a los iconos y títulos del gestor. Las tarjetas del panel rápido usan bordes del mismo color, discontinuos para avisos temporales; el icono muestra su definición al pasar el cursor.
+- Carga el historial del portapapeles en páginas de 50 en ambos paneles, con filas virtuales y búsqueda, filtros de origen y ordenación sobre todo el historial.
+- Muestra YYYYMMDD encima de la hora para registros anteriores a hoy y evita recortar fechas y horas localizadas.
+- Unifica los filtros de fecha y añade un calendario de escritorio; el uso de Tokens emplea los mismos selectores personalizados.
+- Muestra la IP local de este equipo junto al campo de IP del otro equipo, incluso si falla la detección. Solo se introduce la IP; la primera conexión se verifica con un código.
+- Muestra rutas locales e IP actuales o guardadas y permite corregir la dirección y reconectar con el emparejamiento existente.
+- Alinea los botones y sus áreas de respuesta, separa las acciones de recursos, elimina el último separador y mantiene virtuales las listas largas.
+- Añade edición opcional de capturas y acciones de selección de texto en Windows, con solicitudes al modelo tras una acción explícita.
+- Añade detalles de origen, licencia y versión de plugins, suscripciones a sonidos y un sitio independiente con vistas previas que no se solapan.
+- Mejora los avisos de Windows, separa las preferencias DEV y evita que el borde de la tarjeta oculte la etiqueta de actualización del Agent.
