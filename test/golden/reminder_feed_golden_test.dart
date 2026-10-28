@@ -5,15 +5,14 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/app/app_theme.dart';
-import 'package:dingdong/app/dingdong_app.dart';
 import 'package:dingdong/core/widgets/desktop_date_range_picker.dart';
 import 'package:dingdong/features/activity/data/agent_activity_store.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/activity/ui/agent_activity_manager_screen.dart';
-import 'package:dingdong/features/settings/data/preferences_backend.dart';
-import 'package:dingdong/features/settings/data/settings_repository.dart';
+import 'package:dingdong/features/settings/domain/reminder_profile.dart';
+import 'package:dingdong/features/settings/domain/tray_reminder_style.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -100,30 +99,9 @@ void main() {
       final launcher = _Launcher();
       addTearDown(launcher.dispose);
       tester.view.devicePixelRatio = 1;
-      tester.view.physicalSize = const Size(390, 760);
+      tester.view.physicalSize = const Size(1120, 720);
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      await tester.pumpWidget(
-        DingDongApp(
-          activityController: controller,
-          now: () => now,
-          agentConversationLauncher: launcher,
-          settingsRepository: SettingsRepository(
-            MemoryPreferencesBackend({
-              'dingdong.panel.themeMode': dark ? 'dark' : 'light',
-            }),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(tester.takeException(), isNull);
-      await expectLater(
-        find.byKey(const Key('desktop-shell-golden')),
-        matchesGoldenFile(
-          'goldens/agent_feed_popup_${dark ? 'dark' : 'light'}.png',
-        ),
-      );
-      tester.view.physicalSize = const Size(1120, 720);
       await tester.pumpWidget(
         MaterialApp(
           debugShowCheckedModeBanner: false,

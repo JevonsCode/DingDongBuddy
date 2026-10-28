@@ -197,13 +197,9 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
                     temporary: reminder?.temporary ?? false,
                     borderRadius: BorderRadius.circular(9),
                     side: BorderSide(
-                      color:
-                          reminderColor ??
-                          Color.lerp(
-                            PopupStyle.of(context).border,
-                            PopupStyle.of(context).accent,
-                            pulse * 0.42,
-                          )!,
+                      color: widget.activity.unseen
+                          ? reminderColor ?? PopupStyle.of(context).accent
+                          : PopupStyle.of(context).border,
                     ),
                   ),
                   shadows: pulse == 0
