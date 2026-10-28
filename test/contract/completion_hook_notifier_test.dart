@@ -6,6 +6,156 @@ import 'package:dingdong/features/agent_api/data/loopback_mcp_tool_executor.dart
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test(
+    'Antigravity Stop waits until fully idle and uses workspacePaths',
+    () async {
+      final transport = _RecordingTransport();
+      final notifier = CompletionHookNotifier(transport);
+      await notifier.notify(
+        jsonEncode(<String, Object?>{
+          'conversationId': 'ag-session-1',
+          'workspacePaths': <String>['/workspace'],
+          'fullyIdle': false,
+        }),
+        sourceOverride: 'Antigravity',
+      );
+      expect(transport.body, isNull);
+      await notifier.notify(
+        jsonEncode(<String, Object?>{
+          'conversationId': 'ag-session-1',
+          'workspacePaths': <String>['/workspace'],
+        }),
+        sourceOverride: 'Antigravity',
+      );
+      expect(transport.body, isNull);
+      await notifier.notify(
+        jsonEncode(<String, Object?>{
+          'conversationId': 'ag-session-1',
+          'workspacePaths': <String>['/workspace'],
+          'fullyIdle': true,
+        }),
+        sourceOverride: 'Antigravity',
+      );
+      expect(transport.body?['source'], 'Antigravity');
+      expect(transport.body?['conversationId'], 'ag-session-1');
+      expect(transport.body?['workspacePath'], '/workspace');
+    },
+  );
+
+  test(
+    'Antigravity identifies the native surface only from its matching transcript location',
+    () async {
+      const id = 'a45cce14-b0be-4aea-a8f9-e88195674770';
+      for (final entry in <(String, String)>[
+        ('antigravity-cli', 'Antigravity CLI'),
+        ('antigravity-ide', 'Antigravity IDE'),
+        ('antigravity', 'Antigravity App'),
+      ]) {
+        final transport = _RecordingTransport();
+        await CompletionHookNotifier(
+          transport,
+          environment: const {'HOME': '/Users/test'},
+        ).notify(
+          jsonEncode(<String, Object?>{
+            'conversationId': id,
+            'workspacePaths': <String>['/workspace'],
+            'fullyIdle': true,
+            'transcriptPath':
+                '/Users/test/.gemini/${entry.$1}/brain/$id/.system_generated/logs/transcript.jsonl',
+          }),
+          sourceOverride: 'Antigravity',
+        );
+        expect(transport.body?['source'], entry.$2);
+      }
+      final transport = _RecordingTransport();
+      await CompletionHookNotifier(
+        transport,
+        environment: const {'HOME': '/Users/test'},
+      ).notify(
+        jsonEncode(<String, Object?>{
+          'conversationId': id,
+          'workspacePaths': <String>['/one', '/two'],
+          'fullyIdle': true,
+          'transcriptPath':
+              '/Users/test/.gemini/antigravity-cli/brain/other/.system_generated/logs/transcript.jsonl',
+        }),
+        sourceOverride: 'Antigravity',
+      );
+      expect(transport.body?['source'], 'Antigravity');
+      expect(transport.body?['workspacePath'], isNull);
+    },
+  );
+
+  test(
+    'camelCase hook payload forwards the original client and session',
+    () async {
+      final transport = _RecordingTransport();
+      await CompletionHookNotifier(transport).notify(
+        jsonEncode(<String, Object?>{
+          'sessionId': 'copilot-session-1',
+          'cwd': '/workspace',
+          'lastAssistantMessage': '完成测试。',
+        }),
+        sourceOverride: 'GitHub Copilot CLI',
+      );
+      expect(transport.body?['source'], 'GitHub Copilot CLI');
+      expect(transport.body?['conversationId'], 'copilot-session-1');
+      expect(transport.body?['workspacePath'], '/workspace');
+      expect(transport.body?['message'], '完成测试。');
+    },
+  );
+
+  test(
+    'camelCase transcriptPath supplies a final response when present',
+    () async {
+      final directory = await Directory.systemTemp.createTemp(
+        'dingdong-camel-transcript-',
+      );
+      addTearDown(() => directory.delete(recursive: true));
+      final transcript = File('${directory.path}/transcript.jsonl');
+      await transcript.writeAsString(
+        jsonEncode(<String, Object?>{
+          'type': 'response_item',
+          'payload': <String, Object?>{
+            'type': 'message',
+            'role': 'assistant',
+            'phase': 'final_answer',
+            'content': <Object?>[
+              <String, Object?>{'type': 'output_text', 'text': '任务完成。'},
+            ],
+          },
+        }),
+      );
+      final transport = _RecordingTransport();
+      await CompletionHookNotifier(transport).notify(
+        jsonEncode(<String, Object?>{'transcriptPath': transcript.path}),
+        sourceOverride: 'GitHub Copilot CLI',
+      );
+      expect(transport.body?['message'], '任务完成。');
+    },
+  );
+
+  test(
+    'desktop Stop hook carries the actual client and native session',
+    () async {
+      final transport = _RecordingTransport();
+      await CompletionHookNotifier(
+        transport,
+        environment: const {
+          'CLAUDE_CODE_ENTRYPOINT': 'claude-desktop',
+          'CLAUDE_CODE_HOST_SESSION_ID': 'local_desktop-123',
+        },
+      ).notify(
+        '{"session_id":"cli-123","cwd":"/workspace"}',
+        sourceOverride: 'Claude Code',
+      );
+
+      expect(transport.body?['source'], 'Claude Desktop');
+      expect(transport.body?['conversationId'], 'cli-123');
+      expect(transport.body?['hostSessionId'], 'local_desktop-123');
+    },
+  );
+
   test('Stop hook sends one bounded completion notification', () async {
     final _RecordingTransport transport = _RecordingTransport();
 

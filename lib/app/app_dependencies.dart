@@ -375,7 +375,10 @@ final class AppDependencies {
     final AgentResourceSynchronizer resourceSynchronizer =
         await AgentResourceSynchronizer.currentUser(
           paths.skillPackagesDirectory,
-          sandbox: Platform.isWindows && paths.development,
+          sandbox:
+              paths.development &&
+              (Platform.isWindows ||
+                  const bool.fromEnvironment('DINGDONG_PREVIEW_SANDBOX')),
           loadAdapters: agentAdapterRepository.loadEffectiveAdapters,
           skillPackageInstaller: skillPackageInstaller,
           triggerGroupStore: baseTriggerGroupStore,

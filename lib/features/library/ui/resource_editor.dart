@@ -130,6 +130,31 @@ class ResourceEditor extends StatefulWidget {
         ),
         SkillDeliveryAgentOption(id: 'kiro', label: 'Kiro'),
         SkillDeliveryAgentOption(id: 'pi', label: 'Pi', available: false),
+        SkillDeliveryAgentOption(
+          id: 'opencode',
+          label: 'OpenCode',
+          available: false,
+        ),
+        SkillDeliveryAgentOption(
+          id: 'antigravity',
+          label: 'Antigravity',
+          available: false,
+        ),
+        SkillDeliveryAgentOption(
+          id: 'antigravity-cli',
+          label: 'Antigravity CLI',
+          available: false,
+        ),
+        SkillDeliveryAgentOption(
+          id: 'copilot-cli',
+          label: 'GitHub Copilot CLI',
+          available: false,
+        ),
+        SkillDeliveryAgentOption(
+          id: 'windsurf',
+          label: 'Windsurf',
+          available: false,
+        ),
       ];
 
   @override

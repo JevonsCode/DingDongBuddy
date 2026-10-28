@@ -1,0 +1,10 @@
+schemaVersion: 1
+id: windsurf
+displayName: Windsurf
+
+detect:
+  directory: ~/.codeium/windsurf
+
+skills:
+  global: ~/.codeium/windsurf/skills
+  project: .windsurf/skills

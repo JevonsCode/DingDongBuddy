@@ -108,6 +108,11 @@ skills:
       'grok-build',
       'kiro',
       'pi',
+      'opencode',
+      'antigravity',
+      'antigravity-cli',
+      'copilot-cli',
+      'windsurf',
     ]);
     expect(documents.keys, builtInAgentAdapterIds);
     expect(
@@ -139,5 +144,37 @@ skills:
     expect(pi.resolvedProjectSkillPath(), path.join('.pi', 'skills'));
     expect(pi.mcpFilePath, isNull);
     expect(pi.promptFilePath, isNull);
+
+    final AgentAdapter opencode = AgentAdapter.parse(documents['opencode']!);
+    expect(opencode.globalSkillPath, '~/.config/opencode/skills');
+    expect(opencode.projectSkillPath, '.opencode/skills');
+    expect(opencode.mcpFilePath, '~/.config/opencode/opencode.json');
+    expect(opencode.mcpKind!.configValue, 'opencode-json');
+
+    final AgentAdapter antigravity = AgentAdapter.parse(
+      documents['antigravity']!,
+    );
+    expect(antigravity.globalSkillPath, '~/.gemini/config/skills');
+    expect(antigravity.projectSkillPath, '.agents/skills');
+    expect(antigravity.mcpFilePath, '~/.gemini/config/mcp_config.json');
+    expect(antigravity.mcpKind!.configValue, 'antigravity-json');
+
+    final AgentAdapter antigravityCli = AgentAdapter.parse(
+      documents['antigravity-cli']!,
+    );
+    expect(antigravityCli.globalSkillPath, '~/.gemini/antigravity-cli/skills');
+    expect(antigravityCli.projectSkillPath, '.agents/skills');
+    expect(antigravityCli.mcpFilePath, antigravity.mcpFilePath);
+
+    final AgentAdapter copilot = AgentAdapter.parse(documents['copilot-cli']!);
+    expect(copilot.globalSkillPath, '~/.copilot/skills');
+    expect(copilot.projectSkillPath, '.github/skills');
+    expect(copilot.mcpFilePath, '~/.copilot/mcp-config.json');
+    expect(copilot.mcpKind!.configValue, 'copilot-json');
+
+    final AgentAdapter windsurf = AgentAdapter.parse(documents['windsurf']!);
+    expect(windsurf.globalSkillPath, '~/.codeium/windsurf/skills');
+    expect(windsurf.projectSkillPath, '.windsurf/skills');
+    expect(windsurf.mcpFilePath, isNull);
   });
 }

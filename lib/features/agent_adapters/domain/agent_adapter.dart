@@ -9,6 +9,9 @@ enum AgentMcpConfigKind {
   cursorJson('cursor-json'),
   geminiJson('gemini-json'),
   kiroJson('kiro-json'),
+  openCodeJson('opencode-json'),
+  antigravityJson('antigravity-json'),
+  copilotJson('copilot-json'),
   mcpServersJson('mcpServers-json');
 
   const AgentMcpConfigKind(this.configValue);

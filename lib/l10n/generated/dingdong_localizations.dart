@@ -7772,6 +7772,66 @@ abstract class DingDongLocalizations {
   /// **'Connecting…'**
   String get aiTestingConnection;
 
+  /// Community voice installation.
+  ///
+  /// In en, this message translates to:
+  /// **'Source and license'**
+  String get voiceInstallDetails;
+
+  /// Community voice installation.
+  ///
+  /// In en, this message translates to:
+  /// **'Provided by the contributor'**
+  String get voiceInstallContributorInfo;
+
+  /// Community voice installation.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not find this sound. Check the link or connection.'**
+  String get voiceCatalogFindFailed;
+
+  /// Community voice installation.
+  ///
+  /// In en, this message translates to:
+  /// **'Already in your sound library. You can reinstall it.'**
+  String get voiceInstallPresent;
+
+  /// Community voice installation.
+  ///
+  /// In en, this message translates to:
+  /// **'Reinstall'**
+  String get voiceInstallReinstall;
+
+  /// Community voice installation.
+  ///
+  /// In en, this message translates to:
+  /// **'Install sound'**
+  String get voiceInstallTitle;
+
+  /// Community voice installation.
+  ///
+  /// In en, this message translates to:
+  /// **'Install this sound? It will be available in your reminder settings.'**
+  String get voiceInstallConfirm;
+
+  /// Community voice installation.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed. Choose it in a reminder to use it.'**
+  String get voiceInstallSuccess;
+
+  /// Community voice installation.
+  ///
+  /// In en, this message translates to:
+  /// **'License'**
+  String get voiceInstallLicense;
+
+  /// Community voice installation.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not preview this sound. Try again.'**
+  String get voiceInstallPreviewFailed;
+
   /// Community voice catalog: Title.
   ///
   /// In en, this message translates to:
@@ -7781,19 +7841,31 @@ abstract class DingDongLocalizations {
   /// Community voice catalog: Help.
   ///
   /// In en, this message translates to:
-  /// **'Subscribe to add a reviewed, ≤3-second voice to this device’s sound picker. Audio is verified on subscribe. Your current sound never changes automatically. Unsubscribing keeps files used by existing reminders.'**
+  /// **'Install a sound to add it to this device’s reminder picker.'**
   String get voiceCatalogHelp;
 
   /// Community voice catalog: Search.
   ///
   /// In en, this message translates to:
-  /// **'Search title, author or paste an Issue link'**
+  /// **'Search or paste a voice link'**
   String get voiceCatalogSearch;
+
+  /// Community voice installation status filter.
+  ///
+  /// In en, this message translates to:
+  /// **'Installation status'**
+  String get voiceCatalogFilter;
+
+  /// Show only installed community voices.
+  ///
+  /// In en, this message translates to:
+  /// **'Installed'**
+  String get voiceCatalogFilterInstalled;
 
   /// Community voice catalog: Empty.
   ///
   /// In en, this message translates to:
-  /// **'No matching voices on loaded pages yet. Submit an original or licensed sound on the website.'**
+  /// **'No matching sounds.'**
   String get voiceCatalogEmpty;
 
   /// Community voice catalog: LoadFailed.
@@ -7805,7 +7877,7 @@ abstract class DingDongLocalizations {
   /// Community voice catalog: SubscribeFailed.
   ///
   /// In en, this message translates to:
-  /// **'Could not subscribe. The voice may have changed, lack owner approval, exceed 3 seconds, or be unavailable. Refresh and retry.'**
+  /// **'Could not install this sound. It may have changed, be unavailable, or contain invalid audio. Refresh and try again.'**
   String get voiceCatalogSubscribeFailed;
 
   /// Community voice catalog: Full.
@@ -7823,13 +7895,13 @@ abstract class DingDongLocalizations {
   /// Community voice catalog: Subscribe.
   ///
   /// In en, this message translates to:
-  /// **'Subscribe'**
+  /// **'Install'**
   String get voiceCatalogSubscribe;
 
   /// Community voice catalog: Unsubscribe.
   ///
   /// In en, this message translates to:
-  /// **'Unsubscribe'**
+  /// **'Remove'**
   String get voiceCatalogUnsubscribe;
 
   /// Community voice catalog: Downloading.
@@ -7871,7 +7943,7 @@ abstract class DingDongLocalizations {
   /// Heading for pinned local community voice subscriptions, including delisted voices.
   ///
   /// In en, this message translates to:
-  /// **'Subscribed on this device'**
+  /// **'Installed on this device'**
   String get voiceCatalogSubscribed;
 
   /// Device connection address and route controls.
@@ -8155,6 +8227,30 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'Local network access was denied. Check DingDong’s local-network permission and private-network firewall, quit duplicate instances, then refresh.'**
   String get lanNetworkAccessDenied;
+
+  /// Agent MCP synchronization warning.
+  ///
+  /// In en, this message translates to:
+  /// **'MCP source scope conflicts with shared configuration'**
+  String get sharedMcpScopeConflict;
+
+  /// Agent MCP synchronization warning.
+  ///
+  /// In en, this message translates to:
+  /// **'This MCP was not synced because the configuration is shared with clients outside its source scope.'**
+  String get sharedMcpScopeConflictDetail;
+
+  /// Agent MCP synchronization warning.
+  ///
+  /// In en, this message translates to:
+  /// **'MCP authentication is not supported'**
+  String get unsupportedMcpAuthentication;
+
+  /// Agent MCP synchronization warning.
+  ///
+  /// In en, this message translates to:
+  /// **'Antigravity cannot use this environment-variable bearer token. Use its authentication flow or an explicit header.'**
+  String get unsupportedMcpAuthenticationDetail;
 }
 
 class _DingDongLocalizationsDelegate

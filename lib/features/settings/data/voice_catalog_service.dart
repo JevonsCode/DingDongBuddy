@@ -41,7 +41,6 @@ final class VoiceCatalogService implements VoiceCatalogGateway {
     }
     final uri = Uri.https('api.github.com', '/repos/$repository/issues', {
       'state': 'open',
-      'labels': voiceCatalogLabel,
       'per_page': '100',
       'sort': 'created',
       'direction': 'desc',
@@ -94,7 +93,7 @@ final class VoiceCatalogService implements VoiceCatalogGateway {
     return voice;
   }
 
-  /// Re-check approval and attachment at subscription time, not a stale card.
+  /// Re-check the submission and attachment at installation time, not a stale card.
   @override
   Future<ReminderAudio> subscribe(
     CatalogVoice voice,
@@ -112,10 +111,9 @@ final class VoiceCatalogService implements VoiceCatalogGateway {
         : null;
     if (current == null || current.metadataJson != voice.metadataJson) {
       throw const FormatException(
-        'This voice changed or is no longer approved. Refresh the catalog.',
+        'This voice changed or is no longer available. Refresh the catalog.',
       );
     }
-    final approvedHash = await _approval(current);
     final bytes = await _get(
       current.audioUrl,
       maxBytes: voiceCatalogMaxBytes,
@@ -125,9 +123,6 @@ final class VoiceCatalogService implements VoiceCatalogGateway {
     final digest = (await Sha256().hash(
       bytes,
     )).bytes.map((x) => x.toRadixString(16).padLeft(2, '0')).join();
-    if (digest != approvedHash) {
-      throw const FormatException('Audio differs from the approved version.');
-    }
     final latestJson = jsonDecode(
       utf8.decode(await _get(uri, maxBytes: 128 * 1024, attachment: false)),
     );
@@ -174,39 +169,6 @@ final class VoiceCatalogService implements VoiceCatalogGateway {
       metadataSha256: (await Sha256().hash(
         utf8.encode(current.metadataJson),
       )).bytes.map((x) => x.toRadixString(16).padLeft(2, '0')).join(),
-    );
-  }
-
-  Future<String> _approval(CatalogVoice voice) async {
-    String? approved;
-    for (var page = 1; page <= 10; page++) {
-      final uri = Uri.https(
-        'api.github.com',
-        '/repos/$repository/issues/${voice.number}/comments',
-        {'per_page': '100', 'page': '$page'},
-      );
-      final comments = jsonDecode(
-        utf8.decode(
-          await _get(uri, maxBytes: 4 * 1024 * 1024, attachment: false),
-        ),
-      );
-      if (comments is! List) {
-        throw const FormatException('Invalid approval response.');
-      }
-      final digest = await approvedAudioHash(voice, comments);
-      if (digest != null) approved = digest;
-      if (comments.length < 100) {
-        if (approved != null) return approved;
-        break;
-      }
-      if (page == 10) {
-        throw const FormatException(
-          'Too many approval comments to verify safely.',
-        );
-      }
-    }
-    throw const FormatException(
-      'The current voice has no matching owner approval.',
     );
   }
 
@@ -260,6 +222,11 @@ final class VoiceCatalogService implements VoiceCatalogGateway {
                 (next.host ==
                         'github-production-user-asset-6210df.s3.amazonaws.com' &&
                     RegExp(r'^/[0-9]+/[a-zA-Z0-9_./-]+$').hasMatch(next.path) &&
+                    next.fragment.isEmpty) ||
+                (next.host == 'objects.githubusercontent.com' &&
+                    RegExp(
+                      r'^/github-production-repository-file-5c1aeb/[0-9]+/[0-9]+$',
+                    ).hasMatch(next.path) &&
                     next.fragment.isEmpty))) {
           throw const FormatException('Untrusted audio redirect.');
         }

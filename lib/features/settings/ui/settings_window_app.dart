@@ -20,6 +20,7 @@ class SettingsWindowApp extends StatefulWidget {
     required this.viewModel,
     required this.windowController,
     this.initialDestination = SettingsWindowDestination.top,
+    this.initialVoiceIssueNumber,
     this.soundFileGateway,
     this.soundPreviewGateway,
     this.onRestartApplication,
@@ -29,6 +30,7 @@ class SettingsWindowApp extends StatefulWidget {
   final SettingsViewModel viewModel;
   final WindowController windowController;
   final SettingsWindowDestination initialDestination;
+  final int? initialVoiceIssueNumber;
   final SoundFileGateway? soundFileGateway;
   final SoundPreviewGateway? soundPreviewGateway;
   final Future<void> Function()? onRestartApplication;
@@ -49,6 +51,7 @@ class _SettingsWindowAppState extends State<SettingsWindowApp>
     enableWindowsHideOnClose();
     _navigationController = SettingsNavigationController(
       initialDestination: widget.initialDestination,
+      initialVoiceIssueNumber: widget.initialVoiceIssueNumber,
     );
     unawaited(widget.viewModel.load());
     unawaited(
@@ -58,6 +61,11 @@ class _SettingsWindowAppState extends State<SettingsWindowApp>
             SettingsWindowDestination.fromValue(call.arguments),
           );
           await widget.viewModel.checkForUpdates();
+          await windowManager.focus();
+        } else if (call.method == 'window_focus_voice' &&
+            call.arguments is int &&
+            (call.arguments as int) > 0) {
+          _navigationController.navigateToVoice(call.arguments as int);
           await windowManager.focus();
         }
       }),

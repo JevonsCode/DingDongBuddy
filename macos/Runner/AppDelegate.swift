@@ -131,6 +131,9 @@ class AppDelegate: FlutterAppDelegate {
     AccessibilityPermissionAssistant()
   private var desktopShellReady = false
   private var pendingApplicationOpen = false
+  private var voiceLinkChannel: FlutterMethodChannel?
+  private var pendingVoiceLinks: [String] = []
+  private var voiceLinksReady = false
 #if DEBUG
   private var terminationSignalSource: DispatchSourceSignal?
 #endif
@@ -142,6 +145,21 @@ class AppDelegate: FlutterAppDelegate {
     let openedInteractively = NSApp.isActive ||
       NSWorkspace.shared.frontmostApplication?.processIdentifier == ProcessInfo.processInfo.processIdentifier
     if let controller = mainFlutterWindow?.contentViewController as? FlutterViewController {
+      let voiceLinkChannel = FlutterMethodChannel(
+        name: "dingdong/voice_links",
+        binaryMessenger: controller.engine.binaryMessenger
+      )
+      voiceLinkChannel.setMethodCallHandler { [weak self] call, result in
+        guard call.method == "ready", let self else {
+          result(FlutterMethodNotImplemented)
+          return
+        }
+        self.voiceLinksReady = true
+        let pending = self.pendingVoiceLinks
+        self.pendingVoiceLinks.removeAll()
+        result(pending)
+      }
+      self.voiceLinkChannel = voiceLinkChannel
       let channel = FlutterMethodChannel(
         name: "dingdong/clipboard_monitor",
         binaryMessenger: controller.engine.binaryMessenger
@@ -472,6 +490,26 @@ class AppDelegate: FlutterAppDelegate {
   ) -> Bool {
     requestApplicationOpen()
     return false
+  }
+
+  override func application(_ application: NSApplication, open urls: [URL]) {
+#if DEBUG
+    let voiceScheme = "dingdong-dev"
+#else
+    let voiceScheme = "dingdong"
+#endif
+    for url in urls where url.scheme == voiceScheme {
+      let value = url.absoluteString
+      if voiceLinksReady {
+        voiceLinkChannel?.invokeMethod("open", arguments: value)
+      } else {
+        pendingVoiceLinks.append(value)
+      }
+    }
+    let otherURLs = urls.filter { $0.scheme != voiceScheme }
+    if !otherURLs.isEmpty {
+      super.application(application, open: otherURLs)
+    }
   }
 
   override func applicationDockMenu(_ sender: NSApplication) -> NSMenu? {

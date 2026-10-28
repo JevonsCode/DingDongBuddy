@@ -6,6 +6,49 @@ import 'package:path/path.dart' as p;
 
 void main() {
   test(
+    'desktop MCP keeps resource routing and sends desktop notifications',
+    () async {
+      final transport = _RecordingMcpHttpTransport();
+      final executor = LoopbackMcpToolExecutor(
+        transport,
+        currentDirectory: () => '/workspace',
+        repositoryUrlResolver: (_) async => null,
+        sourceResolver: () => 'Claude Desktop',
+        conversationIdResolver: () => 'cli-123',
+        hostSessionIdResolver: () => 'local_desktop-123',
+      );
+
+      await executor.execute('dingdong_bridge', {
+        'task': 'work',
+        'source': 'Claude Code',
+      });
+      expect(transport.body?['source'], 'Claude Code');
+      expect(transport.body?['activitySource'], 'Claude Desktop');
+
+      await executor.execute('dingdong_notify', {
+        'message': 'Waiting',
+        'source': 'Claude Code',
+      });
+      expect(transport.body?['source'], 'Claude Desktop');
+      expect(transport.body?['conversationId'], 'cli-123');
+      expect(transport.body?['hostSessionId'], 'local_desktop-123');
+
+      await executor.execute('dingdong_notify', {
+        'message': 'Other conversation',
+        'conversationId': 'different-cli',
+      });
+      expect(transport.body?['conversationId'], 'different-cli');
+      expect(transport.body, isNot(contains('hostSessionId')));
+
+      await executor.execute('dingdong_load_skill', {
+        'id': 'skill',
+        'source': 'Claude Desktop',
+      });
+      expect(transport.query?['source'], 'Claude Code');
+    },
+  );
+
+  test(
     'named reminder tools preserve structured IDs and imported paths',
     () async {
       final transport = _RecordingMcpHttpTransport();

@@ -42,12 +42,13 @@ extension DuplicateMcpCleanup on AgentResourceSynchronizer {
         throw StateError('The Agent configuration no longer exists.');
       }
       final Object? decoded = decodeStrictJson(snapshot.contents);
+      final String serversKey = _mcpServersKey(target.kind);
       if (decoded is! Map<String, Object?> ||
-          decoded['mcpServers'] is! Map<String, Object?>) {
+          decoded[serversKey] is! Map<String, Object?>) {
         throw const FormatException('The Agent MCP configuration is invalid.');
       }
       final Map<String, Object?> servers = Map<String, Object?>.of(
-        decoded['mcpServers']! as Map<String, Object?>,
+        decoded[serversKey]! as Map<String, Object?>,
       );
       final bool stillDuplicate = _duplicateMcpIssues(target, servers, mcps)
           .any(
@@ -60,7 +61,7 @@ extension DuplicateMcpCleanup on AgentResourceSynchronizer {
       }
       await beforeRemove?.call(snapshot);
       servers.remove(issue.duplicateEntryName);
-      decoded['mcpServers'] = servers;
+      decoded[serversKey] = servers;
       return '${const JsonEncoder.withIndent('  ').convert(decoded)}\n';
     }, validate: decodeStrictJson);
   });

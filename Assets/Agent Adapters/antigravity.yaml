@@ -1,0 +1,14 @@
+schemaVersion: 1
+id: antigravity
+displayName: Antigravity
+
+detect:
+  directory: ~/.gemini/config
+
+skills:
+  global: ~/.gemini/config/skills
+  project: .agents/skills
+
+mcp:
+  file: ~/.gemini/config/mcp_config.json
+  format: antigravity-json

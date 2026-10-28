@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:dingdong/features/activity/data/agent_activity_store.dart';
@@ -7,6 +8,115 @@ import 'package:dingdong/features/agent_api/domain/conversation_token_usage.dart
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test(
+    'does not guess when a transcript maps to multiple desktop sessions',
+    () {
+      final temporary = Directory.systemTemp.createTempSync(
+        'dingdong-ambiguous-',
+      );
+      addTearDown(() => temporary.deleteSync(recursive: true));
+      final index = Directory('${temporary.path}/sessions/account/org')
+        ..createSync(recursive: true);
+      for (final id in ['local_desktop-1', 'local_desktop-2']) {
+        File('${index.path}/$id.json').writeAsStringSync(
+          jsonEncode({'sessionId': id, 'cliSessionId': 'shared-cli'}),
+        );
+      }
+      File('${index.path}/local_cli-imported.json').writeAsStringSync(
+        jsonEncode({
+          'sessionId': 'local_cli-imported',
+          'cliSessionId': 'cli-imported',
+        }),
+      );
+      File('${index.path}/local_native-other.json').writeAsStringSync(
+        jsonEncode({
+          'sessionId': 'local_native-other',
+          'cliSessionId': 'cli-imported',
+        }),
+      );
+      final store = FileAgentActivityStore(
+        File('${temporary.path}/activity.json'),
+        claudeDesktopSessionDirectory: Directory('${temporary.path}/sessions'),
+      );
+      store.save(
+        AgentActivityHistory(
+          activities: [
+            for (final id in ['shared-cli', 'cli-imported'])
+              AgentActivity(
+                id: id,
+                source: 'Claude Code',
+                message: 'Finished',
+                completedAt: DateTime.utc(2026, 10, 28),
+                unseen: false,
+                conversationTarget: AgentConversationTarget(
+                  client: AgentClient.claudeCode,
+                  conversationId: id,
+                ),
+              ),
+          ],
+        ),
+      );
+      expect(
+        store.load().activities.map((item) => item.source),
+        everyElement('Claude Code'),
+      );
+    },
+  );
+
+  test(
+    'recognizes native desktop history without relabeling imported CLI sessions',
+    () {
+      final temporary = Directory.systemTemp.createTempSync(
+        'dingdong-desktop-index-',
+      );
+      addTearDown(() => temporary.deleteSync(recursive: true));
+      final index = Directory('${temporary.path}/sessions/account/org')
+        ..createSync(recursive: true);
+      File('${index.path}/local_desktop-123.json').writeAsStringSync(
+        jsonEncode({
+          'sessionId': 'local_desktop-123',
+          'cliSessionId': 'cli-123',
+        }),
+      );
+      File('${index.path}/local_cli-456.json').writeAsStringSync(
+        jsonEncode({'sessionId': 'local_cli-456', 'cliSessionId': 'cli-456'}),
+      );
+      final store = FileAgentActivityStore(
+        File('${temporary.path}/activity.json'),
+        claudeDesktopSessionDirectory: Directory('${temporary.path}/sessions'),
+      );
+      store.save(
+        AgentActivityHistory(
+          activities: [
+            for (final id in ['cli-123', 'cli-456', 'cli-unknown'])
+              AgentActivity(
+                id: id,
+                source: 'Claude Code',
+                message: 'Finished',
+                completedAt: DateTime.utc(2026, 10, 28),
+                unseen: true,
+                repeatCount: 4,
+                conversationTarget: AgentConversationTarget(
+                  client: AgentClient.claudeCode,
+                  conversationId: id,
+                  workspacePath: '/workspace',
+                ),
+              ),
+          ],
+        ),
+      );
+
+      final items = store.load().activities;
+      expect(items[0].source, 'Claude Desktop');
+      expect(items[0].conversationTarget?.client, AgentClient.claudeDesktop);
+      expect(items[0].conversationTarget?.hostSessionId, 'local_desktop-123');
+      expect(items[0].repeatCount, 4);
+      expect(items[0].unseen, isTrue);
+      expect(items[1].source, 'Claude Code');
+      expect(items[2].source, 'Claude Code');
+    },
+  );
+
   test('file store round-trips detailed records and count timestamps', () {
     final Directory temporary = Directory.systemTemp.createTempSync(
       'dingdong-agent-activity-',

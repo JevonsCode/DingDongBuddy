@@ -177,6 +177,10 @@ AgentConversationTarget? _conversationTarget(
     client: client,
     conversationId: conversationId,
     workspacePath: workspacePath,
+    hostSessionId: _firstTrimmed(<Object?>[
+      nested['hostSessionId'],
+      json['hostSessionId'],
+    ]),
   );
   return target.hasDestination || conversationId != null ? target : null;
 }

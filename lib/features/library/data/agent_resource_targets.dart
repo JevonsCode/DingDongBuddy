@@ -30,25 +30,32 @@ _AgentResourceTargets _targetsForAdapters(
   final List<AgentAdapter> installed = adapters
       .where((AgentAdapter adapter) => adapter.isInstalled(home))
       .toList(growable: false);
-  final Map<String, ({AgentMcpConfigKind kind, String client})>
-  mcpTargetOwners = <String, ({AgentMcpConfigKind kind, String client})>{};
+  final Map<String, ({AgentMcpConfigKind kind, List<String> clients})>
+  mcpTargetOwners =
+      <String, ({AgentMcpConfigKind kind, List<String> clients})>{};
   final Map<String, ({bool routing, String client})> promptTargetOwners =
       <String, ({bool routing, String client})>{};
   for (final AgentAdapter adapter in installed) {
     if (adapter.resolvedMcpFilePath(home) case final String mcpPath) {
       final String normalized = path.normalize(mcpPath);
-      final ({AgentMcpConfigKind kind, String client})? existing =
+      final ({AgentMcpConfigKind kind, List<String> clients})? existing =
           mcpTargetOwners[normalized];
       if (existing != null && existing.kind != adapter.mcpKind) {
         throw FormatException(
-          'Agent Adapters "${existing.client}" and "${adapter.displayName}" '
+          'Agent Adapters "${existing.clients.first}" and "${adapter.displayName}" '
           'use conflicting MCP formats for $normalized.',
         );
       }
-      mcpTargetOwners[normalized] = (
-        kind: adapter.mcpKind!,
-        client: adapter.displayName,
-      );
+      if (existing == null) {
+        mcpTargetOwners[normalized] = (
+          kind: adapter.mcpKind!,
+          clients: _mcpClientSources(adapter),
+        );
+      } else {
+        for (final String source in _mcpClientSources(adapter)) {
+          if (!existing.clients.contains(source)) existing.clients.add(source);
+        }
+      }
     }
     if (adapter.resolvedPromptFilePath(home) case final String promptPath) {
       final String normalized = path.normalize(promptPath);
@@ -65,6 +72,25 @@ _AgentResourceTargets _targetsForAdapters(
         routing: adapter.includeBridgeRoutingInstructions,
         client: adapter.displayName,
       );
+    }
+  }
+  // A client that is not installed yet may later read an already-populated
+  // shared file. Include every known reader before applying source scopes.
+  for (final AgentAdapter adapter in adapters.where(
+    (AgentAdapter adapter) => !installed.contains(adapter),
+  )) {
+    final String? mcpPath = adapter.resolvedMcpFilePath(home);
+    if (mcpPath == null) continue;
+    final existing = mcpTargetOwners[path.normalize(mcpPath)];
+    if (existing == null) continue;
+    if (existing.kind != adapter.mcpKind) {
+      throw FormatException(
+        'Agent Adapters "${existing.clients.first}" and "${adapter.displayName}" '
+        'use conflicting MCP formats for ${path.normalize(mcpPath)}.',
+      );
+    }
+    for (final String source in _mcpClientSources(adapter)) {
+      if (!existing.clients.contains(source)) existing.clients.add(source);
     }
   }
   final List<Directory> skillRoots = installed
@@ -93,18 +119,17 @@ _AgentResourceTargets _targetsForAdapters(
       })
       .whereType<AgentPromptTarget>()
       .toList(growable: false);
-  final List<AgentMcpTarget> mcpTargets = installed
-      .map((AgentAdapter adapter) {
-        final String? file = adapter.resolvedMcpFilePath(home);
-        return file == null
-            ? null
-            : AgentMcpTarget(
-                File(file),
-                adapter.mcpKind!,
-                clientName: adapter.displayName,
-              );
-      })
-      .whereType<AgentMcpTarget>()
+  final List<AgentMcpTarget> mcpTargets = mcpTargetOwners.entries
+      .map(
+        (entry) => AgentMcpTarget(
+          File(entry.key),
+          entry.value.kind,
+          clientName: entry.value.clients.first,
+          additionalClientNames: entry.value.clients
+              .skip(1)
+              .toList(growable: false),
+        ),
+      )
       .toList(growable: false);
   return _AgentResourceTargets(
     skillRoots: skillRoots,
@@ -148,5 +173,13 @@ _AgentResourceTargets _targetsForAdapters(
     ],
   );
 }
+
+List<String> _mcpClientSources(AgentAdapter adapter) => <String>[
+  adapter.displayName,
+  if (adapter.id == 'antigravity') ...<String>[
+    'Antigravity App',
+    'Antigravity IDE',
+  ],
+];
 
 /// Adds transactional synchronization without changing callers of ResourceStore.

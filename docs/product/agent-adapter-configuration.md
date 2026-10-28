@@ -25,7 +25,8 @@ YAML 编辑器及当前版本与前两个版本的比较收在 **高级配置**�
 | Linux | `~/.local/share/DingDong/Agent Adapters` |
 
 每个 `.yaml` 或 `.yml` 文件定义一个 Adapter，建议文件名与 `id` 一致。DingDong 自带
-Codex、Claude Code、Cursor、Gemini CLI、Grok Build、Kiro 和 Pi 的内置定义：
+Codex、Claude Code、Cursor、Gemini CLI、Grok Build、Kiro、Pi、OpenCode、
+Antigravity、Antigravity CLI、GitHub Copilot CLI 和 Windsurf 的内置定义：
 
 - 没有同 ID 用户文件时，使用内置定义。
 - 在资源管理里保存内置定义时，会在上述目录创建同 ID 用户覆盖文件。
@@ -81,7 +82,23 @@ prompt:
 - `cursor-json`
 - `gemini-json`
 - `kiro-json`
+- `opencode-json`：根对象使用 `mcp`，本地命令使用数组
+- `antigravity-json`：根对象使用 `mcpServers`，HTTP 使用 `serverUrl`
+- `copilot-json`：根对象使用 `mcpServers`，每个服务器需要 `tools`
 - `mcpServers-json`：通用 JSON，根对象使用 `mcpServers`
+
+OpenCode 的内置目标为 `~/.config/opencode/opencode.json`。OpenCode 也可从
+其他 JSONC、环境变量和项目配置读取设置，这些来源可能覆盖全局设置；DingDong
+不会修改或合并这些文件。Antigravity CLI 的全局 Skill 位于
+`~/.gemini/antigravity-cli/skills`，App/IDE 位于 `~/.gemini/config/skills`。
+它们共享 `~/.gemini/config/mcp_config.json`：针对任一客户端启用的 MCP 会写入
+共享文件，因此这份原生配置不能把 MCP 限定为只让其中一个客户端看到。
+两者的项目 Skill 目录也与 Codex 共用 `.agents/skills`；多个原生交付目标发生
+目录冲突时，DingDong 会停止冲突部署并提示，而不会覆盖已有 Skill。
+Antigravity 的 HTTP bearer-token 环境变量插值尚未确认，使用该字段时同步会
+报告错误并保留文件；可使用客户端认证流程或明确配置的请求头。
+Windsurf 的内置 Adapter 使用官方仍兼容的旧版 Skill 路径；新版 Devin 的 MCP
+目录随平台及 XDG 配置变化，当前 Adapter 不会猜测或写入 MCP 配置。
 
 Grok Build 和 Pi 当前内置 Adapter 只声明各自官方的原生 Skill 目录：Grok Build 使用
 `~/.grok/skills` 与 `.grok/skills`，Pi 使用 `~/.pi/agent/skills` 与

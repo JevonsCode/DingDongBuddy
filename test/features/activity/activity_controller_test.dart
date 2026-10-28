@@ -7,6 +7,44 @@ import 'package:dingdong/features/shell/domain/tray_unread_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('Claude desktop and CLI do not merge or acknowledge each other', () {
+    var nextId = 0;
+    final controller = ActivityController(idGenerator: () => '${nextId++}');
+    const cli = AgentConversationTarget(
+      client: AgentClient.claudeCode,
+      conversationId: 'same-id',
+      workspacePath: '/workspace',
+    );
+    const desktop = AgentConversationTarget(
+      client: AgentClient.claudeDesktop,
+      conversationId: 'same-id',
+      workspacePath: '/workspace',
+      hostSessionId: 'local_desktop-123',
+    );
+    controller.record(
+      source: 'Claude Code',
+      message: 'CLI',
+      conversationTarget: cli,
+    );
+    controller.record(
+      source: 'Claude Desktop',
+      message: 'Desktop',
+      conversationTarget: desktop,
+    );
+    expect(controller.activities, hasLength(2));
+    expect(
+      controller.activities.first.conversationTarget?.hostSessionId,
+      'local_desktop-123',
+    );
+    expect(controller.markConversationSeen(desktop), 1);
+    expect(
+      controller.activities
+          .singleWhere((item) => item.source == 'Claude Code')
+          .unseen,
+      isTrue,
+    );
+  });
+
   test('observed task lifecycle keeps the real start and completion times', () {
     final DateTime startedAt = DateTime.utc(2026, 8, 11, 9, 30, 4);
     final DateTime completedAt = DateTime.utc(2026, 8, 11, 9, 42, 19);

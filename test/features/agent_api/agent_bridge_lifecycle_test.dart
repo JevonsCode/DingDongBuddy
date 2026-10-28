@@ -7,6 +7,30 @@ import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test(
+    'Bridge records desktop lifecycle without changing resource source',
+    () async {
+      AgentBridgeTaskStart? observed;
+      final router = AgentRouter(
+        resourceStore: InMemoryResourceStore(),
+        onAgentTaskStarted: (start) => observed = start,
+      );
+      final response = await router.route(
+        const HttpRequestData(
+          method: 'POST',
+          uri: '/agent/bridge',
+          body:
+              '{"task":"work","source":"Claude Code",'
+              '"activitySource":"Claude Desktop","conversationId":"cli-123"}',
+        ),
+      );
+
+      expect(response.statusCode, 200);
+      expect(observed?.source, 'Claude Desktop');
+      expect(observed?.conversationId, 'cli-123');
+    },
+  );
+
   test('Bridge reports the task start with its real request context', () async {
     final DateTime now = DateTime.utc(2026, 8, 11, 8, 12, 30);
     AgentBridgeTaskStart? observed;

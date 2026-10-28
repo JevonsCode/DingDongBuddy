@@ -5,6 +5,19 @@ import 'package:dingdong/features/agent_api/data/loopback_mcp_tool_executor.dart
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('desktop session start acknowledges the desktop client', () async {
+    final transport = _RecordingTransport();
+    await ConversationOpenedHookNotifier(
+      transport,
+      environment: const {'CLAUDE_CODE_ENTRYPOINT': 'claude-desktop'},
+    ).notify(
+      '{"hook_event_name":"SessionStart","source":"resume","session_id":"cli-123"}',
+      sourceOverride: 'Claude Code',
+    );
+    expect(transport.body?['source'], 'Claude Desktop');
+    expect(transport.body?['conversationId'], 'cli-123');
+  });
+
   test(
     'Codex SessionStart startup acknowledges the opened conversation',
     () async {

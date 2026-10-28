@@ -1,0 +1,14 @@
+schemaVersion: 1
+id: copilot-cli
+displayName: GitHub Copilot CLI
+
+detect:
+  directory: ~/.copilot
+
+skills:
+  global: ~/.copilot/skills
+  project: .github/skills
+
+mcp:
+  file: ~/.copilot/mcp-config.json
+  format: copilot-json

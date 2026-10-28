@@ -33,6 +33,7 @@ Future<void> main(List<String> arguments) async {
       await _notifyStop(
         transport,
         sourceOverride: _argumentValue(arguments, '--source'),
+        antigravityHook: arguments.contains('--antigravity-hook'),
       );
       return;
     }
@@ -79,6 +80,7 @@ Future<void> _acknowledgeSessionStart(
 Future<void> _notifyStop(
   DartIoMcpHttpTransport transport, {
   String? sourceOverride,
+  bool antigravityHook = false,
 }) async {
   final String hookInput = await stdin.transform(utf8.decoder).join();
   try {
@@ -88,7 +90,7 @@ Future<void> _notifyStop(
   } on Object {
     // Completion alerts must never block or fail the Agent's Stop lifecycle.
   }
-  stdout.write('{}');
+  stdout.write(antigravityHook ? '{"decision":"allow"}' : '{}');
 }
 
 String? _argumentValue(List<String> arguments, String name) {

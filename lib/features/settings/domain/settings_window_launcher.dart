@@ -1,6 +1,7 @@
 enum SettingsWindowDestination {
   top,
-  version;
+  version,
+  voice;
 
   static SettingsWindowDestination fromValue(Object? value) {
     return values.firstWhere(

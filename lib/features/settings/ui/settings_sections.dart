@@ -6,6 +6,7 @@ class _NotificationSettingsSection extends StatelessWidget {
     required this.settings,
     required this.soundFileGateway,
     required this.soundPreviewGateway,
+    super.key,
   });
 
   final SettingsViewModel viewModel;

@@ -889,13 +889,29 @@ void main() {
         r"REQUESTED_REF: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || github.event_name == 'repository_dispatch' && github.event.client_payload.source_ref || inputs.source_ref }}",
       ),
     );
-    // Website-only edits deploy the current catalog over published product docs.
+    // Routing changes overlay the current redirect over published product docs.
     // They must not advertise an unreleased desktop version from main.
     expect(pagesWorkflow, contains("'docs/voices/**'"));
     expect(pagesWorkflow, contains('releases/latest'));
     expect(pagesWorkflow, contains(r'ref: ${{ steps.source.outputs.ref }}'));
-    expect(pagesWorkflow, contains('sparse-checkout: docs/voices'));
-    expect(pagesWorkflow, contains('node docs/voices/deploy-overlay.mjs'));
+    expect(
+      pagesWorkflow,
+      matches(
+        RegExp(
+          r'sparse-checkout:\s*\|\s+docs/voices\s+docs/product\s+\.github/scripts',
+        ),
+      ),
+    );
+    expect(
+      pagesWorkflow,
+      contains('node community-source/.github/scripts/pages-overlay.mjs'),
+    );
+    expect(
+      pagesWorkflow,
+      contains(
+        'cp community-source/docs/voices/index.html docs/voices/index.html',
+      ),
+    );
     expect(pagesWorkflow, isNot(contains('gh release create')));
     expect(deviceLinkDeployWorkflow, contains('workflow_dispatch:'));
     expect(deviceLinkDeployWorkflow, contains('device-link-production'));

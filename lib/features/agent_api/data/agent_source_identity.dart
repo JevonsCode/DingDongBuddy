@@ -12,12 +12,20 @@ String? resolveAgentAdapterId(String source) {
       .replaceAll(RegExp(r'^-+|-+$'), '');
   return switch (normalized) {
     'codex' || 'codex-cli' || 'codex-desktop' || 'openai-codex' => 'codex',
-    'claude' || 'claude-code' || 'anthropic-claude' => 'claude-code',
+    'claude' ||
+    'claude-code' ||
+    'claude-desktop' ||
+    'anthropic-claude' => 'claude-code',
     'cursor' || 'cursor-agent' => 'cursor',
     'gemini' || 'gemini-cli' || 'google-gemini' => 'gemini',
-    'grok' || 'grok-build' => 'grok-build',
+    'grok' || 'grok-build' || 'grok-build-cli' => 'grok-build',
     'kiro' || 'kiro-cli' => 'kiro',
     'pi' || 'pi-coding-agent' => 'pi',
+    'opencode' || 'opencode-cli' || 'opencode-desktop' => 'opencode',
+    'antigravity' || 'antigravity-ide' || 'antigravity-app' => 'antigravity',
+    'antigravity-cli' || 'agy' => 'antigravity-cli',
+    'copilot-cli' || 'github-copilot-cli' => 'copilot-cli',
+    'windsurf' => 'windsurf',
     _ => null,
   };
 }
@@ -30,6 +38,10 @@ String? inferAgentSourceFromEnvironment(Map<String, String> environment) {
 
   if (hasValue('CODEX_THREAD_ID')) {
     return 'Codex';
+  }
+  if (environment['CLAUDE_CODE_ENTRYPOINT']?.trim().toLowerCase() ==
+      'claude-desktop') {
+    return 'Claude Desktop';
   }
   if (hasValue('CLAUDE_CODE_SESSION_ID') ||
       hasValue('CLAUDE_SESSION_ID') ||
@@ -56,4 +68,14 @@ String? inferAgentSourceFromEnvironment(Map<String, String> environment) {
     return 'Pi';
   }
   return null;
+}
+
+/// Keeps explicit non-Claude clients intact when nested in Claude Desktop.
+String? resolveActivitySource(String? requested, String? environmentSource) {
+  final String source = (requested ?? '').trim();
+  if (environmentSource == 'Claude Desktop' &&
+      (source.isEmpty || resolveAgentAdapterId(source) == 'claude-code')) {
+    return 'Claude Desktop';
+  }
+  return source.isEmpty ? environmentSource : source;
 }
