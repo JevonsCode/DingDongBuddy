@@ -8,6 +8,7 @@ import 'package:dingdong/core/widgets/desktop_select_field.dart';
 import 'package:dingdong/core/widgets/desktop_slider.dart';
 import 'package:dingdong/features/agent_api/domain/conversation_token_usage.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
+import 'package:dingdong/features/settings/data/voice_catalog_service.dart';
 import 'package:dingdong/features/settings/domain/settings_window_launcher.dart';
 import 'package:dingdong/features/settings/domain/sound_file_gateway.dart';
 import 'package:dingdong/features/settings/domain/sound_preview_gateway.dart';
@@ -17,6 +18,7 @@ import 'package:dingdong/features/settings/ui/release_settings_section.dart';
 import 'package:dingdong/features/settings/ui/reminder_profiles_editor.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
 import 'package:dingdong/features/settings/ui/system_usage_section.dart';
+import 'package:dingdong/features/settings/ui/voice_install_dialog.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -33,6 +35,7 @@ class SettingsScreen extends StatefulWidget {
     this.useNativeSearch = false,
     this.soundFileGateway,
     this.soundPreviewGateway,
+    this.voiceCatalogService,
     this.onRestartApplication,
     super.key,
   });
@@ -42,6 +45,7 @@ class SettingsScreen extends StatefulWidget {
   final SettingsNavigationController? navigationController;
   final SoundFileGateway? soundFileGateway;
   final SoundPreviewGateway? soundPreviewGateway;
+  final VoiceCatalogGateway? voiceCatalogService;
   final Future<void> Function()? onRestartApplication;
 
   @override
@@ -50,11 +54,13 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   final GlobalKey _releaseSectionKey = GlobalKey();
+  final GlobalKey _voiceSectionKey = GlobalKey();
   final ScrollController _scrollController = ScrollController();
   late SettingsNavigationController _navigationController;
   late bool _ownsNavigationController;
   bool _navigationPending = true;
   bool _navigationScheduled = false;
+  bool _voiceDialogOpen = false;
   final TextEditingController _searchController = TextEditingController();
   static const _searchChannel = MethodChannel('dingdong/settings_search');
   bool _nativeSearchAvailable = false;
@@ -206,8 +212,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
               curve: Curves.easeOutCubic,
             ),
           );
+        case SettingsWindowDestination.voice:
+          final sectionContext = _voiceSectionKey.currentContext;
+          final issueNumber = _navigationController.voiceIssueNumber;
+          if (sectionContext == null ||
+              issueNumber == null ||
+              _voiceDialogOpen) {
+            return;
+          }
+          _navigationPending = false;
+          _voiceDialogOpen = true;
+          unawaited(_openVoice(sectionContext, issueNumber));
       }
     });
+  }
+
+  Future<void> _openVoice(BuildContext sectionContext, int issueNumber) async {
+    await Scrollable.ensureVisible(
+      sectionContext,
+      alignment: 0.08,
+      duration: const Duration(milliseconds: 260),
+      curve: Curves.easeOutCubic,
+    );
+    if (mounted) {
+      await showDialog<void>(
+        context: context,
+        builder: (_) => VoiceInstallDialog(
+          issueNumber: issueNumber,
+          viewModel: widget.viewModel,
+          service: widget.voiceCatalogService,
+          previewGateway: widget.soundPreviewGateway,
+        ),
+      );
+    }
+    _voiceDialogOpen = false;
+    if (mounted && _navigationPending) _scheduleNavigation();
   }
 
   @override
@@ -726,6 +765,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                           if (matches('notifications'))
                             _NotificationSettingsSection(
+                              key: _voiceSectionKey,
                               viewModel: widget.viewModel,
                               settings: settings,
                               soundFileGateway: widget.soundFileGateway,
@@ -804,14 +844,24 @@ final class SettingsNavigationController extends ChangeNotifier {
   SettingsNavigationController({
     SettingsWindowDestination initialDestination =
         SettingsWindowDestination.top,
-  }) : _destination = initialDestination;
+    int? initialVoiceIssueNumber,
+  }) : _destination = initialDestination,
+       _voiceIssueNumber = initialVoiceIssueNumber;
 
   SettingsWindowDestination _destination;
+  int? _voiceIssueNumber;
 
   SettingsWindowDestination get destination => _destination;
+  int? get voiceIssueNumber => _voiceIssueNumber;
 
   void navigateTo(SettingsWindowDestination destination) {
     _destination = destination;
+    notifyListeners();
+  }
+
+  void navigateToVoice(int issueNumber) {
+    _voiceIssueNumber = issueNumber;
+    _destination = SettingsWindowDestination.voice;
     notifyListeners();
   }
 }

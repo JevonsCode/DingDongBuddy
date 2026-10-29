@@ -58,11 +58,17 @@ final class AgentPromptTarget {
 }
 
 final class AgentMcpTarget {
-  const AgentMcpTarget(this.file, this.kind, {this.clientName = 'Agent'});
+  const AgentMcpTarget(
+    this.file,
+    this.kind, {
+    this.clientName = 'Agent',
+    this.additionalClientNames = const <String>[],
+  });
 
   final File file;
   final AgentMcpConfigKind kind;
   final String clientName;
+  final List<String> additionalClientNames;
 }
 
 typedef AgentAdapterLoader = Future<List<AgentAdapter>> Function();
@@ -352,18 +358,41 @@ final class AgentResourceSynchronizer {
     AgentMcpTarget target,
     Map<String, TriggerGroup> triggerGroupsById,
   ) {
-    if (triggerGroupStore == null) {
-      return resources;
-    }
     return resources
         .where(
-          (Resource resource) => resourceCanSyncToAgentSource(
-            resource,
-            target.clientName,
-            triggerGroupsById,
-          ),
+          (Resource resource) =>
+              (triggerGroupStore == null ||
+                  _mcpSourcePermissions(
+                    resource,
+                    target,
+                    triggerGroupsById,
+                  ).every((bool allowed) => allowed)) &&
+              _mcpSupportedForTarget(resource, target),
         )
         .toList(growable: false);
+  }
+
+  List<bool> _mcpSourcePermissions(
+    Resource resource,
+    AgentMcpTarget target,
+    Map<String, TriggerGroup> triggerGroupsById,
+  ) => <String>[target.clientName, ...target.additionalClientNames]
+      .map(
+        (source) =>
+            resourceCanSyncToAgentSource(resource, source, triggerGroupsById),
+      )
+      .toList(growable: false);
+
+  bool _mcpSupportedForTarget(Resource resource, AgentMcpTarget target) {
+    if (target.kind != AgentMcpConfigKind.antigravityJson) return true;
+    try {
+      final config = McpConfiguration.parse(resource.content);
+      return config.tokenEnvironmentVariable.isEmpty ||
+          config.headers.containsKey('Authorization');
+    } on Object {
+      // Invalid resources are reported separately by _inspect.
+      return true;
+    }
   }
 
   Future<void> _syncMcpTarget(
@@ -377,6 +406,9 @@ final class AgentResourceSynchronizer {
     AgentMcpConfigKind.cursorJson ||
     AgentMcpConfigKind.geminiJson ||
     AgentMcpConfigKind.kiroJson ||
+    AgentMcpConfigKind.openCodeJson ||
+    AgentMcpConfigKind.antigravityJson ||
+    AgentMcpConfigKind.copilotJson ||
     AgentMcpConfigKind.mcpServersJson => _syncJson(
       file,
       kind,
@@ -415,7 +447,7 @@ final class AgentResourceSynchronizer {
     if (decoded is! Map) return false;
     bool declares(Object? servers) =>
         servers is Map && servers.containsKey('dingdong');
-    if (declares(decoded['mcpServers'])) return true;
+    if (declares(decoded[_mcpServersKey(kind)])) return true;
     // Claude Code also keeps local-scope servers under each project.
     final Object? projects = decoded['projects'];
     return kind == AgentMcpConfigKind.claudeJson &&
@@ -641,6 +673,40 @@ final class AgentResourceSynchronizer {
       }
     }
     for (final AgentMcpTarget target in mcpTargets) {
+      for (final Resource resource in mcps) {
+        final List<bool> permissions = triggerGroupStore == null
+            ? <bool>[true]
+            : _mcpSourcePermissions(resource, target, triggerGroupsById);
+        if (permissions.any((allowed) => allowed) &&
+            !permissions.every((allowed) => allowed)) {
+          issues.add(
+            _issue(
+              resource: resource,
+              kind: AppIssueKind.sharedMcpScopeConflict,
+              severity: AppIssueSeverity.warning,
+              title: 'MCP scope cannot be isolated in a shared configuration',
+              detail:
+                  'This MCP was not written because the shared configuration is read by clients outside its source scope.',
+              clientName: target.clientName,
+              targetPath: target.file.path,
+            ),
+          );
+        } else if (permissions.every((allowed) => allowed) &&
+            !_mcpSupportedForTarget(resource, target)) {
+          issues.add(
+            _issue(
+              resource: resource,
+              kind: AppIssueKind.unsupportedMcpAuthentication,
+              severity: AppIssueSeverity.warning,
+              title: 'MCP authentication is not supported by this client',
+              detail:
+                  'Antigravity does not support this environment-variable bearer token configuration.',
+              clientName: target.clientName,
+              targetPath: target.file.path,
+            ),
+          );
+        }
+      }
       if (target.kind == AgentMcpConfigKind.codexToml ||
           !await target.file.exists()) {
         continue;
@@ -654,9 +720,10 @@ final class AgentResourceSynchronizer {
         if (decoded is! Map) {
           throw const FormatException('The file must contain a JSON object.');
         }
-        final Object? servers = decoded['mcpServers'];
+        final String serversKey = _mcpServersKey(target.kind);
+        final Object? servers = decoded[serversKey];
         if (servers != null && servers is! Map) {
-          throw const FormatException('mcpServers must be a JSON object.');
+          throw FormatException('$serversKey must be a JSON object.');
         }
         if (servers is Map) {
           issues.addAll(
@@ -732,6 +799,14 @@ final class AgentResourceSynchronizer {
           ? _commandEndpointKey(
               command,
               args is List ? args.whereType<String>().toList() : <String>[],
+            )
+          : command is List &&
+                command.isNotEmpty &&
+                command.every((v) => v is String) &&
+                (command.first as String).trim().isNotEmpty
+          ? _commandEndpointKey(
+              command.first as String,
+              command.skip(1).cast<String>().toList(),
             )
           : null;
       final Resource? managed = endpoint == null
@@ -946,8 +1021,9 @@ final class AgentResourceSynchronizer {
           decodeStrictJson(snapshot.contents) as Map,
         );
       }
+      final String serversKey = _mcpServersKey(kind);
       final Map<String, Object?> servers = Map<String, Object?>.from(
-        (root['mcpServers'] as Map?) ?? const <String, Object?>{},
+        (root[serversKey] as Map?) ?? const <String, Object?>{},
       )..removeWhere((String key, Object? _) => previousNames.contains(key));
       for (final Resource resource in resources) {
         servers[managedMcpServerName(
@@ -961,7 +1037,7 @@ final class AgentResourceSynchronizer {
       }
       return const JsonEncoder.withIndent(
         '  ',
-      ).convert(<String, Object?>{...root, 'mcpServers': servers});
+      ).convert(<String, Object?>{...root, serversKey: servers});
     },
     validate: (String value) => decodeStrictJson(value) as Map<String, Object?>,
   );

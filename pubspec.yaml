@@ -52,6 +52,7 @@ flutter:
     - Assets/Sounds/
     - Assets/Symbols/
     - Assets/Agent Adapters/
+    - Assets/Agent Integrations/
     - skills/dingdong-configure/
     - windows/runner/resources/app_icon.ico
     - windows/runner/resources/tray_icon_adaptive_unread.ico

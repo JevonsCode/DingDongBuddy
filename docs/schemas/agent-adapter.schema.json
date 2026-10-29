@@ -71,6 +71,9 @@
             "cursor-json",
             "gemini-json",
             "kiro-json",
+            "opencode-json",
+            "antigravity-json",
+            "copilot-json",
             "mcpServers-json"
           ]
         }

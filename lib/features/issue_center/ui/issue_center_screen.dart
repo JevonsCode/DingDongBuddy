@@ -598,6 +598,10 @@ String _localizedIssueTitle(BuildContext context, AppIssue issue) =>
       AppIssueKind.invalidSkill => context.l10n.skillConfigurationIsInvalid,
       AppIssueKind.invalidProjectPath => context.l10n.projectSkillPathIsInvalid,
       AppIssueKind.invalidMcp => context.l10n.mcpConfigurationIsInvalid,
+      AppIssueKind.sharedMcpScopeConflict =>
+        context.l10n.sharedMcpScopeConflict,
+      AppIssueKind.unsupportedMcpAuthentication =>
+        context.l10n.unsupportedMcpAuthentication,
       AppIssueKind.invalidAgentConfig =>
         context.l10n.agentConfigurationFileIsInvalid,
       AppIssueKind.duplicateMcp => context.l10n.duplicateMcpServer,
@@ -628,6 +632,10 @@ String _localizedIssueDetail(
     context
         .l10n
         .thisMCPResourceCannotBeWrittenToAgentConfigurationUntil_ad7aa3e0,
+  AppIssueKind.sharedMcpScopeConflict =>
+    context.l10n.sharedMcpScopeConflictDetail,
+  AppIssueKind.unsupportedMcpAuthentication =>
+    context.l10n.unsupportedMcpAuthenticationDetail,
   AppIssueKind.invalidAgentConfig =>
     context
         .l10n

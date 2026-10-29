@@ -3,20 +3,37 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
+import 'package:dingdong/features/agent_api/data/agent_source_identity.dart';
 import 'package:dingdong/features/agent_api/data/loopback_mcp_tool_executor.dart';
+import 'package:path/path.dart' as path;
 
 /// Delivers the durable Agent stop notification and classifies pending input.
 final class CompletionHookNotifier {
-  CompletionHookNotifier(this._transport);
+  CompletionHookNotifier(this._transport, {Map<String, String>? environment})
+    : _environment = environment ?? Platform.environment;
 
   final McpHttpTransport _transport;
+  final Map<String, String> _environment;
 
   Future<Map<String, Object?>> notify(
     String hookInput, {
     String? sourceOverride,
   }) async {
     final Map<String, Object?> input = _decodeInput(hookInput);
-    final String source = _source(input, sourceOverride: sourceOverride);
+    final String requestedSource = _source(
+      input,
+      sourceOverride: sourceOverride,
+      environment: _environment,
+    );
+    final String source = requestedSource.toLowerCase() == 'antigravity'
+        ? _antigravitySource(input, _environment) ?? requestedSource
+        : requestedSource;
+    // Antigravity can emit Stop while background work is still active.
+    if ((source.toLowerCase().contains('antigravity') ||
+            source.toLowerCase() == 'agy') &&
+        input['fullyIdle'] != true) {
+      return const <String, Object?>{'status': 'ignored'};
+    }
     final String? completionMessage = await _completionMessage(input);
     final AgentNotificationKind notificationKind = _notificationKind(
       input,
@@ -38,7 +55,8 @@ final class CompletionHookNotifier {
           'workspace_path',
           'workspacePath',
         ]) ??
-        _firstWorkspaceRoot(input['workspace_roots']);
+        _firstWorkspaceRoot(input['workspace_roots']) ??
+        _onlyWorkspaceRoot(input['workspacePaths']);
     final String? transcriptPath = _firstText(input, const <String>[
       'transcript_path',
       'transcriptPath',
@@ -55,6 +73,8 @@ final class CompletionHookNotifier {
         if (notificationKind != AgentNotificationKind.completion)
           'notificationKind': notificationKind.apiValue,
         'conversationId': ?conversationId,
+        if (source == 'Claude Desktop')
+          'hostSessionId': _environment['CLAUDE_CODE_HOST_SESSION_ID'],
         'workspacePath': ?workspacePath,
         'transcriptPath': ?transcriptPath,
       },
@@ -150,16 +170,18 @@ Map<String, Object?> _decodeInput(String input) {
   }
 }
 
-String _source(Map<String, Object?> input, {String? sourceOverride}) {
+String _source(
+  Map<String, Object?> input, {
+  String? sourceOverride,
+  required Map<String, String> environment,
+}) {
   final String explicit = (sourceOverride ?? '').trim();
-  if (explicit.isNotEmpty) {
-    return explicit;
-  }
   final String configured = (input['agent_name'] as String? ?? '').trim();
-  if (configured.isNotEmpty) {
-    return configured;
-  }
-  return 'Codex';
+  return resolveActivitySource(
+        explicit.isNotEmpty ? explicit : configured,
+        inferAgentSourceFromEnvironment(environment),
+      ) ??
+      'Codex';
 }
 
 Future<String?> _completionMessage(Map<String, Object?> input) async {
@@ -179,9 +201,11 @@ Future<String?> _completionMessage(Map<String, Object?> input) async {
     }
   }
 
-  final String transcriptPath = (input['transcript_path'] as String? ?? '')
-      .trim();
-  if (transcriptPath.isEmpty) {
+  final String? transcriptPath = _firstText(input, const <String>[
+    'transcript_path',
+    'transcriptPath',
+  ]);
+  if (transcriptPath == null) {
     return null;
   }
   try {
@@ -209,6 +233,62 @@ String? _firstWorkspaceRoot(Object? value) {
     if (root is String && root.trim().isNotEmpty) {
       return root.trim();
     }
+  }
+  return null;
+}
+
+String? _onlyWorkspaceRoot(Object? value) {
+  if (value is! List<Object?>) return null;
+  final List<String> roots = value
+      .whereType<String>()
+      .map((String root) => root.trim())
+      .where((String root) => root.isNotEmpty)
+      .toSet()
+      .toList();
+  return roots.length == 1 ? roots.single : null;
+}
+
+String? _antigravitySource(
+  Map<String, Object?> input,
+  Map<String, String> environment,
+) {
+  final String? id = _firstText(input, const <String>['conversationId']);
+  final String? transcript = _firstText(input, const <String>[
+    'transcriptPath',
+  ]);
+  final String home = (environment['HOME'] ?? environment['USERPROFILE'] ?? '')
+      .trim();
+  if (id == null ||
+      transcript == null ||
+      !path.isAbsolute(home) ||
+      !RegExp(
+        r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+      ).hasMatch(id)) {
+    return null;
+  }
+  final String actual = path.normalize(
+    transcript.startsWith('~/')
+        ? path.join(home, transcript.substring(2))
+        : transcript,
+  );
+  for (final (String directory, String source) in <(String, String)>[
+    ('antigravity-cli', 'Antigravity CLI'),
+    ('antigravity-ide', 'Antigravity IDE'),
+    ('antigravity', 'Antigravity App'),
+  ]) {
+    final String expected = path.normalize(
+      path.joinAll(<String>[
+        home,
+        '.gemini',
+        directory,
+        'brain',
+        id,
+        '.system_generated',
+        'logs',
+        'transcript.jsonl',
+      ]),
+    );
+    if (path.equals(actual, expected)) return source;
   }
   return null;
 }

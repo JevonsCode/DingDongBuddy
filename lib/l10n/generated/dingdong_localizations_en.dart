@@ -4453,19 +4453,58 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   String get aiTestingConnection => 'Connecting…';
 
   @override
+  String get voiceInstallDetails => 'Source and license';
+
+  @override
+  String get voiceInstallContributorInfo => 'Provided by the contributor';
+
+  @override
+  String get voiceCatalogFindFailed =>
+      'Could not find this sound. Check the link or connection.';
+
+  @override
+  String get voiceInstallPresent =>
+      'Already in your sound library. You can reinstall it.';
+
+  @override
+  String get voiceInstallReinstall => 'Reinstall';
+
+  @override
+  String get voiceInstallTitle => 'Install sound';
+
+  @override
+  String get voiceInstallConfirm =>
+      'Install this sound? It will be available in your reminder settings.';
+
+  @override
+  String get voiceInstallSuccess =>
+      'Installed. Choose it in a reminder to use it.';
+
+  @override
+  String get voiceInstallLicense => 'License';
+
+  @override
+  String get voiceInstallPreviewFailed =>
+      'Could not preview this sound. Try again.';
+
+  @override
   String get voiceCatalogTitle => 'Community voices';
 
   @override
   String get voiceCatalogHelp =>
-      'Subscribe to add a reviewed, ≤3-second voice to this device’s sound picker. Audio is verified on subscribe. Your current sound never changes automatically. Unsubscribing keeps files used by existing reminders.';
+      'Install a sound to add it to this device’s reminder picker.';
 
   @override
-  String get voiceCatalogSearch =>
-      'Search title, author or paste an Issue link';
+  String get voiceCatalogSearch => 'Search or paste a voice link';
 
   @override
-  String get voiceCatalogEmpty =>
-      'No matching voices on loaded pages yet. Submit an original or licensed sound on the website.';
+  String get voiceCatalogFilter => 'Installation status';
+
+  @override
+  String get voiceCatalogFilterInstalled => 'Installed';
+
+  @override
+  String get voiceCatalogEmpty => 'No matching sounds.';
 
   @override
   String get voiceCatalogLoadFailed =>
@@ -4473,7 +4512,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get voiceCatalogSubscribeFailed =>
-      'Could not subscribe. The voice may have changed, lack owner approval, exceed 3 seconds, or be unavailable. Refresh and retry.';
+      'Could not install this sound. It may have changed, be unavailable, or contain invalid audio. Refresh and try again.';
 
   @override
   String get voiceCatalogFull => 'Your sound library is full (64 sounds).';
@@ -4482,10 +4521,10 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   String get voiceCatalogLinkFailed => 'Could not open the link.';
 
   @override
-  String get voiceCatalogSubscribe => 'Subscribe';
+  String get voiceCatalogSubscribe => 'Install';
 
   @override
-  String get voiceCatalogUnsubscribe => 'Unsubscribe';
+  String get voiceCatalogUnsubscribe => 'Remove';
 
   @override
   String get voiceCatalogDownloading => 'Verifying…';
@@ -4507,7 +4546,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   String get voiceCatalogFindIssue => 'Find Issue link';
 
   @override
-  String get voiceCatalogSubscribed => 'Subscribed on this device';
+  String get voiceCatalogSubscribed => 'Installed on this device';
 
   @override
   String get deviceLanConnection => 'LAN';
@@ -4665,4 +4704,20 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   @override
   String get lanNetworkAccessDenied =>
       'Local network access was denied. Check DingDong’s local-network permission and private-network firewall, quit duplicate instances, then refresh.';
+
+  @override
+  String get sharedMcpScopeConflict =>
+      'MCP source scope conflicts with shared configuration';
+
+  @override
+  String get sharedMcpScopeConflictDetail =>
+      'This MCP was not synced because the configuration is shared with clients outside its source scope.';
+
+  @override
+  String get unsupportedMcpAuthentication =>
+      'MCP authentication is not supported';
+
+  @override
+  String get unsupportedMcpAuthenticationDetail =>
+      'Antigravity cannot use this environment-variable bearer token. Use its authentication flow or an explicit header.';
 }

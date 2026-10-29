@@ -1,0 +1,18 @@
+schemaVersion: 1
+id: opencode
+displayName: OpenCode
+
+detect:
+  directory: ~/.config/opencode
+
+skills:
+  global: ~/.config/opencode/skills
+  project: .opencode/skills
+
+mcp:
+  file: ~/.config/opencode/opencode.json
+  format: opencode-json
+
+prompt:
+  file: ~/.config/opencode/AGENTS.md
+  includeBridgeRoutingInstructions: true

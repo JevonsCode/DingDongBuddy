@@ -448,6 +448,11 @@ const List<String> builtInAgentAdapterIds = <String>[
   'grok-build',
   'kiro',
   'pi',
+  'opencode',
+  'antigravity',
+  'antigravity-cli',
+  'copilot-cli',
+  'windsurf',
 ];
 
 Future<Map<String, String>> loadBundledAgentAdapterDocuments() async {

@@ -119,7 +119,11 @@ final class AgentBridge {
           await onTaskStarted?.call(
             AgentBridgeTaskStart(
               task: task,
-              source: source,
+              source:
+                  source == 'Claude Code' &&
+                      request['activitySource'] == 'Claude Desktop'
+                  ? 'Claude Desktop'
+                  : source,
               startedAt: startedAt,
               workspacePath: context.projectPath,
               repositoryUrl: context.repositoryUrl,

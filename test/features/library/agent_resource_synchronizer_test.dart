@@ -18,6 +18,328 @@ import 'package:path/path.dart' as path;
 
 void main() {
   test(
+    'shared Antigravity MCP target only receives resources allowed to both clients',
+    () async {
+      final Directory temp = Directory.systemTemp.createTempSync(
+        'dingdong-shared-antigravity-',
+      );
+      addTearDown(() => temp.deleteSync(recursive: true));
+      final Directory home = Directory('${temp.path}/home');
+      Directory('${home.path}/.gemini/config').createSync(recursive: true);
+      Directory(
+        '${home.path}/.gemini/antigravity-cli',
+      ).createSync(recursive: true);
+      final DateTime now = DateTime.utc(2026, 7, 17);
+      final groups = InMemoryTriggerGroupStore(<TriggerGroup>[
+        for (final name in <String>[
+          'Antigravity',
+          'Antigravity App',
+          'Antigravity IDE',
+          'Antigravity CLI',
+        ])
+          TriggerGroup(
+            id: name,
+            name: name,
+            rules: <TriggerRule>[
+              TriggerRule(
+                field: TriggerRuleField.source,
+                operator: TriggerRuleOperator.equals,
+                value: name,
+              ),
+            ],
+            createdAt: now,
+            updatedAt: now,
+          ),
+      ]);
+      final synchronizer = await AgentResourceSynchronizer.currentUser(
+        Directory('${temp.path}/packages'),
+        homeDirectory: home.path,
+        triggerGroupStore: groups,
+        loadAdapters: () async => <AgentAdapter>[
+          for (final id in <String>['antigravity', 'antigravity-cli'])
+            AgentAdapter.parse(
+              File('Assets/Agent Adapters/$id.yaml').readAsStringSync(),
+            ),
+        ],
+      );
+      expect(synchronizer.mcpTargets, hasLength(1));
+      expect(
+        synchronizer.mcpTargets.single.additionalClientNames,
+        contains('Antigravity CLI'),
+      );
+      final issues = await synchronizer.sync(<Resource>[
+        for (final name in <String>['Antigravity', 'Antigravity CLI'])
+          _resource(
+            id: name == 'Antigravity' ? 'APP001' : 'CLI002',
+            type: ResourceType.mcp,
+            content: '{"type":"stdio","command":"server"}',
+            triggerGroupIds: <String>[name],
+          ),
+        _resource(
+          id: 'SHARED003',
+          type: ResourceType.mcp,
+          content: '{"type":"stdio","command":"shared-server"}',
+          triggerGroupIds: const <String>[
+            'Antigravity',
+            'Antigravity App',
+            'Antigravity IDE',
+            'Antigravity CLI',
+          ],
+        ),
+      ]);
+      expect(
+        _onlyServerCount(File('${home.path}/.gemini/config/mcp_config.json')),
+        1,
+      );
+      expect(
+        issues.where(
+          (issue) => issue.kind == AppIssueKind.sharedMcpScopeConflict,
+        ),
+        hasLength(2),
+      );
+    },
+  );
+
+  test(
+    'shared MCP scope remains restricted when only one client is installed',
+    () async {
+      final Directory temp = Directory.systemTemp.createTempSync(
+        'dingdong-shared-one-client-',
+      );
+      addTearDown(() => temp.deleteSync(recursive: true));
+      final Directory home = Directory('${temp.path}/home');
+      Directory('${home.path}/.gemini/config').createSync(recursive: true);
+      final DateTime now = DateTime.utc(2026, 7, 17);
+      final groups = InMemoryTriggerGroupStore(<TriggerGroup>[
+        TriggerGroup(
+          id: 'app',
+          name: 'App',
+          rules: <TriggerRule>[
+            TriggerRule(
+              field: TriggerRuleField.source,
+              operator: TriggerRuleOperator.equals,
+              value: 'Antigravity',
+            ),
+          ],
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ]);
+      final synchronizer = await AgentResourceSynchronizer.currentUser(
+        Directory('${temp.path}/packages'),
+        homeDirectory: home.path,
+        triggerGroupStore: groups,
+        loadAdapters: () async => <AgentAdapter>[
+          for (final id in <String>['antigravity', 'antigravity-cli'])
+            AgentAdapter.parse(
+              File('Assets/Agent Adapters/$id.yaml').readAsStringSync(),
+            ),
+        ],
+      );
+      expect(
+        synchronizer.mcpTargets.single.additionalClientNames,
+        contains('Antigravity CLI'),
+      );
+      await synchronizer.sync(<Resource>[
+        _resource(
+          id: 'APP001',
+          type: ResourceType.mcp,
+          content: '{"type":"stdio","command":"server"}',
+          triggerGroupIds: const <String>['app'],
+        ),
+        _resource(
+          id: 'GLOBAL',
+          type: ResourceType.mcp,
+          content: '{"type":"stdio","command":"shared-server"}',
+        ),
+      ]);
+      expect(
+        _onlyServerCount(File('${home.path}/.gemini/config/mcp_config.json')),
+        1,
+      );
+    },
+  );
+
+  test(
+    'OpenCode detects and safely removes duplicate array commands',
+    () async {
+      final Directory temp = Directory.systemTemp.createTempSync(
+        'dingdong-opencode-duplicate-',
+      );
+      addTearDown(() => temp.deleteSync(recursive: true));
+      final File config = File('${temp.path}/opencode.json')
+        ..writeAsStringSync(
+          jsonEncode(<String, Object?>{
+            'mcp': <String, Object?>{
+              'personal': <String, Object?>{
+                'type': 'local',
+                'command': <String>['node', 'server.js'],
+              },
+              'unrelated': <String, Object?>{
+                'type': 'local',
+                'command': <String>['other'],
+              },
+            },
+          }),
+        );
+      final synchronizer = AgentResourceSynchronizer(
+        packageRoot: Directory('${temp.path}/packages'),
+        skillRoots: const <Directory>[],
+        mcpTargets: <AgentMcpTarget>[
+          AgentMcpTarget(
+            config,
+            AgentMcpConfigKind.parse('opencode-json', 'format'),
+          ),
+        ],
+        managedStateFile: File('${temp.path}/state.json'),
+      );
+      final resource = _resource(
+        type: ResourceType.mcp,
+        content: '{"type":"stdio","command":"node","args":["server.js"]}',
+      );
+      await synchronizer.sync(<Resource>[resource]);
+      final issue = (await synchronizer.inspect(<Resource>[
+        resource,
+      ])).singleWhere((issue) => issue.kind == AppIssueKind.duplicateMcp);
+      expect(issue.duplicateEntryName, 'personal');
+      await synchronizer.removeDuplicateMcp(issue, <Resource>[resource]);
+      final root =
+          jsonDecode(config.readAsStringSync()) as Map<String, Object?>;
+      final servers = root['mcp'] as Map<String, Object?>;
+      expect(servers, isNot(contains('personal')));
+      expect(servers, contains('unrelated'));
+      expect(servers, hasLength(2));
+    },
+  );
+
+  test(
+    'Antigravity skips unsupported token interpolation without blocking other clients',
+    () async {
+      final Directory temp = Directory.systemTemp.createTempSync(
+        'dingdong-antigravity-auth-',
+      );
+      addTearDown(() => temp.deleteSync(recursive: true));
+      const original = '{"mcpServers":{"personal":{"command":"mine"}}}';
+      final File config = File('${temp.path}/mcp.json')
+        ..writeAsStringSync(original);
+      final File cursor = File('${temp.path}/cursor.json');
+      final synchronizer = AgentResourceSynchronizer(
+        packageRoot: Directory('${temp.path}/packages'),
+        skillRoots: const <Directory>[],
+        mcpTargets: <AgentMcpTarget>[
+          AgentMcpTarget(
+            config,
+            AgentMcpConfigKind.parse('antigravity-json', 'format'),
+          ),
+          AgentMcpTarget(
+            cursor,
+            AgentMcpConfigKind.cursorJson,
+            clientName: 'Cursor',
+          ),
+        ],
+        managedStateFile: File('${temp.path}/state.json'),
+      );
+      final resource = _resource(
+        type: ResourceType.mcp,
+        content:
+            '{"type":"streamable-http","url":"https://example.com/mcp","bearerTokenEnvVar":"EXAMPLE_TOKEN"}',
+      );
+      final issues = await synchronizer.sync(<Resource>[resource]);
+      expect(config.readAsStringSync(), original);
+      expect(_onlyServerCount(cursor), 1);
+      expect(issues.single.kind, AppIssueKind.unsupportedMcpAuthentication);
+      expect(issues.single.severity, AppIssueSeverity.warning);
+    },
+  );
+
+  test(
+    'new clients use their native MCP shapes and preserve user servers',
+    () async {
+      final Directory temp = Directory.systemTemp.createTempSync(
+        'dingdong-mainstream-mcp-',
+      );
+      addTearDown(() => temp.deleteSync(recursive: true));
+      for (final (String format, String rootKey) in <(String, String)>[
+        ('opencode-json', 'mcp'),
+        ('antigravity-json', 'mcpServers'),
+        ('copilot-json', 'mcpServers'),
+      ]) {
+        final File config = File('${temp.path}/$format.json')
+          ..writeAsStringSync(
+            jsonEncode(<String, Object?>{
+              'theme': 'dark',
+              rootKey: <String, Object?>{
+                'personal': <String, Object?>{
+                  'url': 'https://mine.example/mcp',
+                },
+              },
+            }),
+          );
+        final synchronizer = AgentResourceSynchronizer(
+          packageRoot: Directory('${temp.path}/packages-$format'),
+          skillRoots: const <Directory>[],
+          mcpTargets: <AgentMcpTarget>[
+            AgentMcpTarget(config, AgentMcpConfigKind.parse(format, 'format')),
+          ],
+          managedStateFile: File('${temp.path}/state-$format.json'),
+        );
+        final local = _resource(
+          id: 'LOCAL-0001',
+          type: ResourceType.mcp,
+          content:
+              '{"type":"stdio","command":"node","args":["server.js"],"env":{"MODE":"safe"}}',
+        );
+        final remote = _resource(
+          id: 'REMOTE-001',
+          type: ResourceType.mcp,
+          content: '{"type":"streamable-http","url":"https://example.com/mcp"}',
+        );
+        await synchronizer.sync(<Resource>[local, remote]);
+        Map<String, Object?> root =
+            jsonDecode(config.readAsStringSync()) as Map<String, Object?>;
+        expect(root['theme'], 'dark');
+        Map<String, Object?> servers = root[rootKey] as Map<String, Object?>;
+        expect(servers['personal'], isNotNull);
+        final entries = servers.entries
+            .where((e) => e.key != 'personal')
+            .map((e) => e.value as Map<String, Object?>)
+            .toList();
+        final localValue = entries.singleWhere((e) => e.containsKey('command'));
+        final remoteValue = entries.singleWhere(
+          (e) => !e.containsKey('command'),
+        );
+        if (format == 'opencode-json') {
+          expect(localValue['type'], 'local');
+          expect(localValue['command'], <String>['node', 'server.js']);
+          expect(localValue['environment'], <String, Object?>{'MODE': 'safe'});
+          expect(remoteValue['type'], 'remote');
+          expect(remoteValue['url'], 'https://example.com/mcp');
+          expect(root.containsKey('mcpServers'), isFalse);
+        } else {
+          expect(localValue['command'], 'node');
+          expect(localValue['args'], <String>['server.js']);
+          expect(localValue['env'], <String, Object?>{'MODE': 'safe'});
+          if (format == 'antigravity-json') {
+            expect(remoteValue['serverUrl'], 'https://example.com/mcp');
+          } else {
+            expect(localValue['tools'], <String>['*']);
+            expect(remoteValue['tools'], <String>['*']);
+            expect(remoteValue['type'], 'http');
+            expect(remoteValue['url'], 'https://example.com/mcp');
+          }
+        }
+        await synchronizer.sync(<Resource>[
+          local.copyWith(enabled: false),
+          remote.copyWith(enabled: false),
+        ]);
+        root = jsonDecode(config.readAsStringSync()) as Map<String, Object?>;
+        servers = root[rootKey] as Map<String, Object?>;
+        expect(servers.keys, <String>['personal']);
+      }
+    },
+  );
+
+  test(
     'sandbox preserves Agent files and ignores earlier live sync state',
     () async {
       final Directory temp = Directory.systemTemp.createTempSync(

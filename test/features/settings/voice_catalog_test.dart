@@ -9,8 +9,10 @@ import 'package:dingdong/features/settings/data/reminder_audio_importer.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
 import 'package:dingdong/features/settings/data/voice_catalog_service.dart';
 import 'package:dingdong/features/settings/domain/voice_catalog.dart';
+import 'package:dingdong/features/settings/ui/settings_screen.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
 import 'package:dingdong/features/settings/ui/voice_catalog_dialog.dart';
+import 'package:dingdong/features/settings/ui/voice_install_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -27,7 +29,7 @@ Map<String, dynamic> issue({String? body}) => {
   'created_at': '2026-10-23T01:02:03Z',
   'updated_at': '2026-10-23T02:02:03Z',
   'labels': [
-    {'name': voiceCatalogLabel},
+    {'name': 'voice-approved'},
   ],
   'reactions': {'+1': 4, '-1': 2},
 };
@@ -54,21 +56,144 @@ Uint8List wave({int frames = 24000}) {
 Future<String> hash(List<int> value) async => (await Sha256().hash(
   value,
 )).bytes.map((x) => x.toRadixString(16).padLeft(2, '0')).join();
-Future<Map<String, dynamic>> approval(
-  CatalogVoice voice,
-  Uint8List bytes,
-) async => {
-  'user': {'id': 36203025},
-  'author_association': 'OWNER',
-  'body': jsonEncode({
-    'dingdongVoiceApproval': 1,
-    'issue': 7,
-    'metadataSha256': await hash(utf8.encode(voice.metadataJson)),
-    'audioSha256': await hash(bytes),
-  }),
-};
 
 void main() {
+  test('display names omit submission prefixes without changing metadata', () {
+    const rawTitle = '🕵🏻‍♀️[DOT] [Voice] Gentle chime';
+    final voice = CatalogVoice.fromIssue({...issue(), 'title': rawTitle})!;
+    expect(voice.title, 'Gentle chime');
+    expect((jsonDecode(voice.metadataJson) as List).first, rawTitle);
+  });
+
+  testWidgets('one list filters installed and uninstalled voices', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1100, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final installed = CatalogVoice.fromIssue(issue())!;
+    final available = CatalogVoice.fromIssue({
+      ...issue(),
+      'number': 8,
+      'title': '[Voice] Second sound',
+      'html_url': 'https://github.com/$voiceCatalogRepository/issues/8',
+    })!;
+    final model = SettingsViewModel(
+      SettingsRepository(MemoryPreferencesBackend()),
+    );
+    await model.load();
+    addTearDown(model.dispose);
+    final saved = [
+      ReminderAudio(
+        name: installed.title,
+        path: '/tmp/installed.wav',
+        sourceIssue: installed.issueUrl.toString(),
+      ),
+      ReminderAudio(
+        name: 'Offline sound',
+        path: '/tmp/offline.wav',
+        sourceIssue: 'https://github.com/$voiceCatalogRepository/issues/999',
+      ),
+    ];
+    await model.setNotificationRules(
+      model.settings.notificationRules.copyWith(audioLibrary: saved),
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: VoiceCatalogDialog(
+            viewModel: model,
+            service: _ManyVoiceCatalog(installed, available, saved.first),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text(installed.title), findsOneWidget);
+    expect(find.text(available.title), findsOneWidget);
+    expect(find.text('Offline sound'), findsOneWidget);
+    expect(find.text('Installed on this device'), findsNothing);
+
+    await tester.tap(find.byKey(const Key('voice-catalog-filter')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Installed').last);
+    await tester.pumpAndSettle();
+    expect(find.text(installed.title), findsOneWidget);
+    expect(find.text('Offline sound'), findsOneWidget);
+    expect(find.text(available.title), findsNothing);
+
+    await tester.tap(find.byKey(const Key('voice-catalog-filter')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Not installed').last);
+    await tester.pumpAndSettle();
+    expect(find.text(available.title), findsOneWidget);
+    expect(find.text(installed.title), findsNothing);
+    expect(find.text('Offline sound'), findsNothing);
+  });
+
+  testWidgets('a pasted Issue link finds a voice outside the loaded page', (
+    tester,
+  ) async {
+    final voice = CatalogVoice.fromIssue(issue())!;
+    final model = SettingsViewModel(
+      SettingsRepository(MemoryPreferencesBackend()),
+    );
+    await model.load();
+    addTearDown(model.dispose);
+    final service = _WidgetCatalog(
+      voice,
+      ReminderAudio(name: voice.title, path: '/tmp/test-voice.wav'),
+      emptyFirst: true,
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: VoiceCatalogDialog(viewModel: model, service: service),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text(voice.title), findsNothing);
+    await tester.enterText(find.byType(TextField), voice.issueUrl.toString());
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+    expect(find.text(voice.title), findsOneWidget);
+    expect(service.subscribeCalls, 0);
+  });
+  test(
+    'public catalog accepts the same immutable WAV submissions as the web',
+    () {
+      const raw =
+          'https://raw.githubusercontent.com/JevonsCode/'
+          'dingdong-voices/0123456789abcdef0123456789abcdef01234567/audio/chime.wav';
+      final submission = {
+        ...issue(body: (issue()['body'] as String).replaceAll(attachment, raw)),
+        'labels': [],
+      };
+      expect(CatalogVoice.fromIssue(submission)?.audioUrl.toString(), raw);
+    },
+  );
+
+  test('public voice can be installed without a moderator comment', () async {
+    final submission = {...issue(), 'labels': []};
+    final directory = await Directory.systemTemp.createTemp('voice-public-');
+    addTearDown(() => directory.delete(recursive: true));
+    final requested = <Uri>[];
+    final service = VoiceCatalogService(
+      clientFactory: () => _Client((uri) {
+        requested.add(uri);
+        return uri.host == 'github.com'
+            ? _Response(wave(frames: 100))
+            : _Response.json(submission);
+      }),
+    );
+    final voice = CatalogVoice.fromIssue(submission);
+    expect(voice, isNotNull);
+    final audio = await service.subscribe(voice!, directory);
+    expect(await File(audio.path).readAsBytes(), wave(frames: 100));
+    expect(requested.where((uri) => uri.path.endsWith('/comments')), isEmpty);
+  });
   test(
     'shared JavaScript/Dart fixture canonicalization and PCM hash agree',
     () async {
@@ -86,10 +211,6 @@ void main() {
       expect(
         await hash(utf8.encode(voice.metadataJson)),
         fixture['metadataSha256'],
-      );
-      expect(
-        await approvedAudioHash(voice, [fixture['approval']]),
-        fixture['audioSha256'],
       );
       final bytes = await File(
         'test/fixtures/voices/one-second-pcm.wav',
@@ -141,7 +262,7 @@ void main() {
       }
       expect(CatalogVoice.fromIssue({...issue(), 'state': 'closed'}), isNull);
       expect(CatalogVoice.fromIssue({...issue(), 'pull_request': {}}), isNull);
-      expect(CatalogVoice.fromIssue({...issue(), 'labels': []}), isNull);
+      expect(CatalogVoice.fromIssue({...issue(), 'labels': []}), isNotNull);
       expect(
         CatalogVoice.fromIssue({
           ...issue(),
@@ -235,64 +356,6 @@ void main() {
     expect(() => validateCatalogWave(extended), throwsFormatException);
   });
   test(
-    'owner approval binds current fields and cannot be forged by body claims',
-    () async {
-      final voice = CatalogVoice.fromIssue(issue())!;
-      final comment = await approval(voice, wave());
-      expect(await approvedAudioHash(voice, [comment]), await hash(wave()));
-      expect(
-        await approvedAudioHash(voice, [
-          {
-            ...comment,
-            'user': {'id': 1},
-          },
-        ]),
-        isNull,
-      );
-      expect(
-        await approvedAudioHash(voice, [
-          {...comment, 'author_association': 'CONTRIBUTOR'},
-        ]),
-        isNull,
-      );
-      final changedSource = CatalogVoice.fromIssue(
-        issue(
-          body: (issue()['body'] as String).replaceAll(
-            'Original synthesis.',
-            'Other source.',
-          ),
-        ),
-      )!;
-      expect(await approvedAudioHash(changedSource, [comment]), isNull);
-      expect(
-        await approvedAudioHash(voice, [
-          {...comment, 'body': '🕵🏻‍♀️[DOT]\n${comment['body']}'},
-        ]),
-        await hash(wave()),
-      );
-      expect(
-        await approvedAudioHash(voice, [
-          {...comment, 'body': 'Other prefix\n${comment['body']}'},
-        ]),
-        isNull,
-      );
-      final altered = CatalogVoice.fromIssue({
-        ...issue(),
-        'title': 'Different',
-      })!;
-      expect(await approvedAudioHash(altered, [comment]), isNull);
-      final rights = CatalogVoice.fromIssue(
-        issue(
-          body: (issue()['body'] as String).replaceAll(
-            'I own the rights.',
-            'Other claim.',
-          ),
-        ),
-      )!;
-      expect(await approvedAudioHash(rights, [comment]), isNull);
-    },
-  );
-  test(
     'API pages cached; exact Issue lookup rejects arbitrary hosts before request',
     () async {
       var calls = 0;
@@ -322,62 +385,100 @@ void main() {
       expect(calls, 3);
     },
   );
-  test(
-    'subscription revalidates approval, pins bytes and persists provenance',
-    () async {
-      final voice = CatalogVoice.fromIssue(issue())!;
-      final comment = await approval(voice, wave());
-      final root = await Directory.systemTemp.createTemp('voice-catalog-');
-      addTearDown(() => root.delete(recursive: true));
+  test('installation pins bytes and persists provenance', () async {
+    final voice = CatalogVoice.fromIssue(issue())!;
+    final root = await Directory.systemTemp.createTemp('voice-catalog-');
+    addTearDown(() => root.delete(recursive: true));
+    final service = VoiceCatalogService(
+      clientFactory: () => _Client((uri) {
+        if (uri.host == 'github.com') return _Response(wave());
+        return _Response.json(issue());
+      }),
+    );
+    final audio = await service.subscribe(voice, root);
+    expect(await File(audio.path).readAsBytes(), wave());
+    expect(audio.sourceIssue, voice.issueUrl.toString());
+    expect(audio.sourceAuthor, voice.author);
+    expect(audio.sourceLicense, voice.license);
+    expect(audio.sourceAttribution, voice.source);
+    expect(audio.audioSha256, await hash(wave()));
+    expect(audio.metadataSha256, await hash(utf8.encode(voice.metadataJson)));
+    expect((await service.subscribe(voice, root)).path, audio.path);
+    expect(await root.list().length, 1);
+    final rules = NotificationRules(audioLibrary: [audio]);
+    expect(NotificationRules.parse(rules.encode()).audioLibrary.single, audio);
+  });
+  test('follows only trusted GitHub attachment storage redirects', () async {
+    final voice = CatalogVoice.fromIssue(issue())!;
+    final root = await Directory.systemTemp.createTemp(
+      'voice-catalog-redirect-',
+    );
+    addTearDown(() => root.delete(recursive: true));
+    const allowed =
+        'https://objects.githubusercontent.com/'
+        'github-production-repository-file-5c1aeb/123/456?signature=sample';
+    for (final location in [
+      allowed,
+      'https://objects.githubusercontent.com.evil.test/github-production-repository-file-5c1aeb/123/456?signature=sample',
+      'https://objects.githubusercontent.com/github-production-repository-file-5c1aeb/123/456#fragment',
+      'https://objects.githubusercontent.com/other/123/456?signature=sample',
+      'https://user@objects.githubusercontent.com/github-production-repository-file-5c1aeb/123/456',
+    ]) {
       final service = VoiceCatalogService(
         clientFactory: () => _Client((uri) {
-          if (uri.path.endsWith('/comments')) return _Response.json([comment]);
-          if (uri.host == 'github.com') return _Response(wave());
+          if (uri.host == 'github.com') {
+            return _Response([], statusCode: 302, location: location);
+          }
+          if (uri.host == 'objects.githubusercontent.com') {
+            return _Response(wave());
+          }
           return _Response.json(issue());
         }),
       );
-      final audio = await service.subscribe(voice, root);
-      expect(await File(audio.path).readAsBytes(), wave());
-      expect(audio.sourceIssue, voice.issueUrl.toString());
-      expect(audio.sourceAuthor, voice.author);
-      expect(audio.sourceLicense, voice.license);
-      expect(audio.sourceAttribution, voice.source);
-      expect(audio.audioSha256, await hash(wave()));
-      expect(audio.metadataSha256, await hash(utf8.encode(voice.metadataJson)));
-      expect((await service.subscribe(voice, root)).path, audio.path);
-      expect(await root.list().length, 1);
-      final rules = NotificationRules(audioLibrary: [audio]);
-      expect(
-        NotificationRules.parse(rules.encode()).audioLibrary.single,
-        audio,
-      );
-    },
-  );
+      if (location == allowed) {
+        expect(
+          await File((await service.subscribe(voice, root)).path).readAsBytes(),
+          wave(),
+        );
+      } else {
+        await expectLater(
+          service.subscribe(voice, root),
+          throwsFormatException,
+          reason: location,
+        );
+      }
+    }
+  });
   test(
-    'unapproved/changed bytes never written and unsafe redirects rejected',
+    'changed metadata, invalid audio and unsafe redirects are rejected',
     () async {
       final voice = CatalogVoice.fromIssue(issue())!;
-      final comment = await approval(voice, wave());
       final root = await Directory.systemTemp.createTemp(
         'voice-catalog-reject-',
       );
       addTearDown(() => root.delete(recursive: true));
-      for (final kind in ['unapproved', 'hash', 'redirect']) {
+      for (final kind in ['changed', 'invalid', 'redirect']) {
+        var issueReads = 0;
         final service = VoiceCatalogService(
           clientFactory: () => _Client((uri) {
-            if (uri.path.endsWith('/comments')) {
-              return _Response.json(kind == 'unapproved' ? [] : [comment]);
-            }
             if (uri.host == 'github.com') {
-              return kind == 'redirect'
-                  ? _Response(
-                      [],
-                      statusCode: 302,
-                      location: 'http://127.0.0.1/private',
-                    )
-                  : _Response(wave(frames: 100));
+              if (kind == 'redirect') {
+                return _Response(
+                  [],
+                  statusCode: 302,
+                  location: 'http://127.0.0.1/private',
+                );
+              }
+              return _Response(
+                kind == 'invalid' ? Uint8List(44) : wave(frames: 100),
+              );
             }
-            return _Response.json(issue());
+            issueReads++;
+            return _Response.json(
+              kind == 'changed' && issueReads > 1
+                  ? {...issue(), 'title': 'Changed'}
+                  : issue(),
+            );
           }),
         );
         await expectLater(
@@ -389,47 +490,124 @@ void main() {
       }
     },
   );
-  test(
-    'later approval pages supersede old hashes and incomplete pagination fails closed',
-    () async {
+  testWidgets('an already installed voice is recognised without reinstalling', (
+    tester,
+  ) async {
+    final voice = CatalogVoice.fromIssue(issue())!;
+    final model = SettingsViewModel(
+      SettingsRepository(MemoryPreferencesBackend()),
+    );
+    await model.load();
+    addTearDown(model.dispose);
+    final audio = ReminderAudio(
+      name: voice.title,
+      path: '/tmp/voice.wav',
+      sourceIssue: voice.issueUrl.toString(),
+    );
+    await model.setNotificationRules(
+      model.settings.notificationRules.copyWith(audioLibrary: [audio]),
+    );
+    final service = _WidgetCatalog(voice, audio);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: VoiceInstallDialog(
+            issueNumber: voice.number,
+            viewModel: model,
+            service: service,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Already in your sound library. You can reinstall it.'),
+      findsOneWidget,
+    );
+    expect(find.text('Reinstall'), findsOneWidget);
+    expect(service.subscribeCalls, 0);
+  });
+
+  testWidgets(
+    'a failed voice lookup can be retried in the confirmation dialog',
+    (tester) async {
       final voice = CatalogVoice.fromIssue(issue())!;
-      final bytes = wave(frames: 100);
-      final oldApproval = await approval(voice, wave());
-      final newApproval = await approval(voice, bytes);
-      final root = await Directory.systemTemp.createTemp('voice-pagination-');
-      addTearDown(() => root.delete(recursive: true));
-      for (final incomplete in [false, true]) {
-        var downloads = 0;
-        final service = VoiceCatalogService(
-          clientFactory: () => _Client((uri) {
-            if (uri.path.endsWith('/comments')) {
-              if (incomplete || uri.queryParameters['page'] == '1') {
-                return _Response.json([
-                  oldApproval,
-                  ...List.generate(99, (_) => {'body': 'discussion'}),
-                ]);
-              }
-              return _Response.json([newApproval]);
-            }
-            if (uri.host == 'github.com') {
-              downloads++;
-              return _Response(bytes);
-            }
-            return _Response.json(issue());
-          }),
-        );
-        if (incomplete) {
-          await expectLater(
-            service.subscribe(voice, root),
-            throwsFormatException,
-          );
-          expect(downloads, 0);
-        } else {
-          final audio = await service.subscribe(voice, root);
-          expect(audio.audioSha256, await hash(bytes));
-          expect(downloads, 1);
-        }
-      }
+      final model = SettingsViewModel(
+        SettingsRepository(MemoryPreferencesBackend()),
+      );
+      await model.load();
+      addTearDown(model.dispose);
+      final service = _RetryCatalog(
+        voice,
+        ReminderAudio(name: voice.title, path: '/tmp/voice.wav'),
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: VoiceInstallDialog(
+              issueNumber: voice.number,
+              viewModel: model,
+              service: service,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Refresh'));
+      await tester.pumpAndSettle();
+      expect(find.text(voice.title), findsOneWidget);
+      expect(service.lookups, 2);
+      expect(service.subscribeCalls, 0);
+    },
+  );
+
+  testWidgets(
+    'a voice request scrolls to reminders and opens confirmation without installing',
+    (tester) async {
+      tester.view.physicalSize = const Size(620, 560);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final voice = CatalogVoice.fromIssue(issue())!;
+      final model = SettingsViewModel(
+        SettingsRepository(MemoryPreferencesBackend()),
+      );
+      addTearDown(model.dispose);
+      final navigation = SettingsNavigationController();
+      addTearDown(navigation.dispose);
+      final service = _WidgetCatalog(
+        voice,
+        ReminderAudio(name: voice.title, path: '/tmp/voice.wav'),
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          home: SettingsScreen(
+            viewModel: model,
+            navigationController: navigation,
+            voiceCatalogService: service,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.binding.hasScheduledFrame, isFalse);
+      navigation.navigateToVoice(voice.number);
+      expect(
+        tester.binding.hasScheduledFrame,
+        isTrue,
+        reason: 'A platform request must schedule the navigation frame itself.',
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Install sound'), findsOneWidget);
+      expect(find.text(voice.title), findsOneWidget);
+      expect(model.settings.notificationRules.audioLibrary, isEmpty);
+      expect(service.subscribeCalls, 0);
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      final bounds = tester.getRect(
+        find.byKey(const Key('open-voice-catalog')),
+      );
+      expect(bounds.top, lessThan(560));
+      expect(bounds.bottom, greaterThan(0));
     },
   );
   testWidgets(
@@ -475,16 +653,22 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('Hello 世界 🎶'), findsOneWidget);
-      await tester.tap(find.text('Subscribe'));
+      await tester.tap(find.text('Install'));
+      await tester.pumpAndSettle();
+      expect(model.settings.notificationRules.audioLibrary, isEmpty);
+      expect(service.subscribeCalls, 0);
+      await tester.tap(find.text('Install').last);
       await tester.pumpAndSettle();
       expect(model.settings.notificationRules.audioLibrary, hasLength(1));
+      await tester.tap(find.text('Close').last);
+      await tester.pumpAndSettle();
       expect(service.subscribeCalls, 1);
       expect(
         model.settings.reminderProfiles.map((v) => v.toJson()).toList(),
         before,
       );
       final path = model.settings.notificationRules.audioLibrary.single.path;
-      await tester.tap(find.text('Unsubscribe'));
+      await tester.tap(find.text('Remove'));
       await tester.pumpAndSettle();
       expect(model.settings.notificationRules.audioLibrary, isEmpty);
       expect(await tester.runAsync(() => File(path).exists()), true);
@@ -538,13 +722,16 @@ void main() {
       );
       await tester.tap(find.text('Open catalog'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Subscribe'));
-      await tester.tap(find.text('Subscribe'));
+      await tester.tap(find.text('Install'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Install').last);
       await tester.pump();
       expect(service.subscribeCalls, 1);
+      await tester.tap(find.text('Cancel').last);
+      await tester.pumpAndSettle();
+      expect(find.byType(VoiceCatalogDialog), findsOneWidget);
       await tester.tap(find.text('Close'));
       await tester.pumpAndSettle();
-      expect(find.byType(VoiceCatalogDialog), findsNothing);
       pending.complete(service.audio);
       await tester.pumpAndSettle();
       expect(model.settings.notificationRules.audioLibrary, isEmpty);
@@ -591,13 +778,26 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Subscribed on this device'));
+      await tester.tap(find.byKey(const Key('voice-catalog-filter')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Installed').last);
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       expect(find.text('Close').hitTestable(), findsOneWidget);
       await tester.ensureVisible(find.byType(ListView).last);
       await tester.pumpAndSettle();
       await tester.drag(find.byType(ListView).last, const Offset(0, -5000));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.text('Saved voice 63'),
+        250,
+        scrollable: find
+            .descendant(
+              of: find.byType(ListView).last,
+              matching: find.byType(Scrollable),
+            )
+            .first,
+      );
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       expect(find.text('Close').hitTestable(), findsOneWidget);
@@ -685,14 +885,20 @@ class _Response extends Stream<List<int>> implements HttpClientResponse {
 }
 
 class _WidgetCatalog implements VoiceCatalogGateway {
-  _WidgetCatalog(this.voice, this.audio, {this.pending});
+  _WidgetCatalog(
+    this.voice,
+    this.audio, {
+    this.pending,
+    this.emptyFirst = false,
+  });
   final CatalogVoice voice;
   final ReminderAudio audio;
   final Completer<ReminderAudio>? pending;
+  final bool emptyFirst;
   int subscribeCalls = 0;
   @override
   Future<VoiceCatalogPage> load({int page = 1, bool refresh = false}) async =>
-      VoiceCatalogPage([voice]);
+      VoiceCatalogPage(emptyFirst ? [] : [voice]);
   @override
   Future<CatalogVoice> findIssue(String link) async => voice;
   @override
@@ -704,5 +910,24 @@ class _WidgetCatalog implements VoiceCatalogGateway {
     final waiting = pending;
     if (waiting != null) return waiting.future;
     return audio;
+  }
+}
+
+class _ManyVoiceCatalog extends _WidgetCatalog {
+  _ManyVoiceCatalog(super.voice, this.second, super.audio);
+  final CatalogVoice second;
+  @override
+  Future<VoiceCatalogPage> load({int page = 1, bool refresh = false}) async =>
+      VoiceCatalogPage([voice, second]);
+}
+
+class _RetryCatalog extends _WidgetCatalog {
+  _RetryCatalog(super.voice, super.audio);
+  int lookups = 0;
+  @override
+  Future<CatalogVoice> findIssue(String link) async {
+    lookups++;
+    if (lookups == 1) throw const HttpException('offline');
+    return voice;
   }
 }

@@ -8,6 +8,8 @@ enum AppIssueKind {
   invalidSkill,
   invalidProjectPath,
   invalidMcp,
+  sharedMcpScopeConflict,
+  unsupportedMcpAuthentication,
   invalidAgentConfig,
   duplicateMcp,
   syncFailed,

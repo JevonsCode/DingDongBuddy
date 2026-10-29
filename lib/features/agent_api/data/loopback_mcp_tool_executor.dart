@@ -26,18 +26,21 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
     Future<String?> Function(String directory)? repositoryUrlResolver,
     String? Function()? conversationIdResolver,
     String? Function()? sourceResolver,
+    String? Function()? hostSessionIdResolver,
   }) : _currentDirectory = currentDirectory ?? _defaultCurrentDirectory,
        _repositoryUrlResolver =
            repositoryUrlResolver ?? resolveGitRepositoryUrl,
        _conversationIdResolver =
            conversationIdResolver ?? _defaultConversationId,
-       _sourceResolver = sourceResolver ?? _defaultAgentSource;
+       _sourceResolver = sourceResolver ?? _defaultAgentSource,
+       _hostSessionIdResolver = hostSessionIdResolver ?? _defaultHostSessionId;
 
   final McpHttpTransport _transport;
   final String Function() _currentDirectory;
   final Future<String?> Function(String directory) _repositoryUrlResolver;
   final String? Function() _conversationIdResolver;
   final String? Function() _sourceResolver;
+  final String? Function() _hostSessionIdResolver;
   String? _lastBridgeSource;
   String? _lastBridgeConversationId;
 
@@ -292,6 +295,15 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
   Future<Map<String, Object?>> _bridge(Map<String, Object?> arguments) async {
     _lastBridgeConversationId = null;
     final Map<String, Object?> body = Map<String, Object?>.of(arguments);
+    final String? environmentSource = _sourceResolver()?.trim();
+    final String requestedSource = (body['source'] as String? ?? '').trim();
+    if (resolveActivitySource(requestedSource, environmentSource) ==
+        'Claude Desktop') {
+      // Desktop uses the same Claude Code resource configuration, while its
+      // lifecycle must remain distinct from the terminal client.
+      body['source'] = 'Claude Code';
+      body['activitySource'] = 'Claude Desktop';
+    }
     final String directory =
         (body['workspacePath'] as String? ?? '').trim().isEmpty
         ? _currentDirectory()
@@ -345,16 +357,28 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
   Future<Map<String, Object?>> _notify(Map<String, Object?> arguments) {
     final Map<String, Object?> body = Map<String, Object?>.of(arguments);
     body.putIfAbsent('notificationKind', () => 'attention');
+    final String? currentConversationId = _conversationIdResolver()?.trim();
     if ((body['conversationId'] as String? ?? '').trim().isEmpty) {
-      final String? conversationId = _conversationIdResolver()?.trim();
-      if (conversationId != null && conversationId.isNotEmpty) {
-        body['conversationId'] = conversationId;
+      if (currentConversationId != null && currentConversationId.isNotEmpty) {
+        body['conversationId'] = currentConversationId;
       }
     }
-    if ((body['source'] as String? ?? '').trim().isEmpty) {
-      final String? source = _lastBridgeSource ?? _sourceResolver()?.trim();
-      if (source != null && source.isNotEmpty) {
-        body['source'] = source;
+    final String? source = resolveActivitySource(
+      (body['source'] as String? ?? '').trim().isEmpty
+          ? _lastBridgeSource
+          : body['source'] as String?,
+      _sourceResolver()?.trim(),
+    );
+    if (source != null && source.isNotEmpty) {
+      body['source'] = source;
+    }
+    if (source == 'Claude Desktop' &&
+        currentConversationId != null &&
+        currentConversationId.isNotEmpty &&
+        body['conversationId'] == currentConversationId) {
+      final String? hostSessionId = _hostSessionIdResolver()?.trim();
+      if (hostSessionId != null && hostSessionId.isNotEmpty) {
+        body['hostSessionId'] = hostSessionId;
       }
     }
     if ((body['workspacePath'] as String? ?? '').trim().isEmpty) {
@@ -375,7 +399,11 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
     };
     final String explicitSource = (arguments['source'] as String? ?? '').trim();
     if (explicitSource.isNotEmpty) {
-      query['source'] = explicitSource;
+      query['source'] =
+          explicitSource == 'Claude Desktop' &&
+              _sourceResolver()?.trim() == 'Claude Desktop'
+          ? 'Claude Code'
+          : explicitSource;
     } else if (_lastBridgeSource case final String source
         when source.isNotEmpty) {
       query['source'] = source;
@@ -428,6 +456,9 @@ String? _defaultConversationId() => _firstEnvironmentValue(const <String>[
 
 String? _defaultAgentSource() =>
     inferAgentSourceFromEnvironment(Platform.environment);
+
+String? _defaultHostSessionId() =>
+    Platform.environment['CLAUDE_CODE_HOST_SESSION_ID'];
 
 String? _firstEnvironmentValue(List<String> keys) {
   for (final String key in keys) {

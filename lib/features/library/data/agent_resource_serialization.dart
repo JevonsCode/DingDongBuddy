@@ -22,6 +22,12 @@ Map<String, Object?> _jsonMcp(
       AgentMcpConfigKind.claudeJson => 'Bearer \${$variable}',
       AgentMcpConfigKind.cursorJson => 'Bearer \${env:$variable}',
       AgentMcpConfigKind.geminiJson => 'Bearer \$$variable',
+      AgentMcpConfigKind.openCodeJson => 'Bearer {env:$variable}',
+      AgentMcpConfigKind.antigravityJson => throw const FormatException(
+        'Antigravity bearer-token environment interpolation is not supported. '
+        'Use the client authentication flow or an explicit header.',
+      ),
+      AgentMcpConfigKind.copilotJson => 'Bearer \${$variable}',
       AgentMcpConfigKind.kiroJson ||
       AgentMcpConfigKind.mcpServersJson => 'Bearer \${$variable}',
       AgentMcpConfigKind.codexToml => throw StateError(
@@ -31,19 +37,34 @@ Map<String, Object?> _jsonMcp(
   }
   return switch (config.transport) {
     McpTransport.stdio => <String, Object?>{
-      if (kind == AgentMcpConfigKind.claudeJson) 'type': 'stdio',
-      'command': config.command,
-      if (config.arguments.isNotEmpty) 'args': config.arguments,
-      if (config.environment.isNotEmpty) 'env': config.environment,
-      if (alwaysLoad) 'alwaysLoad': true,
+      if (kind == AgentMcpConfigKind.openCodeJson) ...<String, Object?>{
+        'type': 'local',
+        'command': <String>[config.command, ...config.arguments],
+        if (config.environment.isNotEmpty) 'environment': config.environment,
+      } else ...<String, Object?>{
+        if (kind == AgentMcpConfigKind.claudeJson) 'type': 'stdio',
+        'command': config.command,
+        if (config.arguments.isNotEmpty ||
+            kind == AgentMcpConfigKind.copilotJson)
+          'args': config.arguments,
+        if (config.environment.isNotEmpty) 'env': config.environment,
+        if (kind == AgentMcpConfigKind.copilotJson) 'tools': <String>['*'],
+        if (alwaysLoad) 'alwaysLoad': true,
+      },
     },
     McpTransport.streamableHttp => <String, Object?>{
-      if (kind == AgentMcpConfigKind.claudeJson) 'type': 'http',
+      if (kind == AgentMcpConfigKind.claudeJson ||
+          kind == AgentMcpConfigKind.copilotJson)
+        'type': 'http',
+      if (kind == AgentMcpConfigKind.openCodeJson) 'type': 'remote',
       if (kind == AgentMcpConfigKind.geminiJson)
         'httpUrl': config.url
+      else if (kind == AgentMcpConfigKind.antigravityJson)
+        'serverUrl': config.url
       else
         'url': config.url,
       if (headers.isNotEmpty) 'headers': headers,
+      if (kind == AgentMcpConfigKind.copilotJson) 'tools': <String>['*'],
       if (alwaysLoad) 'alwaysLoad': true,
     },
     McpTransport.raw => throw const FormatException(
@@ -51,6 +72,9 @@ Map<String, Object?> _jsonMcp(
     ),
   };
 }
+
+String _mcpServersKey(AgentMcpConfigKind kind) =>
+    kind == AgentMcpConfigKind.openCodeJson ? 'mcp' : 'mcpServers';
 
 Future<void> _copyDirectory(Directory source, Directory destination) async {
   await destination.create(recursive: true);

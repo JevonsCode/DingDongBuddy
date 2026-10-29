@@ -33,6 +33,48 @@
         },
         "kiro": {
           "$ref": "#/$defs/launcherSettings"
+        },
+        "claude-desktop": {
+          "$ref": "#/$defs/launcherSettings"
+        },
+        "pi": {
+          "$ref": "#/$defs/launcherSettings"
+        },
+        "opencode": {
+          "$ref": "#/$defs/launcherSettings"
+        },
+        "opencode-cli": {
+          "$ref": "#/$defs/launcherSettings"
+        },
+        "opencode-desktop": {
+          "$ref": "#/$defs/launcherSettings"
+        },
+        "antigravity": {
+          "$ref": "#/$defs/launcherSettings"
+        },
+        "antigravity-cli": {
+          "$ref": "#/$defs/launcherSettings"
+        },
+        "antigravity-ide": {
+          "$ref": "#/$defs/launcherSettings"
+        },
+        "antigravity-app": {
+          "$ref": "#/$defs/launcherSettings"
+        },
+        "copilot": {
+          "$ref": "#/$defs/launcherSettings"
+        },
+        "copilot-cli": {
+          "$ref": "#/$defs/launcherSettings"
+        },
+        "copilot-ide": {
+          "$ref": "#/$defs/launcherSettings"
+        },
+        "grok-build": {
+          "$ref": "#/$defs/launcherSettings"
+        },
+        "windsurf": {
+          "$ref": "#/$defs/launcherSettings"
         }
       }
     }

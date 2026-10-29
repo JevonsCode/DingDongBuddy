@@ -1,25 +1,49 @@
 import 'dart:convert';
-import 'package:cryptography/cryptography.dart';
 
 /// Public catalog rules are deliberately separate from local custom audio.
 const voiceCatalogRepository = 'JevonsCode/dingdong-voices';
-const voiceCatalogLabel = 'voice-approved';
 const voiceCatalogMaxBytes = 5 * 1024 * 1024;
 const voiceCatalogWebsite =
-    'https://xn--8ovp9s.xn--m8txu.com/dingdongbuddy/voices/';
+    'https://xn--8ovp9s.xn--m8txu.com/dingdong-voices/';
+
+Uri voiceCatalogWebsiteUri({bool development = false}) {
+  final uri = Uri.parse(voiceCatalogWebsite);
+  return development ? uri.replace(queryParameters: {'app': 'dev'}) : uri;
+}
+
+String voiceDisplayTitle(String title) {
+  final display = title
+      .replaceFirst(RegExp(r'^🕵🏻‍♀️\[DOT\]\s*'), '')
+      .replaceFirst(RegExp(r'^\[Voice\]\s*', caseSensitive: false), '')
+      .trim();
+  return display.isEmpty ? title.trim() : display;
+}
+
+/// Deep links identify a public Issue; they never carry an arbitrary URL.
+int? voiceInstallIssueNumber(String? value, {bool development = false}) {
+  final scheme = development ? 'dingdong-dev' : 'dingdong';
+  final match = RegExp(
+    '^$scheme://voice/([1-9][0-9]{0,9})\$',
+  ).firstMatch(value ?? '');
+  final number = int.tryParse(match?.group(1) ?? '');
+  return number != null && number <= 2147483647 ? number : null;
+}
 
 /// Only GitHub's attachment storage is accepted, never arbitrary Issue URLs.
 bool isVoiceAttachment(Uri uri) =>
-    uri.scheme == 'https' &&
-    uri.host == 'github.com' &&
-    !uri.hasPort &&
-    uri.userInfo.isEmpty &&
-    uri.query.isEmpty &&
-    uri.fragment.isEmpty &&
     RegExp(
-      r'^/user-attachments/files/[0-9]+/[a-zA-Z0-9_.-]+\.wav$',
-      caseSensitive: false,
-    ).hasMatch(uri.path);
+      r'^https://raw\.githubusercontent\.com/JevonsCode/dingdong-voices/[a-f0-9]{40}/audio/[A-Za-z0-9_-]+\.wav$',
+    ).hasMatch(uri.toString()) ||
+    (uri.scheme == 'https' &&
+        uri.host == 'github.com' &&
+        !uri.hasPort &&
+        uri.userInfo.isEmpty &&
+        uri.query.isEmpty &&
+        uri.fragment.isEmpty &&
+        RegExp(
+          r'^/user-attachments/files/[0-9]+/[a-zA-Z0-9_.-]+\.wav$',
+          caseSensitive: false,
+        ).hasMatch(uri.path));
 
 Map<String, String>? voiceIssueFields(String body) {
   final fields = <String, String>{};
@@ -68,11 +92,6 @@ final class CatalogVoice {
       if (issue['state'] != 'open' || issue.containsKey('pull_request')) {
         return null;
       }
-      final labels = issue['labels'];
-      if (labels is! List ||
-          !labels.any((l) => l is Map && l['name'] == voiceCatalogLabel)) {
-        return null;
-      }
       final number = issue['number'];
       final title = issue['title'];
       final body = issue['body'];
@@ -116,14 +135,10 @@ final class CatalogVoice {
         r'https://[^\s<>\[\]\(\)]+',
       ).allMatches(audio).map((m) => m.group(0)!).toList();
       if (urls.length != 1) return null;
-      if (!RegExp(
-        r'^https://github\.com/user-attachments/files/[0-9]+/[a-zA-Z0-9_.-]+\.wav$',
-        caseSensitive: false,
-      ).hasMatch(urls.single)) {
+      final audioUrl = Uri.parse(urls.single);
+      if (!isVoiceAttachment(audioUrl) || audioUrl.toString() != urls.single) {
         return null;
       }
-      final audioUrl = Uri.parse(urls.single);
-      if (!isVoiceAttachment(audioUrl)) return null;
       final issueUrl = Uri.https('github.com', '/$repository/issues/$number');
       if (issue['html_url'] != issueUrl.toString()) return null;
       final reactions = issue['reactions'] as Map?;
@@ -132,12 +147,10 @@ final class CatalogVoice {
         return n is int && n >= 0 ? n : 0;
       }
 
-      final displayTitle = title
-          .replaceFirst(RegExp(r'^\[Voice\]\s*', caseSensitive: false), '')
-          .trim();
+      final displayTitle = voiceDisplayTitle(title);
       return CatalogVoice(
         number: number,
-        title: displayTitle.isEmpty ? title.trim() : displayTitle,
+        title: displayTitle,
         description: description,
         author: author,
         createdAt: DateTime.parse(issue['created_at'] as String),
@@ -167,45 +180,4 @@ final class VoiceCatalogPage {
   const VoiceCatalogPage(this.voices, {this.hasMore = false});
   final List<CatalogVoice> voices;
   final bool hasMore;
-}
-
-/// Approval is data, never a script or Markdown renderer. Current issue fields
-/// must exactly match an owner-approved digest before accessing audio.
-Future<String?> approvedAudioHash(
-  CatalogVoice voice,
-  List<dynamic> comments,
-) async {
-  final digest = (await Sha256().hash(
-    utf8.encode(voice.metadataJson),
-  )).bytes.map((x) => x.toRadixString(16).padLeft(2, '0')).join();
-  for (final comment in comments.reversed) {
-    if (comment is! Map) continue;
-    final user = comment['user'];
-    if (user is! Map ||
-        user['id'] != 36203025 ||
-        comment['author_association'] != 'OWNER') {
-      continue;
-    }
-    final body = comment['body'];
-    if (body is! String || body.length > 2048) continue;
-    try {
-      const prefix = '🕵🏻‍♀️[DOT]\n';
-      final approval = jsonDecode(
-        body.startsWith(prefix) ? body.substring(prefix.length) : body,
-      );
-      if (approval is Map &&
-          approval['dingdongVoiceApproval'] == 1 &&
-          approval['issue'] == voice.number &&
-          approval['metadataSha256'] == digest &&
-          approval['audioSha256'] is String &&
-          RegExp(
-            r'^[0-9a-f]{64}$',
-          ).hasMatch(approval['audioSha256'] as String)) {
-        return approval['audioSha256'] as String;
-      }
-    } on FormatException {
-      /* Other comments are discussion, not approvals. */
-    }
-  }
-  return null;
 }

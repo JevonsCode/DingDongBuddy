@@ -1,12 +1,18 @@
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:dingdong/features/agent_api/data/agent_source_identity.dart';
 import 'package:dingdong/features/agent_api/data/loopback_mcp_tool_executor.dart';
 
 /// Acknowledges the matching reminder when Codex starts or resumes a session.
 final class ConversationOpenedHookNotifier {
-  ConversationOpenedHookNotifier(this._transport);
+  ConversationOpenedHookNotifier(
+    this._transport, {
+    Map<String, String>? environment,
+  }) : _environment = environment ?? Platform.environment;
 
   final McpHttpTransport _transport;
+  final Map<String, String> _environment;
 
   Future<Map<String, Object?>> notify(
     String hookInput, {
@@ -27,9 +33,12 @@ final class ConversationOpenedHookNotifier {
     if (conversationId == null) {
       return const <String, Object?>{'status': 'ignored'};
     }
-    final String source = (sourceOverride ?? '').trim().isNotEmpty
-        ? sourceOverride!.trim()
-        : 'Codex';
+    final String source =
+        resolveActivitySource(
+          sourceOverride,
+          inferAgentSourceFromEnvironment(_environment),
+        ) ??
+        'Codex';
     final String? workspacePath = _firstText(input, const <String>[
       'cwd',
       'workspace_path',

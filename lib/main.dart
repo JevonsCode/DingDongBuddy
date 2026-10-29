@@ -64,6 +64,7 @@ import 'package:dingdong/features/settings/data/settings_repository.dart';
 import 'package:dingdong/features/settings/domain/release_update.dart';
 import 'package:dingdong/features/settings/domain/settings_window_launcher.dart';
 import 'package:dingdong/features/settings/domain/system_usage.dart';
+import 'package:dingdong/features/settings/domain/voice_catalog.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
 import 'package:dingdong/features/settings/ui/settings_window_app.dart';
 import 'package:dingdong/features/shell/domain/desktop_shell_service.dart';
@@ -159,6 +160,9 @@ Future<void> main(List<String> arguments) async {
   }
 
   final AppDataPaths appDataPaths = AppDataPaths.current();
+  final bool isolatedPreview =
+      appDataPaths.development &&
+      const bool.fromEnvironment('DINGDONG_PREVIEW_SANDBOX');
   final bool hadExistingApplicationData = appDataPaths
       .applicationSupportDirectory
       .existsSync();
@@ -201,7 +205,11 @@ Future<void> main(List<String> arguments) async {
         : startupLanguage,
   );
   final ActivityController activityController = ActivityController(
-    store: FileAgentActivityStore(appDataPaths.agentActivityFile),
+    store: FileAgentActivityStore(
+      appDataPaths.agentActivityFile,
+      claudeDesktopSessionDirectory:
+          claudeDesktopSessionDirectoryForCurrentPlatform(),
+    ),
     localizations: currentLocalizations,
   );
   late final NativeAgentConversationLauncher agentConversationLauncher;
@@ -460,14 +468,18 @@ Future<void> main(List<String> arguments) async {
       NativeApplicationUpdater();
   settingsViewModel = SettingsViewModel(
     dependencies.settingsRepository,
-    clipboardMonitoring: dependencies.clipboardMonitorService,
+    clipboardMonitoring: isolatedPreview
+        ? null
+        : dependencies.clipboardMonitorService,
     launchAtStartup: launchAtStartup,
     onWindowOpacityChanged: shellGateway.setOpacity,
     onDockIconHiddenChanged: shellGateway.setDockIconHidden,
     onShowMenuBarRecovery: const NativeMenuBarRecoveryGateway().show,
     onTrayNotificationColorChanged: shellGateway.setTrayNotificationColor,
     onNotificationRulesChanged: shellGateway.setNotificationRules,
-    onGlobalHotKeyChanged: shellGateway.setGlobalHotKey,
+    onGlobalHotKeyChanged: isolatedPreview
+        ? null
+        : shellGateway.setGlobalHotKey,
     onLifecycleTelemetryChanged: lifecycleTelemetryController.setEnabled,
     releaseMetadataSource: HttpReleaseMetadataSource(),
     externalLinkGateway: UrlLauncherExternalLinkGateway(),
@@ -476,7 +488,7 @@ Future<void> main(List<String> arguments) async {
     selectionPluginGateway: (Platform.isMacOS || Platform.isWindows)
         ? selectionPluginGateway
         : null,
-    restoreSelectionPluginOnLoad: !Platform.isWindows,
+    restoreSelectionPluginOnLoad: !Platform.isWindows && !isolatedPreview,
     mcpCommandPath: _mcpCommandPath(),
     systemUsageSource: IoSystemUsageSource(
       dependencies.paths.applicationSupportDirectory,
@@ -846,6 +858,32 @@ Future<void> main(List<String> arguments) async {
     ),
   );
   await WidgetsBinding.instance.endOfFrame;
+  if (Platform.isMacOS) {
+    const voiceLinks = MethodChannel('dingdong/voice_links');
+    Future<void> openVoiceLink(Object? value) async {
+      final issueNumber = voiceInstallIssueNumber(
+        value is String ? value : null,
+        development: appDataPaths.development,
+      );
+      if (issueNumber != null) {
+        await settingsWindowLauncher.showVoice(issueNumber);
+      }
+    }
+
+    voiceLinks.setMethodCallHandler((call) async {
+      if (call.method == 'open') await openVoiceLink(call.arguments);
+    });
+    try {
+      final pending = await voiceLinks.invokeListMethod<String>('ready') ?? [];
+      for (final link in pending) {
+        await openVoiceLink(link);
+      }
+    } on MissingPluginException {
+      // Other hosts have no native URL handler.
+    } on PlatformException {
+      // An unavailable URL handler must not stop the app from starting.
+    }
+  }
   tokenUsageBackgroundService.start();
   unawaited(
     lifecycleTelemetryController.setEnabled(

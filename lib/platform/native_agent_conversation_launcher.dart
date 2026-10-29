@@ -64,10 +64,30 @@ final class NativeAgentConversationLauncher extends ChangeNotifier
                     codexConversationPreflightBatch == null) ||
                 _codexOpenabilityCache[id] == true),
       AgentClient.claudeCode ||
-      AgentClient.geminiCli => id != null && workspace != null,
+      AgentClient.geminiCli ||
+      AgentClient.openCodeCli ||
+      AgentClient.antigravityCli ||
+      AgentClient.copilotCli ||
+      AgentClient.grokBuild => id != null && workspace != null,
+      AgentClient.pi =>
+        id != null &&
+            workspace != null &&
+            RegExp(
+              r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+            ).hasMatch(id),
+      AgentClient.claudeDesktop =>
+        _safeClaudeDesktopSessionId(target.hostSessionId) != null,
       AgentClient.cursor =>
         (id != null && id.startsWith('bc-')) || workspace != null,
       AgentClient.kiro => workspace != null,
+      AgentClient.openCode ||
+      AgentClient.openCodeDesktop ||
+      AgentClient.antigravity ||
+      AgentClient.antigravityIde ||
+      AgentClient.antigravityApp ||
+      AgentClient.copilot ||
+      AgentClient.copilotIde ||
+      AgentClient.windsurf ||
       AgentClient.unknown => false,
     };
   }
@@ -168,10 +188,56 @@ final class NativeAgentConversationLauncher extends ChangeNotifier
           arguments: <String>['--resume', id!],
           workspacePath: workspace!,
         );
+      case AgentClient.claudeDesktop:
+        await _openUri(
+          Uri(
+            scheme: 'claude',
+            host: 'code',
+            path: '/continue',
+            queryParameters: <String, String>{
+              'session': _safeClaudeDesktopSessionId(target.hostSessionId)!,
+            },
+          ),
+        );
       case AgentClient.geminiCli:
         await _openCliSession(
           client: target.client,
           executable: 'gemini',
+          arguments: <String>['--resume', id!],
+          workspacePath: workspace!,
+        );
+      case AgentClient.pi:
+        await _openCliSession(
+          client: target.client,
+          executable: 'pi',
+          arguments: <String>['--session', id!],
+          workspacePath: workspace!,
+        );
+      case AgentClient.openCodeCli:
+        await _openCliSession(
+          client: target.client,
+          executable: 'opencode',
+          arguments: <String>['--session', id!],
+          workspacePath: workspace!,
+        );
+      case AgentClient.antigravityCli:
+        await _openCliSession(
+          client: target.client,
+          executable: 'agy',
+          arguments: <String>['--conversation', id!],
+          workspacePath: workspace!,
+        );
+      case AgentClient.copilotCli:
+        await _openCliSession(
+          client: target.client,
+          executable: 'copilot',
+          arguments: <String>['--resume', id!],
+          workspacePath: workspace!,
+        );
+      case AgentClient.grokBuild:
+        await _openCliSession(
+          client: target.client,
+          executable: 'grok',
           arguments: <String>['--resume', id!],
           workspacePath: workspace!,
         );
@@ -199,6 +265,14 @@ final class NativeAgentConversationLauncher extends ChangeNotifier
         } else {
           await _openDesktopApp('Kiro', 'kiro', workspace!);
         }
+      case AgentClient.openCode:
+      case AgentClient.openCodeDesktop:
+      case AgentClient.antigravity:
+      case AgentClient.antigravityIde:
+      case AgentClient.antigravityApp:
+      case AgentClient.copilot:
+      case AgentClient.copilotIde:
+      case AgentClient.windsurf:
       case AgentClient.unknown:
         throw StateError('Unsupported Agent client.');
     }
@@ -334,6 +408,11 @@ final class NativeAgentConversationLauncher extends ChangeNotifier
     }
     await _processStarter(executable, <String>[workspacePath]);
   }
+}
+
+String? _safeClaudeDesktopSessionId(String? value) {
+  final String id = (value ?? '').trim();
+  return RegExp(r'^local_[A-Za-z0-9-]{1,64}$').hasMatch(id) ? id : null;
 }
 
 String? _safeConversationId(String? value) {

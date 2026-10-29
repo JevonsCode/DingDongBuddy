@@ -64,7 +64,10 @@ class ReminderProfilesEditor extends StatelessWidget {
             key: const Key('open-voice-catalog'),
             onPressed: () => showDialog<void>(
               context: context,
-              builder: (_) => VoiceCatalogDialog(viewModel: viewModel),
+              builder: (_) => VoiceCatalogDialog(
+                viewModel: viewModel,
+                previewGateway: soundPreviewGateway,
+              ),
             ),
             icon: const Icon(Icons.library_music_outlined, size: 18),
             label: Text(context.l10n.voiceCatalogTitle),

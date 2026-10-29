@@ -4276,24 +4276,59 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get aiTestingConnection => '正在连接…';
 
   @override
+  String get voiceInstallDetails => '来源与授权';
+
+  @override
+  String get voiceInstallContributorInfo => '以下信息由投稿者提供';
+
+  @override
+  String get voiceCatalogFindFailed => '找不到此声音，请检查链接或网络。';
+
+  @override
+  String get voiceInstallPresent => '已加入声音库，可以重新安装。';
+
+  @override
+  String get voiceInstallReinstall => '重新安装';
+
+  @override
+  String get voiceInstallTitle => '安装声音';
+
+  @override
+  String get voiceInstallConfirm => '安装此声音？安装后可在提醒中选择。';
+
+  @override
+  String get voiceInstallSuccess => '已安装，可在提醒中选择使用。';
+
+  @override
+  String get voiceInstallLicense => '授权';
+
+  @override
+  String get voiceInstallPreviewFailed => '无法试听，请重试。';
+
+  @override
   String get voiceCatalogTitle => '社区声音';
 
   @override
-  String get voiceCatalogHelp =>
-      '订阅后，审核通过的 ≤3 秒声音会加入本设备的声音选择器。订阅时校验音频，不会自动切换当前声音。取消订阅不会删除现有提醒正在使用的文件。';
+  String get voiceCatalogHelp => '安装后可在本设备的提醒中选择声音。';
 
   @override
-  String get voiceCatalogSearch => '搜索标题、作者或粘贴 Issue 链接';
+  String get voiceCatalogSearch => '搜索或粘贴声音链接';
 
   @override
-  String get voiceCatalogEmpty => '已加载的页面暂无匹配声音。可以去网站投稿原创或已获授权的声音。';
+  String get voiceCatalogFilter => '安装状态';
+
+  @override
+  String get voiceCatalogFilterInstalled => '已安装';
+
+  @override
+  String get voiceCatalogEmpty => '没有找到匹配的声音。';
 
   @override
   String get voiceCatalogLoadFailed => '无法加载 GitHub 声音库。请检查网络；若请求受限，请稍后重试。';
 
   @override
   String get voiceCatalogSubscribeFailed =>
-      '订阅失败。声音可能已修改、未获所有者审核、超过 3 秒或暂时不可用。请刷新后重试。';
+      '安装失败。声音可能已修改、暂不可用或音频格式不符合要求，请刷新后重试。';
 
   @override
   String get voiceCatalogFull => '声音库已满（最多 64 个）。';
@@ -4302,10 +4337,10 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get voiceCatalogLinkFailed => '无法打开链接。';
 
   @override
-  String get voiceCatalogSubscribe => '订阅';
+  String get voiceCatalogSubscribe => '安装';
 
   @override
-  String get voiceCatalogUnsubscribe => '取消订阅';
+  String get voiceCatalogUnsubscribe => '移除';
 
   @override
   String get voiceCatalogDownloading => '校验中…';
@@ -4326,7 +4361,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get voiceCatalogFindIssue => '查找 Issue 链接';
 
   @override
-  String get voiceCatalogSubscribed => '本设备已订阅';
+  String get voiceCatalogSubscribed => '本设备已安装';
 
   @override
   String get deviceLanConnection => '局域网';
@@ -4475,4 +4510,18 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   @override
   String get lanNetworkAccessDenied =>
       '局域网访问被系统拒绝。请检查叮咚的局域网权限和专用网络防火墙，并退出重复打开的叮咚后刷新。';
+
+  @override
+  String get sharedMcpScopeConflict => 'MCP 来源范围与共享配置冲突';
+
+  @override
+  String get sharedMcpScopeConflictDetail =>
+      '此配置由多个客户端共享，部分客户端不在允许范围内，未同步该 MCP。';
+
+  @override
+  String get unsupportedMcpAuthentication => '客户端不支持此 MCP 认证方式';
+
+  @override
+  String get unsupportedMcpAuthenticationDetail =>
+      'Antigravity 暂不支持此环境变量令牌方式，请使用客户端认证或显式请求头。';
 }

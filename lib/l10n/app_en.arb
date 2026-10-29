@@ -5684,16 +5684,40 @@
   "@aiTestingConnection": {
     "description": "AI model configuration and operation status."
   },
+  "voiceInstallDetails": "Source and license",
+  "@voiceInstallDetails": { "description": "Community voice installation." },
+  "voiceInstallContributorInfo": "Provided by the contributor",
+  "@voiceInstallContributorInfo": { "description": "Community voice installation." },
+  "voiceCatalogFindFailed": "Could not find this sound. Check the link or connection.",
+  "@voiceCatalogFindFailed": { "description": "Community voice installation." },
+  "voiceInstallPresent": "Already in your sound library. You can reinstall it.",
+  "@voiceInstallPresent": { "description": "Community voice installation." },
+  "voiceInstallReinstall": "Reinstall",
+  "@voiceInstallReinstall": { "description": "Community voice installation." },
+  "voiceInstallTitle": "Install sound",
+  "@voiceInstallTitle": { "description": "Community voice installation." },
+  "voiceInstallConfirm": "Install this sound? It will be available in your reminder settings.",
+  "@voiceInstallConfirm": { "description": "Community voice installation." },
+  "voiceInstallSuccess": "Installed. Choose it in a reminder to use it.",
+  "@voiceInstallSuccess": { "description": "Community voice installation." },
+  "voiceInstallLicense": "License",
+  "@voiceInstallLicense": { "description": "Community voice installation." },
+  "voiceInstallPreviewFailed": "Could not preview this sound. Try again.",
+  "@voiceInstallPreviewFailed": { "description": "Community voice installation." },
   "voiceCatalogTitle": "Community voices",
-  "voiceCatalogHelp": "Subscribe to add a reviewed, ≤3-second voice to this device’s sound picker. Audio is verified on subscribe. Your current sound never changes automatically. Unsubscribing keeps files used by existing reminders.",
-  "voiceCatalogSearch": "Search title, author or paste an Issue link",
-  "voiceCatalogEmpty": "No matching voices on loaded pages yet. Submit an original or licensed sound on the website.",
+  "voiceCatalogHelp": "Install a sound to add it to this device’s reminder picker.",
+  "voiceCatalogSearch": "Search or paste a voice link",
+  "voiceCatalogFilter": "Installation status",
+  "@voiceCatalogFilter": {"description": "Community voice installation status filter."},
+  "voiceCatalogFilterInstalled": "Installed",
+  "@voiceCatalogFilterInstalled": {"description": "Show only installed community voices."},
+  "voiceCatalogEmpty": "No matching sounds.",
   "voiceCatalogLoadFailed": "Could not load GitHub voices. Check your connection or try later if rate limited.",
-  "voiceCatalogSubscribeFailed": "Could not subscribe. The voice may have changed, lack owner approval, exceed 3 seconds, or be unavailable. Refresh and retry.",
+  "voiceCatalogSubscribeFailed": "Could not install this sound. It may have changed, be unavailable, or contain invalid audio. Refresh and try again.",
   "voiceCatalogFull": "Your sound library is full (64 sounds).",
   "voiceCatalogLinkFailed": "Could not open the link.",
-  "voiceCatalogSubscribe": "Subscribe",
-  "voiceCatalogUnsubscribe": "Unsubscribe",
+  "voiceCatalogSubscribe": "Install",
+  "voiceCatalogUnsubscribe": "Remove",
   "voiceCatalogDownloading": "Verifying…",
   "voiceCatalogLoadMore": "Load more",
   "voiceCatalogPageLimit": "Page limit reached. Browse all voices on the website.",
@@ -5748,7 +5772,7 @@
   "@voiceCatalogFindIssue": {
     "description": "Community voice catalog: FindIssue."
   },
-  "voiceCatalogSubscribed": "Subscribed on this device",
+  "voiceCatalogSubscribed": "Installed on this device",
   "@voiceCatalogSubscribed": {
     "description": "Heading for pinned local community voice subscriptions, including delisted voices."
   },
@@ -5933,5 +5957,13 @@
   "lanNetworkAccessDenied": "Local network access was denied. Check DingDong’s local-network permission and private-network firewall, quit duplicate instances, then refresh.",
   "@lanNetworkAccessDenied": {
     "description": "Actionable local-network access-denied or exclusive-bind error."
-  }
+  },
+  "sharedMcpScopeConflict": "MCP source scope conflicts with shared configuration",
+  "@sharedMcpScopeConflict": { "description": "Agent MCP synchronization warning." },
+  "sharedMcpScopeConflictDetail": "This MCP was not synced because the configuration is shared with clients outside its source scope.",
+  "@sharedMcpScopeConflictDetail": { "description": "Agent MCP synchronization warning." },
+  "unsupportedMcpAuthentication": "MCP authentication is not supported",
+  "@unsupportedMcpAuthentication": { "description": "Agent MCP synchronization warning." },
+  "unsupportedMcpAuthenticationDetail": "Antigravity cannot use this environment-variable bearer token. Use its authentication flow or an explicit header.",
+  "@unsupportedMcpAuthenticationDetail": { "description": "Agent MCP synchronization warning." }
 }

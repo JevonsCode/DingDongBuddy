@@ -510,6 +510,7 @@ final class ActivityController extends ChangeNotifier {
           : target.client,
       conversationId: target.conversationId,
       workspacePath: target.workspacePath,
+      hostSessionId: target.hostSessionId,
     );
   }
 
@@ -534,6 +535,7 @@ final class ActivityController extends ChangeNotifier {
           : merged.client,
       conversationId: merged.conversationId,
       workspacePath: merged.workspacePath,
+      hostSessionId: merged.hostSessionId,
     );
   }
 

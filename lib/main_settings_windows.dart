@@ -47,6 +47,9 @@ Future<void> _runSettingsWindow(
   Map<String, Object?> arguments,
 ) async {
   final AppDataPaths paths = AppDataPaths.current();
+  final bool isolatedPreview =
+      paths.development &&
+      const bool.fromEnvironment('DINGDONG_PREVIEW_SANDBOX');
   final String parentWindowId = arguments['parentWindowId']! as String;
   final MultiWindowSettingsHostBridge hostBridge =
       MultiWindowSettingsHostBridge(parentWindowId);
@@ -62,13 +65,13 @@ Future<void> _runSettingsWindow(
   );
   final SettingsViewModel viewModel = SettingsViewModel(
     settingsRepository,
-    clipboardMonitoring: hostBridge,
+    clipboardMonitoring: isolatedPreview ? null : hostBridge,
     launchAtStartup: hostBridge,
     onWindowOpacityChanged: hostBridge.setOpacity,
     onDockIconHiddenChanged: hostBridge.setDockIconHidden,
     onShowMenuBarRecovery: const NativeMenuBarRecoveryGateway().show,
     onTrayNotificationColorChanged: hostBridge.setTrayNotificationColor,
-    onGlobalHotKeyChanged: hostBridge.setGlobalHotKey,
+    onGlobalHotKeyChanged: isolatedPreview ? null : hostBridge.setGlobalHotKey,
     releaseMetadataSource: HttpReleaseMetadataSource(),
     externalLinkGateway: UrlLauncherExternalLinkGateway(),
     applicationUpdater: hostBridge,
@@ -111,6 +114,7 @@ Future<void> _runSettingsWindow(
       initialDestination: SettingsWindowDestination.fromValue(
         arguments['destination'],
       ),
+      initialVoiceIssueNumber: arguments['voiceIssueNumber'] as int?,
       soundFileGateway: FileSelectorSoundGateway(
         () => appLocalizationsFor(viewModel.settings.language),
       ),

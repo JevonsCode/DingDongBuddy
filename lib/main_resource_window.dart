@@ -68,7 +68,10 @@ Future<void> _runResourceManagerWindow(
   final AgentResourceSynchronizer resourceSynchronizer =
       await AgentResourceSynchronizer.currentUser(
         paths.skillPackagesDirectory,
-        sandbox: Platform.isWindows && paths.development,
+        sandbox:
+            paths.development &&
+            (Platform.isWindows ||
+                const bool.fromEnvironment('DINGDONG_PREVIEW_SANDBOX')),
         loadAdapters: agentAdapterRepository.loadEffectiveAdapters,
         triggerGroupStore: baseTriggerGroupStore,
       );
@@ -194,7 +197,11 @@ Future<void> _runResourceManagerWindow(
   await pluginSettings.load();
   final ActivityController activityController =
       ActivityController(
-          store: FileAgentActivityStore(paths.agentActivityFile),
+          store: FileAgentActivityStore(
+            paths.agentActivityFile,
+            claudeDesktopSessionDirectory:
+                claudeDesktopSessionDirectoryForCurrentPlatform(),
+          ),
           localizations: () => appLocalizationsFor(settings.language),
         )
         ..configure(

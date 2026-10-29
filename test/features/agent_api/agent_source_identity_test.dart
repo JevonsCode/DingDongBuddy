@@ -7,6 +7,7 @@ void main() {
       expect(resolveAgentAdapterId('Codex'), 'codex');
       expect(resolveAgentAdapterId('codex-cli'), 'codex');
       expect(resolveAgentAdapterId('Claude Code'), 'claude-code');
+      expect(resolveAgentAdapterId('Claude Desktop'), 'claude-code');
       expect(resolveAgentAdapterId('cursor-agent'), 'cursor');
       expect(resolveAgentAdapterId('Gemini CLI'), 'gemini');
       expect(resolveAgentAdapterId('Grok'), 'grok-build');
@@ -14,6 +15,12 @@ void main() {
       expect(resolveAgentAdapterId('Kiro'), 'kiro');
       expect(resolveAgentAdapterId('Pi'), 'pi');
       expect(resolveAgentAdapterId('Pi Coding Agent'), 'pi');
+      expect(resolveAgentAdapterId('OpenCode CLI'), 'opencode');
+      expect(resolveAgentAdapterId('OpenCode Desktop'), 'opencode');
+      expect(resolveAgentAdapterId('Antigravity IDE'), 'antigravity');
+      expect(resolveAgentAdapterId('Antigravity CLI'), 'antigravity-cli');
+      expect(resolveAgentAdapterId('GitHub Copilot CLI'), 'copilot-cli');
+      expect(resolveAgentAdapterId('Windsurf'), 'windsurf');
     });
 
     test('returns null for generic or unknown sources', () {

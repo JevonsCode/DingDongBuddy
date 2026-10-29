@@ -97,7 +97,7 @@ prompt:
   includeBridgeRoutingInstructions: true
 ```
 
-The complete allowed structure is: root fields `schemaVersion`, `id`, `displayName`, `detect`, `skills`, `mcp`, and `prompt`; `detect.directory`; paired `skills.global` and `skills.project`; paired `mcp.file` and `mcp.format`; and `prompt.file` plus optional `prompt.includeBridgeRoutingInstructions`. No other fields are supported. Allowed MCP formats are `codex-toml`, `claude-json`, `cursor-json`, `gemini-json`, `kiro-json`, and `mcpServers-json`.
+The complete allowed structure is: root fields `schemaVersion`, `id`, `displayName`, `detect`, `skills`, `mcp`, and `prompt`; `detect.directory`; paired `skills.global` and `skills.project`; paired `mcp.file` and `mcp.format`; and `prompt.file` plus optional `prompt.includeBridgeRoutingInstructions`. No other fields are supported. Allowed MCP formats are `codex-toml`, `claude-json`, `cursor-json`, `gemini-json`, `kiro-json`, `opencode-json`, `antigravity-json`, `copilot-json`, and `mcpServers-json`.
 
 User paths must use `~`, `~/...`, or an absolute path inside the user's home. Resolve the real home and every existing path ancestor, then use component-aware containment rather than string-prefix comparison; reject broken links or any real target outside the home. `skills.project` must use `/` separators and be a safe relative directory without `..` or backslashes. `skills.global` and `skills.project` must appear together.
 
@@ -124,7 +124,7 @@ Resolve `agent-launchers.json` by operating system:
 | Windows | `%APPDATA%\DingDong\agent-launchers.json` |
 | Linux | `~/.local/share/DingDong/agent-launchers.json` |
 
-The root must contain `"schemaVersion": 1`. Optional `defaults` settings apply globally, and entries under `agents` override them. The only supported Agent keys are `codex`, `claude-code`, `cursor`, `gemini-cli`, and `kiro`. Each settings object accepts only:
+The root must contain `"schemaVersion": 1`. Optional `defaults` settings apply globally, and entries under `agents` override them. CLI launcher keys include `claude-code`, `gemini-cli`, `kiro`, `pi`, `opencode-cli`, `antigravity-cli`, `copilot-cli`, and `grok-build`. Desktop and ambiguous source keys are accepted but cannot make an unsupported desktop destination open in a terminal. Each settings object accepts only:
 
 - `"macosTerminal"`: `"terminal"` or `"iterm"`
 - `"itermOpenMode"`: `"new-window"` or `"new-tab"`

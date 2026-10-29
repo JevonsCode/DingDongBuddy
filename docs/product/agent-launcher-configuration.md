@@ -53,6 +53,17 @@ cd -- <workspace> && exec claude --resume <conversation-id>
 
 配置不能提供或覆盖任意 Shell 命令。
 
+## Claude Desktop 和终端 Claude Code
+
+Desktop 的 Code 会话在“最近 Agent”中显示为 `Claude Desktop`，点击后返回
+Desktop 原会话；终端会话仍显示为 `Claude Code`，并按上面的配置在终端恢复。
+两者可以使用不同的 Claude 登录账号，DingDong 不会替它们切换账号。
+
+旧记录没有保存客户端身份。DingDong 会参考本机 Claude Desktop 的会话索引：
+能唯一对应到 Desktop 原生会话的记录会显示为 Desktop；索引缺失或存在歧义时
+保留原记录。已归档的 Desktop 会话不提供跳转。索引只能提供线索，无法还原
+过去在两个客户端之间共享或转移过的每条消息的实际来源。
+
 ## 完整结构
 
 ```json
@@ -98,8 +109,17 @@ cd -- <workspace> && exec claude --resume <conversation-id>
 - `cursor`
 - `gemini-cli`
 - `kiro`
+- `pi`
+- `opencode-cli`
+- `antigravity-cli`
+- `copilot-cli`
+- `grok-build`
 
-其中终端配置当前只对 `claude-code`、`gemini-cli` 和 CLI 模式的 `kiro` 生效。
+终端配置也可用于上述新增 CLI 客户端。兼容性键还包括 `claude-desktop`、
+`opencode`、`opencode-desktop`、`antigravity`、`antigravity-ide`、
+`antigravity-app`、`copilot`、`copilot-ide` 和 `windsurf`；这些键不会让未知来源
+或桌面会话改用 CLI。Pi 只接受完整 UUID 会话 ID，以免部分 ID 匹配到错误会话。
+需要会话 ID 和工作目录的客户端仅在这两项有效时提供跳转。
 
 ## AI Agent 修改协议
 
