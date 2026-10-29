@@ -1,4 +1,4 @@
-# DingDong 1.10.2 Manual Regression Checklist
+# DingDong 1.10.3 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -12,6 +12,16 @@ port fallback, the native selection switch, and two native WebRTC peers using
 encrypted local relay and direct data-channel routes. Content, clipboard and settings
 stores use explicit test fixtures; this does not claim that user API credentials,
 third-party Agent accounts or remote model availability have been verified.
+
+## Community voices and Agent notifications (1.10.3)
+
+- Browse the voice website, preview and download a repository WAV and a GitHub attachment.
+  On macOS, open a voice in DingDong and confirm that installing requires confirmation.
+- In Settings, filter community voices by installation status and look one up by its
+  Issue link. Check that installing adds a sound without changing an active reminder.
+- Check that unread Agent cards use their reminder color on the border; after reading,
+  the border is neutral while the reminder icon retains its color.
+- Check that Claude Desktop and Claude Code activity identify the corresponding client.
 
 ## Temporary reminders and recent Agents (1.10.2)
 

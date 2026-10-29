@@ -24,8 +24,8 @@ maintain Prompts, Skills, and MCP connections in one place; and review events
 from connected Agents with the notification sound you choose. Selected content
 and important reminders can also reach a trusted phone through the mobile PWA.
 
-**DingDong 1.10.2 (build 81)** adds one-use reminders, paginated virtual clipboard
-history, a simpler recent Agents panel, desktop date filters and LAN IP discovery.
+**DingDong 1.10.3 (build 82)** refreshes community sounds, distinguishes
+Claude Desktop from Claude Code, and highlights unread Agent reminders.
 
 > **AI+** selects Prompts, Skills and MCP resources for an Agent’s current task.
 > Configure a model once; resource selection runs only when an Agent requests it.
@@ -122,7 +122,7 @@ exact data boundaries.
 
 ## Optional Windows screenshot and selection plugins
 
-The DingDong 1.10.2 adds optional Windows plugins under **Resource Manager → Plugins**.
+DingDong 1.10.3 provides optional Windows plugins under **Resource Manager → Plugins**.
 Capture with **Ctrl+Alt+A**, annotate in the embedded editor, then copy or save a
 PNG. Text selection offers Copy, Translate, Explain and Polish; text is sent to
 the configured model only after an explicit model action. Protected fields and
@@ -306,11 +306,11 @@ The executable, version-independent procedure lives in
 [INSTALL_WITH_AGENT.md](INSTALL_WITH_AGENT.md). It installs an official release;
 it does not clone or build the repository.
 
-Published stable downloads · 1.10.2:
+Published stable downloads · 1.10.3:
 
-- [macOS · Apple silicon · 1.10.2](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.2/DingDong-1.10.2-macos-arm64.dmg)
-- [macOS · Intel · 1.10.2](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.2/DingDong-1.10.2-macos-x64.dmg)
-- [Windows x64 · 1.10.2](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.2/DingDong-1.10.2-windows-x64-Setup.exe)
+- [macOS · Apple silicon · 1.10.3](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.3/DingDong-1.10.3-macos-arm64.dmg)
+- [macOS · Intel · 1.10.3](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.3/DingDong-1.10.3-macos-x64.dmg)
+- [Windows x64 · 1.10.3](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.3/DingDong-1.10.3-windows-x64-Setup.exe)
 
 macOS requires version 13 or newer. Quick Paste needs Accessibility permission;
 ordinary clipboard history does not require Full Disk Access or Screen Recording.
