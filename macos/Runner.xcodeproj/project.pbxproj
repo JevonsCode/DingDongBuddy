@@ -24,6 +24,7 @@
 		331C80D8294CF71000263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C80D7294CF71000263BE5 /* RunnerTests.swift */; };
 		335BBD1B22A9A15E00E9071D /* GeneratedPluginRegistrant.swift in Sources */ = {isa = PBXBuildFile; fileRef = 335BBD1A22A9A15E00E9071D /* GeneratedPluginRegistrant.swift */; };
 		33CC10F12044A3C60003C045 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CC10F02044A3C60003C045 /* AppDelegate.swift */; };
+		DD0D00010000000000000001 /* ScreenshotPluginController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0D00020000000000000002 /* ScreenshotPluginController.swift */; };
 		DD0A00010000000000000001 /* AccessibilityPermissionAssistant.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0A00020000000000000002 /* AccessibilityPermissionAssistant.swift */; };
 		DD0C00010000000000000001 /* SelectionPluginRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0C00020000000000000002 /* SelectionPluginRuntime.swift */; };
 		DD0C00030000000000000003 /* SelectionPluginController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD0C00040000000000000004 /* SelectionPluginController.swift */; };
@@ -75,6 +76,7 @@
 		335BBD1A22A9A15E00E9071D /* GeneratedPluginRegistrant.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GeneratedPluginRegistrant.swift; sourceTree = "<group>"; };
 		33CC10ED2044A3C60003C045 /* DingDong.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "DingDong.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		33CC10F02044A3C60003C045 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		DD0D00020000000000000002 /* ScreenshotPluginController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotPluginController.swift; sourceTree = "<group>"; };
 		DD0A00020000000000000002 /* AccessibilityPermissionAssistant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityPermissionAssistant.swift; sourceTree = "<group>"; };
 		DD0C00020000000000000002 /* SelectionPluginRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectionPlugin/SelectionPluginRuntime.swift; sourceTree = "<group>"; };
 		DD0C00040000000000000004 /* SelectionPluginController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectionPlugin/SelectionPluginController.swift; sourceTree = "<group>"; };
@@ -192,6 +194,7 @@
 			isa = PBXGroup;
 			children = (
 				33CC10F02044A3C60003C045 /* AppDelegate.swift */,
+				DD0D00020000000000000002 /* ScreenshotPluginController.swift */,
 				DD0A00020000000000000002 /* AccessibilityPermissionAssistant.swift */,
 				DD0C00020000000000000002 /* SelectionPluginRuntime.swift */,
 				DD0C00040000000000000004 /* SelectionPluginController.swift */,
@@ -412,6 +415,7 @@
 			files = (
 				33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */,
 				33CC10F12044A3C60003C045 /* AppDelegate.swift in Sources */,
+				DD0D00010000000000000001 /* ScreenshotPluginController.swift in Sources */,
 				DD0A00010000000000000001 /* AccessibilityPermissionAssistant.swift in Sources */,
 				DD0C00010000000000000001 /* SelectionPluginRuntime.swift in Sources */,
 				DD0C00030000000000000003 /* SelectionPluginController.swift in Sources */,

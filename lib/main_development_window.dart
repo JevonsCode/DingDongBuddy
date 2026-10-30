@@ -62,11 +62,19 @@ Future<void> _runDevelopmentTestAction({
   required MultiWindowResourceManagerLauncher resourceManagerLauncher,
 }) async {
   switch (action) {
+    case DevelopmentTestAction.agentOnboardingPreview:
+      shellController.open(0);
+      await shellGateway.showAndFocus();
+      shellController.requestAgentInstallPreview();
+      return;
     case DevelopmentTestAction.traySleeping:
       await shellGateway.previewTrayBuddyState(TrayBuddyState.sleeping);
       return;
     case DevelopmentTestAction.trayNudge:
       await shellGateway.nudgeTrayIcon();
+      return;
+    case DevelopmentTestAction.notchPreviewLeft:
+      await shellGateway.previewNotchBubble('left');
       return;
     case DevelopmentTestAction.trayOrange:
       await shellGateway.previewReminderColor(TrayNotificationColor.orange);

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
+import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
 import 'package:dingdong/core/widgets/reminder_marker.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
@@ -18,12 +19,18 @@ class AgentActivityManagerScreen extends StatelessWidget {
     required this.controller,
     required this.conversationLauncher,
     this.showConversationTokenUsage = false,
+    this.visible = true,
+    this.onActivityOpened,
+    this.onActivityViewed,
     super.key,
   });
 
   final ActivityController controller;
   final AgentConversationLauncher conversationLauncher;
   final bool showConversationTokenUsage;
+  final bool visible;
+  final Future<void> Function(AgentActivity activity)? onActivityOpened;
+  final Future<void> Function(int sequence)? onActivityViewed;
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +58,7 @@ class AgentActivityManagerScreen extends StatelessWidget {
                           Row(
                             children: <Widget>[
                               Text(
-                                context.l10n.recentAgents,
+                                context.l10n.recentNotifications,
                                 style: Theme.of(context).textTheme.titleLarge
                                     ?.copyWith(fontWeight: FontWeight.w600),
                               ),
@@ -77,12 +84,14 @@ class AgentActivityManagerScreen extends StatelessWidget {
               Expanded(
                 child: RecentAgentFeed(
                   controller: controller,
+                  visible: visible,
+                  onViewed: onActivityViewed,
                   rowBuilder: (context, activity) => _ActivityHistoryRow(
                     activity: activity,
                     conversationLauncher: conversationLauncher,
                     showConversationTokenUsage: showConversationTokenUsage,
-                    onOpen: (target) =>
-                        unawaited(_openConversation(context, target)),
+                    onOpen: () =>
+                        unawaited(_openConversation(context, activity)),
                   ),
                 ),
               ),
@@ -95,10 +104,15 @@ class AgentActivityManagerScreen extends StatelessWidget {
 
   Future<void> _openConversation(
     BuildContext context,
-    AgentConversationTarget target,
+    AgentActivity activity,
   ) async {
     try {
-      await conversationLauncher.open(target);
+      await conversationLauncher.open(activity.conversationTarget!);
+      if (onActivityOpened case final onOpened?) {
+        await onOpened(activity);
+      } else {
+        controller.markOpened(activity);
+      }
     } on Object {
       if (!context.mounted) {
         return;
@@ -148,7 +162,7 @@ class _ActivityHistoryRow extends StatelessWidget {
   final AgentActivity activity;
   final AgentConversationLauncher conversationLauncher;
   final bool showConversationTokenUsage;
-  final ValueChanged<AgentConversationTarget> onOpen;
+  final VoidCallback onOpen;
 
   @override
   Widget build(BuildContext context) {
@@ -158,6 +172,9 @@ class _ActivityHistoryRow extends StatelessWidget {
     final reminderColor = reminder == null
         ? colors.primary
         : Color(0xff000000 | reminder.color.rgbValue);
+    final openedForeground = Theme.of(context).brightness == Brightness.dark
+        ? Color.lerp(reminderColor, Colors.white, 0.16)!
+        : reminderColor;
     final String date = MaterialLocalizations.of(
       context,
     ).formatShortDate(localTime);
@@ -171,7 +188,7 @@ class _ActivityHistoryRow extends StatelessWidget {
       key: Key('agent-activity-row-${activity.id}'),
       color: Colors.transparent,
       child: InkWell(
-        onTap: canOpen ? () => onOpen(target) : null,
+        onTap: canOpen ? onOpen : null,
         mouseCursor: canOpen
             ? SystemMouseCursors.click
             : SystemMouseCursors.basic,
@@ -187,13 +204,9 @@ class _ActivityHistoryRow extends StatelessWidget {
                   width: 30,
                   height: 30,
                   alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: reminderColor.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(7),
-                  ),
-                  child: Icon(
-                    Icons.smart_toy_outlined,
-                    size: 16,
+                  child: PopupSymbolIcon(
+                    'today',
+                    size: 18,
                     color: reminderColor,
                   ),
                 ),
@@ -280,14 +293,18 @@ class _ActivityHistoryRow extends StatelessWidget {
                         ] else if (canOpen) ...<Widget>[
                           const SizedBox(width: 9),
                           Tooltip(
-                            message: context.l10n.openAgentConversation,
+                            message: activity.opened
+                                ? context.l10n.agentConversationAlreadyOpened
+                                : context.l10n.openAgentConversation,
                             child: Icon(
                               Icons.open_in_new_rounded,
                               key: const Key(
                                 'agent-activity-manager-open-conversation',
                               ),
                               size: 16,
-                              color: colors.onSurfaceVariant,
+                              color: activity.opened
+                                  ? openedForeground
+                                  : colors.onSurfaceVariant,
                             ),
                           ),
                         ] else if (target != null) ...<Widget>[

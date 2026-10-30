@@ -1,56 +1,76 @@
 {
   "app": "DingDong",
-  "latestVersion": "1.10.3",
-  "latestBuild": "82",
+  "latestVersion": "1.11.0",
+  "latestBuild": "83",
   "prerelease": false,
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
-  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.10.3",
+  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.11.0",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.3/DingDong-1.10.3-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.0/DingDong-1.11.0-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.3/DingDong-1.10.3-macos-x64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.0/DingDong-1.11.0-macos-x64.dmg",
         "beta": false
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.3/DingDong-1.10.3-windows-x64-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.0/DingDong-1.11.0-windows-x64-Setup.exe",
         "beta": false
       }
     }
   },
   "notes": [
-    "Redesigns the community sound library with filters, playback and downloads, and refreshes its sound collection.",
-    "On macOS, opens a selected sound in DingDong for confirmation before installation. Settings also supports installed-status filters and lookup by submission link.",
-    "Distinguishes Claude Desktop from Claude Code in Agent activity and adds optional configurations for additional Agent clients.",
-    "Uses reminder-colored borders only for unread Agent notifications while keeping reminder icons colored.",
-    "Restricts shared client MCP configurations to resources allowed for all clients and warns when authentication is unsupported."
+    "Detects local Agents and guides DingDong setup, updates, and per-Agent cleanup with a preview of the affected configuration.",
+    "Adds a skippable first-install Agent connection guide and shares connection management with Resource Manager.",
+    "Remembers opened notifications through the right-hand icon color and adds a “Last seen here” divider between new and earlier events.",
+    "Renames Resource Manager’s Agent history to Recent notifications and uses the same star icons as the quick panel.",
+    "Widens Settings, adds section navigation with consistent heading alignment, and marks Notifications (Sounds) with the DingDong bell-ringing character.",
+    "Simplifies the macOS notch option to a switch for revealing notifications from the left.",
+    "Fixes clipboard changes being missed when another copy arrives during an asynchronous capture.",
+    "Updates Agent integration and conversation opening; MCP Agent reminders now require a conversation ID.",
+    "Uses system screenshot tools on macOS and Windows and removes the in-app screenshot editor.",
+    "Uses the DingDong product name consistently across localized interfaces and documentation."
   ],
   "notesByLanguage": {
     "en": [
-      "Redesigns the community sound library with filters, playback and downloads, and refreshes its sound collection.",
-      "On macOS, opens a selected sound in DingDong for confirmation before installation. Settings also supports installed-status filters and lookup by submission link.",
-      "Distinguishes Claude Desktop from Claude Code in Agent activity and adds optional configurations for additional Agent clients.",
-      "Uses reminder-colored borders only for unread Agent notifications while keeping reminder icons colored.",
-      "Restricts shared client MCP configurations to resources allowed for all clients and warns when authentication is unsupported."
+      "Detects local Agents and guides DingDong setup, updates, and per-Agent cleanup with a preview of the affected configuration.",
+      "Adds a skippable first-install Agent connection guide and shares connection management with Resource Manager.",
+      "Remembers opened notifications through the right-hand icon color and adds a “Last seen here” divider between new and earlier events.",
+      "Renames Resource Manager’s Agent history to Recent notifications and uses the same star icons as the quick panel.",
+      "Widens Settings, adds section navigation with consistent heading alignment, and marks Notifications (Sounds) with the DingDong bell-ringing character.",
+      "Simplifies the macOS notch option to a switch for revealing notifications from the left.",
+      "Fixes clipboard changes being missed when another copy arrives during an asynchronous capture.",
+      "Updates Agent integration and conversation opening; MCP Agent reminders now require a conversation ID.",
+      "Uses system screenshot tools on macOS and Windows and removes the in-app screenshot editor.",
+      "Uses the DingDong product name consistently across localized interfaces and documentation."
     ],
     "zh": [
-      "重新设计社区声音库，支持筛选、试听和下载，并更新声音素材。",
-      "在 macOS 可从网页打开 DingDong，确认后安装声音；设置中支持按安装状态筛选及通过投稿链接查找。",
-      "在 Agent 动态中区分 Claude Desktop 与 Claude Code，并增加其他 Agent 客户端的可选接入配置。",
-      "最近 Agent 通知仅在未读时使用提醒颜色的边框，图标始终保留提醒颜色。",
-      "共用客户端配置的 MCP 只同步所有相关客户端均允许的资源，并提示不受支持的认证方式。"
+      "自动检测本机 Agent，引导安装、更新和按 Agent 清理 DingDong 接入配置，并在操作前预览受影响的配置。",
+      "新增可跳过的首次安装 Agent 接入引导，资源管理与 Agent 连接使用同一套接入管理。",
+      "通过右侧打开图标的颜色记录已打开的通知，并以“上次看到这里”分割本次新增和以前的消息。",
+      "资源管理中的 Agent 历史改为“最近通知”，图标与唤出面板统一使用星星样式。",
+      "加宽设置窗口，新增分区目录并修正标题定位；“通知（声音）”加入 DingDong 摇铃铛 IP 形象。",
+      "macOS 刘海选项简化为开关，开启后从刘海左侧显示通知。",
+      "修复异步采集中再次复制时，新剪贴板内容可能未被记录的问题。",
+      "更新 Agent 接入与会话打开组件；通过 MCP 发送 Agent 提醒时必须提供会话 ID。",
+      "macOS 与 Windows 截图改用系统截图工具，移除应用内截图编辑器。",
+      "各语言界面及文档统一使用 DingDong 产品名称。"
     ],
     "es": [
-      "Rediseña la biblioteca de sonidos de la comunidad con filtros, escucha y descargas, y actualiza su colección.",
-      "En macOS, abre el sonido en DingDong para confirmarlo antes de instalarlo. Ajustes permite filtrar por estado de instalación y buscar por enlace de envío.",
-      "Distingue Claude Desktop de Claude Code en la actividad de Agents y añade configuraciones opcionales para otros clientes.",
-      "Aplica el color del recordatorio al borde solo cuando la notificación no se ha leído y conserva el color del icono.",
-      "Sincroniza en configuraciones MCP compartidas solo los recursos permitidos para todos los clientes y avisa si la autenticación no es compatible."
+      "Detecta Agents locales y guía la instalación, actualización y limpieza de la configuración de DingDong por Agent, con una vista previa de los cambios.",
+      "Añade una guía inicial de conexión que se puede omitir y comparte la gestión de conexiones con el gestor de recursos.",
+      "Recuerda las notificaciones abiertas con el color del icono derecho y separa los eventos nuevos y anteriores con “Última visita”.",
+      "Renombra el historial de Agents del gestor de recursos a Notificaciones recientes y usa las mismas estrellas que el panel rápido.",
+      "Amplía Ajustes, añade un índice con títulos alineados y destaca Notificaciones (sonidos) con el personaje de DingDong tocando la campana.",
+      "Simplifica la opción del notch de macOS a un interruptor para mostrar las notificaciones desde la izquierda.",
+      "Corrige la pérdida de cambios del portapapeles cuando llega otra copia durante una captura asíncrona.",
+      "Actualiza la integración de Agents y la apertura de conversaciones; los avisos de Agents por MCP requieren un ID de conversación.",
+      "Usa las herramientas de captura del sistema en macOS y Windows y elimina el editor de capturas de la aplicación.",
+      "Unifica el nombre DingDong en las interfaces localizadas y en la documentación."
     ]
   }
 }

@@ -29,6 +29,7 @@ final class ClipboardMonitorService implements ClipboardMonitoring {
   final void Function()? _onCopyDetected;
   StreamSubscription<void>? _subscription;
   bool _capturing = false;
+  bool _capturePending = false;
 
   @override
   bool get isRunning => _subscription != null;
@@ -39,6 +40,7 @@ final class ClipboardMonitorService implements ClipboardMonitoring {
       return;
     }
     _subscription = _source.changes.listen((_) {
+      _capturePending = true;
       unawaited(_capture());
       _onCopyDetected?.call();
     });
@@ -49,6 +51,7 @@ final class ClipboardMonitorService implements ClipboardMonitoring {
   Future<void> stop() async {
     final StreamSubscription<void>? subscription = _subscription;
     _subscription = null;
+    _capturePending = false;
     await subscription?.cancel();
     await _source.stop();
   }
@@ -59,7 +62,12 @@ final class ClipboardMonitorService implements ClipboardMonitoring {
     }
     _capturing = true;
     try {
-      await _captureService.capture();
+      // A platform change is acknowledged before this asynchronous read ends.
+      // Read again when a newer change arrived instead of dropping it forever.
+      while (isRunning && _capturePending) {
+        _capturePending = false;
+        await _captureService.capture();
+      }
     } finally {
       _capturing = false;
     }

@@ -198,6 +198,24 @@ class TrayManager {
     await _channel.invokeMethod('nudgeIcon');
   }
 
+  /// Shows a temporary macOS notch-bubble preview in the requested direction.
+  Future<bool> previewNotchBubble(String direction) async {
+    return await _channel.invokeMethod<bool>(
+          'previewNotchBubble',
+          <String, Object>{'direction': direction},
+        ) ??
+        false;
+  }
+
+  Future<void> setNotchBubbleDirection(String direction) async {
+    await _channel
+        .invokeMethod('setNotchBubbleDirection', {'direction': direction});
+  }
+
+  Future<void> showNotchReminderIfHidden() async {
+    await _channel.invokeMethod('showNotchReminderIfHidden');
+  }
+
   /// Sets the hover text for this tray icon.
   ///
   /// Must be called after the icon is set.

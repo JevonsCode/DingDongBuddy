@@ -464,7 +464,9 @@ final class McpServer {
               'Optional named reminder ID from dingdong_list_reminders. Selects its enabled state, kind, color, style and sound. Unknown IDs are rejected. Omit sound to use the saved profile sound.',
         ),
         'flashCount': _integerProperty(maximum: 20),
-        'conversationId': _stringProperty(),
+        'conversationId': _stringProperty(
+          description: 'Required current conversation ID supplied by the host. Never invent an ID or use a workspace path in its place.',
+        ),
         'workspacePath': _stringProperty(),
         'notificationKind': <String, Object?>{
           'type': 'string',
@@ -479,7 +481,7 @@ final class McpServer {
               'Only for a one-off sound the user asked for in this conversation. Omit it to use the sound the user saved for this kind.',
         },
       },
-      required: <String>['message'],
+      required: <String>['message', 'conversationId'],
     ),
     _tool(
       name: 'dingdong_list_reminders',

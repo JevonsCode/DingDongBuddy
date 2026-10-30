@@ -69,10 +69,12 @@ jobs:
         with:
           ref: ${{ github.event_name == 'push' && github.sha || 'main' }}
           path: community-source
+          sparse-checkout-cone-mode: false
           sparse-checkout: |
-            docs/voices
-            docs/product
-            .github/scripts
+            /docs/index.html
+            /docs/voices/
+            /docs/product/
+            /.github/scripts/
       - name: Apply current routing and remove deleted product pages
         run: |
           rm -rf docs/voices

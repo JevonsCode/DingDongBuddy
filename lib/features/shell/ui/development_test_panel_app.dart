@@ -186,6 +186,27 @@ class _DevelopmentTestPanelState extends State<_DevelopmentTestPanel> {
             _TestDataNotice(colors: colors),
             const SizedBox(height: 22),
             _TestSection(
+              title: context.l10n.devNewUserExperience,
+              description: context.l10n.devNewUserExperienceDescription,
+              cards: [
+                _TestCard(
+                  title: context.l10n.agentInstallWelcomeTitle,
+                  description:
+                      context.l10n.devAgentOnboardingPreviewDescription,
+                  buttonLabel: context.l10n.preview,
+                  buttonKey: const Key('dev-test-panel-agent-onboarding'),
+                  icon: Icons.waving_hand_outlined,
+                  running:
+                      _runningAction ==
+                      DevelopmentTestAction.agentOnboardingPreview,
+                  onPressed: _callbackFor(
+                    DevelopmentTestAction.agentOnboardingPreview,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            _TestSection(
               title: context.l10n.menuBarMascot,
               description: context
                   .l10n
@@ -211,6 +232,18 @@ class _DevelopmentTestPanelState extends State<_DevelopmentTestPanel> {
                   icon: Icons.swap_horiz_rounded,
                   running: _runningAction == DevelopmentTestAction.trayNudge,
                   onPressed: _callbackFor(DevelopmentTestAction.trayNudge),
+                ),
+                _TestCard(
+                  title: context.l10n.devNotchSlideLeft,
+                  description: context.l10n.devNotchPreviewDescription,
+                  buttonLabel: context.l10n.preview,
+                  buttonKey: const Key('dev-test-panel-notch-left'),
+                  icon: Icons.west_rounded,
+                  running:
+                      _runningAction == DevelopmentTestAction.notchPreviewLeft,
+                  onPressed: _callbackFor(
+                    DevelopmentTestAction.notchPreviewLeft,
+                  ),
                 ),
               ],
             ),
@@ -678,8 +711,12 @@ class _ActionStatus extends StatelessWidget {
 
 String _successLabel(BuildContext context, DevelopmentTestAction action) {
   return switch (action) {
+    DevelopmentTestAction.agentOnboardingPreview =>
+      context.l10n.devAgentOnboardingOpened,
     DevelopmentTestAction.traySleeping => context.l10n.triggeredSleepingState,
     DevelopmentTestAction.trayNudge => context.l10n.triggeredHorizontalNudge,
+    DevelopmentTestAction.notchPreviewLeft =>
+      context.l10n.devNotchPreviewTriggered,
     DevelopmentTestAction.trayOrange ||
     DevelopmentTestAction.trayPink ||
     DevelopmentTestAction.trayBlue ||

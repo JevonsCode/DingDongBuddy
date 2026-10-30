@@ -51,6 +51,17 @@ public class TrayManagerPlugin: NSObject, FlutterPlugin, NSMenuDelegate {
             shakeIcon(call, result: result)
         case "nudgeIcon":
             nudgeIcon(call, result: result)
+        case "previewNotchBubble":
+            let args = call.arguments as? [String: Any]
+            let direction = args?["direction"] as? String ?? ""
+            result(trayIcon?.previewNotchBubble(direction) ?? false)
+        case "setNotchBubbleDirection":
+            let args = call.arguments as? [String: Any]
+            trayIcon?.setNotchBubbleDirection(args?["direction"] as? String ?? "off")
+            result(true)
+        case "showNotchReminderIfHidden":
+            trayIcon?.showNotchReminderIfHidden()
+            result(true)
         case "setToolTip":
             setToolTip(call, result: result)
         case "setTitle":
@@ -76,7 +87,7 @@ public class TrayManagerPlugin: NSObject, FlutterPlugin, NSMenuDelegate {
     }
     
     public func getBounds(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        let frame = trayIcon?.statusItem?.button?.window?.frame;
+        let frame = trayIcon?.consumeNotchClickFrame() ?? trayIcon?.statusItem?.button?.window?.frame;
         
         if (frame != nil) {
             let resultData: NSDictionary = [
@@ -198,7 +209,11 @@ public class TrayManagerPlugin: NSObject, FlutterPlugin, NSMenuDelegate {
     }
     
     public func popUpContextMenu(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        if (trayMenu != nil) {
+        if let trayMenu {
+            if trayIcon?.popUpNotchContextMenu(trayMenu) == true {
+                result(true)
+                return
+            }
             trayIcon?.statusItem?.menu = trayMenu
             trayIcon?.statusItem?.button?.performClick(trayIcon)
         }

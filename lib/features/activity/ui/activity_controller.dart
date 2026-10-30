@@ -40,6 +40,7 @@ final class ActivityController extends ChangeNotifier {
     int countWindowHours = defaultAgentActivityCountHours,
     bool groupRepeatedAgentSessions = true,
     DingDongLocalizations Function()? localizations,
+    this.persistHistory = true,
     this._rememberAcrossRestarts = true,
   }) : _store = store ?? InMemoryAgentActivityStore(),
        _idGenerator = idGenerator ?? _generateId,
@@ -57,6 +58,10 @@ final class ActivityController extends ChangeNotifier {
   final String Function() _idGenerator;
   final DateTime Function() _now;
   final DingDongLocalizations Function() _localizations;
+
+  /// Auxiliary engines forward mutations to the host instead of saving a
+  /// potentially stale copy of its activity file.
+  final bool persistHistory;
   List<AgentActivity> _activities = const <AgentActivity>[];
   List<AgentTaskRun> _activeRuns = const <AgentTaskRun>[];
   List<DateTime> _completionTimes = const <DateTime>[];
@@ -69,6 +74,8 @@ final class ActivityController extends ChangeNotifier {
   bool _groupRepeatedAgentSessions;
   bool _rememberAcrossRestarts;
   bool _loaded = false;
+  int _latestSequence = 0;
+  int? _lastViewedSequence;
   Timer? _recentCountTimer;
 
   List<AgentActivity> get activities =>
@@ -95,14 +102,18 @@ final class ActivityController extends ChangeNotifier {
   int get countWindowHours => _countWindowHours;
   bool get rememberAcrossRestarts => _rememberAcrossRestarts;
   bool get groupRepeatedAgentSessions => _groupRepeatedAgentSessions;
+  int get latestSequence => _latestSequence;
+  int? get lastViewedSequence => _lastViewedSequence;
 
   /// Loads the previous session. The primary app passes [resetPreviousSession]
   /// so a user who disabled remembering starts clean after relaunch.
   void load({bool resetPreviousSession = false}) {
     if (resetPreviousSession && !_rememberAcrossRestarts) {
-      _store.clear();
+      if (persistHistory) _store.clear();
       _activities = const <AgentActivity>[];
       _completionTimes = const <DateTime>[];
+      _latestSequence = 0;
+      _lastViewedSequence = null;
     } else {
       _replaceWith(_store.load());
     }
@@ -236,6 +247,7 @@ final class ActivityController extends ChangeNotifier {
     if (repeatedIndex >= 0) {
       final AgentActivity previous = _activities[repeatedIndex];
       final AgentActivity repeated = previous.repeated(
+        sequence: ++_latestSequence,
         source: normalizedSource,
         message: normalizedMessage,
         task: run?.task,
@@ -268,6 +280,7 @@ final class ActivityController extends ChangeNotifier {
       );
     }
     final AgentActivity activity = AgentActivity(
+      sequence: ++_latestSequence,
       id: run?.id ?? _idGenerator(),
       source: normalizedSource,
       message: normalizedMessage,
@@ -396,7 +409,8 @@ final class ActivityController extends ChangeNotifier {
     if (index < 0) {
       return;
     }
-    final AgentActivity repeated = _activities[index].repeated(
+    final previous = _activities[index];
+    final AgentActivity repeated = previous.repeated(
       source: normalizedSource,
       message: normalizedMessage,
       completedAt: completedAt,
@@ -408,7 +422,7 @@ final class ActivityController extends ChangeNotifier {
       countAsReminder: false,
     );
     _activities = <AgentActivity>[
-      repeated,
+      previous.opened ? repeated.withOpened() : repeated,
       ..._activities
           .asMap()
           .entries
@@ -657,6 +671,32 @@ final class ActivityController extends ChangeNotifier {
   List<String> get sources =>
       (_activities.map((e) => e.source).toSet().toList()..sort());
 
+  /// Advances the durable visit checkpoint without changing a mounted feed's
+  /// captured boundary or acknowledging individual conversation openings.
+  void markFeedViewed(int throughSequence) {
+    if (!_loaded ||
+        throughSequence < 0 ||
+        throughSequence > _latestSequence ||
+        (_lastViewedSequence != null &&
+            throughSequence <= _lastViewedSequence!)) {
+      return;
+    }
+    _lastViewedSequence = throughSequence;
+    _persist();
+    notifyListeners();
+  }
+
+  /// A launch acknowledges only the revision captured before it started.
+  void markOpened(AgentActivity activity) {
+    final index = _activities.indexWhere((item) => item.id == activity.id);
+    if (index < 0) return;
+    final current = _activities[index];
+    if (current.opened || current.sequence != activity.sequence) return;
+    _activities = List.of(_activities)..[index] = current.withOpened();
+    _persist();
+    notifyListeners();
+  }
+
   void setRecentPageSize(int size) {
     final next = size.clamp(1, 500);
     if (_recentPageSize == next) return;
@@ -682,6 +722,7 @@ final class ActivityController extends ChangeNotifier {
     int? limit,
     Set<String>? sources,
     DateTimeRange? range,
+    int? newerThanSequence,
   }) async {
     final matches =
         _activities
@@ -691,11 +732,20 @@ final class ActivityController extends ChangeNotifier {
                   dateWithinFilter(e.completedAt, range),
             )
             .toList()
-          ..sort(_feedOrder);
+          ..sort((a, b) {
+            if (newerThanSequence != null) {
+              final aNew = a.sequence > newerThanSequence;
+              final bNew = b.sequence > newerThanSequence;
+              if (aNew != bNew) return aNew ? -1 : 1;
+            }
+            return _feedOrder(a, b);
+          });
     final start = offset.clamp(0, matches.length);
     return AgentActivityPage(
       items: List.unmodifiable(
-        matches.skip(start).take((limit ?? _recentPageSize).clamp(1, 500)),
+        matches
+            .skip(start)
+            .take((limit ?? _recentPageSize).clamp(1, _maxItems)),
       ),
       total: matches.length,
     );
@@ -712,13 +762,20 @@ final class ActivityController extends ChangeNotifier {
     _activities = const <AgentActivity>[];
     _activeRuns = const <AgentTaskRun>[];
     _completionTimes = const <DateTime>[];
+    _latestSequence = 0;
+    _lastViewedSequence = null;
     _revealActive = false;
     _loaded = true;
-    _store.clear();
+    if (persistHistory) _store.clear();
     notifyListeners();
   }
 
   void _replaceWith(AgentActivityHistory history) {
+    _lastViewedSequence = history.lastViewedSequence;
+    _latestSequence = history.activities.fold(
+      max(history.latestSequence, _lastViewedSequence ?? 0),
+      (sequence, activity) => max(sequence, activity.sequence),
+    );
     _recentPageSize = history.recentPageSize.clamp(1, 500);
     _activities = List<AgentActivity>.of(history.activities)
       ..sort(
@@ -759,11 +816,13 @@ final class ActivityController extends ChangeNotifier {
   }
 
   void _persist() {
-    if (!_loaded) {
+    if (!_loaded || !persistHistory) {
       return;
     }
     _store.save(
       AgentActivityHistory(
+        latestSequence: _latestSequence,
+        lastViewedSequence: _lastViewedSequence,
         recentPageSize: _recentPageSize,
         activities: _activities,
         completionTimes: _completionTimes,

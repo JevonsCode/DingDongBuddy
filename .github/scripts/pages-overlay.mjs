@@ -3,12 +3,11 @@ import {fileURLToPath} from 'node:url';
 import {join} from 'node:path';
 
 export function addCatalogLinks(html) {
-  html=html.replaceAll('href="/dingdongbuddy/voices/"','href="./voices/"');
-  if (!/href="\.\/voices\/"/.test(html)) {
-    html=html.replace('</nav>','<a href="./voices/">声音库 / Voices</a>\n      </nav>');
-  }
+  const catalogHref='href="https://xn--8ovp9s.xn--m8txu.com/dingdong-voices/"';
+  html=html.replaceAll(/href="(?:\.\/voices\/|voices\/|\/dingdongbuddy\/voices\/|\/DingDongBuddy\/voices\/)"/g,catalogHref);
+  html=html.replace(/<nav\b[^>]*>[\s\S]*?<\/nav>/,nav=>nav.includes(catalogHref)?nav:nav.replace('</nav>',`<a ${catalogHref}>声音库 / Voices</a>\n      </nav>`));
   const section=/<section class="sound-section"[\s\S]*?<\/section>/;
-  return html.replace(section,block=>block.includes('href="./voices/"')?block:block.replace('</section>','<p class="sound-catalog-link"><a href="./voices/">声音库 / Community voices →</a></p></section>'));
+  return html.replace(section,block=>block.includes(catalogHref)?block:block.replace('</section>',`<p class="sound-catalog-link"><a ${catalogHref}>声音库 / Community voices →</a></p></section>`));
 }
 
 export function pruneMissingProductDocs(released,current) {

@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
+import 'package:agent_session_launcher/agent_session_launcher.dart' as sessions;
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/domain/agent_launcher_configuration.dart';
 import 'package:flutter/foundation.dart';
@@ -31,6 +33,7 @@ final class NativeAgentConversationLauncher extends ChangeNotifier
     AgentUriOpener? uriOpener,
     AgentProcessStarter? processStarter,
     AgentLauncherConfigurationLoader? configurationLoader,
+    this.extensionsDirectory,
     this.codexConversationOpenability,
     this.codexConversationOpenabilityBatch,
     this.codexConversationPreflightBatch,
@@ -41,6 +44,38 @@ final class NativeAgentConversationLauncher extends ChangeNotifier
            configurationLoader ?? _loadDefaultLauncherConfiguration;
 
   final String _operatingSystem;
+  final String? extensionsDirectory;
+  sessions.LauncherConfig _sessionConfig = sessions.LauncherConfig.defaults;
+
+  sessions.SessionTarget _sessionTarget(AgentConversationTarget target) =>
+      sessions.SessionTarget(
+        client: _sessionClientId(target.client),
+        conversationId: target.conversationId,
+        hostSessionId: target.hostSessionId,
+        workspacePath: target.workspacePath,
+      );
+
+  sessions.SessionLauncher get _sessions => sessions.SessionLauncher(
+    config: _sessionConfig,
+    operatingSystem: _operatingSystem,
+  );
+
+  Future<void> _refreshSessionConfig() async {
+    final legacy = await _configurationLoader();
+    _sessionConfig = sessions.LauncherConfig.load(
+      hostConfig: jsonEncode({
+        'schemaVersion': 1,
+        'preferences': legacy.defaults.toJson(),
+        'clients': {
+          for (final entry in legacy.agentOverrides.entries)
+            _sessionClientId(entry.key): {'preferences': entry.value.toJson()},
+        },
+      }),
+      extensionsDirectory:
+          extensionsDirectory ?? sessions.defaultExtensionsDirectory(),
+    );
+  }
+
   final AgentUriOpener _uriOpener;
   final AgentProcessStarter _processStarter;
   final AgentLauncherConfigurationLoader _configurationLoader;
@@ -56,40 +91,27 @@ final class NativeAgentConversationLauncher extends ChangeNotifier
   bool canOpen(AgentConversationTarget target) {
     final String? id = _safeConversationId(target.conversationId);
     final String? workspace = _safeWorkspacePath(target.workspacePath);
-    return switch (target.client) {
-      AgentClient.codex =>
-        id != null &&
-            ((codexConversationOpenability == null &&
-                    codexConversationOpenabilityBatch == null &&
-                    codexConversationPreflightBatch == null) ||
-                _codexOpenabilityCache[id] == true),
-      AgentClient.claudeCode ||
-      AgentClient.geminiCli ||
-      AgentClient.openCodeCli ||
-      AgentClient.antigravityCli ||
-      AgentClient.copilotCli ||
-      AgentClient.grokBuild => id != null && workspace != null,
-      AgentClient.pi =>
-        id != null &&
-            workspace != null &&
-            RegExp(
-              r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
-            ).hasMatch(id),
-      AgentClient.claudeDesktop =>
-        _safeClaudeDesktopSessionId(target.hostSessionId) != null,
-      AgentClient.cursor =>
-        (id != null && id.startsWith('bc-')) || workspace != null,
-      AgentClient.kiro => workspace != null,
-      AgentClient.openCode ||
-      AgentClient.openCodeDesktop ||
-      AgentClient.antigravity ||
-      AgentClient.antigravityIde ||
-      AgentClient.antigravityApp ||
-      AgentClient.copilot ||
-      AgentClient.copilotIde ||
-      AgentClient.windsurf ||
-      AgentClient.unknown => false,
-    };
+    final client = _sessionConfig.client(_sessionClientId(target.client));
+    if (client?.enabled == false) return false;
+    // Workspace-only fallbacks remain host behavior, not session resume.
+    if (target.client == AgentClient.cursor &&
+        (id == null || !id.startsWith('bc-'))) {
+      return workspace != null;
+    }
+    if (target.client == AgentClient.kiro && id == null) {
+      return workspace != null;
+    }
+    try {
+      final plan = _sessions.inspect(_sessionTarget(target));
+      if (!_sessions.supportsOpening(plan)) return false;
+    } on sessions.SessionLaunchException {
+      return false;
+    }
+    return target.client != AgentClient.codex ||
+        ((codexConversationOpenability == null &&
+                codexConversationOpenabilityBatch == null &&
+                codexConversationPreflightBatch == null) ||
+            _codexOpenabilityCache[id] == true);
   }
 
   @override
@@ -107,6 +129,9 @@ final class NativeAgentConversationLauncher extends ChangeNotifier
   /// made background subagents look resumable until Codex rejected the deep
   /// link. Unknown Codex targets remain closed until this preflight completes.
   Future<void> preflight(Iterable<AgentConversationTarget> targets) async {
+    final before = targets.map(canOpen).toList();
+    await _refreshSessionConfig();
+    if (!listEquals(before, targets.map(canOpen).toList())) notifyListeners();
     if (codexConversationOpenability == null &&
         codexConversationOpenabilityBatch == null &&
         codexConversationPreflightBatch == null) {
@@ -165,116 +190,52 @@ final class NativeAgentConversationLauncher extends ChangeNotifier
 
   @override
   Future<void> open(AgentConversationTarget target) async {
+    await _refreshSessionConfig();
     if (!canOpen(target)) {
       throw StateError('This Agent item has no supported destination.');
     }
-    final String? id = _safeConversationId(target.conversationId);
-    final String? workspace = _safeWorkspacePath(target.workspacePath);
-    switch (target.client) {
-      case AgentClient.codex:
-        if ((codexConversationOpenability != null ||
-                codexConversationOpenabilityBatch != null ||
-                codexConversationPreflightBatch != null) &&
-            !await _isCodexConversationOpenable(id!)) {
-          throw StateError('This Codex thread is not a resumable user thread.');
-        }
-        await _openUri(
-          Uri(scheme: 'codex', host: 'threads', pathSegments: <String>[id!]),
-        );
-      case AgentClient.claudeCode:
-        await _openCliSession(
-          client: target.client,
-          executable: 'claude',
-          arguments: <String>['--resume', id!],
-          workspacePath: workspace!,
-        );
-      case AgentClient.claudeDesktop:
-        await _openUri(
-          Uri(
-            scheme: 'claude',
-            host: 'code',
-            path: '/continue',
-            queryParameters: <String, String>{
-              'session': _safeClaudeDesktopSessionId(target.hostSessionId)!,
-            },
-          ),
-        );
-      case AgentClient.geminiCli:
-        await _openCliSession(
-          client: target.client,
-          executable: 'gemini',
-          arguments: <String>['--resume', id!],
-          workspacePath: workspace!,
-        );
-      case AgentClient.pi:
-        await _openCliSession(
-          client: target.client,
-          executable: 'pi',
-          arguments: <String>['--session', id!],
-          workspacePath: workspace!,
-        );
-      case AgentClient.openCodeCli:
-        await _openCliSession(
-          client: target.client,
-          executable: 'opencode',
-          arguments: <String>['--session', id!],
-          workspacePath: workspace!,
-        );
-      case AgentClient.antigravityCli:
-        await _openCliSession(
-          client: target.client,
-          executable: 'agy',
-          arguments: <String>['--conversation', id!],
-          workspacePath: workspace!,
-        );
-      case AgentClient.copilotCli:
-        await _openCliSession(
-          client: target.client,
-          executable: 'copilot',
-          arguments: <String>['--resume', id!],
-          workspacePath: workspace!,
-        );
-      case AgentClient.grokBuild:
-        await _openCliSession(
-          client: target.client,
-          executable: 'grok',
-          arguments: <String>['--resume', id!],
-          workspacePath: workspace!,
-        );
-      case AgentClient.cursor:
-        if (id != null && id.startsWith('bc-')) {
-          await _openUri(
-            Uri(
-              scheme: 'cursor',
-              host: 'anysphere.cursor-deeplink',
-              path: '/background-agent',
-              queryParameters: <String, String>{'bcId': id},
-            ),
-          );
-        } else {
-          await _openDesktopApp('Cursor', 'cursor', workspace!);
-        }
-      case AgentClient.kiro:
-        if (id != null && workspace != null) {
-          await _openCliSession(
-            client: target.client,
-            executable: 'kiro-cli',
-            arguments: <String>['chat', '--resume-id', id],
-            workspacePath: workspace,
-          );
-        } else {
-          await _openDesktopApp('Kiro', 'kiro', workspace!);
-        }
-      case AgentClient.openCode:
-      case AgentClient.openCodeDesktop:
-      case AgentClient.antigravity:
-      case AgentClient.antigravityIde:
-      case AgentClient.antigravityApp:
-      case AgentClient.copilot:
-      case AgentClient.copilotIde:
-      case AgentClient.windsurf:
-      case AgentClient.unknown:
-        throw StateError('Unsupported Agent client.');
+    final id = _safeConversationId(target.conversationId);
+    final workspace = _safeWorkspacePath(target.workspacePath);
+    if (target.client == AgentClient.codex &&
+        (codexConversationOpenability != null ||
+            codexConversationOpenabilityBatch != null ||
+            codexConversationPreflightBatch != null) &&
+        !await _isCodexConversationOpenable(id!)) {
+      throw StateError('This Codex thread is not a resumable user thread.');
+    }
+    if (target.client == AgentClient.cursor &&
+        (id == null || !id.startsWith('bc-'))) {
+      await _openDesktopApp('Cursor', 'cursor', workspace!);
+      return;
+    }
+    if (target.client == AgentClient.kiro && id == null) {
+      await _openDesktopApp('Kiro', 'kiro', workspace!);
+      return;
+    }
+    final plan = _sessions.inspect(_sessionTarget(target));
+    if (plan.kind == 'uri') {
+      await _openUri(plan.uri!);
+    } else {
+      final preferences = const sessions.LaunchPreferences()
+          .over(
+            _sessionConfig.client(_sessionClientId(target.client))?.preferences,
+          )
+          .over(_sessionConfig.preferences);
+      await _openCliSession(
+        executable: plan.executable!,
+        arguments: plan.arguments,
+        workspacePath: plan.workspacePath!,
+        settings: AgentLauncherSettings(
+          macosTerminal:
+              preferences.macosTerminal == sessions.MacosTerminal.iterm
+              ? MacOsTerminalApplication.iTerm
+              : MacOsTerminalApplication.terminal,
+          iTermOpenMode:
+              preferences.itermOpenMode == sessions.ITermOpenMode.newTab
+              ? ITermOpenMode.newTab
+              : ITermOpenMode.newWindow,
+        ),
+      );
     }
   }
 
@@ -351,7 +312,7 @@ final class NativeAgentConversationLauncher extends ChangeNotifier
   }
 
   Future<void> _openCliSession({
-    required AgentClient client,
+    required AgentLauncherSettings settings,
     required String executable,
     required List<String> arguments,
     required String workspacePath,
@@ -361,8 +322,6 @@ final class NativeAgentConversationLauncher extends ChangeNotifier
         'cd -- ${_shellQuote(workspacePath)}',
         'exec ${_shellQuote(executable)} ${arguments.map(_shellQuote).join(' ')}',
       ].join(' && ');
-      final AgentLauncherSettings settings = (await _configurationLoader())
-          .settingsFor(client);
       final String script = switch (settings.macosTerminal) {
         MacOsTerminalApplication.terminal => _terminalAppleScript(command),
         MacOsTerminalApplication.iTerm => _iTermAppleScript(
@@ -410,10 +369,11 @@ final class NativeAgentConversationLauncher extends ChangeNotifier
   }
 }
 
-String? _safeClaudeDesktopSessionId(String? value) {
-  final String id = (value ?? '').trim();
-  return RegExp(r'^local_[A-Za-z0-9-]{1,64}$').hasMatch(id) ? id : null;
-}
+String _sessionClientId(AgentClient client) => switch (client) {
+  AgentClient.codex => 'codex-desktop',
+  AgentClient.kiro => 'kiro-cli',
+  _ => client.apiValue,
+};
 
 String? _safeConversationId(String? value) {
   final String trimmed = value?.trim() ?? '';

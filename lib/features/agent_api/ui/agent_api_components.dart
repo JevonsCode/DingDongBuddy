@@ -455,14 +455,10 @@ class _AdvancedDisclosure extends StatelessWidget {
 }
 
 class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({
-    required this.title,
-    required this.description,
-    super.key,
-  });
+  const _SectionTitle({required this.title, this.description, super.key});
 
   final String title;
-  final String description;
+  final String? description;
 
   @override
   Widget build(BuildContext context) {
@@ -477,15 +473,17 @@ class _SectionTitle extends StatelessWidget {
             fontWeight: FontWeight.w800,
           ),
         ),
-        const SizedBox(height: 3),
-        Text(
-          description,
-          style: TextStyle(
-            color: PopupStyle.of(context).textSecondary,
-            fontSize: 11,
-            height: 1.4,
+        if (description case final String description) ...<Widget>[
+          const SizedBox(height: 3),
+          Text(
+            description,
+            style: TextStyle(
+              color: PopupStyle.of(context).textSecondary,
+              fontSize: 11,
+              height: 1.4,
+            ),
           ),
-        ),
+        ],
       ],
     );
   }

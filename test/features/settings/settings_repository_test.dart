@@ -4,9 +4,40 @@ import 'package:dingdong/features/settings/data/settings_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('legacy downward notch setting migrates to left', () async {
+    final backend = MemoryPreferencesBackend({
+      'dingdong.macos.notchBubbleDirection': 'down',
+    });
+    final repository = SettingsRepository(backend);
+    final settings = await repository.load();
+    expect(settings.notchBubbleDirection, NotchBubbleDirection.left);
+    await repository.save(settings);
+    expect(backend.values['dingdong.macos.notchBubbleDirection'], 'left');
+  });
+
+  test('notch bubble direction survives settings load and save', () async {
+    final backend = MemoryPreferencesBackend(<String, Object>{
+      'dingdong.macos.notchBubbleDirection': 'left',
+    });
+    final repository = SettingsRepository(backend);
+    final settings = await repository.load();
+    expect(settings.notchBubbleDirection, NotchBubbleDirection.left);
+    await repository.save(settings);
+    expect(backend.values['dingdong.macos.notchBubbleDirection'], 'left');
+    await repository.save(
+      settings.copyWith(notchBubbleDirection: NotchBubbleDirection.off),
+    );
+    expect(
+      (await repository.load()).notchBubbleDirection,
+      NotchBubbleDirection.off,
+    );
+    expect(NotchBubbleDirection.parse('unknown'), NotchBubbleDirection.left);
+  });
+
   test('uses expanded clipboard and recent Agent defaults', () async {
     final MemoryPreferencesBackend backend = MemoryPreferencesBackend();
     final AppSettings settings = await SettingsRepository(backend).load();
+    expect(settings.notchBubbleDirection, NotchBubbleDirection.left);
 
     expect(settings.clipboardMaxItems, 5000);
     expect(settings.clipboardMaxAgeDays, 120);

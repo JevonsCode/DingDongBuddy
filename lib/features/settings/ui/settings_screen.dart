@@ -21,6 +21,7 @@ import 'package:dingdong/features/settings/ui/system_usage_section.dart';
 import 'package:dingdong/features/settings/ui/voice_install_dialog.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
 part 'settings_fields.dart';
@@ -55,6 +56,52 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final GlobalKey _releaseSectionKey = GlobalKey();
   final GlobalKey _voiceSectionKey = GlobalKey();
+  final Map<String, GlobalKey> _sectionKeys = {
+    for (final id in [
+      'general',
+      'keyboardShortcuts',
+      'quickPaste',
+      'storage',
+      'appearance',
+      'clipboardHistory2',
+      'recentAgents',
+      'footer',
+      'agentAPI',
+    ])
+      id: GlobalKey(),
+  };
+  String _activeSection = 'general';
+
+  GlobalKey _keyFor(String id) => switch (id) {
+    'notifications' => _voiceSectionKey,
+    'release' => _releaseSectionKey,
+    _ => _sectionKeys[id]!,
+  };
+
+  void _scrollToSection(String id) {
+    final target = _keyFor(id).currentContext;
+    if (target == null) return;
+    setState(() => _activeSection = id);
+    unawaited(_revealSection(target));
+  }
+
+  Future<void> _revealSection(BuildContext target) async {
+    final renderObject = target.findRenderObject();
+    if (renderObject == null || !_scrollController.hasClients) return;
+    final viewport = RenderAbstractViewport.of(renderObject);
+    final position = _scrollController.position;
+    // Leading alignment accounts for pinned search without depending on the
+    // section's height. Keep its heading clear of the toolbar in either layout.
+    final offset = (viewport.getOffsetToReveal(renderObject, 0).offset - 24)
+        .clamp(position.minScrollExtent, position.maxScrollExtent)
+        .toDouble();
+    await _scrollController.animateTo(
+      offset,
+      duration: const Duration(milliseconds: 240),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
   final ScrollController _scrollController = ScrollController();
   late SettingsNavigationController _navigationController;
   late bool _ownsNavigationController;
@@ -204,14 +251,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             return;
           }
           _navigationPending = false;
-          unawaited(
-            Scrollable.ensureVisible(
-              releaseContext,
-              alignment: 0.08,
-              duration: const Duration(milliseconds: 260),
-              curve: Curves.easeOutCubic,
-            ),
-          );
+          unawaited(_revealSection(releaseContext));
         case SettingsWindowDestination.voice:
           final sectionContext = _voiceSectionKey.currentContext;
           final issueNumber = _navigationController.voiceIssueNumber;
@@ -228,12 +268,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _openVoice(BuildContext sectionContext, int issueNumber) async {
-    await Scrollable.ensureVisible(
-      sectionContext,
-      alignment: 0.08,
-      duration: const Duration(milliseconds: 260),
-      curve: Curves.easeOutCubic,
-    );
+    await _revealSection(sectionContext);
     if (mounted) {
       await showDialog<void>(
         context: context,
@@ -277,7 +312,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             (word) => terms[id]!.join(' ').toLowerCase().contains(word),
           );
           final hasMatches = terms.keys.any(matches);
-          return CustomScrollView(
+          final content = CustomScrollView(
             controller: _scrollController,
             slivers: <Widget>[
               if (!_nativeSearchAvailable)
@@ -312,6 +347,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                           if (matches('general'))
                             _SettingsSection(
+                              key: _keyFor('general'),
                               title: context.l10n.general,
                               description: context
                                   .l10n
@@ -346,6 +382,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   ),
                                 if (defaultTargetPlatform ==
                                     TargetPlatform.macOS)
+                                  CompactSwitchListTile(
+                                    key: const Key('settings-notch-hover'),
+                                    contentPadding: EdgeInsets.zero,
+                                    title: Text(context.l10n.notchHoverEnabled),
+                                    subtitle: Text(
+                                      context.l10n.notchHoverDescription,
+                                    ),
+                                    value:
+                                        settings.notchBubbleDirection !=
+                                        NotchBubbleDirection.off,
+                                    onChanged: (enabled) => widget.viewModel
+                                        .setNotchBubbleDirection(
+                                          enabled
+                                              ? NotchBubbleDirection.left
+                                              : NotchBubbleDirection.off,
+                                        ),
+                                  ),
+                                if (defaultTargetPlatform ==
+                                    TargetPlatform.macOS)
                                   _SettingRow(
                                     label: context
                                         .l10n
@@ -366,6 +421,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                           if (matches('keyboardShortcuts'))
                             _SettingsSection(
+                              key: _keyFor('keyboardShortcuts'),
                               title: context.l10n.keyboardShortcuts,
                               description: context
                                   .l10n
@@ -445,12 +501,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                           if (matches('quickPaste'))
                             QuickPastePermissionSection(
+                              key: _keyFor('quickPaste'),
                               viewModel: widget.viewModel,
                             ),
                           if (matches('storage'))
-                            SystemUsageSection(viewModel: widget.viewModel),
+                            SystemUsageSection(
+                              key: _keyFor('storage'),
+                              viewModel: widget.viewModel,
+                            ),
                           if (matches('appearance'))
                             _SettingsSection(
+                              key: _keyFor('appearance'),
                               title: context.l10n.appearance,
                               description: context
                                   .l10n
@@ -597,6 +658,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                           if (matches('clipboardHistory2'))
                             _SettingsSection(
+                              key: _keyFor('clipboardHistory2'),
                               title: context.l10n.clipboardHistory2,
                               description: context
                                   .l10n
@@ -668,6 +730,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                           if (matches('recentAgents'))
                             _SettingsSection(
+                              key: _keyFor('recentAgents'),
                               title: context.l10n.recentAgents,
                               description: context
                                   .l10n
@@ -773,11 +836,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                           if (matches('footer'))
                             _ConversationFooterSettingsSection(
+                              key: _keyFor('footer'),
                               viewModel: widget.viewModel,
                               settings: settings,
                             ),
                           if (matches('agentAPI'))
                             _SettingsSection(
+                              key: _keyFor('agentAPI'),
                               title: context.l10n.agentAPI,
                               description: context
                                   .l10n
@@ -833,6 +898,110 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
             ],
+          );
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth < 880) return content;
+              final colors = Theme.of(context).colorScheme;
+              return Row(
+                children: [
+                  Container(
+                    key: const Key('settings-directory'),
+                    width: 176,
+                    decoration: BoxDecoration(
+                      color: colors.surfaceContainerLow,
+                      border: Border(
+                        right: BorderSide(color: colors.outlineVariant),
+                      ),
+                    ),
+                    child: ListView(
+                      padding: const EdgeInsets.fromLTRB(12, 24, 12, 16),
+                      children: [
+                        for (final id in terms.keys.where(matches))
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 3),
+                            child: Semantics(
+                              selected: _activeSection == id,
+                              child: DesktopActionButton(
+                                key: Key('settings-anchor-$id'),
+                                tooltip: terms[id]!.first,
+                                onPressed: () => _scrollToSection(id),
+                                style:
+                                    DesktopActionButton.styleFrom(
+                                      minimumSize: const Size(
+                                        double.infinity,
+                                        34,
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 9,
+                                        vertical: 6,
+                                      ),
+                                      foregroundColor: _activeSection == id
+                                          ? colors.primary
+                                          : colors.onSurface,
+                                      backgroundColor: _activeSection == id
+                                          ? colors.primary.withValues(
+                                              alpha: 0.10,
+                                            )
+                                          : Colors.transparent,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                    ).copyWith(
+                                      alignment: Alignment.centerLeft,
+                                      side: WidgetStateProperty.resolveWith(
+                                        (states) => BorderSide(
+                                          color:
+                                              states.contains(
+                                                WidgetState.focused,
+                                              )
+                                              ? colors.primary
+                                              : Colors.transparent,
+                                          width:
+                                              states.contains(
+                                                WidgetState.focused,
+                                              )
+                                              ? 1.5
+                                              : 1,
+                                        ),
+                                      ),
+                                    ),
+                                child: Row(
+                                  children: [
+                                    if (id == 'notifications') ...[
+                                      Image.asset(
+                                        Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? 'Assets/DingDongIP/ding-w.png'
+                                            : 'Assets/DingDongIP/ding.png',
+                                        width: 22,
+                                        height: 22,
+                                        cacheWidth: 64,
+                                        filterQuality: FilterQuality.medium,
+                                        excludeFromSemantics: true,
+                                      ),
+                                      const SizedBox(width: 6),
+                                    ],
+                                    Expanded(
+                                      child: Text(
+                                        terms[id]!.first,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(fontSize: 13),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  Expanded(child: content),
+                ],
+              );
+            },
           );
         },
       ),

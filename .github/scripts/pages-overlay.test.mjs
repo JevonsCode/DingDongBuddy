@@ -10,9 +10,24 @@ test('catalog links preserve released content and work from a project site',()=>
   const html='<nav><a href="https://example.com/release">Download</a></nav><section class="sound-section"></section>';
   const out=addCatalogLinks(html);
   assert.ok(out.includes('href="https://example.com/release"'));
-  assert.equal((out.match(/href="\.\/voices\/"/g)||[]).length,2);
+  assert.equal((out.match(/href="https:\/\/xn--8ovp9s\.xn--m8txu\.com\/dingdong-voices\/"/g)||[]).length,2);
   assert.equal(addCatalogLinks(out),out);
-  assert.equal(addCatalogLinks('<nav><a href="/dingdongbuddy/voices/">Voices</a></nav>'),'<nav><a href="./voices/">Voices</a></nav>');
+  assert.equal(addCatalogLinks('<nav><a href="/dingdongbuddy/voices/">Voices</a></nav>'),'<nav><a href="https://xn--8ovp9s.xn--m8txu.com/dingdong-voices/">Voices</a></nav>');
+});
+
+test('homepage and deploy overlay share the independent catalog without duplicate links',()=>{
+  const home=readFileSync(new URL('../../docs/index.html',import.meta.url),'utf8');
+  const catalog='https://xn--8ovp9s.xn--m8txu.com/dingdong-voices/';
+  const links=[...home.matchAll(/href="([^"]+)" data-i18n="(?:nav.voices|sounds.catalog)"/g)];
+  assert.equal(links.length,2);
+  for(const [,href] of links) assert.equal(href,catalog);
+  const deployed=addCatalogLinks(home);
+  assert.equal(deployed,home);
+  assert.equal((deployed.match(/href="https:\/\/xn--8ovp9s\.xn--m8txu\.com\/dingdong-voices\/"/g)||[]).length,2);
+  for(const href of ['./voices/','voices/','/DingDongBuddy/voices/']) {
+    const rewritten=addCatalogLinks(`<nav><a href="${href}">Voices</a></nav>`);
+    assert.equal(rewritten,`<nav><a href="${catalog}">Voices</a></nav>`);
+  }
 });
 
 test('legacy entry preserves the DEV query and fragment on redirect',()=>{

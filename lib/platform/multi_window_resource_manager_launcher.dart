@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:desktop_multi_window/desktop_multi_window.dart';
+import 'package:dingdong/features/activity/domain/agent_activity_window_protocol.dart';
 import 'package:dingdong/features/library/domain/resource_manager_launcher.dart';
 
 const String resourceManagerWindowKind = 'resource-manager';
@@ -13,13 +14,17 @@ final class MultiWindowResourceManagerLauncher
   final String parentWindowId;
 
   /// Reloads clipboard history in an already-open resource manager.
-  Future<void> refreshClipboard() async {
+  Future<void> refreshClipboard() => _refresh('clipboard_changed');
+
+  Future<void> refreshActivity() => _refresh(agentActivityChangedMethod);
+
+  Future<void> _refresh(String method) async {
     try {
       final List<WindowController> windows = await WindowController.getAll();
       for (final WindowController controller in windows) {
         final Map<String, Object?> arguments = _decode(controller.arguments);
         if (arguments['kind'] == resourceManagerWindowKind) {
-          await controller.invokeMethod<void>('clipboard_changed');
+          await controller.invokeMethod<void>(method);
           return;
         }
       }

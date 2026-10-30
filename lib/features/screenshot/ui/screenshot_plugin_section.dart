@@ -4,8 +4,6 @@ import 'dart:convert';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/widgets/compact_switch.dart';
 import 'package:dingdong/core/widgets/desktop_action_button.dart';
-import 'package:dingdong/features/plugins/domain/plugin_source.dart';
-import 'package:dingdong/features/plugins/ui/plugin_source_note.dart';
 import 'package:dingdong/features/screenshot/domain/screenshot_plugin.dart';
 import 'package:dingdong/features/settings/domain/global_hot_key.dart';
 import 'package:dingdong/features/settings/ui/global_hot_key_recorder.dart';
@@ -24,6 +22,8 @@ class _ScreenshotPluginSectionState extends State<ScreenshotPluginSection> {
   Map<String, Object?>? _status;
   String? _error;
   bool _busy = false;
+  bool _background = false;
+  Timer? _captureRefresh;
 
   @override
   void initState() {
@@ -34,11 +34,13 @@ class _ScreenshotPluginSectionState extends State<ScreenshotPluginSection> {
   Future<void> _run(
     String action, [
     Map<String, Object?> values = const {},
+    bool background = false,
   ]) async {
     if (_busy) return;
     setState(() {
       _busy = true;
-      _error = null;
+      _background = background;
+      if (!background) _error = null;
     });
     try {
       final result = await widget.action(action, values);
@@ -88,9 +90,22 @@ class _ScreenshotPluginSectionState extends State<ScreenshotPluginSection> {
       if (mounted) {
         setState(() {
           _busy = false;
+          _background = false;
         });
+        _captureRefresh?.cancel();
+        if (_status?['capturing'] == true) {
+          _captureRefresh = Timer(const Duration(milliseconds: 800), () {
+            if (mounted) unawaited(_run('status', const {}, true));
+          });
+        }
       }
     }
+  }
+
+  @override
+  void dispose() {
+    _captureRefresh?.cancel();
+    super.dispose();
   }
 
   @override
@@ -121,14 +136,23 @@ class _ScreenshotPluginSectionState extends State<ScreenshotPluginSection> {
         const SizedBox(height: 8),
         Text(l.screenshotPluginDescription),
         const SizedBox(height: 20),
-        if (_busy)
+        if (_busy && !_background)
           const LinearProgressIndicator(key: Key('screenshot-loading')),
-        if (defaultTargetPlatform != TargetPlatform.windows) ...[
+        if (defaultTargetPlatform != TargetPlatform.windows &&
+            defaultTargetPlatform != TargetPlatform.macOS) ...[
           Text(
             l.screenshotUnsupported,
             key: const Key('screenshot-unsupported'),
           ),
         ] else ...[
+          Text(
+            defaultTargetPlatform == TargetPlatform.macOS
+                ? l.screenshotSystemHelpMac
+                : l.screenshotSystemHelpWindows,
+            key: const Key('screenshot-system-help'),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 16),
           CompactSwitchListTile(
             key: const Key('screenshot-enabled'),
             contentPadding: EdgeInsets.zero,
@@ -196,7 +220,6 @@ class _ScreenshotPluginSectionState extends State<ScreenshotPluginSection> {
             ],
           ),
         ],
-        const PluginSourceNote(source: PluginSource.screenshot),
         if (errorText != null) ...[
           const SizedBox(height: 16),
           Semantics(
@@ -208,8 +231,6 @@ class _ScreenshotPluginSectionState extends State<ScreenshotPluginSection> {
             ),
           ),
         ],
-        const SizedBox(height: 24),
-        Text(l.screenshotHelp, style: Theme.of(context).textTheme.bodySmall),
       ],
     );
   }

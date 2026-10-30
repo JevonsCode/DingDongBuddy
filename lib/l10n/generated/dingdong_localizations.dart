@@ -130,12 +130,6 @@ abstract class DingDongLocalizations {
   /// Embedded plugin attribution and upstream update status.
   ///
   /// In en, this message translates to:
-  /// **'Uses the open-source editor through a pinned dependency. DingDong provides capture, shortcuts and interface adaptation.'**
-  String get pluginScreenshotSourceNote;
-
-  /// Embedded plugin attribution and upstream update status.
-  ///
-  /// In en, this message translates to:
   /// **'Windows selection retrieval is adapted from this project. The floating toolbar, settings and model requests are implemented by DingDong.'**
   String get pluginSelectionSourceNote;
 
@@ -166,13 +160,13 @@ abstract class DingDongLocalizations {
   /// Screenshot extension or plugin platform availability.
   ///
   /// In en, this message translates to:
-  /// **'Capture a region, add annotations, then copy or save a PNG.'**
+  /// **'Open the system screenshot tool with your chosen shortcut.'**
   String get screenshotPluginDescription;
 
   /// Screenshot extension or plugin platform availability.
   ///
   /// In en, this message translates to:
-  /// **'Enable screenshot plugin'**
+  /// **'Enable screenshots'**
   String get screenshotEnable;
 
   /// Screenshot extension or plugin platform availability.
@@ -196,7 +190,7 @@ abstract class DingDongLocalizations {
   /// Screenshot extension or plugin platform availability.
   ///
   /// In en, this message translates to:
-  /// **'Screenshot capture is currently available on Windows only.'**
+  /// **'Screenshot capture is available on macOS and Windows.'**
   String get screenshotUnsupported;
 
   /// Screenshot extension or plugin platform availability.
@@ -220,14 +214,8 @@ abstract class DingDongLocalizations {
   /// Screenshot extension or plugin platform availability.
   ///
   /// In en, this message translates to:
-  /// **'Capture editor is open · press Esc to cancel'**
+  /// **'Opening system screenshot…'**
   String get screenshotCapturing;
-
-  /// Screenshot extension or plugin platform availability.
-  ///
-  /// In en, this message translates to:
-  /// **'Drag to select, then annotate with arrows, shapes, text or pixelation in the editor. Use the toolbar to copy, save, undo or cancel. Images stay in memory until you copy or save.'**
-  String get screenshotHelp;
 
   /// Screenshot extension or plugin platform availability.
   ///
@@ -250,50 +238,8 @@ abstract class DingDongLocalizations {
   /// Screenshot extension or plugin platform availability.
   ///
   /// In en, this message translates to:
-  /// **'Could not capture the screen. Try again.'**
+  /// **'Could not open system screenshot. Try again.'**
   String get screenshotCaptureError;
-
-  /// Screenshot extension or plugin platform availability.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not copy or save. Try again or press Esc to cancel.'**
-  String get screenshotExportError;
-
-  /// Screenshot extension or plugin platform availability.
-  ///
-  /// In en, this message translates to:
-  /// **'Rectangle'**
-  String get screenshotRectangle;
-
-  /// Screenshot extension or plugin platform availability.
-  ///
-  /// In en, this message translates to:
-  /// **'Arrow'**
-  String get screenshotArrow;
-
-  /// Screenshot extension or plugin platform availability.
-  ///
-  /// In en, this message translates to:
-  /// **'Text'**
-  String get screenshotText;
-
-  /// Screenshot extension or plugin platform availability.
-  ///
-  /// In en, this message translates to:
-  /// **'Undo'**
-  String get screenshotUndo;
-
-  /// Screenshot extension or plugin platform availability.
-  ///
-  /// In en, this message translates to:
-  /// **'Reselect'**
-  String get screenshotReselect;
-
-  /// Screenshot extension or plugin platform availability.
-  ///
-  /// In en, this message translates to:
-  /// **'Drag to select · Release to edit · Esc cancel'**
-  String get screenshotNativeHint;
 
   /// Screenshot extension or plugin platform availability.
   ///
@@ -3297,6 +3243,12 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'Notifications'**
   String get notifications;
+
+  /// Settings directory label for notifications and sounds.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications (Sounds)'**
+  String get notificationsAndSounds;
 
   /// DingDong built-in interface copy.
   ///
@@ -8251,6 +8203,324 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'Antigravity cannot use this environment-variable bearer token. Use its authentication flow or an explicit header.'**
   String get unsupportedMcpAuthenticationDetail;
+
+  /// Divider between updates received since the preceding activity-list visit and historical updates.
+  ///
+  /// In en, this message translates to:
+  /// **'Last seen here'**
+  String get activityLastSeenHere;
+
+  /// Tooltip for a notification whose conversation was successfully opened; clicking opens it again.
+  ///
+  /// In en, this message translates to:
+  /// **'Opened · Open conversation again'**
+  String get agentConversationAlreadyOpened;
+
+  /// Screenshot mode selection and shortcut configuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Open macOS Screenshot with your chosen shortcut. Capture, copy and save in the system tool.'**
+  String get screenshotSystemHelpMac;
+
+  /// Screenshot mode selection and shortcut configuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Map your chosen shortcut to Win+Shift+S. Capture, copy and save in the system tool.'**
+  String get screenshotSystemHelpWindows;
+
+  /// DEV preview for the downward notch bubble animation.
+  ///
+  /// In en, this message translates to:
+  /// **'Slide down from the notch'**
+  String get devNotchSlideDown;
+
+  /// DEV preview for the leftward notch bubble animation.
+  ///
+  /// In en, this message translates to:
+  /// **'Slide left from the notch'**
+  String get devNotchSlideLeft;
+
+  /// Explanation for a DEV notch bubble preview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview the bubble beside the screen notch without creating a reminder.'**
+  String get devNotchPreviewDescription;
+
+  /// Status shown after a DEV notch bubble preview starts.
+  ///
+  /// In en, this message translates to:
+  /// **'Notch bubble preview started'**
+  String get devNotchPreviewTriggered;
+
+  /// Settings label for notch bubble direction.
+  ///
+  /// In en, this message translates to:
+  /// **'Bubble when hidden by the notch'**
+  String get notchBubbleDirection;
+
+  /// Reveal the bubble below the notch.
+  ///
+  /// In en, this message translates to:
+  /// **'Slide below the notch'**
+  String get notchBubbleDown;
+
+  /// Reveal the bubble to the left of the notch.
+  ///
+  /// In en, this message translates to:
+  /// **'Slide left of the notch'**
+  String get notchBubbleLeft;
+
+  /// Disable the notch bubble.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get notchBubbleOff;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Update available'**
+  String get agentInstallStateUpdateAvailable;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'No supported Agent was found on this computer. Copy the setup prompt below instead.'**
+  String get agentInstallNoClients;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get agentInstallChangeUpdate;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Review changes'**
+  String get agentInstallPreviewTitle;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'In Codex, run /hooks and trust DingDong\'s Hooks so they can run.'**
+  String get agentInstallTrustCodexHooks;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get agentInstallChangeDelete;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Restart {name} to load the change.'**
+  String agentInstallRestartClient(String name);
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Conflict'**
+  String get agentInstallStateConflict;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up by hand'**
+  String get agentInstallStateManual;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Install selected'**
+  String get agentInstallSelected;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove DingDong from {name}?'**
+  String agentInstallRemoveTitle(String name);
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Install'**
+  String get agentInstallConfirm;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything selected is already up to date.'**
+  String get agentInstallNoChanges;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get agentInstallStateConnected;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get agentInstallChangeCreate;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Looking for Agents…'**
+  String get agentInstallScanning;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'DingDong found these Agents on this computer. Pick the ones that should get the DingDong MCP server and notification Hooks.'**
+  String get agentInstallDescription;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Rescan'**
+  String get agentInstallRescan;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Not supported'**
+  String get agentInstallStateUnsupported;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'DingDong will change these files. Other settings stay as they are, and a backup of each file is kept.'**
+  String get agentInstallPreviewDescription;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Install into Agents'**
+  String get agentInstallTitle;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear settings'**
+  String get agentInstallRemove;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Review the files below. Confirm to remove this Agent’s DingDong MCP, Hooks and connection instructions while keeping other settings.'**
+  String get agentInstallRemoveDescription;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Not connected'**
+  String get agentInstallStateNotConnected;
+
+  /// Explains that DEV scans and previews real Agent configurations without writing.
+  ///
+  /// In en, this message translates to:
+  /// **'DEV preview detects Agents and shows planned configuration changes. Use DingDong to apply the connection.'**
+  String get agentInstallPreviewOnlyDescription;
+
+  /// Read-only Agent installation preview action in DEV.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview selected connections'**
+  String get agentInstallPreviewSelected;
+
+  /// Disclosure for the optional manual Agent setup fallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual setup'**
+  String get agentInstallManualSetup;
+
+  /// Notch hover reminder switch
+  ///
+  /// In en, this message translates to:
+  /// **'Show reminders when hovering over the notch'**
+  String get notchHoverEnabled;
+
+  /// Left-side reveal when the tray icon is obscured
+  ///
+  /// In en, this message translates to:
+  /// **'When the menu bar icon is hidden, reminders slide out from the left of the notch.'**
+  String get notchHoverDescription;
+
+  /// recentNotifications
+  ///
+  /// In en, this message translates to:
+  /// **'Recent notifications'**
+  String get recentNotifications;
+
+  /// agentInstallInstructions
+  ///
+  /// In en, this message translates to:
+  /// **'Connection instructions'**
+  String get agentInstallInstructions;
+
+  /// agentInstallAdvancedAdapters
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced: custom Agent configuration'**
+  String get agentInstallAdvancedAdapters;
+
+  /// agentInstallWelcomeTitle
+  ///
+  /// In en, this message translates to:
+  /// **'Connect your local Agents'**
+  String get agentInstallWelcomeTitle;
+
+  /// agentInstallWelcomeDescription
+  ///
+  /// In en, this message translates to:
+  /// **'DingDong can detect local Agents and install their connection settings. You can skip this now and return through the popup → Activity → Agent connections.'**
+  String get agentInstallWelcomeDescription;
+
+  /// agentInstallSkip
+  ///
+  /// In en, this message translates to:
+  /// **'Skip for now'**
+  String get agentInstallSkip;
+
+  /// agentInstallStart
+  ///
+  /// In en, this message translates to:
+  /// **'Detect and connect'**
+  String get agentInstallStart;
+
+  /// Read-only DEV cleanup preview
+  ///
+  /// In en, this message translates to:
+  /// **'These DingDong settings can be removed from this Agent. DEV only previews the changes and does not modify files.'**
+  String get agentInstallRemovePreviewDescription;
+
+  /// devNewUserExperience
+  ///
+  /// In en, this message translates to:
+  /// **'New user experience'**
+  String get devNewUserExperience;
+
+  /// devNewUserExperienceDescription
+  ///
+  /// In en, this message translates to:
+  /// **'Check the first-install experience.'**
+  String get devNewUserExperienceDescription;
+
+  /// devAgentOnboardingPreviewDescription
+  ///
+  /// In en, this message translates to:
+  /// **'Open the first-time Agent setup in the popup. Preview it as often as needed.'**
+  String get devAgentOnboardingPreviewDescription;
+
+  /// devAgentOnboardingOpened
+  ///
+  /// In en, this message translates to:
+  /// **'Opened: new user Agent setup'**
+  String get devAgentOnboardingOpened;
 }
 
 class _DingDongLocalizationsDelegate

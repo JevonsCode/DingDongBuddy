@@ -92,7 +92,7 @@ Future<void> _runSettingsWindow(
   await windowManager.ensureInitialized();
   await preventWindowsAuxiliaryWindowClose();
   final WindowOptions options = WindowOptions(
-    size: const Size(620, 680),
+    size: const Size(1040, 760),
     minimumSize: const Size(620, 560),
     center: true,
     skipTaskbar: desktopWindowSkipsTaskbar(

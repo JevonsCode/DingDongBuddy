@@ -24,8 +24,8 @@ maintain Prompts, Skills, and MCP connections in one place; and review events
 from connected Agents with the notification sound you choose. Selected content
 and important reminders can also reach a trusted phone through the mobile PWA.
 
-**DingDong 1.10.3 (build 82)** refreshes community sounds, distinguishes
-Claude Desktop from Claude Code, and highlights unread Agent reminders.
+**DingDong 1.11.0 (build 83)** detects local Agents for guided setup and cleanup,
+remembers opened notifications, and adds a wider Settings directory.
 
 > **AI+** selects Prompts, Skills and MCP resources for an Agent’s current task.
 > Configure a model once; resource selection runs only when an Agent requests it.
@@ -35,8 +35,7 @@ See the [AI+ setup and privacy boundaries](docs/product/ai-companion.md) or brow
 
 Clipboard history loads 50 records at a time in both the quick panel and resource
 manager. Search and filters cover the complete saved history. The quick panel
-shows 21 recent Agents by default; change this under **Settings → Recent Agents →
-Quick panel Agent count**. See [clipboard history](docs/product/clipboard-history.md)
+shows 21 recent Agents by default; change this under **Settings → Quick panel Agent count**. See [clipboard history](docs/product/clipboard-history.md)
 and [reminders and recent Agents](docs/product/reminders.md).
 
 At the end of a supported Agent's final reply, DingDong can add a compact
@@ -120,20 +119,24 @@ saved in ordinary local preferences; re-enter a token previously stored in
 Keychain. See the [AI+ guide](docs/product/ai-companion.md) for configuration and
 exact data boundaries.
 
-## Optional Windows screenshot and selection plugins
+## System screenshots and Windows selection tools
 
-DingDong 1.10.3 provides optional Windows plugins under **Resource Manager → Plugins**.
-Capture with **Ctrl+Alt+A**, annotate in the embedded editor, then copy or save a
-PNG. Text selection offers Copy, Translate, Explain and Polish; text is sent to
+The current development version maps a configurable shortcut to the system
+screenshot tool under **Resource Manager → Plugins → Screenshot**. The default is
+**Ctrl+Alt+A** on Windows, mapped to **Win+Shift+S**, and **⌘⌥A** on macOS, opening
+Screenshot. You can record or reset the shortcut, enable it, or capture immediately.
+The operating system handles capture, annotation, copy and save.
+
+Windows text selection offers Copy, Translate, Explain and Polish. Text is sent to
 the configured model only after an explicit model action. Protected fields and
-unreadable selections are excluded. Plugin details list sources, licenses and
+unreadable selections are excluded. Selection details list sources, licenses and
 versions; Agent client plugin inventories are separate in Resources.
 
 Windows unread reminders retain the original DingDong artwork with optional
 rocking motion and a hover capsule showing counts by reminder group. Static
 reminder and reduced-motion settings remain respected.
 
-See the [Windows plugin guide](docs/product/screenshot-plugin.md) for setup,
+See the [screenshot and selection guide](docs/product/screenshot-plugin.md) for setup,
 privacy boundaries and remaining cross-application acceptance coverage.
 
 ## Optional system selection tools on macOS
@@ -306,11 +309,11 @@ The executable, version-independent procedure lives in
 [INSTALL_WITH_AGENT.md](INSTALL_WITH_AGENT.md). It installs an official release;
 it does not clone or build the repository.
 
-Published stable downloads · 1.10.3:
+Published stable downloads · 1.11.0:
 
-- [macOS · Apple silicon · 1.10.3](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.3/DingDong-1.10.3-macos-arm64.dmg)
-- [macOS · Intel · 1.10.3](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.3/DingDong-1.10.3-macos-x64.dmg)
-- [Windows x64 · 1.10.3](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.3/DingDong-1.10.3-windows-x64-Setup.exe)
+- [macOS · Apple silicon · 1.11.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.0/DingDong-1.11.0-macos-arm64.dmg)
+- [macOS · Intel · 1.11.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.0/DingDong-1.11.0-macos-x64.dmg)
+- [Windows x64 · 1.11.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.0/DingDong-1.11.0-windows-x64-Setup.exe)
 
 macOS requires version 13 or newer. Quick Paste needs Accessibility permission;
 ordinary clipboard history does not require Full Disk Access or Screen Recording.
@@ -345,6 +348,12 @@ DingDong uses three independent native paths for Codex:
 When the completion Hook is configured, the Agent does not need to call
 `dingdong_notify` again for the same completed task. Use that tool for blockers,
 requests for user attention, or clients without a completion Hook.
+
+To connect from DingDong itself, open **Agent connection center → MCP access → Install into
+Agents**: DingDong lists the Agents it finds on this computer, shows the files it
+will change, and installs the MCP server and Hooks into the ones you select.
+DEV builds show real detection and read-only change previews without modifying
+the Agent configurations.
 
 Automatic setup preserves unrelated entries in native files, including
 `~/.codex/config.toml`, `~/.claude/settings.json`,

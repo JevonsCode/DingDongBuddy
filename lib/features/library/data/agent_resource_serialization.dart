@@ -211,47 +211,11 @@ AgentMcpConfigKind _inferMcpKind(File file) =>
     ? AgentMcpConfigKind.codexToml
     : AgentMcpConfigKind.mcpServersJson;
 
-final RegExp _managedPromptsPattern = RegExp(
-  '${RegExp.escape(_managedPromptsBegin)}.*?${RegExp.escape(_managedPromptsEnd)}\\s*',
-  dotAll: true,
-);
-
 final RegExp _managedMcpBlockPattern = RegExp(
   r'^# BEGIN DINGDONG MCP .*?^# END DINGDONG MCP\s*\n?',
   multiLine: true,
   dotAll: true,
 );
-
-String _removeCodexMcpTables(String contents, Set<String> serverNames) {
-  if (contents.isEmpty || serverNames.isEmpty) {
-    return contents;
-  }
-  final Set<String> targetTables = serverNames
-      .map((String name) => 'mcp_servers.$name')
-      .toSet();
-  final List<String> kept = <String>[];
-  String? removingTable;
-  for (final String line in contents.split('\n')) {
-    final String? table = _tomlTablePath(line);
-    if (table != null) {
-      if (targetTables.contains(table)) {
-        removingTable = table;
-        continue;
-      }
-      final String? activeRemoval = removingTable;
-      if (activeRemoval != null) {
-        if (table.startsWith('$activeRemoval.')) {
-          continue;
-        }
-        removingTable = null;
-      }
-    }
-    if (removingTable == null) {
-      kept.add(line);
-    }
-  }
-  return kept.join('\n');
-}
 
 String? _tomlTablePath(String line) {
   final String trimmed = line.trim();

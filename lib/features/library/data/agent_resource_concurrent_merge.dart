@@ -222,8 +222,3 @@ bool _onlyAgentResourceUsageChanged(
   }
   return usageChanged;
 }
-
-String _toml(String value) => value
-    .replaceAll(r'\', r'\\')
-    .replaceAll('"', r'\"')
-    .replaceAll('\n', r'\n');

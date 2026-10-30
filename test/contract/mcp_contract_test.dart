@@ -415,6 +415,11 @@ void main() {
                   as Map<String, Object?>)['properties']
               as Map<String, Object?>;
       expect(
+        (toolNamed('dingdong_notify')['inputSchema']
+            as Map<String, Object?>)['required'],
+        containsAll(['message', 'conversationId']),
+      );
+      expect(
         toolNamed('dingdong_notify')['description'],
         allOf(contains('configured completion hook'), contains('Do not call')),
       );

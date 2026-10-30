@@ -8,6 +8,8 @@ import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/serialization/strict_json.dart';
 import 'package:dingdong/features/agent_adapters/data/codex_completion_hook_gateway.dart';
 import 'package:dingdong/features/agent_adapters/domain/agent_adapter.dart';
+import 'package:dingdong/features/agent_api/data/agent_installer_edits.dart'
+    as installer_edits;
 import 'package:dingdong/features/agent_api/domain/agent_bridge_guidance.dart';
 import 'package:dingdong/features/issue_center/domain/app_issue.dart';
 import 'package:dingdong/features/issue_center/ui/issue_center_controller.dart';
@@ -462,28 +464,26 @@ final class AgentResourceSynchronizer {
     File file, {
     required bool includeBridgeRoutingInstructions,
   }) => SafeManagedFile(file).update((ManagedFileSnapshot snapshot) {
-    final String current = snapshot.contents;
-    final String cleaned = current
-        .replaceAll(_managedPromptsPattern, '')
-        .trimRight();
-    final StringBuffer block = StringBuffer();
+    String? next = snapshot.exists ? snapshot.contents : null;
+    // Collapse earlier duplicate managed blocks using the installer's codec.
+    while (true) {
+      final cleaned = installer_edits.MarkdownBlock.remove(
+        next,
+        _managedPromptsBegin,
+        _managedPromptsEnd,
+      );
+      if (cleaned == next) break;
+      next = cleaned;
+    }
     if (includeBridgeRoutingInstructions) {
-      block
-        ..writeln(_managedPromptsBegin)
-        ..write(dingDongAgentBridgeGuidance.trim())
-        ..writeln();
-      block.writeln(_managedPromptsEnd);
+      next = installer_edits.MarkdownBlock.set(
+        next,
+        _managedPromptsBegin,
+        _managedPromptsEnd,
+        dingDongAgentBridgeGuidance.trim(),
+      );
     }
-    final String managed = block.toString().trimRight();
-    final String next = <String>[
-      if (cleaned.isNotEmpty) cleaned,
-      if (managed.isNotEmpty) managed,
-    ].join('\n\n');
-    final String normalized = next.isEmpty ? '' : '$next\n';
-    if (!snapshot.exists && normalized.isEmpty) {
-      return null;
-    }
-    return normalized;
+    return next;
   });
 
   /// Performs the same checks as sync without changing any Agent files.
@@ -1022,22 +1022,32 @@ final class AgentResourceSynchronizer {
         );
       }
       final String serversKey = _mcpServersKey(kind);
-      final Map<String, Object?> servers = Map<String, Object?>.from(
-        (root[serversKey] as Map?) ?? const <String, Object?>{},
-      )..removeWhere((String key, Object? _) => previousNames.contains(key));
-      for (final Resource resource in resources) {
-        servers[managedMcpServerName(
-          title: resource.title,
-          id: resource.id,
-        )] = _jsonMcp(
-          McpConfiguration.parse(resource.content),
-          kind,
-          activation: resource.activation,
+      final servers = root[serversKey];
+      if (servers != null && servers is! Map) {
+        throw FormatException('$serversKey must be an object.');
+      }
+      String? next = snapshot.contents.trim().isEmpty
+          ? '{}'
+          : snapshot.contents;
+      for (final name in previousNames) {
+        next = installer_edits.JsonEdit.remove(next, [serversKey, name]);
+      }
+      for (final resource in resources) {
+        next = installer_edits.JsonEdit.set(
+          next,
+          [
+            serversKey,
+            managedMcpServerName(title: resource.title, id: resource.id),
+          ],
+          _jsonMcp(
+            McpConfiguration.parse(resource.content),
+            kind,
+            activation: resource.activation,
+          ),
         );
       }
-      return const JsonEncoder.withIndent(
-        '  ',
-      ).convert(<String, Object?>{...root, serversKey: servers});
+      // Preserve the established empty-map contract for user-owned config files.
+      return next ?? '{}';
     },
     validate: (String value) => decodeStrictJson(value) as Map<String, Object?>,
   );
@@ -1047,62 +1057,45 @@ final class AgentResourceSynchronizer {
     List<Resource> resources,
     Set<String> previousNames,
   ) => SafeManagedFile(file).update((ManagedFileSnapshot snapshot) {
-    final String current = snapshot.contents;
-    final Set<String> managedServerNames = <String>{
+    final current = snapshot.contents;
+    final names = <String>{
       ...previousNames,
-      ...resources.map(
-        (Resource resource) =>
-            managedMcpServerName(title: resource.title, id: resource.id),
-      ),
+      for (final resource in resources)
+        managedMcpServerName(title: resource.title, id: resource.id),
     };
-    final String cleaned = _removeCodexMcpTables(
-      current.replaceAll(_managedMcpBlockPattern, ''),
-      managedServerNames,
-    ).trimRight();
-    _rejectDuplicateTomlTables(cleaned, file.path);
-    final StringBuffer output = StringBuffer(cleaned);
-    for (final Resource resource in resources) {
-      final McpConfiguration config = McpConfiguration.parse(resource.content);
-      output
-        ..writeln(output.isEmpty ? '' : '\n')
-        ..writeln('# BEGIN DINGDONG MCP ${resource.id}')
-        ..writeln(
-          '[mcp_servers.${managedMcpServerName(title: resource.title, id: resource.id)}]',
-        );
+    String? next = current.replaceAll(_managedMcpBlockPattern, '');
+    _rejectDuplicateTomlTables(next, file.path);
+    for (final name in names) {
+      next = installer_edits.CodexToml.removeServer(next, name);
+    }
+    for (final resource in resources) {
+      final config = McpConfiguration.parse(resource.content);
+      final Map<String, Object?> entry;
       if (config.transport == McpTransport.stdio) {
-        output.writeln('command = "${_toml(config.command)}"');
-        if (config.arguments.isNotEmpty) {
-          output.writeln(
-            'args = [${config.arguments.map((String value) => '"${_toml(value)}"').join(', ')}]',
-          );
-        }
-        if (config.environment.isNotEmpty) {
-          output.writeln(
-            'env = { ${config.environment.entries.map((MapEntry<String, String> item) => '${item.key} = "${_toml(item.value)}"').join(', ')} }',
-          );
-        }
+        entry = {
+          'command': config.command,
+          if (config.arguments.isNotEmpty) 'args': config.arguments,
+          if (config.environment.isNotEmpty) 'env': config.environment,
+        };
       } else if (config.transport == McpTransport.streamableHttp) {
-        output.writeln('url = "${_toml(config.url)}"');
-        if (config.tokenEnvironmentVariable.isNotEmpty) {
-          output.writeln(
-            'bearer_token_env_var = "${_toml(config.tokenEnvironmentVariable)}"',
-          );
-        }
-        if (config.headers.isNotEmpty) {
-          output.writeln(
-            'http_headers = { ${config.headers.entries.map((MapEntry<String, String> item) => '"${_toml(item.key)}" = "${_toml(item.value)}"').join(', ')} }',
-          );
-        }
+        entry = {
+          'url': config.url,
+          if (config.tokenEnvironmentVariable.isNotEmpty)
+            'bearer_token_env_var': config.tokenEnvironmentVariable,
+          if (config.headers.isNotEmpty) 'http_headers': config.headers,
+        };
       } else {
         throw FormatException('MCP ${resource.title} must use STDIO or HTTP.');
       }
-      output
-        ..writeln('enabled = true')
-        ..writeln('# END DINGDONG MCP');
+      next = installer_edits.CodexToml.setServer(
+        next,
+        managedMcpServerName(title: resource.title, id: resource.id),
+        {...entry, 'enabled': true},
+      );
     }
-    final String next = '${output.toString().trimRight()}\n';
-    _rejectDuplicateTomlTables(next, file.path);
-    return next;
+    final result = next ?? '';
+    _rejectDuplicateTomlTables(result, file.path);
+    return result.isEmpty ? '' : '${result.trimRight()}\n';
   });
 
   Future<Map<String, Set<String>>> _readManagedMcpState() async {

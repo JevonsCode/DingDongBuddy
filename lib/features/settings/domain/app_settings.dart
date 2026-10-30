@@ -47,6 +47,16 @@ enum AppThemePreference {
   }
 }
 
+/// How a hidden macOS menu-bar badge emerges from the camera housing.
+enum NotchBubbleDirection {
+  off,
+  down,
+  left;
+
+  static NotchBubbleDirection parse(Object? value) =>
+      value == 'off' ? NotchBubbleDirection.off : NotchBubbleDirection.left;
+}
+
 /// Workspace opened when DingDong starts.
 enum DefaultWorkspace {
   today,
@@ -69,6 +79,7 @@ final class AppSettings {
     this.themeMode = AppThemePreference.light,
     this.launchAtStartup = false,
     this.hideDockIcon = false,
+    this.notchBubbleDirection = NotchBubbleDirection.left,
     this.trayNotificationColor = TrayNotificationColor.orange,
     this.globalHotKey = GlobalHotKey.defaultValue,
     this.workspaceShortcuts = WorkspaceShortcuts.defaultValue,
@@ -104,6 +115,7 @@ final class AppSettings {
   final AppThemePreference themeMode;
   final bool launchAtStartup;
   final bool hideDockIcon;
+  final NotchBubbleDirection notchBubbleDirection;
   final TrayNotificationColor trayNotificationColor;
   final GlobalHotKey globalHotKey;
   final WorkspaceShortcuts workspaceShortcuts;
@@ -268,6 +280,7 @@ final class AppSettings {
       themeMode: themeMode,
       launchAtStartup: launchAtStartup,
       hideDockIcon: hideDockIcon,
+      notchBubbleDirection: notchBubbleDirection,
       trayNotificationColor: trayNotificationColor,
       globalHotKey: globalHotKey.sanitized(),
       workspaceShortcuts: workspaceShortcuts.sanitized(defaultTargetPlatform),
@@ -309,6 +322,7 @@ final class AppSettings {
     AppThemePreference? themeMode,
     bool? launchAtStartup,
     bool? hideDockIcon,
+    NotchBubbleDirection? notchBubbleDirection,
     TrayNotificationColor? trayNotificationColor,
     GlobalHotKey? globalHotKey,
     WorkspaceShortcuts? workspaceShortcuts,
@@ -344,6 +358,7 @@ final class AppSettings {
       themeMode: themeMode ?? this.themeMode,
       launchAtStartup: launchAtStartup ?? this.launchAtStartup,
       hideDockIcon: hideDockIcon ?? this.hideDockIcon,
+      notchBubbleDirection: notchBubbleDirection ?? this.notchBubbleDirection,
       trayNotificationColor:
           trayNotificationColor ?? this.trayNotificationColor,
       globalHotKey: globalHotKey ?? this.globalHotKey,

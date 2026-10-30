@@ -8,12 +8,15 @@ import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
 import 'package:dingdong/core/platform/windows_auxiliary_window_close_behavior.dart';
 import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
+import 'package:dingdong/features/activity/domain/agent_activity_window_protocol.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/activity/ui/agent_activity_manager_screen.dart';
 import 'package:dingdong/features/agent_adapters/data/agent_adapter_repository.dart';
 import 'package:dingdong/features/agent_adapters/ui/agent_adapter_controller.dart';
 import 'package:dingdong/features/agent_adapters/ui/agent_adapter_screen.dart';
+import 'package:dingdong/features/agent_api/domain/agent_install.dart';
+import 'package:dingdong/features/agent_api/ui/agent_integration_screen.dart';
 import 'package:dingdong/features/ai_companion/ui/ai_companion_controller.dart';
 import 'package:dingdong/features/ai_companion/ui/ai_companion_screen.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_manager_screen.dart';
@@ -34,6 +37,7 @@ import 'package:dingdong/features/token_usage/ui/token_usage_controller.dart';
 import 'package:dingdong/features/token_usage/ui/token_usage_screen.dart';
 import 'package:dingdong/platform/file_selector_library_transfer_gateway.dart';
 import 'package:dingdong/platform/native_agent_conversation_launcher.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:window_manager/window_manager.dart';
@@ -48,6 +52,7 @@ class ResourceManagerApp extends StatefulWidget {
     required this.settings,
     required this.windowController,
     this.agentAdapterController,
+    this.agentInstallGateway,
     this.initialDestination = ResourceManagerDestination.resources,
     this.openClipboardCategoriesOnLaunch = false,
     this.resourceManagerLauncher,
@@ -61,6 +66,9 @@ class ResourceManagerApp extends StatefulWidget {
     this.tokenUsageController,
     this.onCloseTokenUsage,
     this.aiCompanionController,
+    this.initialWindowVisible = true,
+    this.onActivityOpened,
+    this.onActivityViewed,
     super.key,
   });
 
@@ -75,6 +83,7 @@ class ResourceManagerApp extends StatefulWidget {
   final ActivityController activityController;
   final IssueCenterController issueCenterController;
   final AgentAdapterController? agentAdapterController;
+  final AgentInstallGateway? agentInstallGateway;
   final AppSettings settings;
   final WindowController windowController;
   final ResourceManagerDestination initialDestination;
@@ -84,6 +93,9 @@ class ResourceManagerApp extends StatefulWidget {
   final DesktopContextMenuGateway? desktopContextMenuGateway;
   final Future<List<AppIssue>> Function()? onLoadHostIssues;
   final Future<void> Function(Uri uri)? onOpenExternalLink;
+  final bool initialWindowVisible;
+  final Future<void> Function(AgentActivity activity)? onActivityOpened;
+  final Future<void> Function(int sequence)? onActivityViewed;
 
   @override
   State<ResourceManagerApp> createState() => _ResourceManagerAppState();
@@ -99,11 +111,18 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
   final GlobalKey<LibraryScreenState> _libraryScreenKey =
       GlobalKey<LibraryScreenState>();
   late final AgentConversationLauncher _agentConversationLauncher;
+  bool _activityWindowVisible = true;
+  bool _ownsWindowListener = false;
 
   @override
   void initState() {
     super.initState();
     enableWindowsHideOnClose();
+    _activityWindowVisible = widget.initialWindowVisible;
+    if (defaultTargetPlatform != TargetPlatform.windows) {
+      windowManager.addListener(this);
+      _ownsWindowListener = true;
+    }
     _selectedIndex = widget.initialDestination.index;
     _clipboardCategoryRequestRevision = widget.openClipboardCategoriesOnLaunch
         ? 1
@@ -131,6 +150,9 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
             await windowManager.focus();
           case 'clipboard_changed':
             widget.clipboardViewModel.load();
+          case agentActivityChangedMethod:
+            widget.activityController.reload();
+            _preflightActivityTargets();
           case manageClipboardCategoriesMethod:
             await _selectDestination(ResourceManagerDestination.clipboard);
             if (mounted &&
@@ -185,6 +207,7 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
 
   @override
   void dispose() {
+    if (_ownsWindowListener) windowManager.removeListener(this);
     unawaited(widget.windowController.setWindowMethodHandler(null));
     widget.agentAdapterController?.dispose();
     widget.pluginSettings?.dispose();
@@ -193,6 +216,27 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
     final closeTokenUsage = widget.onCloseTokenUsage;
     if (closeTokenUsage != null) unawaited(closeTokenUsage());
     super.dispose();
+  }
+
+  void _setActivityVisible(bool visible) {
+    if (_activityWindowVisible == visible || !mounted) return;
+    if (visible) widget.activityController.reload();
+    setState(() => _activityWindowVisible = visible);
+  }
+
+  @override
+  void onWindowFocus() => _setActivityVisible(true);
+
+  @override
+  void onWindowMinimize() => _setActivityVisible(false);
+
+  @override
+  void onWindowRestore() => _setActivityVisible(true);
+
+  @override
+  void onWindowClose() {
+    _setActivityVisible(false);
+    if (defaultTargetPlatform == TargetPlatform.windows) super.onWindowClose();
   }
 
   Future<void> _selectDestination(
@@ -324,12 +368,21 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
                       ResourceManagerDestination.recentAgents =>
                         AgentActivityManagerScreen(
                           controller: widget.activityController,
+                          visible: _activityWindowVisible,
+                          onActivityOpened: widget.onActivityOpened,
+                          onActivityViewed: widget.onActivityViewed,
                           conversationLauncher: _agentConversationLauncher,
                           showConversationTokenUsage:
                               widget.settings.showConversationTokenUsage,
                         ),
                       ResourceManagerDestination.agentAdapters =>
-                        widget.agentAdapterController == null
+                        widget.agentInstallGateway != null
+                            ? AgentIntegrationScreen(
+                                gateway: widget.agentInstallGateway!,
+                                adapterController:
+                                    widget.agentAdapterController,
+                              )
+                            : widget.agentAdapterController == null
                             ? const SizedBox.shrink()
                             : AgentAdapterScreen(
                                 controller: widget.agentAdapterController!,
@@ -476,8 +529,8 @@ class _WorkspaceSidebar extends StatelessWidget {
               const SizedBox(height: 3),
               _SidebarItem(
                 key: const Key('resource-manager-nav-agent-activity'),
-                icon: Icons.smart_toy_outlined,
-                label: context.l10n.recentAgents,
+                icon: Icons.auto_awesome_outlined,
+                label: context.l10n.recentNotifications,
                 selected:
                     selectedIndex ==
                     ResourceManagerDestination.recentAgents.index,

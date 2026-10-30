@@ -72,7 +72,7 @@ Future<void> _runResourceManagerWindow(
             paths.development &&
             (Platform.isWindows ||
                 const bool.fromEnvironment('DINGDONG_PREVIEW_SANDBOX')),
-        loadAdapters: agentAdapterRepository.loadEffectiveAdapters,
+        loadAdapters: () => loadInstallerResourceAdapters(agentAdapterRepository),
         triggerGroupStore: baseTriggerGroupStore,
       );
   issueCenterController.setInspector(
@@ -197,6 +197,7 @@ Future<void> _runResourceManagerWindow(
   await pluginSettings.load();
   final ActivityController activityController =
       ActivityController(
+          persistHistory: parent == null,
           store: FileAgentActivityStore(
             paths.agentActivityFile,
             claudeDesktopSessionDirectory:
@@ -265,6 +266,29 @@ Future<void> _runResourceManagerWindow(
   await aiCompanionController.load();
   runApp(
     ResourceManagerApp(
+      initialWindowVisible: false,
+      onActivityOpened: parent == null
+          ? null
+          : (activity) async {
+              await parent!.invokeMethod<void>(agentActivityOpenedMethod, {
+                'id': activity.id,
+                'sequence': activity.sequence,
+              });
+              activityController.reload();
+            },
+      onActivityViewed: parent == null
+          ? null
+          : (sequence) async {
+              try {
+                await parent!.invokeMethod<void>(
+                  agentActivityViewedMethod,
+                  sequence,
+                );
+                activityController.reload();
+              } on Object {
+                // Closing windows can interrupt this optional checkpoint.
+              }
+            },
       aiCompanionController: aiCompanionController,
       tokenUsageController: tokenUsageController,
       onCloseTokenUsage: tokenUsageRepository.close,
@@ -272,6 +296,12 @@ Future<void> _runResourceManagerWindow(
       clipboardViewModel: clipboardViewModel,
       activityController: activityController,
       agentAdapterController: agentAdapterController,
+      agentInstallGateway: LocalAgentInstallGateway(
+        mcpCommandPath: paths.development && Platform.isMacOS
+            ? '/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp'
+            : _mcpCommandPath(),
+        previewOnly: paths.development,
+      ),
       issueCenterController: issueCenterController,
       settings: settings,
       windowController: windowController,

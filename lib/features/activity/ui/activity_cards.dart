@@ -172,6 +172,10 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
         final reminderColor = reminder == null
             ? null
             : Color(0xff000000 | reminder.color.rgbValue);
+        final openedColor = reminderColor ?? PopupStyle.of(context).accent;
+        final openedForeground = Theme.of(context).brightness == Brightness.dark
+            ? Color.lerp(openedColor, Colors.white, 0.16)!
+            : openedColor;
         return Transform.scale(
           scale: 1 + pulse * 0.012,
           child: MouseRegion(
@@ -326,12 +330,16 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
                     ] else if (widget.onTap != null) ...<Widget>[
                       const SizedBox(width: 7),
                       Tooltip(
-                        message: context.l10n.openAgentConversation,
+                        message: widget.activity.opened
+                            ? context.l10n.agentConversationAlreadyOpened
+                            : context.l10n.openAgentConversation,
                         child: Icon(
                           Icons.open_in_new_rounded,
                           key: Key('activity-open-conversation'),
                           size: 13,
-                          color: PopupStyle.of(context).textTertiary,
+                          color: widget.activity.opened
+                              ? openedForeground
+                              : PopupStyle.of(context).textSecondary,
                         ),
                       ),
                     ] else if (widget.activity.conversationTarget !=

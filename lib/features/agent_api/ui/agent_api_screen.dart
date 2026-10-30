@@ -9,6 +9,8 @@ import 'package:dingdong/core/widgets/desktop_icon_button.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/agent_api/domain/agent_api_gateway.dart';
+import 'package:dingdong/features/agent_api/domain/agent_install.dart';
+import 'package:dingdong/features/agent_api/ui/agent_install_card.dart';
 import 'package:dingdong/features/agent_api/ui/mcp_setup_card.dart';
 import 'package:dingdong/features/issue_center/ui/issue_center_controller.dart';
 import 'package:dingdong/features/library/domain/resource_manager_launcher.dart';
@@ -27,6 +29,8 @@ class AgentApiScreen extends StatefulWidget {
     this.activityController,
     this.issueCenterController,
     this.resourceManagerLauncher,
+    this.agentInstallGateway,
+    this.onInstallScanCompleted,
     this.focusMcpOnOpen = false,
     this.onMcpFocusHandled,
     this.onBack,
@@ -45,6 +49,10 @@ class AgentApiScreen extends StatefulWidget {
   final ActivityController? activityController;
   final IssueCenterController? issueCenterController;
   final ResourceManagerLauncher? resourceManagerLauncher;
+
+  /// Installs DingDong into local Agents; null shows only the setup prompt.
+  final AgentInstallGateway? agentInstallGateway;
+  final ValueChanged<List<AgentInstallClient>>? onInstallScanCompleted;
   final bool focusMcpOnOpen;
   final VoidCallback? onMcpFocusHandled;
   final VoidCallback? onBack;
@@ -64,6 +72,7 @@ class _AgentApiScreenState extends State<AgentApiScreen> {
   String? _healthError;
   bool _testFailed = false;
   bool _advancedExpanded = false;
+  bool _manualSetupExpanded = false;
   _AgentHealthStatus _healthStatus = _AgentHealthStatus.unknown;
   late AgentApiGateway _gateway;
   late bool _ownsGateway;
@@ -308,13 +317,43 @@ class _AgentApiScreenState extends State<AgentApiScreen> {
                           _SectionTitle(
                             key: const Key('agent-api-mcp-access'),
                             title: context.l10n.mcpAccess,
-                            description: context.l10n.agentSetupGettingStarted,
+                            description: widget.agentInstallGateway == null
+                                ? context.l10n.agentSetupGettingStarted
+                                : null,
                           ),
                           const SizedBox(height: 12),
-                          McpSetupCard(
-                            settingsViewModel: widget.settingsViewModel,
-                            clipboardGateway: widget.clipboardGateway,
-                          ),
+                          if (widget.agentInstallGateway
+                              case final AgentInstallGateway
+                                  gateway) ...<Widget>[
+                            AgentInstallCard(
+                              gateway: gateway,
+                              onScanCompleted: widget.onInstallScanCompleted,
+                            ),
+                            const SizedBox(height: 12),
+                            DesktopActionButton(
+                              key: const Key('agent-install-show-manual'),
+                              onPressed: () => setState(() {
+                                _manualSetupExpanded = !_manualSetupExpanded;
+                              }),
+                              label: context.l10n.agentInstallManualSetup,
+                              icon: Icon(
+                                _manualSetupExpanded
+                                    ? Icons.expand_less_rounded
+                                    : Icons.expand_more_rounded,
+                                size: 16,
+                              ),
+                              compact: true,
+                            ),
+                          ],
+                          if (widget.agentInstallGateway == null ||
+                              _manualSetupExpanded) ...<Widget>[
+                            if (widget.agentInstallGateway != null)
+                              const SizedBox(height: 12),
+                            McpSetupCard(
+                              settingsViewModel: widget.settingsViewModel,
+                              clipboardGateway: widget.clipboardGateway,
+                            ),
+                          ],
                           if (packageContainerName(mcpCommand)
                               case final String hostApp) ...<Widget>[
                             const SizedBox(height: 10),

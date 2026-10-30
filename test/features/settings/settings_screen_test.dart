@@ -9,6 +9,7 @@ import 'package:dingdong/features/settings/ui/global_hot_key_recorder.dart';
 import 'package:dingdong/features/settings/ui/release_settings_section.dart';
 import 'package:dingdong/features/settings/ui/settings_screen.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
+import 'package:dingdong/features/settings/ui/system_usage_section.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -30,6 +31,132 @@ void testWidgetsOnPlatform(
 }
 
 void main() {
+  testWidgetsOnPlatform(
+    'macOS notch hover switch saves only left or off',
+    TargetPlatform.macOS,
+    (WidgetTester tester) async {
+      final backend = MemoryPreferencesBackend();
+      final changes = <NotchBubbleDirection>[];
+      final model = SettingsViewModel(
+        SettingsRepository(backend),
+        onNotchBubbleDirectionChanged: (value) async => changes.add(value),
+      );
+      addTearDown(model.dispose);
+      await model.load();
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('zh'),
+          supportedLocales: DingDongLocalizations.supportedLocales,
+          localizationsDelegates: DingDongLocalizations.localizationsDelegates,
+          home: SettingsScreen(viewModel: model),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final toggle = find.byKey(const Key('settings-notch-hover'));
+      await tester.ensureVisible(toggle);
+      expect(model.settings.notchBubbleDirection, NotchBubbleDirection.left);
+      expect(find.text('从刘海下方滑出'), findsNothing);
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+      expect(model.settings.notchBubbleDirection, NotchBubbleDirection.off);
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+      expect(model.settings.notchBubbleDirection, NotchBubbleDirection.left);
+      expect(backend.values['dingdong.macos.notchBubbleDirection'], 'left');
+      expect(changes.last, NotchBubbleDirection.left);
+    },
+  );
+
+  testWidgets(
+    'wide settings directory jumps to sections and adapts at narrow width',
+    (tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(1040, 720);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final model = SettingsViewModel(
+        SettingsRepository(MemoryPreferencesBackend()),
+      );
+      addTearDown(model.dispose);
+      await tester.pumpWidget(
+        MaterialApp(home: SettingsScreen(viewModel: model)),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('settings-directory')), findsOneWidget);
+      expect(find.text('Notifications (Sounds)'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('settings-anchor-agentAPI')));
+      await tester.pumpAndSettle();
+      final bounds = tester.getRect(find.byKey(const Key('settings-api-port')));
+      expect(bounds.top, greaterThan(0));
+      expect(bounds.bottom, lessThan(720));
+      tester.view.physicalSize = const Size(620, 720);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('settings-directory')), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  for (final nativeSearch in [false, true]) {
+    testWidgetsOnPlatform(
+      'directory keeps long section headings below ${nativeSearch ? 'native' : 'pinned'} search',
+      TargetPlatform.macOS,
+      (tester) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(1040, 760);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        addTearDown(tester.view.resetPhysicalSize);
+        const channel = MethodChannel('dingdong/settings_search');
+        final messenger = tester.binding.defaultBinaryMessenger;
+        messenger.setMockMethodCallHandler(channel, (call) async {
+          return call.method == 'configure' ? true : null;
+        });
+        addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
+        final model = SettingsViewModel(
+          SettingsRepository(MemoryPreferencesBackend()),
+        );
+        addTearDown(model.dispose);
+        await tester.pumpWidget(
+          MaterialApp(
+            home: SettingsScreen(
+              viewModel: model,
+              useNativeSearch: nativeSearch,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final content = find.byType(CustomScrollView).first;
+        final expectedTop = nativeSearch ? 24.0 : 100.0;
+        for (final height in [760.0, 560.0]) {
+          tester.view.physicalSize = Size(1040, height);
+          await tester.pumpAndSettle();
+          for (final id in [
+            'storage',
+            'appearance',
+            'notifications',
+            'storage',
+          ]) {
+            await tester.tap(find.byKey(Key('settings-anchor-$id')));
+            await tester.pumpAndSettle();
+            final heading = id == 'storage'
+                ? find.byType(SystemUsageSection)
+                : find.descendant(
+                    of: content,
+                    matching: find.text(
+                      id == 'appearance' ? 'Appearance' : 'Notifications',
+                    ),
+                  );
+            expect(
+              tester.getTopLeft(heading).dy - tester.getTopLeft(content).dy,
+              closeTo(expectedTop, 1),
+              reason: '$id heading stays visible at height $height',
+            );
+          }
+        }
+      },
+    );
+  }
+
   testWidgets('quick panel count is configured in recent Agent settings', (
     WidgetTester tester,
   ) async {
@@ -143,9 +270,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('子智能体提醒'), findsOneWidget);
-    expect(find.text('关闭后，子智能体动态不显示提醒，也不播放叮咚声音。'), findsOneWidget);
+    expect(find.text('关闭后，子智能体动态不显示提醒，也不播放 DingDong 提醒声。'), findsOneWidget);
     expect(find.text('Codex 语音任务提醒'), findsOneWidget);
-    expect(find.text('关闭后，从 Codex 语音模式发起的任务不显示提醒，也不播放叮咚声音。'), findsOneWidget);
+    expect(
+      find.text('关闭后，从 Codex 语音模式发起的任务不显示提醒，也不播放 DingDong 提醒声。'),
+      findsOneWidget,
+    );
   });
 
   testWidgetsOnPlatform(

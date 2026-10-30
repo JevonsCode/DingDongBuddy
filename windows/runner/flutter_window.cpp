@@ -612,6 +612,11 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
   }
 
   switch (message) {
+    case WM_TIMER:
+      if (screenshot_plugin_ && screenshot_plugin_->HandleTimer(wparam)) {
+        return 0;
+      }
+      break;
     case WM_HOTKEY:
       if (screenshot_plugin_ && screenshot_plugin_->HandleHotKey(wparam)) {
         return 0;

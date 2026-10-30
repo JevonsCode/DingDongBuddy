@@ -74,6 +74,7 @@ final class PluginDesktopShellGateway
   bool _hideDockIcon = false;
   double _windowOpacity = 0.90;
   TrayNotificationColor _trayNotificationColor;
+  NotchBubbleDirection _notchBubbleDirection = NotchBubbleDirection.left;
   NotificationRules _notificationRules = NotificationRules.defaultValue;
   TrayBuddyState _trayBuddyState = TrayBuddyState.normal;
   TrayBuddyState? _trayBuddyPreviewState;
@@ -121,6 +122,12 @@ final class PluginDesktopShellGateway
     windowManager.addListener(this);
     trayManager.addListener(this);
     await _unreadController.restore();
+    if (Platform.isMacOS) {
+      await trayManager.setNotchBubbleDirection(_notchBubbleDirection.name);
+      if (_unreadController.count > 0) {
+        await trayManager.showNotchReminderIfHidden();
+      }
+    }
     _unreadControllerRestored = true;
     if (_pendingUnreadAcknowledgements > 0) {
       final int pending = _pendingUnreadAcknowledgements;
@@ -146,6 +153,8 @@ final class PluginDesktopShellGateway
     _hotKeyChannel.setMethodCallHandler((MethodCall call) async {
       if (call.method == 'openApplication') {
         _commands.add(DesktopShellCommand.openApplication);
+      } else if (call.method == 'showTestPanel' && _developmentBuild) {
+        _commands.add(DesktopShellCommand.showTestPanel);
       } else if (call.method == 'hideDockIcon') {
         _commands.add(DesktopShellCommand.hideDockIcon);
       } else if (call.method == 'pressed') {
@@ -258,11 +267,16 @@ final class PluginDesktopShellGateway
     AgentNotificationKind kind = AgentNotificationKind.completion,
     String? reminderId,
     ReminderProfile? reminder,
-  }) => _unreadController.markUnread(
-    kind: kind,
-    reminderId: reminderId,
-    reminder: reminder,
-  );
+  }) async {
+    await _unreadController.markUnread(
+      kind: kind,
+      reminderId: reminderId,
+      reminder: reminder,
+    );
+    if (Platform.isMacOS && _started) {
+      await trayManager.showNotchReminderIfHidden();
+    }
+  }
 
   Future<void> acknowledgeUnreadCount(int count) {
     if (count <= 0) {
@@ -287,6 +301,22 @@ final class PluginDesktopShellGateway
       return;
     }
     await trayManager.nudgeIcon();
+  }
+
+  Future<void> previewNotchBubble(String direction) async {
+    if (!_developmentBuild || !Platform.isMacOS) return;
+    final bool shown = await trayManager.previewNotchBubble(direction);
+    if (!shown) throw StateError('No available notch screen for preview');
+  }
+
+  Future<void> setNotchBubbleDirection(NotchBubbleDirection value) async {
+    _notchBubbleDirection = value;
+    if (_started && Platform.isMacOS) {
+      await trayManager.setNotchBubbleDirection(value.name);
+      if (value != NotchBubbleDirection.off && _unreadController.count > 0) {
+        await trayManager.showNotchReminderIfHidden();
+      }
+    }
   }
 
   Future<void> setTrayBuddyState(TrayBuddyState value) async {

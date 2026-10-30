@@ -1,7 +1,9 @@
 /// Real DEV-only integration paths exposed by the standalone test panel.
 enum DevelopmentTestAction {
+  agentOnboardingPreview('agent-onboarding-preview'),
   traySleeping('tray-sleeping'),
   trayNudge('tray-nudge'),
+  notchPreviewLeft('notch-preview-left'),
   trayOrange('tray-orange'),
   trayPink('tray-pink'),
   trayBlue('tray-blue'),
@@ -26,7 +28,8 @@ enum DevelopmentTestAction {
 
   bool get requiresTrayAnimation =>
       this == DevelopmentTestAction.traySleeping ||
-      this == DevelopmentTestAction.trayNudge;
+      this == DevelopmentTestAction.trayNudge ||
+      this == DevelopmentTestAction.notchPreviewLeft;
 
   static DevelopmentTestAction? fromId(Object? value) {
     if (value is! String) return null;

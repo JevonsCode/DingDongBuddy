@@ -38,7 +38,7 @@ DingDong combines local clipboard content management, shared cross-Agent resourc
 
 ## Brand Commitments
 
-- The product name is DingDong.
+- The product name is DingDong in every locale. Keep this spelling in UI, onboarding, notifications, sound names, documentation, and marketing copy; do not translate or transliterate the brand into a Chinese name.
 - DingDong is a free public open-source project intended to help people use local Agents. Product copy must not imply paid plans, subscriptions, or a charging roadmap. Optional external model services and plugins may have their own terms.
 - Existing DingDong character artwork, application icons, symbol assets, and notification sounds are authoritative brand assets under `Assets/`.
 - The interface should feel like a focused desktop companion rather than a generic administration dashboard.

@@ -1,12 +1,20 @@
 name: dingdong
 description: Cross-platform desktop companion for local AI agents.
 publish_to: none
-version: 1.10.3+82
+version: 1.11.0+83
 
 environment:
   sdk: ^3.12.2
 
 dependencies:
+  agent_installer:
+    git:
+      url: https://github.com/JevonsCode/agent-installer.git
+      ref: 9b3c9fb7e92e9e4c9dd5bf9c0e1ac4300704a033
+  agent_session_launcher:
+    git:
+      url: https://github.com/JevonsCode/agent-session-launcher.git
+      ref: dce8ab5bb68c750f52bb9b0409e8ac7cc52f544a
   characters: ^1.4.1
   cryptography: ^2.9.0
   desktop_multi_window:
@@ -21,7 +29,6 @@ dependencies:
   intl: ^0.20.2
   pasteboard: ^0.5.0
   path: ^1.9.1
-  pro_image_editor: 14.16.0
   qr_flutter: ^4.1.0
   screen_retriever: ^0.2.2
   shared_preferences: ^2.5.5
