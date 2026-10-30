@@ -30,7 +30,12 @@ void main() {
       home = Directory.systemTemp.createTempSync('dingdong-agent-install-');
       gateway = LocalAgentInstallGateway(
         mcpCommandPath: _mcp,
-        environment: <String, String>{'HOME': home.path, 'PATH': ''},
+        environment: <String, String>{
+          'HOME': home.path,
+          'USERPROFILE': home.path,
+          'APPDATA': '${home.path}${Platform.pathSeparator}AppData',
+          'PATH': '',
+        },
         extensionsDirectory: '${home.path}/extensions',
         backupDirectory: '${home.path}/backups',
         runInIsolate: false,
@@ -65,11 +70,25 @@ void main() {
         containsPair('command', _mcp),
       );
       final String settings = read('.claude/settings.json')!;
+      final List<String> commands = <String>[
+        for (final Object? groups
+            in ((jsonDecode(settings) as Map<String, Object?>)['hooks']!
+                    as Map<String, Object?>)
+                .values)
+          for (final Object? group in groups! as List<Object?>)
+            for (final Object? hook
+                in (group! as Map<String, Object?>)['hooks']! as List<Object?>)
+              (hook! as Map<String, Object?>)['command']! as String,
+      ];
+      // Each platform's shell quotes the client name its own way.
+      final String source = Platform.isWindows
+          ? '"Claude Code"'
+          : "'Claude Code'";
+      expect(commands, contains('$_mcp --notify-stop --source $source'));
       expect(
-        settings,
-        contains('$_mcp --notify-stop --source \'Claude Code\''),
+        commands,
+        contains('$_mcp --acknowledge-session-start --source $source'),
       );
-      expect(settings, contains('--acknowledge-session-start'));
       expect(settings, contains('"matcher": "startup|resume"'));
       expect((await claude()).state, AgentInstallState.connected);
 
