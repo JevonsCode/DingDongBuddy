@@ -8251,6 +8251,150 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'Antigravity cannot use this environment-variable bearer token. Use its authentication flow or an explicit header.'**
   String get unsupportedMcpAuthenticationDetail;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Install into Agents'**
+  String get agentInstallTitle;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'DingDong found these Agents on this computer. Pick the ones that should get the DingDong MCP server and notification Hooks.'**
+  String get agentInstallDescription;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Looking for Agents…'**
+  String get agentInstallScanning;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'No supported Agent was found on this computer. Copy the setup prompt below instead.'**
+  String get agentInstallNoClients;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Install selected'**
+  String get agentInstallSelected;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Rescan'**
+  String get agentInstallRescan;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Review changes'**
+  String get agentInstallPreviewTitle;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'DingDong will change these files. Other settings stay as they are, and a backup of each file is kept.'**
+  String get agentInstallPreviewDescription;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything selected is already up to date.'**
+  String get agentInstallNoChanges;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Install'**
+  String get agentInstallConfirm;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get agentInstallRemove;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove DingDong from {name}?'**
+  String agentInstallRemoveTitle(String name);
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Only DingDong\'s MCP server and Hooks are removed. Other settings stay as they are.'**
+  String get agentInstallRemoveDescription;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get agentInstallChangeCreate;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get agentInstallChangeUpdate;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get agentInstallChangeDelete;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get agentInstallStateConnected;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Update available'**
+  String get agentInstallStateUpdateAvailable;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Not connected'**
+  String get agentInstallStateNotConnected;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Conflict'**
+  String get agentInstallStateConflict;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Set up by hand'**
+  String get agentInstallStateManual;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Not supported'**
+  String get agentInstallStateUnsupported;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'In Codex, run /hooks and trust DingDong\'s Hooks so they can run.'**
+  String get agentInstallTrustCodexHooks;
+
+  /// Agent install card on the Agent API screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Restart {name} to load the change.'**
+  String agentInstallRestartClient(String name);
 }
 
 class _DingDongLocalizationsDelegate

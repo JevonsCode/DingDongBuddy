@@ -4773,4 +4773,85 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   @override
   String get unsupportedMcpAuthenticationDetail =>
       'Antigravity no admite este token de entorno. Usa su flujo de autenticación o una cabecera explícita.';
+
+  @override
+  String get agentInstallTitle => 'Instalar en Agents';
+
+  @override
+  String get agentInstallDescription =>
+      'DingDong encontró estos Agents en este equipo. Elige los que recibirán el servidor MCP de DingDong y los Hooks de notificación.';
+
+  @override
+  String get agentInstallScanning => 'Buscando Agents…';
+
+  @override
+  String get agentInstallNoClients =>
+      'No se encontró ningún Agent compatible en este equipo. Copia el prompt de configuración de abajo.';
+
+  @override
+  String get agentInstallSelected => 'Instalar selección';
+
+  @override
+  String get agentInstallRescan => 'Volver a buscar';
+
+  @override
+  String get agentInstallPreviewTitle => 'Revisar cambios';
+
+  @override
+  String get agentInstallPreviewDescription =>
+      'DingDong cambiará estos archivos. El resto de la configuración no cambia y se guarda una copia de cada archivo.';
+
+  @override
+  String get agentInstallNoChanges => 'Todo lo seleccionado ya está al día.';
+
+  @override
+  String get agentInstallConfirm => 'Instalar';
+
+  @override
+  String get agentInstallRemove => 'Quitar';
+
+  @override
+  String agentInstallRemoveTitle(String name) {
+    return '¿Quitar DingDong de $name?';
+  }
+
+  @override
+  String get agentInstallRemoveDescription =>
+      'Solo se quitan el servidor MCP y los Hooks de DingDong. El resto no cambia.';
+
+  @override
+  String get agentInstallChangeCreate => 'Crear';
+
+  @override
+  String get agentInstallChangeUpdate => 'Actualizar';
+
+  @override
+  String get agentInstallChangeDelete => 'Eliminar';
+
+  @override
+  String get agentInstallStateConnected => 'Conectado';
+
+  @override
+  String get agentInstallStateUpdateAvailable => 'Actualización disponible';
+
+  @override
+  String get agentInstallStateNotConnected => 'Sin conectar';
+
+  @override
+  String get agentInstallStateConflict => 'Conflicto';
+
+  @override
+  String get agentInstallStateManual => 'Configurar a mano';
+
+  @override
+  String get agentInstallStateUnsupported => 'No compatible';
+
+  @override
+  String get agentInstallTrustCodexHooks =>
+      'En Codex, ejecuta /hooks y confía en los Hooks de DingDong para que funcionen.';
+
+  @override
+  String agentInstallRestartClient(String name) {
+    return 'Reinicia $name para cargar el cambio.';
+  }
 }

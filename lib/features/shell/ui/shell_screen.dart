@@ -9,6 +9,7 @@ import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/activity/ui/activity_screen.dart';
+import 'package:dingdong/features/agent_api/domain/agent_install.dart';
 import 'package:dingdong/features/agent_api/ui/agent_api_screen.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_content_launcher.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_preview_launcher.dart';
@@ -58,6 +59,7 @@ class ShellScreen extends StatefulWidget {
     this.deviceLinkManagerLauncher,
     this.libraryTransferGateway,
     this.resourceManagerLauncher,
+    this.agentInstallGateway,
     this.settingsWindowLauncher,
     this.soundFileGateway,
     this.soundPreviewGateway,
@@ -87,6 +89,7 @@ class ShellScreen extends StatefulWidget {
   final DeviceLinkManagerLauncher? deviceLinkManagerLauncher;
   final LibraryTransferGateway? libraryTransferGateway;
   final ResourceManagerLauncher? resourceManagerLauncher;
+  final AgentInstallGateway? agentInstallGateway;
   final SettingsWindowLauncher? settingsWindowLauncher;
   final SoundFileGateway? soundFileGateway;
   final SoundPreviewGateway? soundPreviewGateway;
@@ -733,6 +736,7 @@ class _ShellScreenState extends State<ShellScreen> {
         activityController: widget.activityController,
         issueCenterController: widget.issueCenterController,
         resourceManagerLauncher: _resourceManagerLauncher(),
+        agentInstallGateway: widget.agentInstallGateway,
         focusMcpOnOpen: _focusMcpOnOpen,
         onMcpFocusHandled: _handleMcpFocusHandled,
         onBack: () => widget.controller.open(0),

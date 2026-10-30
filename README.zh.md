@@ -290,6 +290,10 @@ DingDong 在 Codex 中使用三条互相独立的原生链路：
 已配置完成 Hook 时，Agent 不需要为同一个已完成任务再次调用 `dingdong_notify`。
 这个工具用于阻塞、等待用户处理，或没有完成 Hook 的客户端。
 
+也可以直接在 DingDong 里接入：打开“**Agent 连接中心 → MCP 接入 → 安装到 Agent**”，
+DingDong 会列出这台电脑上找到的 Agent，先显示要修改的文件，再把 MCP 和 Hook
+装到你勾选的 Agent 里。
+
 自动接入会保留原生文件里的无关内容，包括 `~/.codex/config.toml`、
 `~/.claude/settings.json`、`~/.cursor/hooks.json` 和
 `~/.gemini/settings.json`。可执行文件或 MCP 配置变化后，Codex 可能要求

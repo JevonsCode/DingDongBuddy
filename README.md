@@ -346,6 +346,10 @@ When the completion Hook is configured, the Agent does not need to call
 `dingdong_notify` again for the same completed task. Use that tool for blockers,
 requests for user attention, or clients without a completion Hook.
 
+To connect from DingDong itself, open **Agent connection center → MCP access → Install into
+Agents**: DingDong lists the Agents it finds on this computer, shows the files it
+will change, and installs the MCP server and Hooks into the ones you select.
+
 Automatic setup preserves unrelated entries in native files, including
 `~/.codex/config.toml`, `~/.claude/settings.json`,
 `~/.cursor/hooks.json`, and `~/.gemini/settings.json`. Codex

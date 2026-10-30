@@ -7,6 +7,10 @@ environment:
   sdk: ^3.12.2
 
 dependencies:
+  agent_installer:
+    git:
+      url: https://github.com/JevonsCode/agent-installer.git
+      ref: a9a7721b18cfc04e81f5e3ffd3a2708a4e15810e
   characters: ^1.4.1
   cryptography: ^2.9.0
   desktop_multi_window:

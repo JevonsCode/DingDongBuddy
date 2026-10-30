@@ -27,6 +27,7 @@ import 'package:dingdong/features/agent_adapters/data/codex_completion_hook_gate
 import 'package:dingdong/features/agent_adapters/data/codex_thread_inspector.dart';
 import 'package:dingdong/features/agent_adapters/ui/agent_adapter_controller.dart';
 import 'package:dingdong/features/agent_api/data/agent_bridge.dart';
+import 'package:dingdong/features/agent_api/data/agent_install_gateway.dart';
 import 'package:dingdong/features/agent_api/data/ding_request.dart';
 import 'package:dingdong/features/ai_companion/data/ai_companion_store.dart';
 import 'package:dingdong/features/ai_companion/ui/ai_companion_controller.dart';
@@ -820,6 +821,10 @@ Future<void> main(List<String> arguments) async {
   );
   runApp(
     DingDongApp(
+      // A development build's MCP path is not one real Agents should keep.
+      agentInstallGateway: appDataPaths.development
+          ? null
+          : LocalAgentInstallGateway(mcpCommandPath: _mcpCommandPath()),
       tokenUsageBackgroundService: tokenUsageBackgroundService,
       activityController: activityController,
       developmentBuild: appDataPaths.development,

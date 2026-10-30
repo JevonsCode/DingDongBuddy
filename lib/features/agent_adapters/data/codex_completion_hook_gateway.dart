@@ -257,9 +257,17 @@ final class CodexAppServerCompletionHookGateway
   final String homeDirectory;
   final String dingDongMcpCommandPath;
 
-  String get _expectedCommand =>
-      '"${path.normalize(dingDongMcpCommandPath)}" '
-      '--notify-stop --source "Codex"';
+  /// The setup prompt and the Agent installer quote differently; both run
+  /// the same words.
+  bool _isExpectedCommand(Object? command) {
+    if (command is! String) return false;
+    final List<String> words = commandWords(command);
+    return words.length == 4 &&
+        path.normalize(words[0]) == path.normalize(dingDongMcpCommandPath) &&
+        words[1] == '--notify-stop' &&
+        words[2] == '--source' &&
+        words[3] == 'Codex';
+  }
 
   String get _expectedSourcePath =>
       path.normalize(path.join(homeDirectory, '.codex', 'config.toml'));
@@ -431,7 +439,7 @@ final class CodexAppServerCompletionHookGateway
       hook['source'] == 'user' &&
       path.normalize(hook['sourcePath'] as String? ?? '') ==
           _expectedSourcePath &&
-      hook['command'] == _expectedCommand;
+      _isExpectedCommand(hook['command']);
 
   bool _looksLikeDingDongHook(Map<String, Object?> hook) {
     final String command = hook['command'] as String? ?? '';
@@ -494,4 +502,39 @@ String _safeMessage(String message) {
     return oneLine;
   }
   return '${oneLine.substring(0, 277)}...';
+}
+
+/// Splits a hook command line into words, removing single and double quotes.
+List<String> commandWords(String command) {
+  final List<String> words = <String>[];
+  final StringBuffer word = StringBuffer();
+  bool inWord = false;
+  String? quote;
+  for (int i = 0; i < command.length; i++) {
+    final String c = command[i];
+    if (quote != null) {
+      if (c == quote) {
+        quote = null;
+      } else if (quote == '"' &&
+          c == r'\' &&
+          i + 1 < command.length &&
+          command[i + 1] == '"') {
+        word.write(command[++i]);
+      } else {
+        word.write(c);
+      }
+    } else if (c == '"' || c == "'") {
+      quote = c;
+      inWord = true;
+    } else if (c == ' ' || c == '\t') {
+      if (inWord) words.add(word.toString());
+      word.clear();
+      inWord = false;
+    } else {
+      word.write(c);
+      inWord = true;
+    }
+  }
+  if (inWord) words.add(word.toString());
+  return words;
 }

@@ -4524,4 +4524,84 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   @override
   String get unsupportedMcpAuthenticationDetail =>
       'Antigravity 暂不支持此环境变量令牌方式，请使用客户端认证或显式请求头。';
+
+  @override
+  String get agentInstallTitle => '安装到 Agent';
+
+  @override
+  String get agentInstallDescription =>
+      'DingDong 在这台电脑上找到了下面这些 Agent。勾选后会装上 DingDong 的 MCP 和通知 Hook。';
+
+  @override
+  String get agentInstallScanning => '正在查找 Agent…';
+
+  @override
+  String get agentInstallNoClients => '这台电脑上没有找到支持的 Agent，可以复制下面的提示词手动配置。';
+
+  @override
+  String get agentInstallSelected => '安装所选';
+
+  @override
+  String get agentInstallRescan => '重新扫描';
+
+  @override
+  String get agentInstallPreviewTitle => '确认改动';
+
+  @override
+  String get agentInstallPreviewDescription =>
+      'DingDong 会修改下面这些文件，其他设置保持不变，每个文件都会先备份。';
+
+  @override
+  String get agentInstallNoChanges => '所选的 Agent 都已是最新，不需要改动。';
+
+  @override
+  String get agentInstallConfirm => '安装';
+
+  @override
+  String get agentInstallRemove => '移除';
+
+  @override
+  String agentInstallRemoveTitle(String name) {
+    return '从 $name 移除 DingDong？';
+  }
+
+  @override
+  String get agentInstallRemoveDescription =>
+      '只会移除 DingDong 的 MCP 和 Hook，其他设置保持不变。';
+
+  @override
+  String get agentInstallChangeCreate => '新建';
+
+  @override
+  String get agentInstallChangeUpdate => '修改';
+
+  @override
+  String get agentInstallChangeDelete => '删除';
+
+  @override
+  String get agentInstallStateConnected => '已接入';
+
+  @override
+  String get agentInstallStateUpdateAvailable => '可更新';
+
+  @override
+  String get agentInstallStateNotConnected => '未接入';
+
+  @override
+  String get agentInstallStateConflict => '有冲突';
+
+  @override
+  String get agentInstallStateManual => '需手动配置';
+
+  @override
+  String get agentInstallStateUnsupported => '不支持';
+
+  @override
+  String get agentInstallTrustCodexHooks =>
+      '在 Codex 里输入 /hooks，信任 DingDong 的 Hook 后才会生效。';
+
+  @override
+  String agentInstallRestartClient(String name) {
+    return '重启 $name 后生效。';
+  }
 }

@@ -13,6 +13,7 @@ import 'package:dingdong/core/theme/popup_style.dart';
 import 'package:dingdong/core/widgets/desktop_context_menu.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
+import 'package:dingdong/features/agent_api/domain/agent_install.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_category_rule_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_group_order_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
@@ -85,6 +86,7 @@ class DingDongApp extends StatefulWidget {
     this.issueCenterController,
     this.resourceUpdateFetcher,
     this.resourceManagerLauncher,
+    this.agentInstallGateway,
     this.settingsWindowLauncher,
     this.settingsRepository,
     this.settingsViewModel,
@@ -133,6 +135,9 @@ class DingDongApp extends StatefulWidget {
   final IssueCenterController? issueCenterController;
   final ResourceUpdateFetcher? resourceUpdateFetcher;
   final ResourceManagerLauncher? resourceManagerLauncher;
+
+  /// Installs DingDong into local Agents; null hides the installer.
+  final AgentInstallGateway? agentInstallGateway;
   final SettingsWindowLauncher? settingsWindowLauncher;
   final SettingsRepository? settingsRepository;
   final SettingsViewModel? settingsViewModel;
@@ -303,6 +308,7 @@ class _DingDongAppState extends State<DingDongApp> {
                       appLocalizationsFor(_settingsViewModel.settings.language),
                 ),
             resourceManagerLauncher: widget.resourceManagerLauncher,
+            agentInstallGateway: widget.agentInstallGateway,
             settingsWindowLauncher: widget.settingsWindowLauncher,
             soundFileGateway:
                 widget.soundFileGateway ??
