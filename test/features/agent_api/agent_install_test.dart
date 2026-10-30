@@ -11,9 +11,11 @@ import 'package:dingdong/features/settings/data/settings_repository.dart';
 import 'package:dingdong/features/settings/ui/settings_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as path;
 
-const String _mcp =
-    '/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp';
+final String _mcp = Platform.isWindows
+    ? 'C:/DingDong/dingdong_mcp.exe'
+    : '/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp';
 
 void main() {
   testWidgets(
@@ -67,7 +69,12 @@ void main() {
       home = Directory.systemTemp.createTempSync('dingdong-agent-install-');
       gateway = LocalAgentInstallGateway(
         mcpCommandPath: _mcp,
-        environment: <String, String>{'HOME': home.path, 'PATH': ''},
+        environment: <String, String>{
+          'HOME': home.path,
+          'USERPROFILE': home.path,
+          'APPDATA': path.join(home.path, 'AppData', 'Roaming'),
+          'PATH': '',
+        },
         extensionsDirectory: '${home.path}/extensions',
         backupDirectory: '${home.path}/backups',
         runInIsolate: false,
@@ -82,7 +89,12 @@ void main() {
         Directory('${home.path}/.claude').createSync();
         final preview = LocalAgentInstallGateway(
           mcpCommandPath: _mcp,
-          environment: <String, String>{'HOME': home.path, 'PATH': ''},
+          environment: <String, String>{
+            'HOME': home.path,
+            'USERPROFILE': home.path,
+            'APPDATA': path.join(home.path, 'AppData', 'Roaming'),
+            'PATH': '',
+          },
           extensionsDirectory: '${home.path}/extensions',
           backupDirectory: '${home.path}/backups',
           runInIsolate: false,
@@ -192,9 +204,18 @@ void main() {
         containsPair('command', _mcp),
       );
       final String settings = read('.claude/settings.json')!;
+      final decoded = jsonDecode(settings) as Map<String, Object?>;
+      final hooks = decoded['hooks'] as Map<String, Object?>;
+      final stop =
+          (hooks['Stop'] as List<Object?>).single as Map<String, Object?>;
+      final commands = stop['hooks'] as List<Object?>;
+      final stopCommand =
+          (commands.single as Map<String, Object?>)['command'] as String;
       expect(
-        settings,
-        contains('$_mcp --notify-stop --source \'Claude Code\''),
+        stopCommand,
+        Platform.isWindows
+            ? '$_mcp --notify-stop --source "Claude Code"'
+            : '$_mcp --notify-stop --source \'Claude Code\'',
       );
       expect(settings, contains('--acknowledge-session-start'));
       expect(settings, contains('"matcher": "startup|resume"'));
@@ -206,7 +227,7 @@ void main() {
     });
 
     test('takes over hooks that were added by hand in Codex', () async {
-      const String toml =
+      final String toml =
           'model = "gpt-5"\n'
           '\n'
           '[mcp_servers.dingdong]\n'
@@ -313,7 +334,6 @@ void main() {
         await tester.tap(find.byKey(const Key('agent-install-cancel')));
         await tester.pumpAndSettle();
         expect(gateway.removed, isNull);
-
       },
     );
 

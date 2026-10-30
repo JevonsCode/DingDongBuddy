@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dingdong/features/agent_adapters/data/agent_adapter_repository.dart';
 import 'package:dingdong/features/library/data/installer_resource_adapters.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as path;
 
 void main() {
   test(
@@ -38,6 +39,8 @@ void main() {
         repository,
         environment: {
           'HOME': home.path,
+          'USERPROFILE': home.path,
+          'APPDATA': path.join(home.path, 'AppData', 'Roaming'),
           'PATH': '',
           'CODEX_HOME': '${home.path}/codex-custom',
         },
@@ -46,9 +49,9 @@ void main() {
       final codex = adapters.singleWhere((adapter) => adapter.id == 'codex');
       expect(
         codex.resolvedMcpFilePath(home.path),
-        '${home.path}/codex-custom/config.toml',
+        path.join(home.path, 'codex-custom', 'config.toml'),
       );
-      expect(codex.resolvedProjectSkillPath(), '.agents/skills');
+      expect(codex.resolvedProjectSkillPath(), path.join('.agents', 'skills'));
       expect(
         adapters.where((adapter) => adapter.displayName == 'Gemini CLI'),
         hasLength(1),
@@ -58,7 +61,7 @@ void main() {
       );
       expect(
         local.resolvedMcpFilePath(home.path),
-        '${home.path}/local-config/mcp.json',
+        path.join(home.path, 'local-config', 'mcp.json'),
       );
       expect(local.isInstalled(home.path), isTrue);
     },
