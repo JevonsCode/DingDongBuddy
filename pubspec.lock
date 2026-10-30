@@ -5,8 +5,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: a9a7721b18cfc04e81f5e3ffd3a2708a4e15810e
-      resolved-ref: a9a7721b18cfc04e81f5e3ffd3a2708a4e15810e
+      ref: d4f680de56fed2a136c15e49d81953e3851cf010
+      resolved-ref: d4f680de56fed2a136c15e49d81953e3851cf010
       url: "https://github.com/JevonsCode/agent-installer.git"
     source: git
     version: "0.1.0"

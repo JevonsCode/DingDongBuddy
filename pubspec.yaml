@@ -10,7 +10,7 @@ dependencies:
   agent_installer:
     git:
       url: https://github.com/JevonsCode/agent-installer.git
-      ref: a9a7721b18cfc04e81f5e3ffd3a2708a4e15810e
+      ref: d4f680de56fed2a136c15e49d81953e3851cf010
   characters: ^1.4.1
   cryptography: ^2.9.0
   desktop_multi_window:

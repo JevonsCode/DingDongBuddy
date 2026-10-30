@@ -108,7 +108,13 @@ List<Object> _execute(_Request request) {
           detected: s.scan.detected,
           state: AgentInstallState.parse(s.state),
           evidence: s.scan.evidence,
-          problem: s.scan.manual,
+          problem:
+              s.scan.manual ??
+              s.components
+                  .where((ComponentStatus c) => c.state == 'conflict')
+                  .map((ComponentStatus c) => c.message)
+                  .nonNulls
+                  .firstOrNull,
         ),
     ],
     _Job.plan => _outcomes(installer.plan(request.clientIds)),

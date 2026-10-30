@@ -14,6 +14,9 @@ Map<String, Object?> dingDongInstallManifest() => <String, Object?>{
     'name': 'dingdong',
     'command': '{appMcp}',
     'args': <String>[],
+    // A same-name server whose command lacks this is someone else's and is
+    // left alone; DingDong entries added by hand carry it too.
+    'markers': <String>['dingdong_mcp'],
   },
   'hooks': <String, Object?>{
     // Earlier hand-made entries are recognized by the executable name.
