@@ -21,10 +21,6 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   String get pluginLicenses => 'Licencias';
 
   @override
-  String get pluginScreenshotSourceNote =>
-      'Utiliza el editor mediante una dependencia fijada. DingDong aporta captura, atajos y adaptación de la interfaz.';
-
-  @override
   String get pluginSelectionSourceNote =>
       'La lectura de selecciones de Windows adapta código de este proyecto. DingDong implementa la barra, los ajustes y las solicitudes al modelo.';
 
@@ -45,7 +41,7 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get screenshotPluginDescription =>
-      'Captura una región, anota y copia o guarda como PNG.';
+      'Abre la herramienta de captura del sistema con tu propio atajo.';
 
   @override
   String get screenshotEnable => 'Activar capturas';
@@ -62,7 +58,7 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get screenshotUnsupported =>
-      'Las capturas están disponibles actualmente solo en Windows.';
+      'La captura está disponible en macOS y Windows.';
 
   @override
   String get screenshotRunning => 'Listo · atajo registrado';
@@ -75,11 +71,7 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
       'No se pudo iniciar. Actualiza o vuelve a activar.';
 
   @override
-  String get screenshotCapturing => 'Editor abierto · Esc para cancelar';
-
-  @override
-  String get screenshotHelp =>
-      'Arrastra para seleccionar y edita con flechas, formas, texto o pixelado. Usa la barra para copiar, guardar, deshacer o cancelar. La imagen permanece en memoria hasta copiar o guardar.';
+  String get screenshotCapturing => 'Abriendo la captura del sistema…';
 
   @override
   String get screenshotConflict =>
@@ -95,30 +87,7 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get screenshotCaptureError =>
-      'No se pudo capturar la pantalla. Inténtalo de nuevo.';
-
-  @override
-  String get screenshotExportError =>
-      'No se pudo copiar o guardar. Reintenta o pulsa Esc.';
-
-  @override
-  String get screenshotRectangle => 'Rectángulo';
-
-  @override
-  String get screenshotArrow => 'Flecha';
-
-  @override
-  String get screenshotText => 'Texto';
-
-  @override
-  String get screenshotUndo => 'Deshacer';
-
-  @override
-  String get screenshotReselect => 'Reseleccionar';
-
-  @override
-  String get screenshotNativeHint =>
-      'Arrastra para seleccionar · Suelta para editar · Esc cancela';
+      'No se pudo abrir la captura del sistema. Inténtalo de nuevo.';
 
   @override
   String get selectionWindowsDiagnosis =>
@@ -1858,6 +1827,9 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get notifications => 'Notificaciones';
+
+  @override
+  String get notificationsAndSounds => 'Notificaciones (sonidos)';
 
   @override
   String get notify => 'Notificar';
@@ -4773,4 +4745,183 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   @override
   String get unsupportedMcpAuthenticationDetail =>
       'Antigravity no admite este token de entorno. Usa su flujo de autenticación o una cabecera explícita.';
+
+  @override
+  String get activityLastSeenHere => 'Visto hasta aquí';
+
+  @override
+  String get agentConversationAlreadyOpened =>
+      'Abierta · Abrir conversación de nuevo';
+
+  @override
+  String get screenshotSystemHelpMac =>
+      'Abre Captura de macOS con tu atajo. Captura, copia y guarda con la herramienta del sistema.';
+
+  @override
+  String get screenshotSystemHelpWindows =>
+      'Asigna tu atajo a Win+Shift+S. Captura, copia y guarda con la herramienta del sistema.';
+
+  @override
+  String get devNotchSlideDown => 'Deslizar hacia abajo desde la muesca';
+
+  @override
+  String get devNotchSlideLeft => 'Deslizar a la izquierda desde la muesca';
+
+  @override
+  String get devNotchPreviewDescription =>
+      'Previsualiza la burbuja junto a la muesca sin crear un recordatorio.';
+
+  @override
+  String get devNotchPreviewTriggered => 'Vista previa de la burbuja iniciada';
+
+  @override
+  String get notchBubbleDirection => 'Burbuja oculta por la muesca';
+
+  @override
+  String get notchBubbleDown => 'Deslizar debajo de la muesca';
+
+  @override
+  String get notchBubbleLeft => 'Deslizar a la izquierda de la muesca';
+
+  @override
+  String get notchBubbleOff => 'Desactivada';
+
+  @override
+  String get agentInstallStateUpdateAvailable => 'Actualización disponible';
+
+  @override
+  String get agentInstallNoClients =>
+      'No se encontró ningún Agent compatible en este equipo. Copia el prompt de configuración de abajo.';
+
+  @override
+  String get agentInstallChangeUpdate => 'Actualizar';
+
+  @override
+  String get agentInstallPreviewTitle => 'Revisar cambios';
+
+  @override
+  String get agentInstallTrustCodexHooks =>
+      'En Codex, ejecuta /hooks y confía en los Hooks de DingDong para que funcionen.';
+
+  @override
+  String get agentInstallChangeDelete => 'Eliminar';
+
+  @override
+  String agentInstallRestartClient(String name) {
+    return 'Reinicia $name para cargar el cambio.';
+  }
+
+  @override
+  String get agentInstallStateConflict => 'Conflicto';
+
+  @override
+  String get agentInstallStateManual => 'Configurar a mano';
+
+  @override
+  String get agentInstallSelected => 'Instalar selección';
+
+  @override
+  String agentInstallRemoveTitle(String name) {
+    return '¿Quitar DingDong de $name?';
+  }
+
+  @override
+  String get agentInstallConfirm => 'Instalar';
+
+  @override
+  String get agentInstallNoChanges => 'Todo lo seleccionado ya está al día.';
+
+  @override
+  String get agentInstallStateConnected => 'Conectado';
+
+  @override
+  String get agentInstallChangeCreate => 'Crear';
+
+  @override
+  String get agentInstallScanning => 'Buscando Agents…';
+
+  @override
+  String get agentInstallDescription =>
+      'DingDong encontró estos Agents en este equipo. Elige los que recibirán el servidor MCP de DingDong y los Hooks de notificación.';
+
+  @override
+  String get agentInstallRescan => 'Volver a buscar';
+
+  @override
+  String get agentInstallStateUnsupported => 'No compatible';
+
+  @override
+  String get agentInstallPreviewDescription =>
+      'DingDong cambiará estos archivos. El resto de la configuración no cambia y se guarda una copia de cada archivo.';
+
+  @override
+  String get agentInstallTitle => 'Instalar en Agents';
+
+  @override
+  String get agentInstallRemove => 'Limpiar configuración';
+
+  @override
+  String get agentInstallRemoveDescription =>
+      'Revisa estos archivos. Al confirmar se eliminarán el MCP, los Hooks y las instrucciones de DingDong de este Agent, conservando los otros ajustes.';
+
+  @override
+  String get agentInstallStateNotConnected => 'Sin conectar';
+
+  @override
+  String get agentInstallPreviewOnlyDescription =>
+      'La vista DEV detecta Agents y muestra los cambios de configuración previstos. Usa DingDong para aplicar la conexión.';
+
+  @override
+  String get agentInstallPreviewSelected => 'Revisar conexiones elegidas';
+
+  @override
+  String get agentInstallManualSetup => 'Configuración manual';
+
+  @override
+  String get notchHoverEnabled =>
+      'Mostrar avisos al pasar el cursor por la muesca';
+
+  @override
+  String get notchHoverDescription =>
+      'Si el icono queda oculto, los avisos salen por la izquierda de la muesca.';
+
+  @override
+  String get recentNotifications => 'Notificaciones recientes';
+
+  @override
+  String get agentInstallInstructions => 'Instrucciones de conexión';
+
+  @override
+  String get agentInstallAdvancedAdapters => 'Avanzado: configuración de Agent';
+
+  @override
+  String get agentInstallWelcomeTitle => 'Conectar tus Agents locales';
+
+  @override
+  String get agentInstallWelcomeDescription =>
+      'DingDong puede detectar los Agents e instalar su configuración de conexión. Puedes omitirlo y volver desde el panel → Actividad → Conexiones de Agent.';
+
+  @override
+  String get agentInstallSkip => 'Omitir por ahora';
+
+  @override
+  String get agentInstallStart => 'Detectar y conectar';
+
+  @override
+  String get agentInstallRemovePreviewDescription =>
+      'Estos ajustes de DingDong se pueden eliminar de este Agent. DEV solo muestra una vista previa y no modifica los archivos.';
+
+  @override
+  String get devNewUserExperience => 'Experiencia inicial';
+
+  @override
+  String get devNewUserExperienceDescription =>
+      'Revisa la experiencia de la primera instalación.';
+
+  @override
+  String get devAgentOnboardingPreviewDescription =>
+      'Abre la guía inicial de conexión en el panel. Puedes verla varias veces.';
+
+  @override
+  String get devAgentOnboardingOpened => 'Abierta: guía inicial de conexión';
 }

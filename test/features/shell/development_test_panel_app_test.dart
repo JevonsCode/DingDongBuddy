@@ -10,6 +10,30 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('new-user preview dispatches a repeatable DEV action', (
+    tester,
+  ) async {
+    final actions = <String>[];
+    await tester.pumpWidget(
+      DevelopmentTestPanelApp(
+        settings: const AppSettings(language: AppLanguagePreference.chinese),
+        animationsSupported: false,
+        onRun: (action) async => actions.add(action.id),
+      ),
+    );
+    final preview = find.byKey(const Key('dev-test-panel-agent-onboarding'));
+    expect(preview, findsOneWidget);
+    for (var attempt = 0; attempt < 2; attempt++) {
+      await tester.ensureVisible(preview);
+      await tester.tap(preview);
+      await tester.pumpAndSettle();
+    }
+    expect(actions, ['agent-onboarding-preview', 'agent-onboarding-preview']);
+    await tester.scrollUntilVisible(find.text('已打开：新用户接入引导'), 400);
+    await tester.pumpAndSettle();
+    expect(find.text('已打开：新用户接入引导'), findsOneWidget);
+  });
+
   test('development test action IDs round-trip', () {
     for (final DevelopmentTestAction action in DevelopmentTestAction.values) {
       expect(DevelopmentTestAction.fromId(action.id), action);
@@ -135,7 +159,10 @@ void main() {
 
     const Map<String, DevelopmentTestAction>
     remainingActions = <String, DevelopmentTestAction>{
+      'dev-test-panel-agent-onboarding':
+          DevelopmentTestAction.agentOnboardingPreview,
       'dev-test-panel-nudge': DevelopmentTestAction.trayNudge,
+      'dev-test-panel-notch-left': DevelopmentTestAction.notchPreviewLeft,
       'dev-test-panel-color-orange': DevelopmentTestAction.trayOrange,
       'dev-test-panel-color-pink': DevelopmentTestAction.trayPink,
       'dev-test-panel-color-blue': DevelopmentTestAction.trayBlue,
@@ -208,6 +235,32 @@ void main() {
     ]);
 
     expect(find.textContaining('其余集成测试仍可使用'), findsOneWidget);
+  });
+
+  testWidgets('DEV panel offers the left notch preview only', (
+    WidgetTester tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 2400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final actions = <DevelopmentTestAction>[];
+    await tester.pumpWidget(
+      DevelopmentTestPanelApp(
+        settings: const AppSettings(language: AppLanguagePreference.chinese),
+        animationsSupported: true,
+        onRun: (action) async => actions.add(action),
+      ),
+    );
+
+    for (final entry in <String, String>{
+      'dev-test-panel-notch-left': 'notch-preview-left',
+    }.entries) {
+      final button = find.byKey(Key(entry.key));
+      expect(button, findsOneWidget);
+      await tester.ensureVisible(button);
+      await tester.tap(button);
+      await tester.pumpAndSettle();
+      expect(actions.last.id, entry.value);
+    }
   });
 }
 

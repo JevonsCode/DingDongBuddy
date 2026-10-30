@@ -21,6 +21,8 @@ final class AgentActivity {
     this.tokenUsage,
     this.reminder,
     this.pinned = false,
+    this.sequence = 0,
+    this.opened = false,
   }) : unseenReminderCount = unseenReminderCount ?? (unseen ? 1 : 0);
 
   factory AgentActivity.fromJson(Map<String, Object?> json) {
@@ -46,6 +48,10 @@ final class AgentActivity {
           : null,
       tokenUsage: ConversationTokenUsage.tryParse(json['tokenUsage']),
       pinned: json['pinned'] == true,
+      sequence: json['sequence'] is int && (json['sequence']! as int) >= 0
+          ? json['sequence']! as int
+          : 0,
+      opened: json['opened'] == true,
       reminder: json['reminder'] is Map
           ? ReminderProfile.fromJson(
               Map<String, Object?>.from(json['reminder'] as Map),
@@ -70,11 +76,18 @@ final class AgentActivity {
   final ReminderProfile? reminder;
   final bool pinned;
 
+  /// Local arrival order, independent of the Agent's completion timestamp.
+  final int sequence;
+  final bool opened;
+
   bool get needsUserAttention =>
       notificationKind == AgentNotificationKind.attention;
 
   AgentActivity withPinned(bool value) =>
       AgentActivity.fromJson({...toJson(), 'pinned': value});
+
+  AgentActivity withOpened() =>
+      AgentActivity.fromJson({...toJson(), 'opened': true});
 
   AgentActivity seen() => AgentActivity(
     id: id,
@@ -92,6 +105,8 @@ final class AgentActivity {
     tokenUsage: tokenUsage,
     reminder: reminder,
     pinned: pinned,
+    sequence: sequence,
+    opened: opened,
   );
 
   AgentActivity repeated({
@@ -107,6 +122,7 @@ final class AgentActivity {
     ReminderProfile? reminder,
     bool preserveLifecycle = false,
     bool countAsReminder = true,
+    int? sequence,
   }) {
     final AgentConversationTarget? mergedTarget =
         this.conversationTarget == null
@@ -132,11 +148,14 @@ final class AgentActivity {
       tokenUsage: tokenUsage ?? this.tokenUsage,
       reminder: reminder ?? this.reminder,
       pinned: pinned,
+      sequence: sequence ?? this.sequence,
     );
   }
 
   Map<String, Object?> toJson() => <String, Object?>{
     'id': id,
+    if (sequence > 0) 'sequence': sequence,
+    if (opened) 'opened': true,
     if (pinned) 'pinned': true,
     if (reminder != null) 'reminder': reminder!.toJson(),
     'source': source,

@@ -600,7 +600,7 @@ void main() {
     );
     const AgentConversationTarget target = AgentConversationTarget(
       client: AgentClient.codex,
-      conversationId: 'pending-codex-thread',
+      conversationId: '01a18c7d-9422-7482-adc4-c23b2f12d471',
     );
     activityController.record(
       source: 'Codex',
@@ -817,7 +817,7 @@ void main() {
               repeatCount: 2,
               conversationTarget: const AgentConversationTarget(
                 client: AgentClient.codex,
-                conversationId: 'thread-aligned-repeat',
+                conversationId: '01a18c7d-9422-7482-adc4-c23b2f12d472',
               ),
             ),
           ],

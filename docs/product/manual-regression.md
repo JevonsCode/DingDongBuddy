@@ -1,4 +1,4 @@
-# DingDong 1.10.3 Manual Regression Checklist
+# DingDong 1.11.0 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -12,6 +12,48 @@ port fallback, the native selection switch, and two native WebRTC peers using
 encrypted local relay and direct data-channel routes. Content, clipboard and settings
 stores use explicit test fixtures; this does not claim that user API credentials,
 third-party Agent accounts or remote model availability have been verified.
+
+## Local Agent installer and opened history
+
+- Open Agent connection center → MCP access. Installed Agents are detected
+  automatically; unconnected or outdated entries are selected initially.
+  Review the files before confirming installation. Cancel leaves them unchanged.
+- In a production build, connect selected Agents and verify unrelated settings
+  remain intact, backups exist, and connected entries leave the selection.
+  For Codex, trust the new Hooks in `/hooks`; restart or reload the relevant
+  client and confirm a real completion receipt in the connection center.
+- In DEV, the same card shows actual detection and read-only file previews.
+  Installation and per-Agent cleanup may be previewed, without a write confirmation,
+  and must not change
+  real Agent configuration files.
+- Clear one Agent's DingDong configuration. Verify the preview lists its files
+  and MCP/Hooks/instructions; cancel changes nothing, confirm preserves unrelated
+  configuration. A same-name foreign MCP must remain untouched.
+- On a fresh installation, skip Agent setup and reopen it through the popup →
+  Dynamic → Agent connections. On later panel opens the update badge must follow
+  actual detection rather than whether the setup prompt was copied.
+- In the DEV test panel, choose New user experience → Connect your local Agents
+  → Preview. The real popup onboarding dialog must reopen for an existing user;
+  skipping preserves the saved onboarding state. Repeat the preview and choose
+  Detect and connect to enter the Agent connection page. Production ignores
+  this DEV preview request.
+- Resource manager → Agent connections uses the same installer as the popup.
+  Resource MCP and instruction edits use the installer's shared edit engine;
+  retain source scopes, native Skill deployment receipts and concurrency checks.
+- Settings opens wider with left section anchors. Check section jumps, search,
+  narrow-window fallback and the left-only notch hover switch; a saved `down`
+  preference migrates to `left`, while `off` stays off.
+- In both Dynamic and Resource manager → Recent notifications, a successful conversation
+  launch colors the right-hand icon. Failed launches leave it neutral. Returning
+  to the page preserves the opened state; a newer event in that conversation
+  clears it. An event arriving during launch must remain unopened.
+- Check that “Last seen here” remains fixed during one visit and separates the
+  next visit's new and historical items, including filters and loaded pages.
+
+## Settings directory (1.11.0)
+
+- Select Usage, Appearance, and Notifications (Sounds) in both tall and short windows. The section heading must stay visible below the native toolbar or pinned search field with a consistent gap.
+- Confirm the static bell-ringing DingDong character beside Notifications (Sounds) uses the existing light/dark artwork, without motion or an extra action.
 
 ## Community voices and Agent notifications (1.10.3)
 
@@ -55,8 +97,10 @@ third-party Agent accounts or remote model availability have been verified.
 - Edit the IP of an already paired computer, save and reconnect without replacing
   the device identity or key. Reject invalid, public and off-subnet addresses.
   Reassign DHCP on real devices and check automatic discovery learns the new IP.
-- Exercise Windows screenshot annotation, undo/redo, copy and PNG save, then reopen
-  the editor. Test copy and explicit model actions from the selection toolbar.
+- Configure, reset and disable the screenshot shortcut on macOS/Windows. Both the
+  shortcut and Capture now must open the system tool, without a DingDong capture
+  or editing window. Check conflicts and retained shortcuts from older versions.
+  Test copy and explicit model actions from the selection toolbar.
 - Browse and preview community sounds, subscribe, restart and verify the saved
   sound remains selected. Verify source/license information and unavailable states.
 

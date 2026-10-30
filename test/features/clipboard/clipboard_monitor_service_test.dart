@@ -9,6 +9,75 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test(
+    'captures the latest change received while an earlier read is busy',
+    () async {
+      final source = _FakeClipboardChangeSource();
+      final gateway = _MutableClipboardGateway();
+      final store = InMemoryClipboardStore();
+      var id = 0;
+      final monitor = ClipboardMonitorService(
+        source: source,
+        captureService: ClipboardCaptureService(
+          gateway: gateway,
+          store: store,
+          idGenerator: () => 'copy-${id++}',
+        ),
+      );
+      final firstRead = Completer<ClipboardSnapshot>();
+      gateway.pendingRead = firstRead;
+      await monitor.start();
+      source.emit();
+      gateway.text = 'latest external copy';
+      source.emit();
+      source.emit();
+      firstRead.complete(
+        const ClipboardSnapshot(text: 'earlier external copy'),
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(
+        store.list(limit: 10).map((record) => record.content),
+        containsAll(['earlier external copy', 'latest external copy']),
+      );
+      expect(
+        gateway.reads,
+        2,
+        reason: 'Coalesce pending changes into one fresh read.',
+      );
+      await monitor.stop();
+    },
+  );
+
+  test(
+    'stopping discards queued reads until monitoring is started again',
+    () async {
+      final source = _FakeClipboardChangeSource();
+      final gateway = _MutableClipboardGateway();
+      final monitor = ClipboardMonitorService(
+        source: source,
+        captureService: ClipboardCaptureService(
+          gateway: gateway,
+          store: InMemoryClipboardStore(),
+        ),
+      );
+      final firstRead = Completer<ClipboardSnapshot>();
+      gateway.pendingRead = firstRead;
+      await monitor.start();
+      source.emit();
+      source.emit();
+      await monitor.stop();
+      firstRead.complete(const ClipboardSnapshot(text: 'already in flight'));
+      await Future<void>.delayed(Duration.zero);
+      expect(gateway.reads, 1);
+      await monitor.start();
+      source.emit();
+      await Future<void>.delayed(Duration.zero);
+      expect(gateway.reads, 2);
+      await monitor.stop();
+    },
+  );
+
+  test(
     'monitor captures one record for each platform change while running',
     () async {
       final _FakeClipboardChangeSource source = _FakeClipboardChangeSource();
@@ -66,9 +135,18 @@ final class _FakeClipboardChangeSource implements ClipboardChangeSource {
 
 final class _MutableClipboardGateway implements ClipboardGateway {
   String? text;
+  Completer<ClipboardSnapshot>? pendingRead;
+  int reads = 0;
 
   @override
-  Future<ClipboardSnapshot> read() async => ClipboardSnapshot(text: text);
+  Future<ClipboardSnapshot> read() async {
+    reads += 1;
+    final pending = pendingRead;
+    pendingRead = null;
+    return pending == null
+        ? ClipboardSnapshot(text: text)
+        : await pending.future;
+  }
 
   @override
   Future<void> writeFiles(List<String> paths) async {}

@@ -1,90 +1,15 @@
 import 'dart:async';
-import 'dart:io';
-import 'dart:ui' as ui;
 
-import 'package:dingdong/app/app_localizations.dart';
-import 'package:dingdong/app/app_theme.dart';
 import 'package:dingdong/features/plugins/ui/plugins_screen.dart';
 import 'package:dingdong/features/screenshot/domain/screenshot_plugin.dart';
 import 'package:dingdong/features/screenshot/ui/screenshot_plugin_section.dart';
 import 'package:dingdong/features/settings/domain/global_hot_key.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  windowsTest('render screenshot catalog and details for review', (
-    tester,
-  ) async {
-    if (Platform.environment['DINGDONG_SCREENSHOT_REVIEW'] != '1') return;
-    await tester.runAsync(() async {
-      for (final family in ['ScreenshotReview', 'Roboto', 'Ahem']) {
-        final loader = FontLoader(family)
-          ..addFont(
-            Future.value(
-              ByteData.sublistView(
-                File('C:/Windows/Fonts/msyh.ttc').readAsBytesSync(),
-              ),
-            ),
-          );
-        await loader.load();
-      }
-      final icons = FontLoader('MaterialIcons')
-        ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'));
-      await icons.load();
-    });
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetDevicePixelRatio);
-    addTearDown(tester.view.resetPhysicalSize);
-    final output = Directory('build/screenshot-review')
-      ..createSync(recursive: true);
-    for (final locale in ['zh', 'en']) {
-      tester.view.physicalSize = Size(locale == 'zh' ? 1000 : 620, 760);
-      final host = _Host();
-      final boundary = GlobalKey();
-      final baseTheme = locale == 'zh' ? AppTheme.light() : AppTheme.dark();
-      await tester.pumpWidget(
-        RepaintBoundary(
-          key: boundary,
-          child: MaterialApp(
-            locale: Locale(locale),
-            debugShowCheckedModeBanner: false,
-            localizationsDelegates:
-                DingDongLocalizations.localizationsDelegates,
-            supportedLocales: DingDongLocalizations.supportedLocales,
-            theme: baseTheme.copyWith(
-              textTheme: baseTheme.textTheme.apply(
-                fontFamily: 'ScreenshotReview',
-              ),
-            ),
-            home: Scaffold(body: PluginsScreen(screenshotAction: host.call)),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      Future<void> capture(String name) async {
-        await tester.runAsync(() async {
-          final image =
-              await (boundary.currentContext!.findRenderObject()!
-                      as RenderRepaintBoundary)
-                  .toImage();
-          final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-          File(
-            '${output.path}/$locale-$name.png',
-          ).writeAsBytesSync(bytes!.buffer.asUint8List());
-          image.dispose();
-        });
-      }
-
-      await capture('catalog');
-      await tester.tap(find.byKey(const Key('plugin-row-screenshot')));
-      await tester.pumpAndSettle();
-      await capture('details');
-      expect(tester.takeException(), isNull);
-    }
-  });
   windowsTest(
     'clicking the plugin title opens configuration and back returns',
     (tester) async {
@@ -133,6 +58,70 @@ void main() {
     expect(host.actions.last, 'capture');
   });
 
+  windowsTest('macOS exposes system screenshot and shortcut configuration', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+    final host = _Host();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: ScreenshotPluginSection(action: host.call),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('screenshot-system-help')), findsOneWidget);
+    expect(find.byKey(const Key('screenshot-hot-key')), findsOneWidget);
+    expect(find.byKey(const Key('screenshot-enabled')), findsOneWidget);
+    expect(find.byKey(const Key('screenshot-unsupported')), findsNothing);
+  });
+
+  windowsTest('system screenshot has no backend selector or editor source', (
+    tester,
+  ) async {
+    final host = _Host();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: ScreenshotPluginSection(action: host.call)),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('screenshot-backend')), findsNothing);
+    expect(find.text('Open-source editor'), findsNothing);
+    expect(find.text('Open-source components'), findsNothing);
+    expect(find.byKey(const Key('screenshot-system-help')), findsOneWidget);
+    expect(find.byKey(const Key('screenshot-hot-key')), findsOneWidget);
+  });
+
+  windowsTest('pending system launch refreshes status without an extra click', (
+    tester,
+  ) async {
+    final host = _Host()..capturePending = true;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: ScreenshotPluginSection(action: host.call),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('screenshot-enabled')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('screenshot-capture-now')));
+    await tester.tap(find.byKey(const Key('screenshot-capture-now')));
+    await tester.pumpAndSettle();
+    expect(host.capturing, isTrue);
+    host.capturing = false;
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pumpAndSettle();
+    expect(find.text('Ready · shortcut registered'), findsOneWidget);
+  });
+
   windowsTest(
     'recorder saves custom shortcut and reset uses screenshot default',
     (tester) async {
@@ -157,6 +146,41 @@ void main() {
     },
   );
 
+  windowsTest('macOS records Command Option and restores its default', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+    final host = _Host();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: ScreenshotPluginSection(action: host.call)),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('screenshot-hot-key')));
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.altLeft);
+    await tester.sendKeyEvent(LogicalKeyboardKey.keyB);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.altLeft);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+    await tester.pumpAndSettle();
+    expect(
+      host.shortcut,
+      const GlobalHotKey(
+        key: 'B',
+        primary: true,
+        shift: false,
+        alt: true,
+        secondary: false,
+      ),
+    );
+    expect(find.text('⌘⌥B'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('screenshot-hot-key-reset')));
+    await tester.pumpAndSettle();
+    expect(host.shortcut, ScreenshotConfiguration.defaultShortcut);
+    expect(find.text('⌘⌥A'), findsOneWidget);
+  });
+
   windowsTest(
     'conflict is visible and failed configuration does not look enabled',
     (tester) async {
@@ -178,7 +202,7 @@ void main() {
   windowsTest('unsupported platform has no enable or capture controls', (
     tester,
   ) async {
-    debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
+    debugDefaultTargetPlatformOverride = TargetPlatform.linux;
     addTearDown(() => debugDefaultTargetPlatformOverride = null);
     final host = _Host();
     await tester.pumpWidget(
@@ -238,6 +262,8 @@ class _Host {
   final actions = <String>[];
   bool enabled = false;
   bool conflict = false;
+  bool capturePending = false;
+  bool capturing = false;
   GlobalHotKey shortcut = ScreenshotConfiguration.defaultShortcut;
   Completer<void>? pause;
   Future<Map<String, Object?>> call(
@@ -245,6 +271,7 @@ class _Host {
     Map<String, Object?> values,
   ) async {
     actions.add(action);
+    if (action == 'capture' && capturePending) capturing = true;
     if (action == 'configure') {
       await pause?.future;
       if (conflict) throw const ScreenshotPluginException('shortcut_conflict');
@@ -261,7 +288,7 @@ class _Host {
       'shortcut': shortcut.toPlatformArguments(),
       'supported': true,
       'running': enabled,
-      'capturing': false,
+      'capturing': capturing,
     };
   }
 }

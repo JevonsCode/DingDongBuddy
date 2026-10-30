@@ -15,10 +15,6 @@
   "@pluginLicenses": {
     "description": "Embedded plugin attribution and upstream update status."
   },
-  "pluginScreenshotSourceNote": "Utiliza el editor mediante una dependencia fijada. DingDong aporta captura, atajos y adaptación de la interfaz.",
-  "@pluginScreenshotSourceNote": {
-    "description": "Embedded plugin attribution and upstream update status."
-  },
   "pluginSelectionSourceNote": "La lectura de selecciones de Windows adapta código de este proyecto. DingDong implementa la barra, los ajustes y las solicitudes al modelo.",
   "@pluginSelectionSourceNote": {
     "description": "Embedded plugin attribution and upstream update status."
@@ -68,9 +64,6 @@
   "@screenshotCapturing": {
     "description": "Screenshot extension or plugin platform availability."
   },
-  "@screenshotHelp": {
-    "description": "Screenshot extension or plugin platform availability."
-  },
   "@screenshotConflict": {
     "description": "Screenshot extension or plugin platform availability."
   },
@@ -83,53 +76,24 @@
   "@screenshotCaptureError": {
     "description": "Screenshot extension or plugin platform availability."
   },
-  "@screenshotExportError": {
-    "description": "Screenshot extension or plugin platform availability."
-  },
-  "@screenshotRectangle": {
-    "description": "Screenshot extension or plugin platform availability."
-  },
-  "@screenshotArrow": {
-    "description": "Screenshot extension or plugin platform availability."
-  },
-  "@screenshotText": {
-    "description": "Screenshot extension or plugin platform availability."
-  },
-  "@screenshotUndo": {
-    "description": "Screenshot extension or plugin platform availability."
-  },
-  "@screenshotReselect": {
-    "description": "Screenshot extension or plugin platform availability."
-  },
-  "@screenshotNativeHint": {
-    "description": "Screenshot extension or plugin platform availability."
-  },
   "@selectionWindowsDiagnosis": {
     "description": "Screenshot extension or plugin platform availability."
   },
   "screenshotPluginTitle": "Captura de pantalla",
-  "screenshotPluginDescription": "Captura una región, anota y copia o guarda como PNG.",
+  "screenshotPluginDescription": "Abre la herramienta de captura del sistema con tu propio atajo.",
   "screenshotEnable": "Activar capturas",
   "screenshotEnableDescription": "Registrar el atajo mientras DingDong esté abierto.",
   "screenshotShortcut": "Atajo de captura",
   "screenshotCaptureNow": "Capturar ahora",
-  "screenshotUnsupported": "Las capturas están disponibles actualmente solo en Windows.",
+  "screenshotUnsupported": "La captura está disponible en macOS y Windows.",
   "screenshotRunning": "Listo · atajo registrado",
   "screenshotStopped": "Desactivado · atajo liberado",
   "screenshotUnavailable": "No se pudo iniciar. Actualiza o vuelve a activar.",
-  "screenshotCapturing": "Editor abierto · Esc para cancelar",
-  "screenshotHelp": "Arrastra para seleccionar y edita con flechas, formas, texto o pixelado. Usa la barra para copiar, guardar, deshacer o cancelar. La imagen permanece en memoria hasta copiar o guardar.",
+  "screenshotCapturing": "Abriendo la captura del sistema…",
   "screenshotConflict": "Este atajo ya está en uso. Elige otra combinación.",
   "screenshotPersistenceError": "No se pudo guardar. Se restauró el atajo anterior.",
   "screenshotRollbackError": "No se pudo restaurar el atajo. Actualiza y vuelve a activar.",
-  "screenshotCaptureError": "No se pudo capturar la pantalla. Inténtalo de nuevo.",
-  "screenshotExportError": "No se pudo copiar o guardar. Reintenta o pulsa Esc.",
-  "screenshotRectangle": "Rectángulo",
-  "screenshotArrow": "Flecha",
-  "screenshotText": "Texto",
-  "screenshotUndo": "Deshacer",
-  "screenshotReselect": "Reseleccionar",
-  "screenshotNativeHint": "Arrastra para seleccionar · Suelta para editar · Esc cancela",
+  "screenshotCaptureError": "No se pudo abrir la captura del sistema. Inténtalo de nuevo.",
   "selectionWindowsDiagnosis": "La selección del sistema admite Windows y macOS. Esta plataforma aún no es compatible.",
   "amber": "Ámbar",
   "@amber": {
@@ -2394,6 +2358,10 @@
     "description": "DingDong built-in interface copy."
   },
   "notifications": "Notificaciones",
+  "notificationsAndSounds": "Notificaciones (sonidos)",
+  "@notificationsAndSounds": {
+    "description": "Settings directory label for notifications and sounds."
+  },
   "@notifications": {
     "description": "DingDong built-in interface copy."
   },
@@ -3112,7 +3080,9 @@
     "description": "DingDong built-in interface copy."
   },
   "selectLoadedItems": "Seleccionar elementos cargados",
-  "@selectLoadedItems": {"description": "Select only loaded clipboard history pages, without affecting unloaded items."},
+  "@selectLoadedItems": {
+    "description": "Select only loaded clipboard history pages, without affecting unloaded items."
+  },
   "selectAll": "Seleccionar todo",
   "@selectAll": {
     "description": "DingDong built-in interface copy."
@@ -5684,32 +5654,56 @@
     "description": "AI model configuration and operation status."
   },
   "voiceInstallDetails": "Origen y licencia",
-  "@voiceInstallDetails": { "description": "Community voice installation." },
+  "@voiceInstallDetails": {
+    "description": "Community voice installation."
+  },
   "voiceInstallContributorInfo": "Información aportada por el colaborador",
-  "@voiceInstallContributorInfo": { "description": "Community voice installation." },
+  "@voiceInstallContributorInfo": {
+    "description": "Community voice installation."
+  },
   "voiceCatalogFindFailed": "No se encontró el sonido. Comprueba el enlace o la conexión.",
-  "@voiceCatalogFindFailed": { "description": "Community voice installation." },
+  "@voiceCatalogFindFailed": {
+    "description": "Community voice installation."
+  },
   "voiceInstallPresent": "Ya está en tu biblioteca. Puedes reinstalarlo.",
-  "@voiceInstallPresent": { "description": "Community voice installation." },
+  "@voiceInstallPresent": {
+    "description": "Community voice installation."
+  },
   "voiceInstallReinstall": "Reinstalar",
-  "@voiceInstallReinstall": { "description": "Community voice installation." },
+  "@voiceInstallReinstall": {
+    "description": "Community voice installation."
+  },
   "voiceInstallTitle": "Instalar sonido",
-  "@voiceInstallTitle": { "description": "Community voice installation." },
+  "@voiceInstallTitle": {
+    "description": "Community voice installation."
+  },
   "voiceInstallConfirm": "¿Instalar este sonido? Podrás elegirlo en tus recordatorios.",
-  "@voiceInstallConfirm": { "description": "Community voice installation." },
+  "@voiceInstallConfirm": {
+    "description": "Community voice installation."
+  },
   "voiceInstallSuccess": "Instalado. Elígelo en un recordatorio para usarlo.",
-  "@voiceInstallSuccess": { "description": "Community voice installation." },
+  "@voiceInstallSuccess": {
+    "description": "Community voice installation."
+  },
   "voiceInstallLicense": "Licencia",
-  "@voiceInstallLicense": { "description": "Community voice installation." },
+  "@voiceInstallLicense": {
+    "description": "Community voice installation."
+  },
   "voiceInstallPreviewFailed": "No se pudo escuchar. Inténtalo de nuevo.",
-  "@voiceInstallPreviewFailed": { "description": "Community voice installation." },
+  "@voiceInstallPreviewFailed": {
+    "description": "Community voice installation."
+  },
   "voiceCatalogTitle": "Sonidos de la comunidad",
   "voiceCatalogHelp": "Instala un sonido para usarlo en los recordatorios de este dispositivo.",
   "voiceCatalogSearch": "Busca o pega un enlace de sonido",
   "voiceCatalogFilter": "Estado de instalación",
-  "@voiceCatalogFilter": {"description": "Community voice installation status filter."},
+  "@voiceCatalogFilter": {
+    "description": "Community voice installation status filter."
+  },
   "voiceCatalogFilterInstalled": "Instalados",
-  "@voiceCatalogFilterInstalled": {"description": "Show only installed community voices."},
+  "@voiceCatalogFilterInstalled": {
+    "description": "Show only installed community voices."
+  },
   "voiceCatalogEmpty": "No se encontraron sonidos.",
   "voiceCatalogLoadFailed": "No se pudieron cargar los sonidos. Revisa tu conexión o inténtalo más tarde si GitHub limita las solicitudes.",
   "voiceCatalogSubscribeFailed": "No se pudo instalar. El sonido puede haber cambiado, no estar disponible o ser inválido. Actualiza e inténtalo de nuevo.",
@@ -5802,11 +5796,17 @@
     }
   },
   "devicePeerLanAddress": "IP local del otro equipo",
-  "@devicePeerLanAddress": {"description": "Computer LAN pairing: distinguish this device address from the peer input."},
+  "@devicePeerLanAddress": {
+    "description": "Computer LAN pairing: distinguish this device address from the peer input."
+  },
   "deviceLocalAddressLoading": "Obteniendo la IP de este equipo…",
-  "@deviceLocalAddressLoading": {"description": "Computer LAN pairing: distinguish this device address from the peer input."},
+  "@deviceLocalAddressLoading": {
+    "description": "Computer LAN pairing: distinguish this device address from the peer input."
+  },
   "deviceLocalAddressUnavailable": "IP de este equipo no disponible. Actualiza para reintentar.",
-  "@deviceLocalAddressUnavailable": {"description": "Computer LAN pairing: distinguish this device address from the peer input."},
+  "@deviceLocalAddressUnavailable": {
+    "description": "Computer LAN pairing: distinguish this device address from the peer input."
+  },
   "deviceLanAddress": "IP de red local",
   "@deviceLanAddress": {
     "description": "Device connection address and route controls."
@@ -5857,14 +5857,24 @@
   "activityNoMatches": "Ningún recordatorio coincide con estos filtros",
   "devTemporaryNotification": "Notificación temporal",
   "quickPanelAgentCount": "Agents en el panel rápido",
-  "@quickPanelAgentCount": { "description": "Recent Agent quick panel count setting" },
+  "@quickPanelAgentCount": {
+    "description": "Recent Agent quick panel count setting"
+  },
   "quickPanelAgentCountDescription": "Número de avisos recientes de Agents mostrados en el panel rápido. Predeterminado: 21.",
-  "@quickPanelAgentCountDescription": { "description": "Recent Agent quick panel count setting" },
-  "@devTemporaryNotification": { "description": "DEV test panel temporary reminder title" },
+  "@quickPanelAgentCountDescription": {
+    "description": "Recent Agent quick panel count setting"
+  },
+  "@devTemporaryNotification": {
+    "description": "DEV test panel temporary reminder title"
+  },
   "devTemporaryNotificationDescription": "Crea un aviso local verde con un sonido brillante; su configuración temporal se elimina después de usarlo.",
-  "@devTemporaryNotificationDescription": { "description": "Explains the one-use local DEV reminder fixture" },
+  "@devTemporaryNotificationDescription": {
+    "description": "Explains the one-use local DEV reminder fixture"
+  },
   "devTemporaryNotificationCreated": "Creada: notificación temporal",
-  "@devTemporaryNotificationCreated": { "description": "DEV test panel result after a temporary reminder" },
+  "@devTemporaryNotificationCreated": {
+    "description": "DEV test panel result after a temporary reminder"
+  },
   "reminderTemporary": "Temporal · solo el próximo uso",
   "reminderDefinitionUnavailable": "Este registro antiguo no tiene una definición guardada",
   "reminderTemporaryHelp": "Se usa para el próximo recordatorio y se elimina automáticamente.",
@@ -5958,11 +5968,213 @@
     "description": "Actionable local-network access-denied or exclusive-bind error."
   },
   "sharedMcpScopeConflict": "El alcance de MCP entra en conflicto con la configuración compartida",
-  "@sharedMcpScopeConflict": { "description": "Agent MCP synchronization warning." },
+  "@sharedMcpScopeConflict": {
+    "description": "Agent MCP synchronization warning."
+  },
   "sharedMcpScopeConflictDetail": "No se sincronizó este MCP porque la configuración también la usan clientes fuera de su alcance.",
-  "@sharedMcpScopeConflictDetail": { "description": "Agent MCP synchronization warning." },
+  "@sharedMcpScopeConflictDetail": {
+    "description": "Agent MCP synchronization warning."
+  },
   "unsupportedMcpAuthentication": "El cliente no admite esta autenticación MCP",
-  "@unsupportedMcpAuthentication": { "description": "Agent MCP synchronization warning." },
+  "@unsupportedMcpAuthentication": {
+    "description": "Agent MCP synchronization warning."
+  },
   "unsupportedMcpAuthenticationDetail": "Antigravity no admite este token de entorno. Usa su flujo de autenticación o una cabecera explícita.",
-  "@unsupportedMcpAuthenticationDetail": { "description": "Agent MCP synchronization warning." }
+  "@unsupportedMcpAuthenticationDetail": {
+    "description": "Agent MCP synchronization warning."
+  },
+  "activityLastSeenHere": "Visto hasta aquí",
+  "@activityLastSeenHere": {
+    "description": "Divider between updates received since the preceding activity-list visit and historical updates."
+  },
+  "agentConversationAlreadyOpened": "Abierta · Abrir conversación de nuevo",
+  "@agentConversationAlreadyOpened": {
+    "description": "Tooltip for a notification whose conversation was successfully opened; clicking opens it again."
+  },
+  "screenshotSystemHelpMac": "Abre Captura de macOS con tu atajo. Captura, copia y guarda con la herramienta del sistema.",
+  "@screenshotSystemHelpMac": {
+    "description": "Screenshot mode selection and shortcut configuration."
+  },
+  "screenshotSystemHelpWindows": "Asigna tu atajo a Win+Shift+S. Captura, copia y guarda con la herramienta del sistema.",
+  "@screenshotSystemHelpWindows": {
+    "description": "Screenshot mode selection and shortcut configuration."
+  },
+  "devNotchSlideDown": "Deslizar hacia abajo desde la muesca",
+  "devNotchSlideLeft": "Deslizar a la izquierda desde la muesca",
+  "devNotchPreviewDescription": "Previsualiza la burbuja junto a la muesca sin crear un recordatorio.",
+  "devNotchPreviewTriggered": "Vista previa de la burbuja iniciada",
+  "notchBubbleDirection": "Burbuja oculta por la muesca",
+  "notchBubbleDown": "Deslizar debajo de la muesca",
+  "notchBubbleLeft": "Deslizar a la izquierda de la muesca",
+  "notchBubbleOff": "Desactivada",
+  "@devNotchSlideDown": {
+    "description": "DEV preview for the downward notch bubble animation."
+  },
+  "@devNotchSlideLeft": {
+    "description": "DEV preview for the leftward notch bubble animation."
+  },
+  "@devNotchPreviewDescription": {
+    "description": "Explanation for a DEV notch bubble preview."
+  },
+  "@devNotchPreviewTriggered": {
+    "description": "Status shown after a DEV notch bubble preview starts."
+  },
+  "@notchBubbleDirection": {
+    "description": "Settings label for notch bubble direction."
+  },
+  "@notchBubbleDown": {
+    "description": "Reveal the bubble below the notch."
+  },
+  "@notchBubbleLeft": {
+    "description": "Reveal the bubble to the left of the notch."
+  },
+  "@notchBubbleOff": {
+    "description": "Disable the notch bubble."
+  },
+  "@agentInstallChangeDelete": {
+    "description": "Agent install card on the Agent API screen."
+  },
+  "agentInstallStateUpdateAvailable": "Actualización disponible",
+  "agentInstallNoClients": "No se encontró ningún Agent compatible en este equipo. Copia el prompt de configuración de abajo.",
+  "@agentInstallSelected": {
+    "description": "Agent install card on the Agent API screen."
+  },
+  "@agentInstallChangeCreate": {
+    "description": "Agent install card on the Agent API screen."
+  },
+  "@agentInstallScanning": {
+    "description": "Agent install card on the Agent API screen."
+  },
+  "agentInstallChangeUpdate": "Actualizar",
+  "agentInstallPreviewTitle": "Revisar cambios",
+  "@agentInstallDescription": {
+    "description": "Agent install card on the Agent API screen."
+  },
+  "agentInstallTrustCodexHooks": "En Codex, ejecuta /hooks y confía en los Hooks de DingDong para que funcionen.",
+  "@agentInstallRemoveDescription": {
+    "description": "Agent install card on the Agent API screen."
+  },
+  "agentInstallChangeDelete": "Eliminar",
+  "agentInstallRestartClient": "Reinicia {name} para cargar el cambio.",
+  "agentInstallStateConflict": "Conflicto",
+  "@agentInstallRescan": {
+    "description": "Agent install card on the Agent API screen."
+  },
+  "agentInstallStateManual": "Configurar a mano",
+  "agentInstallSelected": "Instalar selección",
+  "agentInstallRemoveTitle": "¿Quitar DingDong de {name}?",
+  "@agentInstallStateConflict": {
+    "description": "Agent install card on the Agent API screen."
+  },
+  "@agentInstallStateNotConnected": {
+    "description": "Agent install card on the Agent API screen."
+  },
+  "@agentInstallPreviewTitle": {
+    "description": "Agent install card on the Agent API screen."
+  },
+  "@agentInstallStateUpdateAvailable": {
+    "description": "Agent install card on the Agent API screen."
+  },
+  "@agentInstallNoClients": {
+    "description": "Agent install card on the Agent API screen."
+  },
+  "@agentInstallStateUnsupported": {
+    "description": "Agent install card on the Agent API screen."
+  },
+  "@agentInstallRestartClient": {
+    "description": "Agent install card on the Agent API screen.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@agentInstallRemove": {
+    "description": "Agent install card on the Agent API screen."
+  },
+  "@agentInstallNoChanges": {
+    "description": "Agent install card on the Agent API screen."
+  },
+  "@agentInstallStateManual": {
+    "description": "Agent install card on the Agent API screen."
+  },
+  "@agentInstallTrustCodexHooks": {
+    "description": "Agent install card on the Agent API screen."
+  },
+  "@agentInstallChangeUpdate": {
+    "description": "Agent install card on the Agent API screen."
+  },
+  "agentInstallConfirm": "Instalar",
+  "agentInstallNoChanges": "Todo lo seleccionado ya está al día.",
+  "agentInstallStateConnected": "Conectado",
+  "@agentInstallPreviewDescription": {
+    "description": "Agent install card on the Agent API screen."
+  },
+  "agentInstallChangeCreate": "Crear",
+  "agentInstallScanning": "Buscando Agents…",
+  "agentInstallDescription": "DingDong encontró estos Agents en este equipo. Elige los que recibirán el servidor MCP de DingDong y los Hooks de notificación.",
+  "agentInstallRescan": "Volver a buscar",
+  "@agentInstallStateConnected": {
+    "description": "Agent install card on the Agent API screen."
+  },
+  "agentInstallStateUnsupported": "No compatible",
+  "agentInstallPreviewDescription": "DingDong cambiará estos archivos. El resto de la configuración no cambia y se guarda una copia de cada archivo.",
+  "@agentInstallConfirm": {
+    "description": "Agent install card on the Agent API screen."
+  },
+  "agentInstallTitle": "Instalar en Agents",
+  "@agentInstallRemoveTitle": {
+    "description": "Agent install card on the Agent API screen.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "agentInstallRemove": "Limpiar configuración",
+  "agentInstallRemoveDescription": "Revisa estos archivos. Al confirmar se eliminarán el MCP, los Hooks y las instrucciones de DingDong de este Agent, conservando los otros ajustes.",
+  "@agentInstallTitle": {
+    "description": "Agent install card on the Agent API screen."
+  },
+  "agentInstallStateNotConnected": "Sin conectar",
+  "agentInstallPreviewOnlyDescription": "La vista DEV detecta Agents y muestra los cambios de configuración previstos. Usa DingDong para aplicar la conexión.",
+  "@agentInstallPreviewOnlyDescription": {
+    "description": "Explains that DEV scans and previews real Agent configurations without writing."
+  },
+  "agentInstallPreviewSelected": "Revisar conexiones elegidas",
+  "@agentInstallPreviewSelected": {
+    "description": "Read-only Agent installation preview action in DEV."
+  },
+  "agentInstallManualSetup": "Configuración manual",
+  "@agentInstallManualSetup": {
+    "description": "Disclosure for the optional manual Agent setup fallback."
+  },
+  "notchHoverEnabled": "Mostrar avisos al pasar el cursor por la muesca",
+  "notchHoverDescription": "Si el icono queda oculto, los avisos salen por la izquierda de la muesca.",
+  "@notchHoverEnabled": {"description": "Notch hover reminder switch"},
+  "@notchHoverDescription": {"description": "Left-side reveal when the tray icon is obscured"},
+  "recentNotifications": "Notificaciones recientes",
+  "@recentNotifications": {"description": "recentNotifications"},
+  "agentInstallInstructions": "Instrucciones de conexión",
+  "@agentInstallInstructions": {"description": "agentInstallInstructions"},
+  "agentInstallAdvancedAdapters": "Avanzado: configuración de Agent",
+  "@agentInstallAdvancedAdapters": {"description": "agentInstallAdvancedAdapters"},
+  "agentInstallWelcomeTitle": "Conectar tus Agents locales",
+  "@agentInstallWelcomeTitle": {"description": "agentInstallWelcomeTitle"},
+  "agentInstallWelcomeDescription": "DingDong puede detectar los Agents e instalar su configuración de conexión. Puedes omitirlo y volver desde el panel → Actividad → Conexiones de Agent.",
+  "@agentInstallWelcomeDescription": {"description": "agentInstallWelcomeDescription"},
+  "agentInstallSkip": "Omitir por ahora",
+  "@agentInstallSkip": {"description": "agentInstallSkip"},
+  "agentInstallStart": "Detectar y conectar",
+  "@agentInstallStart": {"description": "agentInstallStart"},
+  "agentInstallRemovePreviewDescription": "Estos ajustes de DingDong se pueden eliminar de este Agent. DEV solo muestra una vista previa y no modifica los archivos.",
+  "@agentInstallRemovePreviewDescription": {"description":"Read-only DEV cleanup preview"},
+  "devNewUserExperience": "Experiencia inicial",
+  "@devNewUserExperience": {"description": "devNewUserExperience"},
+  "devNewUserExperienceDescription": "Revisa la experiencia de la primera instalación.",
+  "@devNewUserExperienceDescription": {"description": "devNewUserExperienceDescription"},
+  "devAgentOnboardingPreviewDescription": "Abre la guía inicial de conexión en el panel. Puedes verla varias veces.",
+  "@devAgentOnboardingPreviewDescription": {"description": "devAgentOnboardingPreviewDescription"},
+  "devAgentOnboardingOpened": "Abierta: guía inicial de conexión",
+  "@devAgentOnboardingOpened": {"description": "devAgentOnboardingOpened"}
 }

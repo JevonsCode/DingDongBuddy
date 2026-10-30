@@ -9,6 +9,8 @@ Map<String, List<String>> _settingsSearchTerms(BuildContext context) => {
     context.l10n.launchAtStartup,
     context.l10n.startDingDongAfterYouSignInToThisComputer,
     context.l10n.hideDockIcon,
+    context.l10n.notchHoverEnabled,
+    context.l10n.notchHoverDescription,
     context.l10n.keepDingDongInTheMenuBarWithoutShowingItInTheDock,
     context.l10n.menuBarIconHiddenByTheCameraHousing,
     context.l10n.findIcon,
@@ -130,6 +132,7 @@ Map<String, List<String>> _settingsSearchTerms(BuildContext context) => {
     context.l10n.countWindowHours,
   ],
   'notifications': [
+    context.l10n.notificationsAndSounds,
     context.l10n.notifications,
     context.l10n.chooseWhichAgentEventsShouldNotifyYouThenCustomizeThe_7d9141e4,
     context.l10n.completionMinimumDuration,

@@ -5,6 +5,7 @@ import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/features/activity/data/agent_activity_store.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
+import 'package:dingdong/features/activity/domain/agent_activity_window_protocol.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/agent_api/domain/conversation_token_usage.dart';
@@ -27,6 +28,220 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets(
+    'resource manager open icon retains host acknowledgement and resets on the next update',
+    (tester) async {
+      const channels = MethodChannel('mixin.one/desktop_multi_window/channels');
+      const registry = MethodChannel('mixin.one/desktop_multi_window');
+      const nativeWindow = MethodChannel('window_manager');
+      final messenger = tester.binding.defaultBinaryMessenger;
+      messenger.setMockMethodCallHandler(channels, (_) async => null);
+      messenger.setMockMethodCallHandler(nativeWindow, (_) async => null);
+      messenger.setMockMethodCallHandler(
+        registry,
+        (call) async => call.method == 'getWindowDefinition'
+            ? {'windowId': 'opened-test', 'windowArgument': ''}
+            : null,
+      );
+      addTearDown(() {
+        messenger.setMockMethodCallHandler(channels, null);
+        messenger.setMockMethodCallHandler(registry, null);
+        messenger.setMockMethodCallHandler(nativeWindow, null);
+      });
+      final library = LibraryViewModel(InMemoryResourceStore());
+      await library.load();
+      final clipboard = ClipboardViewModel(InMemoryClipboardStore())..load();
+      final store = InMemoryAgentActivityStore();
+      final host = ActivityController(
+        store: store,
+        now: () => DateTime.utc(2026, 10, 30),
+      )..load();
+      const target = AgentConversationTarget(
+        client: AgentClient.codex,
+        conversationId: 'resource-window-opened',
+      );
+      const reminder = ReminderProfile(
+        id: 'review',
+        name: 'Review',
+        color: TrayNotificationColor.pink,
+      );
+      void record(String message) => host.record(
+        source: 'Codex',
+        message: message,
+        completedAt: DateTime.utc(2026, 10, 1),
+        conversationTarget: target,
+        reminder: reminder,
+      );
+      record('Ready to open');
+      final auxiliary = ActivityController(
+        store: store,
+        persistHistory: false,
+        now: () => DateTime.utc(2026, 10, 30),
+      )..load();
+      final issues = IssueCenterController();
+      final launcher = _FakeAgentConversationLauncher();
+      addTearDown(library.dispose);
+      addTearDown(clipboard.dispose);
+      addTearDown(host.dispose);
+      addTearDown(auxiliary.dispose);
+      addTearDown(issues.dispose);
+      addTearDown(launcher.dispose);
+      var acknowledgements = 0;
+      await tester.pumpWidget(
+        ResourceManagerApp(
+          viewModel: library,
+          clipboardViewModel: clipboard,
+          activityController: auxiliary,
+          issueCenterController: issues,
+          settings: const AppSettings(language: AppLanguagePreference.chinese),
+          windowController: WindowController.fromWindowId('opened-test'),
+          initialDestination: ResourceManagerDestination.recentAgents,
+          agentConversationLauncher: launcher,
+          onActivityOpened: (activity) async {
+            acknowledgements++;
+            host.markOpened(activity);
+            auxiliary.reload();
+          },
+          onActivityViewed: (sequence) async {
+            host.markFeedViewed(sequence);
+            auxiliary.reload();
+          },
+        ),
+      );
+      await tester.pumpAndSettle();
+      final icon = find.byKey(
+        const Key('agent-activity-manager-open-conversation'),
+      );
+      final neutralColor = tester.widget<Icon>(icon).color;
+      final openedColor = Color(0xff000000 | reminder.color.rgbValue);
+      expect(neutralColor, isNot(openedColor));
+      await tester.tap(icon);
+      await tester.pumpAndSettle();
+      expect(launcher.opened?.toJson(), target.toJson());
+      expect(acknowledgements, 1);
+      expect(host.activities.single.opened, isTrue);
+      expect(store.load().activities.single.opened, isTrue);
+      expect(tester.widget<Icon>(icon).color, openedColor);
+
+      await tester.tap(find.byKey(const Key('resource-manager-nav-resources')));
+      await tester.pumpAndSettle();
+      auxiliary.reload();
+      await tester.tap(
+        find.byKey(const Key('resource-manager-nav-agent-activity')),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.widget<Icon>(icon).color, openedColor);
+
+      record('A new update');
+      await _sendWindowMethod(
+        messenger,
+        channel: 'mixin.one/window_controller/opened-test',
+        method: agentActivityChangedMethod,
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('A new update'), findsOneWidget);
+      expect(auxiliary.activities.single.opened, isFalse);
+      expect(tester.widget<Icon>(icon).color, neutralColor);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+    },
+  );
+
+  testWidgets(
+    'hidden manager preserves the checkpoint and reopening starts a new visit',
+    (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.windows;
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+      const channels = MethodChannel('mixin.one/desktop_multi_window/channels');
+      const registry = MethodChannel('mixin.one/desktop_multi_window');
+      const nativeWindow = MethodChannel('window_manager');
+      final messenger = tester.binding.defaultBinaryMessenger;
+      messenger.setMockMethodCallHandler(channels, (_) async => null);
+      messenger.setMockMethodCallHandler(nativeWindow, (_) async => null);
+      messenger.setMockMethodCallHandler(
+        registry,
+        (call) async => call.method == 'getWindowDefinition'
+            ? {'windowId': 'visit-test', 'windowArgument': ''}
+            : null,
+      );
+      addTearDown(() {
+        messenger.setMockMethodCallHandler(channels, null);
+        messenger.setMockMethodCallHandler(registry, null);
+        messenger.setMockMethodCallHandler(nativeWindow, null);
+      });
+      final library = LibraryViewModel(InMemoryResourceStore());
+      await library.load();
+      final clipboard = ClipboardViewModel(InMemoryClipboardStore())..load();
+      final activity = ActivityController(
+        store: InMemoryAgentActivityStore(
+          AgentActivityHistory(
+            latestSequence: 2,
+            lastViewedSequence: 1,
+            activities: [
+              for (final sequence in [1, 2])
+                AgentActivity(
+                  id: 'seed-$sequence',
+                  source: 'Codex',
+                  message: sequence == 1
+                      ? 'Historical visit'
+                      : 'Previous new message',
+                  completedAt: DateTime.utc(2026, 10, 1, sequence),
+                  unseen: false,
+                  sequence: sequence,
+                ),
+            ],
+          ),
+        ),
+      )..load();
+      final issues = IssueCenterController();
+      addTearDown(activity.dispose);
+      addTearDown(issues.dispose);
+      await tester.pumpWidget(
+        ResourceManagerApp(
+          viewModel: library,
+          clipboardViewModel: clipboard,
+          activityController: activity,
+          issueCenterController: issues,
+          settings: const AppSettings(language: AppLanguagePreference.chinese),
+          windowController: WindowController.fromWindowId('visit-test'),
+          initialDestination: ResourceManagerDestination.recentAgents,
+          initialWindowVisible: false,
+          agentConversationLauncher: _FakeAgentConversationLauncher(),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(activity.lastViewedSequence, 1);
+      await _sendWindowManagerEvent(messenger, 'focus');
+      await tester.pumpAndSettle();
+      expect(activity.lastViewedSequence, 2);
+      expect(find.text('上次看到这里'), findsOneWidget);
+      await _sendWindowManagerEvent(messenger, 'close');
+      await tester.pumpAndSettle();
+      activity.record(
+        source: 'Codex',
+        message: 'Newest visit',
+        completedAt: DateTime.utc(2026, 10, 2),
+      );
+      await tester.pumpAndSettle();
+      expect(activity.lastViewedSequence, 2);
+      await _sendWindowManagerEvent(messenger, 'focus');
+      await tester.pumpAndSettle();
+      final divider = find.text('上次看到这里');
+      expect(divider, findsOneWidget);
+      expect(
+        tester.getTopLeft(find.text('Newest visit')).dy,
+        lessThan(tester.getTopLeft(divider).dy),
+      );
+      expect(
+        tester.getTopLeft(find.text('Previous new message')).dy,
+        greaterThan(tester.getTopLeft(divider).dy),
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+      debugDefaultTargetPlatformOverride = null;
+    },
+  );
 
   testWidgets('Windows resource manager close hides without exiting', (
     WidgetTester tester,

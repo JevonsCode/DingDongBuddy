@@ -25,6 +25,7 @@ import 'package:dingdong/features/jev/data/jev_factory.dart';
 import 'package:dingdong/features/jev/data/jev_routes.dart';
 import 'package:dingdong/features/jev/data/jev_service.dart';
 import 'package:dingdong/features/library/data/agent_resource_synchronizer.dart';
+import 'package:dingdong/features/library/data/installer_resource_adapters.dart';
 import 'package:dingdong/features/library/data/resource_file_service.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/trigger_group_file_service.dart';
@@ -379,7 +380,7 @@ final class AppDependencies {
               paths.development &&
               (Platform.isWindows ||
                   const bool.fromEnvironment('DINGDONG_PREVIEW_SANDBOX')),
-          loadAdapters: agentAdapterRepository.loadEffectiveAdapters,
+          loadAdapters: () => loadInstallerResourceAdapters(agentAdapterRepository),
           skillPackageInstaller: skillPackageInstaller,
           triggerGroupStore: baseTriggerGroupStore,
         );

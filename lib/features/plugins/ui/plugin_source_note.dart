@@ -58,9 +58,7 @@ class _PluginSourceNoteState extends State<PluginSourceNote> {
             ),
             const SizedBox(height: 8),
             Text(
-              source.isCommit
-                  ? l.pluginSelectionSourceNote
-                  : l.pluginScreenshotSourceNote,
+              l.pluginSelectionSourceNote,
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 12),

@@ -1,5 +1,6 @@
 import 'package:dingdong/app/dingdong_app.dart';
 import 'package:dingdong/core/models/resource.dart';
+import 'package:dingdong/features/agent_api/domain/agent_install.dart';
 import 'package:dingdong/features/agent_api/domain/agent_setup_revision.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/domain/library_transfer_gateway.dart';
@@ -13,6 +14,138 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  for (final seen in [false, true]) {
+    testWidgets(
+      'DEV preview can repeat without changing onboarding seen=$seen',
+      (tester) async {
+        _useCompactWindow(tester);
+        final backend = MemoryPreferencesBackend({
+          'dingdong.onboarding.mcpAccessSeen': seen,
+        });
+        final controller = ShellController(initialIndex: 3);
+        addTearDown(controller.dispose);
+        await tester.pumpWidget(
+          DingDongApp(
+            developmentBuild: true,
+            settingsRepository: SettingsRepository(backend),
+            shellController: controller,
+            agentInstallGateway: _InstallerGateway(),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final saved = Map<String, Object>.of(backend.values);
+        for (var attempt = 0; attempt < 2; attempt++) {
+          controller.requestAgentInstallPreview();
+          await tester.pumpAndSettle();
+          expect(
+            find.byKey(const Key('agent-install-onboarding')),
+            findsOneWidget,
+          );
+          await tester.tap(find.byKey(const Key('agent-install-skip')));
+          await tester.pumpAndSettle();
+          expect(backend.values, saved);
+        }
+        controller.requestAgentInstallPreview();
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('agent-install-start')));
+        await tester.pumpAndSettle();
+        expect(controller.selectedIndex, 3);
+        expect(find.byKey(const Key('agent-install-card')), findsOneWidget);
+        expect(find.byKey(const Key('agent-install-onboarding')), findsNothing);
+      },
+    );
+  }
+
+  testWidgets('production ignores the DEV onboarding preview request', (
+    tester,
+  ) async {
+    _useCompactWindow(tester);
+    final controller = ShellController();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      DingDongApp(
+        settingsRepository: SettingsRepository(
+          MemoryPreferencesBackend({'dingdong.onboarding.mcpAccessSeen': true}),
+        ),
+        shellController: controller,
+        agentInstallGateway: _InstallerGateway(),
+      ),
+    );
+    await tester.pumpAndSettle();
+    controller.requestAgentInstallPreview();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('agent-install-onboarding')), findsNothing);
+  });
+
+  testWidgets('first install can skip Agent setup and reopen it later', (
+    tester,
+  ) async {
+    _useCompactWindow(tester);
+    final backend = MemoryPreferencesBackend();
+    final controller = ShellController();
+    final installer = _InstallerGateway();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      DingDongApp(
+        settingsRepository: SettingsRepository(backend),
+        shellController: controller,
+        agentInstallGateway: installer,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('agent-install-onboarding')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('agent-install-skip')));
+    await tester.pumpAndSettle();
+    expect(backend.values['dingdong.onboarding.mcpAccessSeen'], true);
+    await tester.tap(find.byKey(const Key('today-agent-api')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('agent-install-card')), findsOneWidget);
+    controller.open(0);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('agent-install-onboarding')), findsNothing);
+  });
+
+  testWidgets('setup update badge follows detection when the popup opens', (
+    tester,
+  ) async {
+    _useCompactWindow(tester);
+    final backend = MemoryPreferencesBackend({
+      'dingdong.onboarding.mcpAccessSeen': true,
+      'dingdong.agentApi.acknowledgedSetupRevision': 0,
+    });
+    final installer = _InstallerGateway();
+    final visible = ValueNotifier(true);
+    addTearDown(visible.dispose);
+    await tester.pumpWidget(
+      DingDongApp(
+        settingsRepository: SettingsRepository(backend),
+        agentInstallGateway: installer,
+        windowVisible: visible,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const Key('today-agent-setup-update-badge')),
+      findsNothing,
+    );
+    installer.state = AgentInstallState.updateAvailable;
+    visible.value = false;
+    visible.value = true;
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const Key('today-agent-setup-update-badge')),
+      findsOneWidget,
+    );
+    installer.state = AgentInstallState.connected;
+    visible.value = false;
+    visible.value = true;
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const Key('today-agent-setup-update-badge')),
+      findsNothing,
+    );
+  });
+
   testWidgets('empty activity connects an Agent again after setup was viewed', (
     WidgetTester tester,
   ) async {
@@ -201,4 +334,29 @@ final class _TransferGateway implements LibraryTransferGateway {
 
   @override
   Future<String?> saveExport({required String contents}) async => null;
+}
+
+final class _InstallerGateway implements AgentInstallGateway {
+  AgentInstallState state = AgentInstallState.connected;
+  @override
+  bool get previewOnly => true;
+  @override
+  Future<List<AgentInstallClient>> scan() async => [
+    AgentInstallClient(
+      id: 'codex',
+      name: 'Codex',
+      detected: true,
+      state: state,
+    ),
+  ];
+  @override
+  Future<List<AgentInstallOutcome>> plan(List<String> ids) async => [];
+  @override
+  Future<List<AgentInstallOutcome>> planRemoval(List<String> ids) async => [];
+  @override
+  Future<List<AgentInstallOutcome>> apply(List<String> ids) async =>
+      throw StateError('preview');
+  @override
+  Future<List<AgentInstallOutcome>> remove(List<String> ids) async =>
+      throw StateError('preview');
 }

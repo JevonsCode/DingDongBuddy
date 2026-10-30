@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/domain/agent_launcher_configuration.dart';
@@ -6,6 +7,46 @@ import 'package:dingdong/platform/native_agent_conversation_launcher.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test(
+    'launcher reads shared extensions and ignores install-only files',
+    () async {
+      final extensions = await Directory.systemTemp.createTemp(
+        'jvs-a-launcher-',
+      );
+      addTearDown(() => extensions.delete(recursive: true));
+      await File('${extensions.path}/installer-only.json').writeAsString(
+        '{"schemaVersion":1,"install":{"name":"Local Installer"}}',
+      );
+      await File(
+        '${extensions.path}/cursor.json',
+      ).writeAsString('{"schemaVersion":1,"name":"Cursor","enabled":false}');
+      final launcher = NativeAgentConversationLauncher(
+        operatingSystem: 'macos',
+        extensionsDirectory: extensions.path,
+      );
+      const target = AgentConversationTarget(
+        client: AgentClient.cursor,
+        conversationId: 'bc-session',
+      );
+      await launcher.preflight([target]);
+      expect(launcher.canOpen(target), isFalse);
+      await expectLater(launcher.open(target), throwsStateError);
+    },
+  );
+
+  test('Codex malformed IDs are rejected before creating a deep link', () {
+    final launcher = NativeAgentConversationLauncher(operatingSystem: 'macos');
+    expect(
+      launcher.canOpen(
+        const AgentConversationTarget(
+          client: AgentClient.codex,
+          conversationId: 'thread-1',
+        ),
+      ),
+      isFalse,
+    );
+  });
+
   test(
     'Codex conversation opens through its allow-listed thread URL',
     () async {
@@ -20,13 +61,16 @@ void main() {
           );
       const AgentConversationTarget target = AgentConversationTarget(
         client: AgentClient.codex,
-        conversationId: 'thread-1',
+        conversationId: '01a18c7d-9422-7482-adc4-c23b2f12d465',
       );
 
       expect(launcher.canOpen(target), isTrue);
       await launcher.open(target);
 
-      expect(opened.toString(), 'codex://threads/thread-1');
+      expect(
+        opened.toString(),
+        'codex://threads/01a18c7d-9422-7482-adc4-c23b2f12d465',
+      );
     },
   );
 
@@ -85,7 +129,7 @@ void main() {
         );
     const AgentConversationTarget target = AgentConversationTarget(
       client: AgentClient.codex,
-      conversationId: 'thread-pending-check',
+      conversationId: '01a18c7d-9422-7482-adc4-c23b2f12d466',
     );
 
     expect(launcher.canOpen(target), isFalse);

@@ -27,6 +27,8 @@ final class SettingsViewModel extends ChangeNotifier
     Future<void> Function()? onShowMenuBarRecovery,
     Future<void> Function(TrayNotificationColor value)?
     onTrayNotificationColorChanged,
+    Future<void> Function(NotchBubbleDirection value)?
+    onNotchBubbleDirectionChanged,
     Future<bool> Function(GlobalHotKey value)? onGlobalHotKeyChanged,
     Future<void> Function(NotificationRules value)? onNotificationRulesChanged,
     Future<void> Function(bool enabled)? onLifecycleTelemetryChanged,
@@ -48,6 +50,7 @@ final class SettingsViewModel extends ChangeNotifier
        _onDockIconHiddenChanged = onDockIconHiddenChanged,
        _onShowMenuBarRecovery = onShowMenuBarRecovery,
        _onTrayNotificationColorChanged = onTrayNotificationColorChanged,
+       _onNotchBubbleDirectionChanged = onNotchBubbleDirectionChanged,
        _onGlobalHotKeyChanged = onGlobalHotKeyChanged,
        _onNotificationRulesChanged = onNotificationRulesChanged,
        _onLifecycleTelemetryChanged = onLifecycleTelemetryChanged,
@@ -69,6 +72,8 @@ final class SettingsViewModel extends ChangeNotifier
   final Future<void> Function()? _onShowMenuBarRecovery;
   final Future<void> Function(TrayNotificationColor value)?
   _onTrayNotificationColorChanged;
+  final Future<void> Function(NotchBubbleDirection value)?
+  _onNotchBubbleDirectionChanged;
   final Future<bool> Function(GlobalHotKey value)? _onGlobalHotKeyChanged;
   final Future<void> Function(NotificationRules value)?
   _onNotificationRulesChanged;
@@ -172,6 +177,10 @@ final class SettingsViewModel extends ChangeNotifier
       if (_disposed) return;
       await _onTrayNotificationColorChanged?.call(
         _settings.trayNotificationColor,
+      );
+      if (_disposed) return;
+      await _onNotchBubbleDirectionChanged?.call(
+        _settings.notchBubbleDirection,
       );
       if (_disposed) return;
       await _onNotificationRulesChanged?.call(_settings.notificationRules);
@@ -492,6 +501,18 @@ final class SettingsViewModel extends ChangeNotifier
       await _save();
     } on Object {
       _errorMessage = 'Menu bar notification color could not be updated.';
+      notifyListeners();
+    }
+  }
+
+  Future<void> setNotchBubbleDirection(NotchBubbleDirection value) async {
+    _settings = _settings.copyWith(notchBubbleDirection: value);
+    notifyListeners();
+    try {
+      await _onNotchBubbleDirectionChanged?.call(value);
+      await _save();
+    } on Object {
+      _errorMessage = 'Notch bubble direction could not be updated.';
       notifyListeners();
     }
   }

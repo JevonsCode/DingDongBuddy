@@ -29,6 +29,50 @@ void main() {
   });
 
   test(
+    'retired backend does not survive restart but its shortcut does',
+    () async {
+      await service.load();
+      final shortcut = const GlobalHotKey(key: 'B', alt: true);
+      await service.manage('configure', {
+        'enabled': true,
+        'backend': 'system',
+        'shortcut': shortcut.toPlatformArguments(),
+      });
+      final restarted = ScreenshotPluginService(preferences, _Gateway());
+      await restarted.load();
+      final status = await restarted.manage('status', {});
+      expect(status.containsKey('backend'), isFalse);
+      expect(restarted.configuration.shortcut, shortcut);
+      expect(status['running'], isTrue);
+    },
+  );
+
+  test(
+    'a failed shortcut write restores the previous native shortcut',
+    () async {
+      final failing = _FailingPreferences();
+      final local = ScreenshotPluginService(failing, gateway);
+      await local.load();
+      await local.manage('configure', {'enabled': true});
+      failing.fail = true;
+      await expectLater(
+        local.manage('configure', {
+          'shortcut': const GlobalHotKey(
+            key: 'B',
+            alt: true,
+          ).toPlatformArguments(),
+        }),
+        throwsA(isA<ScreenshotPluginException>()),
+      );
+      expect(gateway.current.shortcut, ScreenshotConfiguration.defaultShortcut);
+      expect(
+        local.configuration.shortcut,
+        ScreenshotConfiguration.defaultShortcut,
+      );
+    },
+  );
+
+  test(
     'enabled configuration survives restart through one preference',
     () async {
       await service.load();

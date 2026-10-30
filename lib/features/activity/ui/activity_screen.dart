@@ -34,6 +34,7 @@ class ActivityScreen extends StatefulWidget {
     required this.onOpenWorkspace,
     required this.onOpenAgentApi,
     this.agentBaseUri,
+    this.agentSetupNeedsUpdate,
     this.onHideWindow,
     this.contextMenuGateway,
     this.resourceManagerLauncher,
@@ -50,6 +51,7 @@ class ActivityScreen extends StatefulWidget {
   final ValueChanged<int> onOpenWorkspace;
   final VoidCallback onOpenAgentApi;
   final Uri? agentBaseUri;
+  final bool? agentSetupNeedsUpdate;
   final Future<void> Function()? onHideWindow;
   final DesktopContextMenuGateway? contextMenuGateway;
   final ResourceManagerLauncher? resourceManagerLauncher;
@@ -77,8 +79,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
       ]),
       builder: (BuildContext context, Widget? child) {
         _scheduleSeenAcknowledgement();
-        return RecentAgentFeed(
+        final feed = RecentAgentFeed(
           controller: widget.activityController,
+          visible: _windowIsVisible,
           compact: true,
           pageSize: widget.settingsViewModel.settings.quickPanelAgentCount,
           now: widget.now,
@@ -117,10 +120,11 @@ class _ActivityScreenState extends State<ActivityScreen> {
                           : '${widget.agentBaseUri!.port}',
                       label: context.l10n.apiAgentConnections,
                       badge:
-                          widget
-                              .settingsViewModel
-                              .settings
-                              .requiresAgentSetupUpdate
+                          (widget.agentSetupNeedsUpdate ??
+                              widget
+                                  .settingsViewModel
+                                  .settings
+                                  .requiresAgentSetupUpdate)
                           ? _MetricCardBadge(
                               key: const Key('today-agent-setup-update-badge'),
                               label: context.l10n.update,
@@ -222,6 +226,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
             );
           },
         );
+        return Scaffold(backgroundColor: Colors.transparent, body: feed);
       },
     );
   }
@@ -275,15 +280,17 @@ class _ActivityScreenState extends State<ActivityScreen> {
         !widget.agentConversationLauncher.canOpen(target)) {
       return null;
     }
-    return () => unawaited(_openConversation(context, target));
+    return () => unawaited(_openConversation(context, activity));
   }
 
   Future<void> _openConversation(
     BuildContext context,
-    AgentConversationTarget target,
+    AgentActivity activity,
   ) async {
+    final controller = widget.activityController;
     try {
-      await widget.agentConversationLauncher.open(target);
+      await widget.agentConversationLauncher.open(activity.conversationTarget!);
+      controller.markOpened(activity);
       await widget.onHideWindow?.call();
     } on Object {
       if (!context.mounted) {

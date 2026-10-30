@@ -20,6 +20,7 @@ import 'package:dingdong/core/widgets/desktop_context_menu.dart';
 import 'package:dingdong/features/activity/data/agent_activity_store.dart';
 import 'package:dingdong/features/activity/data/agent_launcher_configuration_store.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
+import 'package:dingdong/features/activity/domain/agent_activity_window_protocol.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/agent_adapters/data/agent_adapter_repository.dart';
@@ -27,6 +28,7 @@ import 'package:dingdong/features/agent_adapters/data/codex_completion_hook_gate
 import 'package:dingdong/features/agent_adapters/data/codex_thread_inspector.dart';
 import 'package:dingdong/features/agent_adapters/ui/agent_adapter_controller.dart';
 import 'package:dingdong/features/agent_api/data/agent_bridge.dart';
+import 'package:dingdong/features/agent_api/data/agent_install_gateway.dart';
 import 'package:dingdong/features/agent_api/data/ding_request.dart';
 import 'package:dingdong/features/ai_companion/data/ai_companion_store.dart';
 import 'package:dingdong/features/ai_companion/ui/ai_companion_controller.dart';
@@ -45,6 +47,7 @@ import 'package:dingdong/features/issue_center/data/duplicate_resource_cleanup.d
 import 'package:dingdong/features/issue_center/domain/app_issue.dart';
 import 'package:dingdong/features/issue_center/ui/issue_center_controller.dart';
 import 'package:dingdong/features/library/data/agent_resource_synchronizer.dart';
+import 'package:dingdong/features/library/data/installer_resource_adapters.dart';
 import 'package:dingdong/features/library/data/resource_file_service.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/trigger_group_file_service.dart';
@@ -54,7 +57,6 @@ import 'package:dingdong/features/library/ui/library_view_model.dart';
 import 'package:dingdong/features/library/ui/library_view_model_factory.dart';
 import 'package:dingdong/features/library/ui/resource_manager_app.dart';
 import 'package:dingdong/features/screenshot/data/screenshot_plugin_service.dart';
-import 'package:dingdong/features/screenshot/ui/screenshot_editor_app.dart';
 import 'package:dingdong/features/selection/domain/selection_plugin_gateway.dart';
 import 'package:dingdong/features/selection/ui/selection_overlay_app.dart';
 import 'package:dingdong/features/settings/data/http_release_metadata_source.dart';
@@ -128,10 +130,6 @@ Future<void> main(List<String> arguments) async {
         parentWindowId: windowArguments['parentWindowId']! as String,
       ),
     );
-    return;
-  }
-  if (windowArguments['kind'] == screenshotEditorWindowKind) {
-    await runScreenshotEditorWindow(windowController, windowArguments);
     return;
   }
   if (windowArguments['kind'] == deviceLinkManagerWindowKind) {
@@ -404,6 +402,7 @@ Future<void> main(List<String> arguments) async {
   await deviceLinkController.start();
   activityController.addListener(() {
     unawaited(deviceLinkController.syncAgentState());
+    unawaited(resourceManagerLauncher.refreshActivity());
   });
   deviceLinkController.addListener(() {
     unawaited(deviceLinkManagerLauncher.refresh());
@@ -476,6 +475,7 @@ Future<void> main(List<String> arguments) async {
     onDockIconHiddenChanged: shellGateway.setDockIconHidden,
     onShowMenuBarRecovery: const NativeMenuBarRecoveryGateway().show,
     onTrayNotificationColorChanged: shellGateway.setTrayNotificationColor,
+    onNotchBubbleDirectionChanged: shellGateway.setNotchBubbleDirection,
     onNotificationRulesChanged: shellGateway.setNotificationRules,
     onGlobalHotKeyChanged: isolatedPreview
         ? null
@@ -504,19 +504,7 @@ Future<void> main(List<String> arguments) async {
     NativeScreenshotPluginGateway(
       labels: () {
         final l = currentLocalizations();
-        return {
-          'rectangle': l.screenshotRectangle,
-          'arrow': l.screenshotArrow,
-          'text': l.screenshotText,
-          'undo': l.screenshotUndo,
-          'reselect': l.screenshotReselect,
-          'copy': l.copy,
-          'save': l.save,
-          'cancel': l.cancel,
-          'hint': l.screenshotNativeHint,
-          'exportError': l.screenshotExportError,
-          'captureError': l.screenshotCaptureError,
-        };
+        return {'cancel': l.cancel, 'captureError': l.screenshotCaptureError};
       },
     ),
     conflictsWithShortcut: (shortcut) async {
@@ -790,6 +778,28 @@ Future<void> main(List<String> arguments) async {
       case resourceLibraryChangedMethod:
         shellController.requestLibraryRefresh();
         return null;
+      case agentActivityOpenedMethod:
+        final values = call.arguments;
+        if (values is! Map ||
+            values['id'] is! String ||
+            values['sequence'] is! int) {
+          throw ArgumentError('Invalid activity opening acknowledgement.');
+        }
+        for (final activity in activityController.activities) {
+          if (activity.id == values['id'] &&
+              activity.sequence == values['sequence']) {
+            activityController.markOpened(activity);
+            break;
+          }
+        }
+        return null;
+      case agentActivityViewedMethod:
+        final sequence = call.arguments;
+        if (sequence is! int) {
+          throw ArgumentError('Invalid activity visit acknowledgement.');
+        }
+        activityController.markFeedViewed(sequence);
+        return null;
       case deviceLinkShareRecordMethod:
         final Map<Object?, Object?> values = call.arguments! as Map;
         deviceLinkController.requestShare(
@@ -820,6 +830,13 @@ Future<void> main(List<String> arguments) async {
   );
   runApp(
     DingDongApp(
+      agentInstallGateway: LocalAgentInstallGateway(
+        // Preview the installed product's configuration, never a DEV MCP path.
+        mcpCommandPath: appDataPaths.development && Platform.isMacOS
+            ? '/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp'
+            : _mcpCommandPath(),
+        previewOnly: appDataPaths.development,
+      ),
       tokenUsageBackgroundService: tokenUsageBackgroundService,
       activityController: activityController,
       developmentBuild: appDataPaths.development,

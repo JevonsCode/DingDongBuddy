@@ -13,7 +13,6 @@ class PluginSource {
     required this.license,
     required this.url,
     required this.metadataUrl,
-    this.isCommit = false,
   });
 
   final String name;
@@ -21,15 +20,6 @@ class PluginSource {
   final String license;
   final String url;
   final String metadataUrl;
-  final bool isCommit;
-
-  static const screenshot = PluginSource(
-    name: 'pro_image_editor',
-    version: '14.16.0',
-    license: 'BSD-3-Clause',
-    url: 'https://github.com/hm21/pro_image_editor',
-    metadataUrl: 'https://pub.dev/api/packages/pro_image_editor',
-  );
 
   static const selection = PluginSource(
     name: 'selection-hook',
@@ -38,39 +28,21 @@ class PluginSource {
     url: 'https://github.com/0xfullex/selection-hook',
     metadataUrl:
         'https://api.github.com/repos/0xfullex/selection-hook/commits/main',
-    isCommit: true,
   );
 
-  String get displayVersion => isCommit ? version.substring(0, 12) : version;
+  String get displayVersion => version.substring(0, 12);
 
   PluginUpstreamState compareMetadata(Map<String, dynamic> json) {
-    final value = isCommit ? json['sha'] : (json['latest'] as Map?)?['version'];
+    final value = json['sha'];
     if (value is! String || value.isEmpty) {
       throw const FormatException('Missing upstream version');
     }
-    if (isCommit) {
-      if (!RegExp(r'^[0-9a-f]{40}$').hasMatch(value)) {
-        throw const FormatException('Invalid upstream commit');
-      }
-      return value == version
-          ? PluginUpstreamState.current
-          : PluginUpstreamState.changed;
+    if (!RegExp(r'^[0-9a-f]{40}$').hasMatch(value)) {
+      throw const FormatException('Invalid upstream commit');
     }
-    final pattern = RegExp(r'^(\d+)\.(\d+)\.(\d+)$');
-    final remote = pattern.firstMatch(value);
-    final local = pattern.firstMatch(version);
-    if (remote == null || local == null) {
-      throw const FormatException('Invalid stable version');
-    }
-    for (var i = 1; i <= 3; i++) {
-      final difference = int.parse(remote[i]!) - int.parse(local[i]!);
-      if (difference != 0) {
-        return difference > 0
-            ? PluginUpstreamState.changed
-            : PluginUpstreamState.current;
-      }
-    }
-    return PluginUpstreamState.current;
+    return value == version
+        ? PluginUpstreamState.current
+        : PluginUpstreamState.changed;
   }
 
   /// On-demand metadata only. No screen, selection, model settings or tokens

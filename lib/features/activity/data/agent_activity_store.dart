@@ -31,11 +31,15 @@ final class AgentActivityHistory {
     this.activities = const <AgentActivity>[],
     this.recentPageSize = 21,
     this.completionTimes = const <DateTime>[],
+    this.latestSequence = 0,
+    this.lastViewedSequence,
   });
 
   final int recentPageSize;
   final List<AgentActivity> activities;
   final List<DateTime> completionTimes;
+  final int latestSequence;
+  final int? lastViewedSequence;
 }
 
 abstract interface class AgentActivityStore {
@@ -54,11 +58,21 @@ final class FileAgentActivityStore implements AgentActivityStore {
 
   @override
   AgentActivityHistory load() {
-    if (!file.existsSync()) {
-      return const AgentActivityHistory();
-    }
     try {
-      final Object? decoded = jsonDecode(file.readAsStringSync());
+      String? contents;
+      // The host flushes .tmp before moving the current file to .bak. An
+      // auxiliary engine can observe that short rename gap. If .tmp has
+      // already moved into place by the time it is opened, retry current.
+      for (final candidate in [file, File('${file.path}.tmp'), file]) {
+        try {
+          contents = candidate.readAsStringSync();
+          break;
+        } on FileSystemException {
+          continue;
+        }
+      }
+      if (contents == null) return const AgentActivityHistory();
+      final Object? decoded = jsonDecode(contents);
       if (decoded is! Map<String, Object?> ||
           (decoded['version'] != 1 && decoded['version'] != 2) ||
           decoded['activities'] is! List<Object?>) {
@@ -85,6 +99,16 @@ final class FileAgentActivityStore implements AgentActivityStore {
                 .map((AgentActivity item) => item.completedAt.toUtc())
                 .toList(growable: false);
       return AgentActivityHistory(
+        latestSequence:
+            decoded['latestSequence'] is int &&
+                (decoded['latestSequence']! as int) >= 0
+            ? decoded['latestSequence']! as int
+            : 0,
+        lastViewedSequence:
+            decoded['lastViewedSequence'] is int &&
+                (decoded['lastViewedSequence']! as int) >= 0
+            ? decoded['lastViewedSequence']! as int
+            : null,
         recentPageSize: decoded['recentPageSize'] is int
             ? (decoded['recentPageSize'] as int).clamp(1, 500)
             : 21,
@@ -104,6 +128,9 @@ final class FileAgentActivityStore implements AgentActivityStore {
     temporary.writeAsStringSync(
       const JsonEncoder.withIndent('  ').convert(<String, Object?>{
         'version': 2,
+        'latestSequence': history.latestSequence,
+        if (history.lastViewedSequence != null)
+          'lastViewedSequence': history.lastViewedSequence,
         'recentPageSize': history.recentPageSize,
         'activities': history.activities
             .map((AgentActivity item) => item.toJson())
@@ -266,6 +293,8 @@ final class InMemoryAgentActivityStore implements AgentActivityStore {
   @override
   void save(AgentActivityHistory history) {
     this.history = AgentActivityHistory(
+      latestSequence: history.latestSequence,
+      lastViewedSequence: history.lastViewedSequence,
       recentPageSize: history.recentPageSize,
       activities: List<AgentActivity>.unmodifiable(history.activities),
       completionTimes: List<DateTime>.unmodifiable(history.completionTimes),

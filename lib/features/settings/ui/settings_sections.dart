@@ -155,6 +155,7 @@ class _ConversationFooterSettingsSection extends StatelessWidget {
   const _ConversationFooterSettingsSection({
     required this.viewModel,
     required this.settings,
+    super.key,
   });
 
   final SettingsViewModel viewModel;

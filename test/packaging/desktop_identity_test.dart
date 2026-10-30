@@ -483,7 +483,7 @@ void main() {
     expect(website, contains('class="conversation-grid"'));
     expect(website, contains('"hero.title.clipboard": "复制过的，一搜就有。"'));
     expect(website, contains('"hero.title.resources": "Agent 配置，只写一遍。"'));
-    expect(website, contains('"hero.title.alerts": "Agent 干完活，叮咚叫你。"'));
+    expect(website, contains('"hero.title.alerts": "Agent 干完活，DingDong 叫你。"'));
     expect(
       website,
       contains('"hero.title.alerts": "When an Agent is done, DingDong rings."'),
@@ -563,7 +563,7 @@ void main() {
     expect(websiteStyles, contains('.device-showcase'));
     expect(websiteStyles, contains('.device-guardrails'));
     expect(website, contains('快捷键，换成自己顺手的'));
-    expect(website, contains('挑一声你听得出来的叮咚'));
+    expect(website, contains('选择 DingDong 的提醒声'));
     expect(website, contains('下面几个声音，先听听再选。'));
     expect(website, contains('demo-enabled-card'));
     expect(website, contains('"Scoped"'));
@@ -894,11 +894,12 @@ void main() {
     expect(pagesWorkflow, contains("'docs/voices/**'"));
     expect(pagesWorkflow, contains('releases/latest'));
     expect(pagesWorkflow, contains(r'ref: ${{ steps.source.outputs.ref }}'));
+    expect(pagesWorkflow, contains('sparse-checkout-cone-mode: false'));
     expect(
       pagesWorkflow,
       matches(
         RegExp(
-          r'sparse-checkout:\s*\|\s+docs/voices\s+docs/product\s+\.github/scripts',
+          r'sparse-checkout:\s*\|\s+/docs/index\.html\s+/docs/voices/\s+/docs/product/\s+/\.github/scripts/',
         ),
       ),
     );

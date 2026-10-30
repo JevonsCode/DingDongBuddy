@@ -5,12 +5,13 @@
 #include <flutter/binary_messenger.h>
 #include <memory>
 
-/// Windows-only region capture and in-memory PNG handoff. A single instance belongs to the primary engine.
+/// System screenshot shortcut mapping, owned only by the primary engine.
 class ScreenshotPlugin {
  public:
   ScreenshotPlugin(HWND owner, flutter::BinaryMessenger* messenger);
   ~ScreenshotPlugin();
   bool HandleHotKey(WPARAM id);
+  bool HandleTimer(WPARAM id);
 
  private:
   struct Impl;

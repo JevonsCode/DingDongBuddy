@@ -110,6 +110,17 @@ public class TrayIcon: NSView {
     }
 
     private var overflowPanel: NSPanel?
+    private let notchPreview = NotchBubblePreview()
+    private var notchDirection: NotchBubbleDirection? = .left
+    private var notchGlobalMouse: Any?
+    private var notchLocalMouse: Any?
+    private var notchHoverTimer: Timer?
+    private var notchCloseWork: DispatchWorkItem?
+    private var notchReminderPinned = false
+    private var pendingNotchClickFrame: NSRect?
+    private var notchMenuPending = false
+    private var notchMenuTracking = false
+    private var notchMenuTimeout: DispatchWorkItem?
     private var overflowTargetFrame = NSRect.zero
     private var overflowAnimationTimer: Timer?
     private var overflowExpanded = false
@@ -367,6 +378,11 @@ public class TrayIcon: NSView {
         removeOverflowMonitors()
         collapseWork?.cancel()
         overflowPanel?.orderOut(nil)
+        notchCloseWork?.cancel()
+        notchMenuTimeout?.cancel()
+        notchHoverTimer?.invalidate()
+        if let monitor = notchGlobalMouse { NSEvent.removeMonitor(monitor) }
+        if let monitor = notchLocalMouse { NSEvent.removeMonitor(monitor) }
     }
 
     // A single progress value drives drawing and status-item width together.
@@ -509,6 +525,7 @@ public class TrayIcon: NSView {
 
         self.frame = statusItem!.button!.frame
         needsDisplay = true
+        refreshNotchBubble()
     }
     
     public func setImagePosition(_ imagePosition: String) {
@@ -545,6 +562,250 @@ public class TrayIcon: NSView {
         animation.duration = 0.56
         animation.timingFunction = CAMediaTimingFunction(name: .easeOut)
         button.layer?.add(animation, forKey: "dingdong-reminder-nudge")
+    }
+
+    /// Renders the same native badge into a temporary, non-persistent preview.
+    @objc public func previewNotchBubble(_ direction: String) -> Bool {
+        guard let direction = NotchBubbleDirection(rawValue: direction),
+              let content = notchBubbleContent(sampleIfEmpty: true) else { return false }
+        return notchPreview.show(content: content, direction: direction,
+            onClick: { [weak self] in self?.activateNotchBubble() },
+            onRightClick: { [weak self] in self?.requestNotchContextMenu() },
+            onRightMouseUp: { [weak self] in self?.onTrayIconRightMouseUp?() },
+            onClose: { [weak self] in
+                guard let self, self.notchReminderPinned, self.obscuredNotch() != nil else { return }
+                self.showNotchBubble()
+            },
+            accessibilityLabel: statusItem?.button?.accessibilityLabel() ?? "DingDong")
+    }
+
+    private func notchBubbleContent(sampleIfEmpty: Bool) -> NotchBubbleContent? {
+        guard let artwork = sourceImage else { return nil }
+        let height = max(22, statusItem?.button?.bounds.height ?? 24)
+        let actual = unreadBadgeTitle == nil ? [] : renderedScene()
+        let useSample = sampleIfEmpty && actual.count < 3
+        if actual.isEmpty && !useSample {
+            let size = NSSize(width: 32, height: height)
+            let image = NSImage(size: size)
+            image.lockFocus()
+            NSColor(cgColor: badgeBackgroundColor(badgeRgb))?.setFill()
+            NSBezierPath(roundedRect: NSRect(origin: .zero, size: size),
+                         xRadius: height / 2, yRadius: height / 2).fill()
+            artwork.draw(in: NSRect(x: 5, y: (height - 22) / 2, width: 22, height: 22))
+            image.unlockFocus()
+            return NotchBubbleContent(size: size, layers: [NotchBubbleLayer(
+                image: image, frame: NSRect(origin: .zero, size: size))])
+        }
+        var scene = actual
+        if useSample {
+            let attributes: [NSAttributedString.Key: Any] = [
+                .foregroundColor: NSColor.white,
+                .font: NSFont.monospacedDigitSystemFont(ofSize: 13, weight: .semibold)
+            ]
+            let primary = NSAttributedString(string: "3", attributes: attributes)
+            let primaryWidth = 5 + 22 + 4 + ceil(primary.size().width) + 8
+            let diameter = height - 2
+            scene = [BadgeFrame(id: "sample-primary",
+                rect: NSRect(x: 0, y: 0, width: primaryWidth, height: height),
+                text: primary, textX: 31 + primary.size().width / 2,
+                color: NSColor(cgColor: badgeBackgroundColor(0x9575CD))!)]
+            for (index, color) in [0xE95795, 0x397DDD].enumerated() {
+                let x = primaryWidth - 8 + CGFloat(index) * (diameter - 8)
+                scene.append(BadgeFrame(id: "sample-\(index)",
+                    rect: NSRect(x: x, y: 1, width: diameter, height: diameter),
+                    text: NSAttributedString(string: index == 0 ? "1" : "2", attributes: attributes),
+                    textX: x + diameter / 2,
+                    color: NSColor(cgColor: badgeBackgroundColor(UInt32(color)))!))
+            }
+        }
+        let width = max(scene.map { $0.rect.maxX }.max() ?? 0, useSample ? 0 : bounds.width)
+        let size = NSSize(width: width, height: height)
+        let layers = scene.enumerated().map { index, badge -> NotchBubbleLayer in
+            let frame = NSRect(x: badge.rect.minX, y: 0, width: badge.rect.width, height: height)
+            let image = NSImage(size: frame.size)
+            image.lockFocus()
+            NSGraphicsContext.current?.cgContext.translateBy(x: -frame.minX, y: 0)
+            drawBadge(badge, centerY: height / 2)
+            if index == 0 {
+                let icon = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+                    ? (stillBadgeImage ?? artwork) : artwork
+                icon.draw(in: NSRect(x: 5, y: height / 2 - 11, width: 22, height: 22))
+            }
+            image.unlockFocus()
+            return NotchBubbleLayer(image: image, frame: frame)
+        }
+        return NotchBubbleContent(size: size, layers: layers)
+    }
+
+    public func setNotchBubbleDirection(_ value: String) {
+        notchDirection = value == "off" ? nil : .left
+        if notchDirection == nil {
+            notchReminderPinned = false
+            notchMenuPending = false
+            notchMenuTimeout?.cancel()
+            cancelNotchClose()
+            notchPreview.dismiss()
+            if let monitor = notchGlobalMouse { NSEvent.removeMonitor(monitor) }
+            if let monitor = notchLocalMouse { NSEvent.removeMonitor(monitor) }
+            notchGlobalMouse = nil
+            notchLocalMouse = nil
+            notchHoverTimer?.invalidate()
+            notchHoverTimer = nil
+            return
+        }
+        if notchGlobalMouse == nil {
+            notchGlobalMouse = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved]) { [weak self] _ in
+                self?.updateNotchHover()
+            }
+        }
+        if notchLocalMouse == nil {
+            notchLocalMouse = NSEvent.addLocalMonitorForEvents(matching: [.mouseMoved]) { [weak self] event in
+                self?.updateNotchHover()
+                return event
+            }
+        }
+        if notchHoverTimer == nil {
+            let timer = Timer(timeInterval: 0.125, repeats: true) { [weak self] _ in
+                self?.updateNotchHover()
+            }
+            notchHoverTimer = timer
+            RunLoop.main.add(timer, forMode: .common)
+        }
+        if notchPreview.isVisible && !notchPreview.isPreview {
+            notchPreview.dismiss()
+            if notchReminderPinned { showNotchBubble() }
+        }
+    }
+
+    public func showNotchReminderIfHidden() {
+        guard notchDirection != nil, obscuredNotch() != nil else { return }
+        notchReminderPinned = true
+        showNotchBubble()
+    }
+
+    public func consumeNotchClickFrame() -> NSRect? {
+        defer { pendingNotchClickFrame = nil }
+        return pendingNotchClickFrame
+    }
+
+    @discardableResult
+    func popUpNotchContextMenu(_ menu: NSMenu) -> Bool {
+        guard notchMenuPending else { return false }
+        notchMenuTimeout?.cancel()
+        notchMenuPending = false
+        notchMenuTracking = true
+        defer {
+            notchMenuTracking = false
+            if !notchPreview.isPreview && !notchReminderPinned { scheduleNotchClose() }
+        }
+        return notchPreview.popUpContextMenu(menu)
+    }
+
+    private func obscuredNotch() -> NotchBubbleGeometry? {
+        guard statusItem?.isVisible == true, let button = statusItem?.button,
+              let window = button.window else { return nil }
+        let item = window.convertToScreen(button.convert(button.bounds, to: nil))
+        for screen in NSScreen.screens {
+            guard let geometry = NotchBubbleGeometry.forScreen(screen) else { continue }
+            if NSScreen.screens.contains(where: { $0 !== screen && $0.frame.intersects(item) }) {
+                continue
+            }
+            if geometry.obscures(item: item, screen: screen.frame) { return geometry }
+        }
+        return nil
+    }
+
+    private func updateNotchHover() {
+        handleNotchHover(at: NSEvent.mouseLocation)
+    }
+
+    private func pointerIsOverNotchOrBubble(_ point: NSPoint) -> Bool {
+        let overNotch = NSScreen.screens.contains { screen in
+            NotchBubbleGeometry.forScreen(screen)?.notch.insetBy(dx: -3, dy: -6).contains(point) == true
+        }
+        return overNotch || notchPreview.frame?.insetBy(dx: -6, dy: -6).contains(point) == true
+    }
+
+    func handleNotchHover(at point: NSPoint) {
+        guard notchDirection != nil, !notchMenuPending, !notchMenuTracking,
+              !(notchPreview.isPreview && notchPreview.isVisible) else { return }
+        if pointerIsOverNotchOrBubble(point) {
+            cancelNotchClose()
+            if !notchPreview.isVisible { showNotchBubble() }
+            else { notchPreview.keepOpen() }
+        } else if !notchReminderPinned && notchPreview.isVisible {
+            scheduleNotchClose()
+        }
+    }
+
+    private func cancelNotchClose() {
+        notchCloseWork?.cancel()
+        notchCloseWork = nil
+    }
+
+    private func scheduleNotchClose() {
+        guard notchCloseWork == nil else { return }
+        let work = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            self.notchCloseWork = nil
+            guard self.notchPreview.isVisible, !self.notchReminderPinned,
+                  !self.notchMenuPending, !self.notchMenuTracking else { return }
+            let point = NSEvent.mouseLocation
+            if self.pointerIsOverNotchOrBubble(point) { return }
+            self.notchPreview.dismiss()
+        }
+        notchCloseWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.26, execute: work)
+    }
+
+    private func showNotchBubble() {
+        guard let direction = notchDirection,
+              let content = notchBubbleContent(sampleIfEmpty: false) else { return }
+        cancelNotchClose()
+        _ = notchPreview.show(content: content, direction: direction, preview: false,
+            onClick: { [weak self] in self?.activateNotchBubble() },
+            onRightClick: { [weak self] in self?.requestNotchContextMenu() },
+            onRightMouseUp: { [weak self] in self?.onTrayIconRightMouseUp?() },
+            onHover: { [weak self] inside in
+                if inside { self?.cancelNotchClose() }
+                else if self?.notchReminderPinned == false { self?.scheduleNotchClose() }
+            }, accessibilityLabel: statusItem?.button?.accessibilityLabel() ?? "DingDong")
+    }
+
+    private func activateNotchBubble() {
+        pendingNotchClickFrame = notchPreview.frame
+        notchReminderPinned = false
+        notchPreview.dismiss()
+        onTrayIconMouseDown?()
+    }
+
+    private func requestNotchContextMenu() {
+        guard let handler = onTrayIconRightMouseDown else { return }
+        cancelNotchClose()
+        notchPreview.keepOpen()
+        notchMenuPending = true
+        notchMenuTimeout?.cancel()
+        let timeout = DispatchWorkItem { [weak self] in
+            guard let self, self.notchMenuPending else { return }
+            self.notchMenuPending = false
+            if self.notchPreview.isPreview { self.notchPreview.resumePreviewTimeout() }
+            else if !self.notchReminderPinned { self.scheduleNotchClose() }
+        }
+        notchMenuTimeout = timeout
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: timeout)
+        handler()
+    }
+
+    private func refreshNotchBubble() {
+        guard notchPreview.isVisible, !notchPreview.isPreview else { return }
+        if notchReminderPinned && obscuredNotch() == nil {
+            notchReminderPinned = false
+            if !pointerIsOverNotchOrBubble(NSEvent.mouseLocation) && !notchMenuPending && !notchMenuTracking {
+                notchPreview.dismiss()
+                return
+            }
+        }
+        if let content = notchBubbleContent(sampleIfEmpty: false) { notchPreview.update(content: content) }
     }
 
     public func setTitle(
@@ -614,6 +875,19 @@ public class TrayIcon: NSView {
         }
         self.frame = button.bounds
         needsDisplay = true
+        if !isUnreadBadge {
+            notchReminderPinned = false
+            if !notchPreview.isPreview {
+                if pointerIsOverNotchOrBubble(NSEvent.mouseLocation),
+                   let content = notchBubbleContent(sampleIfEmpty: false) {
+                    notchPreview.update(content: content)
+                } else if !notchMenuPending && !notchMenuTracking {
+                    notchPreview.dismiss()
+                }
+            }
+        } else {
+            refreshNotchBubble()
+        }
     }
 
     public override func draw(_ dirtyRect: NSRect) {
@@ -621,32 +895,36 @@ public class TrayIcon: NSView {
         guard unreadBadgeTitle != nil else { return }
         // Text remains centred on each complete badge, including while occluded.
         for badge in renderedScene().reversed() {
-            NSGraphicsContext.saveGraphicsState()
-            NSGraphicsContext.current?.cgContext.setAlpha(badge.alpha)
-            badge.color.setFill()
-            NSBezierPath(roundedRect: badge.rect, xRadius: badge.rect.height / 2,
-                yRadius: badge.rect.height / 2).fill()
-            if badge.temporary {
-                let outline = NSBezierPath(roundedRect: badge.rect.insetBy(dx: 1, dy: 1),
-                    xRadius: badge.rect.height / 2, yRadius: badge.rect.height / 2)
-                outline.lineWidth = 1.5
-                outline.setLineDash([3, 2], count: 2, phase: 0)
-                NSColor.white.setStroke()
-                outline.stroke()
-            }
-            if badge.id == "@overflow" {
-                NSColor.white.setFill()
-                for offset in [-4.0, 0.0, 4.0] {
-                    NSBezierPath(ovalIn: NSRect(x: badge.rect.midX + offset - 1,
-                        y: badge.rect.midY - 1, width: 2, height: 2)).fill()
-                }
-            } else {
-                drawCentered(badge.text, centerX: badge.textX)
-            }
-            NSGraphicsContext.restoreGraphicsState()
+            drawBadge(badge, centerY: bounds.midY)
         }
         let artwork = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion ? stillBadgeImage : sourceImage
         artwork?.draw(in: NSRect(x: 5, y: bounds.midY - 11, width: 22, height: 22))
+    }
+
+    private func drawBadge(_ badge: BadgeFrame, centerY: CGFloat) {
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current?.cgContext.setAlpha(badge.alpha)
+        badge.color.setFill()
+        NSBezierPath(roundedRect: badge.rect, xRadius: badge.rect.height / 2,
+            yRadius: badge.rect.height / 2).fill()
+        if badge.temporary {
+            let outline = NSBezierPath(roundedRect: badge.rect.insetBy(dx: 1, dy: 1),
+                xRadius: badge.rect.height / 2, yRadius: badge.rect.height / 2)
+            outline.lineWidth = 1.5
+            outline.setLineDash([3, 2], count: 2, phase: 0)
+            NSColor.white.setStroke()
+            outline.stroke()
+        }
+        if badge.id == "@overflow" {
+            NSColor.white.setFill()
+            for offset in [-4.0, 0.0, 4.0] {
+                NSBezierPath(ovalIn: NSRect(x: badge.rect.midX + offset - 1,
+                    y: badge.rect.midY - 1, width: 2, height: 2)).fill()
+            }
+        } else {
+            drawCentered(badge.text, centerX: badge.textX, centerY: centerY)
+        }
+        NSGraphicsContext.restoreGraphicsState()
     }
 
     private var displayedBubbles: [[String: Any]] {
@@ -673,13 +951,13 @@ public class TrayIcon: NSView {
         return max((statusItem?.button?.bounds.height ?? 22) - 2, ceil(bubbleText(bubble).size().width) + 10)
     }
 
-    private func drawCentered(_ text: NSAttributedString, centerX: CGFloat) {
+    private func drawCentered(_ text: NSAttributedString, centerX: CGFloat, centerY: CGFloat) {
         guard let context = NSGraphicsContext.current?.cgContext else { return }
         let line = CTLineCreateWithAttributedString(text)
         let glyphBounds = CTLineGetBoundsWithOptions(line, .useGlyphPathBounds)
         context.saveGState()
         context.textMatrix = .identity
-        context.textPosition = CGPoint(x: centerX - glyphBounds.midX, y: bounds.midY - glyphBounds.midY)
+        context.textPosition = CGPoint(x: centerX - glyphBounds.midX, y: centerY - glyphBounds.midY)
         CTLineDraw(line, context)
         context.restoreGState()
     }

@@ -6,6 +6,27 @@ import 'package:path/path.dart' as p;
 
 void main() {
   test(
+    'notify requires an explicit nonempty conversation ID before sending',
+    () async {
+      for (final invalid in <Object?>[null, '', '   ', 42]) {
+        final transport = _RecordingMcpHttpTransport();
+        final executor = LoopbackMcpToolExecutor(
+          transport,
+          conversationIdResolver: () => 'another-host-context',
+        );
+        await expectLater(
+          executor.execute('dingdong_notify', {
+            'message': 'Waiting',
+            'conversationId': ?invalid,
+          }),
+          throwsArgumentError,
+        );
+        expect(transport.path, isNull);
+      }
+    },
+  );
+
+  test(
     'desktop MCP keeps resource routing and sends desktop notifications',
     () async {
       final transport = _RecordingMcpHttpTransport();
@@ -27,6 +48,7 @@ void main() {
 
       await executor.execute('dingdong_notify', {
         'message': 'Waiting',
+        'conversationId': 'cli-123',
         'source': 'Claude Code',
       });
       expect(transport.body?['source'], 'Claude Desktop');
@@ -73,6 +95,7 @@ void main() {
       expect(transport.body?['path'], '/tmp/chime.wav');
       await executor.execute('dingdong_notify', {
         'message': 'Failed',
+        'conversationId': 'reminder-thread',
         'reminderId': 'error',
       });
       expect(transport.body?['reminderId'], 'error');
@@ -149,6 +172,7 @@ void main() {
 
     await executor.execute('dingdong_notify', <String, Object?>{
       'message': 'Finished',
+      'conversationId': 'current-thread',
       'source': 'Codex',
     });
 
@@ -170,6 +194,7 @@ void main() {
 
     await executor.execute('dingdong_notify', <String, Object?>{
       'message': 'Waiting for approval',
+      'conversationId': 'subagent-thread-1',
     });
 
     expect(transport.body?['conversationId'], 'subagent-thread-1');

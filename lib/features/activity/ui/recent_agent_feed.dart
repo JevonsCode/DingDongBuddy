@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/models/date_filter_range.dart';
 import 'package:dingdong/core/widgets/desktop_action_button.dart';
@@ -21,6 +22,8 @@ class RecentAgentFeed extends StatefulWidget {
     this.compact = false,
     this.pageSize = 21,
     this.now,
+    this.visible = true,
+    this.onViewed,
     super.key,
   });
   final ActivityController controller;
@@ -29,6 +32,8 @@ class RecentAgentFeed extends StatefulWidget {
   final bool compact;
   final int pageSize;
   final DateTime Function()? now;
+  final bool visible;
+  final Future<void> Function(int sequence)? onViewed;
   @override
   State<RecentAgentFeed> createState() => _RecentAgentFeedState();
 }
@@ -41,10 +46,12 @@ class _RecentAgentFeedState extends State<RecentAgentFeed> {
   Set<String>? _sources;
   DateFilterPreset? _preset;
   DateTimeRange? _custom;
+  int? _visitBoundary;
 
   @override
   void initState() {
     super.initState();
+    if (widget.visible) _visitBoundary = widget.controller.lastViewedSequence;
     widget.controller.addListener(_changed);
     _scroll.addListener(_onScroll);
     unawaited(_load(reset: true));
@@ -57,9 +64,15 @@ class _RecentAgentFeedState extends State<RecentAgentFeed> {
       oldWidget.controller.removeListener(_changed);
       widget.controller.addListener(_changed);
     }
+    if (widget.visible &&
+        (!oldWidget.visible || oldWidget.controller != widget.controller)) {
+      _visitBoundary = widget.controller.lastViewedSequence;
+    }
     if (oldWidget.controller != widget.controller ||
-        oldWidget.pageSize != widget.pageSize) {
-      _changed();
+        oldWidget.pageSize != widget.pageSize ||
+        oldWidget.visible != widget.visible) {
+      if (_scroll.hasClients) _scroll.jumpTo(0);
+      unawaited(_load(reset: true, resetPagination: true));
     }
   }
 
@@ -71,6 +84,10 @@ class _RecentAgentFeedState extends State<RecentAgentFeed> {
   }
 
   void _changed() {
+    if (_visitBoundary != null &&
+        widget.controller.latestSequence < _visitBoundary!) {
+      _visitBoundary = null;
+    }
     unawaited(_load(reset: true));
   }
 
@@ -80,16 +97,20 @@ class _RecentAgentFeedState extends State<RecentAgentFeed> {
     }
   }
 
-  Future<void> _load({bool reset = false}) async {
+  Future<void> _load({bool reset = false, bool resetPagination = false}) async {
     if (!reset && (_loading || _items.length >= _total)) return;
     final generation = reset ? ++_generation : _generation;
     final offset = reset ? 0 : _items.length;
     _loading = true;
+    final observedSequence = widget.controller.latestSequence;
     // Keep the last page on screen until its replacement arrives.
     final page = await widget.controller.queryPage(
       offset: offset,
-      limit: widget.pageSize,
+      limit: reset && !resetPagination
+          ? max(widget.pageSize, _items.length)
+          : widget.pageSize,
       sources: _sources,
+      newerThanSequence: _visitBoundary,
       range: _preset == DateFilterPreset.custom
           ? _custom
           : _preset?.bounds((widget.now ?? DateTime.now)()),
@@ -100,17 +121,29 @@ class _RecentAgentFeedState extends State<RecentAgentFeed> {
       _total = page.total;
       _loading = false;
     });
+    if (widget.visible &&
+        (widget.controller.lastViewedSequence == null ||
+            observedSequence > widget.controller.lastViewedSequence!)) {
+      if (widget.onViewed case final onViewed?) {
+        await onViewed(observedSequence);
+      } else {
+        widget.controller.markFeedViewed(observedSequence);
+      }
+    }
   }
 
   void _filter(VoidCallback edit) {
     setState(edit);
     if (_scroll.hasClients) _scroll.jumpTo(0);
-    unawaited(_load(reset: true));
+    unawaited(_load(reset: true, resetPagination: true));
   }
 
   @override
   Widget build(BuildContext context) {
     final padding = widget.compact ? 16.0 : 24.0;
+    final boundaryIndex = _visitBoundary == null
+        ? -1
+        : _items.indexWhere((item) => item.sequence <= _visitBoundary!);
     return Stack(
       children: [
         CustomScrollView(
@@ -195,7 +228,15 @@ class _RecentAgentFeedState extends State<RecentAgentFeed> {
                   final activity = _items[index];
                   return KeyedSubtree(
                     key: ValueKey('feed-row-${activity.id}'),
-                    child: widget.rowBuilder(context, activity),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (boundaryIndex > 0 && index == boundaryIndex)
+                          const _LastSeenDivider(),
+                        widget.rowBuilder(context, activity),
+                      ],
+                    ),
                   );
                 },
               ),
@@ -246,4 +287,29 @@ class _RecentAgentFeedState extends State<RecentAgentFeed> {
       ],
     );
   }
+}
+
+class _LastSeenDivider extends StatelessWidget {
+  const _LastSeenDivider();
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    key: const Key('activity-last-seen-divider'),
+    padding: const EdgeInsets.symmetric(vertical: 10),
+    child: Row(
+      children: [
+        const Expanded(child: Divider(height: 1)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Text(
+            context.l10n.activityLastSeenHere,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+        const Expanded(child: Divider(height: 1)),
+      ],
+    ),
+  );
 }

@@ -45,6 +45,43 @@ void main() {
     expect(connection.closed, isTrue);
   });
 
+  test('recognizes the Stop Hook as written by the Agent installer', () async {
+    final String installed = Platform.isWindows
+        ? '"${path.normalize(mcp)}" --notify-stop --source Codex'
+        : '${path.normalize(mcp)} --notify-stop --source Codex';
+    final _FakeConnection connection = _FakeConnection(<String, Object?>{
+      'data': <Object?>[
+        _hookEntry(
+          homeDirectory: home,
+          command: installed,
+          trustStatus: 'untrusted',
+        ),
+      ],
+    });
+    final CodexCompletionHookStatus status =
+        await CodexAppServerCompletionHookGateway(
+          connectionFactory: _FakeConnectionFactory(connection),
+          homeDirectory: home,
+          dingDongMcpCommandPath: mcp,
+        ).inspect();
+
+    expect(status.review, CodexCompletionHookReview.untrusted);
+    expect(status.command, installed);
+  });
+
+  test('command words drop shell quoting', () {
+    expect(
+      commandWords('"/a b/dingdong_mcp" --source \'Claude Code\' "x\\"y"'),
+      <String>['/a b/dingdong_mcp', '--source', 'Claude Code', 'x"y'],
+    );
+    expect(
+      commandWords(
+        r'"C:\Program Files\DingDong\dingdong_mcp.exe" --notify-stop',
+      ),
+      <String>[r'C:\Program Files\DingDong\dingdong_mcp.exe', '--notify-stop'],
+    );
+  });
+
   test('writes only the current key and hash, then verifies again', () async {
     final _FakeConnection connection = _FakeConnection(
       <String, Object?>{

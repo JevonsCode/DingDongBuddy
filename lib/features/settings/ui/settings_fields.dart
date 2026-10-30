@@ -5,6 +5,7 @@ class _SettingsSection extends StatelessWidget {
     required this.title,
     required this.description,
     required this.children,
+    super.key,
   });
 
   final String title;

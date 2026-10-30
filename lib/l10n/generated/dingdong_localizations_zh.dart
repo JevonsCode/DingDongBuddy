@@ -21,14 +21,12 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get pluginLicenses => '开源许可';
 
   @override
-  String get pluginScreenshotSourceNote => '通过固定版本依赖复用开源编辑引擎；钉东提供截图、快捷键和界面适配。';
-
-  @override
   String get pluginSelectionSourceNote =>
-      '选择性复用此项目的 Windows 取词代码；浮条、配置和模型调用由钉东实现。';
+      '选择性复用此项目的 Windows 取词代码；浮条、配置和模型调用由 DingDong 实现。';
 
   @override
-  String get pluginUpstreamChanged => '上游已有更新，需适配测试后随钉东更新提供；此次检查不会安装更新。';
+  String get pluginUpstreamChanged =>
+      '上游已有更新，需适配测试后随 DingDong 更新提供；此次检查不会安装更新。';
 
   @override
   String get pluginUpstreamCurrent => '未发现更新的上游版本或代码变更。';
@@ -40,13 +38,13 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get screenshotPluginTitle => '截图';
 
   @override
-  String get screenshotPluginDescription => '快捷截图、框选区域与标注，复制图片或保存为 PNG。';
+  String get screenshotPluginDescription => '用自定义快捷键打开系统截图工具。';
 
   @override
-  String get screenshotEnable => '启用截图插件';
+  String get screenshotEnable => '启用截图';
 
   @override
-  String get screenshotEnableDescription => '叮咚运行时可通过全局快捷键截图。';
+  String get screenshotEnableDescription => 'DingDong 运行时可通过全局快捷键截图。';
 
   @override
   String get screenshotShortcut => '截图快捷键';
@@ -55,7 +53,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get screenshotCaptureNow => '立即截图';
 
   @override
-  String get screenshotUnsupported => '截图功能当前仅支持 Windows。';
+  String get screenshotUnsupported => '截图功能支持 macOS 和 Windows。';
 
   @override
   String get screenshotRunning => '已就绪 · 快捷键已注册';
@@ -67,11 +65,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get screenshotUnavailable => '截图未能启动，请刷新状态或重新启用。';
 
   @override
-  String get screenshotCapturing => '截图编辑中 · 按 Esc 取消';
-
-  @override
-  String get screenshotHelp =>
-      '拖动框选后进入编辑器，可绘制箭头、形状、文字或马赛克。使用工具栏复制、保存、撤销或取消；图片在主动复制或保存前只在内存中处理。';
+  String get screenshotCapturing => '正在打开系统截图…';
 
   @override
   String get screenshotConflict => '这个快捷键已被占用，请换一个组合。';
@@ -83,28 +77,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get screenshotRollbackError => '原快捷键恢复失败，请刷新状态并重新启用。';
 
   @override
-  String get screenshotCaptureError => '无法截取屏幕，请重试。';
-
-  @override
-  String get screenshotExportError => '复制或保存失败，请重试，或按 Esc 取消。';
-
-  @override
-  String get screenshotRectangle => '矩形';
-
-  @override
-  String get screenshotArrow => '箭头';
-
-  @override
-  String get screenshotText => '文字';
-
-  @override
-  String get screenshotUndo => '撤销';
-
-  @override
-  String get screenshotReselect => '重选';
-
-  @override
-  String get screenshotNativeHint => '拖动框选 · 松开进入编辑 · Esc 取消';
+  String get screenshotCaptureError => '无法打开系统截图，请重试。';
 
   @override
   String get selectionWindowsDiagnosis => '系统划词目前支持 Windows 和 macOS；此平台暂未支持。';
@@ -1029,7 +1002,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get details => '查看详情';
 
   @override
-  String get dingdongBright => '清亮叮咚';
+  String get dingdongBright => 'DingDong 清亮';
 
   @override
   String
@@ -1037,14 +1010,14 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
       '资源发生变化时 DingDong 会自动检查，也可以使用右上角的“检测”重新检查。';
 
   @override
-  String get dingdongClassic => '经典叮咚';
+  String get dingdongClassic => 'DingDong 经典';
 
   @override
   String get dingdongCopiesTheCompleteSkillPackageIntoEachSelected_de26f089 =>
       'DingDong 会把完整 Skill 包复制到每个所选项目的 Agent 原生目录；只有该 Agent 在这些项目中工作时才会发现它。';
 
   @override
-  String get dingdongCrisp => '清脆叮咚';
+  String get dingdongCrisp => 'DingDong 清脆';
 
   @override
   String dingdongCurrentAppVersionDesktop(Object currentAppVersion) {
@@ -1052,7 +1025,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   }
 
   @override
-  String get dingdongDeep => '低沉叮咚';
+  String get dingdongDeep => 'DingDong 低沉';
 
   @override
   String get dingdongDeviceConnectionManager => 'DingDong 设备连接管理窗口';
@@ -1086,7 +1059,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get dingdongSkillsUseTheSameName => 'DingDong Skill 名称重复';
 
   @override
-  String get dingdongSoft => '轻柔叮咚';
+  String get dingdongSoft => 'DingDong 轻柔';
 
   @override
   String get disable => '停用';
@@ -1758,6 +1731,9 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
 
   @override
   String get notifications => '通知';
+
+  @override
+  String get notificationsAndSounds => '通知（声音）';
 
   @override
   String get notify => '发送提醒';
@@ -2818,11 +2794,11 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
 
   @override
   String get whenOffSubagentActivityShowsNoNotificationOrDingDong_ce161d98 =>
-      '关闭后，子智能体动态不显示提醒，也不播放叮咚声音。';
+      '关闭后，子智能体动态不显示提醒，也不播放 DingDong 提醒声。';
 
   @override
   String get whenOffTasksStartedInCodexVoiceModeDoNotNotifyOrPlayA_75237958 =>
-      '关闭后，从 Codex 语音模式发起的任务不显示提醒，也不播放叮咚声音。';
+      '关闭后，从 Codex 语音模式发起的任务不显示提醒，也不播放 DingDong 提醒声。';
 
   @override
   String get whenToUse => '什么时候使用';
@@ -3799,7 +3775,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get agentPluginsTitle => 'Agent 插件';
 
   @override
-  String get agentPluginsPageDescription => '管理叮咚自身的可选扩展功能。';
+  String get agentPluginsPageDescription => '管理 DingDong 自身的可选扩展功能。';
 
   @override
   String get agentPluginsDingDongExtensions => 'DingDong 扩展';
@@ -3914,7 +3890,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
 
   @override
   String get lanNoComputers =>
-      '请在两台电脑上打开叮咚的「连接电脑」，连接同一局域网，并允许叮咚通过专用网络防火墙。访客 Wi-Fi 可能阻止设备发现。';
+      '请在两台电脑上打开 DingDong 的「连接电脑」，连接同一局域网，并允许 DingDong 通过专用网络防火墙。访客 Wi-Fi 可能阻止设备发现。';
 
   @override
   String get lanPairingFailed => '配对未完成，请检查配对码和局域网连接。配对码过期或已尝试 5 次时，请重新生成。';
@@ -4502,14 +4478,14 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get lanFindByIpHelp => '自动发现找不到时，输入另一台电脑的局域网 IP，无需填写端口；首次连接使用配对码。';
 
   @override
-  String get lanPortBusy => '局域网发现端口正被另一个叮咚实例占用，请退出重复打开的叮咚后刷新。';
+  String get lanPortBusy => '局域网发现端口正被另一个 DingDong 实例占用，请退出重复打开的 DingDong 后刷新。';
 
   @override
   String get activityBackToTop => '回到顶部';
 
   @override
   String get lanNetworkAccessDenied =>
-      '局域网访问被系统拒绝。请检查叮咚的局域网权限和专用网络防火墙，并退出重复打开的叮咚后刷新。';
+      '局域网访问被系统拒绝。请检查 DingDong 的局域网权限和专用网络防火墙，并退出重复打开的 DingDong 后刷新。';
 
   @override
   String get sharedMcpScopeConflict => 'MCP 来源范围与共享配置冲突';
@@ -4524,4 +4500,175 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   @override
   String get unsupportedMcpAuthenticationDetail =>
       'Antigravity 暂不支持此环境变量令牌方式，请使用客户端认证或显式请求头。';
+
+  @override
+  String get activityLastSeenHere => '上次看到这里';
+
+  @override
+  String get agentConversationAlreadyOpened => '已打开 · 再次打开会话';
+
+  @override
+  String get screenshotSystemHelpMac => '用所设快捷键唤起 macOS 截图工具，截图、复制和保存由系统工具处理。';
+
+  @override
+  String get screenshotSystemHelpWindows =>
+      '将所设快捷键映射到 Win+Shift+S，截图、复制和保存由系统工具处理。';
+
+  @override
+  String get devNotchSlideDown => '从刘海下方滑出';
+
+  @override
+  String get devNotchSlideLeft => '从刘海左侧滑出';
+
+  @override
+  String get devNotchPreviewDescription => '在屏幕刘海旁预览气泡动效，不创建提醒记录。';
+
+  @override
+  String get devNotchPreviewTriggered => '已触发刘海气泡预览';
+
+  @override
+  String get notchBubbleDirection => '刘海遮挡时的气泡';
+
+  @override
+  String get notchBubbleDown => '从刘海下方滑出';
+
+  @override
+  String get notchBubbleLeft => '从刘海左侧滑出';
+
+  @override
+  String get notchBubbleOff => '不启用';
+
+  @override
+  String get agentInstallStateUpdateAvailable => '可更新';
+
+  @override
+  String get agentInstallNoClients => '这台电脑上没有找到支持的 Agent，可以复制下面的提示词手动配置。';
+
+  @override
+  String get agentInstallChangeUpdate => '修改';
+
+  @override
+  String get agentInstallPreviewTitle => '确认改动';
+
+  @override
+  String get agentInstallTrustCodexHooks =>
+      '在 Codex 里输入 /hooks，信任 DingDong 的 Hook 后才会生效。';
+
+  @override
+  String get agentInstallChangeDelete => '删除';
+
+  @override
+  String agentInstallRestartClient(String name) {
+    return '重启 $name 后生效。';
+  }
+
+  @override
+  String get agentInstallStateConflict => '有冲突';
+
+  @override
+  String get agentInstallStateManual => '需手动配置';
+
+  @override
+  String get agentInstallSelected => '安装所选';
+
+  @override
+  String agentInstallRemoveTitle(String name) {
+    return '从 $name 移除 DingDong？';
+  }
+
+  @override
+  String get agentInstallConfirm => '安装';
+
+  @override
+  String get agentInstallNoChanges => '所选的 Agent 都已是最新，不需要改动。';
+
+  @override
+  String get agentInstallStateConnected => '已接入';
+
+  @override
+  String get agentInstallChangeCreate => '新建';
+
+  @override
+  String get agentInstallScanning => '正在查找 Agent…';
+
+  @override
+  String get agentInstallDescription =>
+      'DingDong 在这台电脑上找到了下面这些 Agent。勾选后会装上 DingDong 的 MCP 和通知 Hook。';
+
+  @override
+  String get agentInstallRescan => '重新扫描';
+
+  @override
+  String get agentInstallStateUnsupported => '不支持';
+
+  @override
+  String get agentInstallPreviewDescription =>
+      'DingDong 会修改下面这些文件，其他设置保持不变，每个文件都会先备份。';
+
+  @override
+  String get agentInstallTitle => '安装到 Agent';
+
+  @override
+  String get agentInstallRemove => '清理配置';
+
+  @override
+  String get agentInstallRemoveDescription =>
+      '请核对以下文件。确认后将清理此 Agent 中 DingDong 的 MCP、Hooks 和接入提示，并保留其他配置。';
+
+  @override
+  String get agentInstallStateNotConnected => '未接入';
+
+  @override
+  String get agentInstallPreviewOnlyDescription =>
+      'DEV 预览会检测本机 Agent 并显示预计配置改动。请在正式版 DingDong 中完成连接。';
+
+  @override
+  String get agentInstallPreviewSelected => '预览所选连接';
+
+  @override
+  String get agentInstallManualSetup => '手动接入';
+
+  @override
+  String get notchHoverEnabled => '鼠标移到刘海时显示提醒';
+
+  @override
+  String get notchHoverDescription => '菜单栏图标被遮挡时，提醒从刘海左侧滑出。';
+
+  @override
+  String get recentNotifications => '最近通知';
+
+  @override
+  String get agentInstallInstructions => '接入提示';
+
+  @override
+  String get agentInstallAdvancedAdapters => '高级：自定义 Agent 配置';
+
+  @override
+  String get agentInstallWelcomeTitle => '连接本机 Agent';
+
+  @override
+  String get agentInstallWelcomeDescription =>
+      'DingDong 可以自动检测本机 Agent，并安装所需的连接配置。你也可以先跳过，之后从“唤出面板 → 动态 → Agent 连接”继续接入。';
+
+  @override
+  String get agentInstallSkip => '暂时跳过';
+
+  @override
+  String get agentInstallStart => '检测并连接';
+
+  @override
+  String get agentInstallRemovePreviewDescription =>
+      '以下是此 Agent 中可清理的 DingDong 配置。DEV 仅提供预览，不会修改文件。';
+
+  @override
+  String get devNewUserExperience => '新用户体验';
+
+  @override
+  String get devNewUserExperienceDescription => '检查首次安装时的界面。';
+
+  @override
+  String get devAgentOnboardingPreviewDescription => '在唤出面板中打开首次接入引导，可重复预览。';
+
+  @override
+  String get devAgentOnboardingOpened => '已打开：新用户接入引导';
 }

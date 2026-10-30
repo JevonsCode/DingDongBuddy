@@ -37,6 +37,7 @@ final class ScreenshotConfiguration {
   }
 
   static ScreenshotConfiguration fromArguments(Map<String, Object?> value) {
+    // Retired backend fields are ignored; all shortcuts now use the system tool.
     final encoded = value['shortcut'];
     if (encoded is! Map) {
       throw const ScreenshotPluginException('invalid_shortcut');

@@ -355,14 +355,17 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
   }
 
   Future<Map<String, Object?>> _notify(Map<String, Object?> arguments) {
+    final conversationId = arguments['conversationId'];
+    if (conversationId is! String || conversationId.trim().isEmpty) {
+      throw ArgumentError(
+        'conversationId is required. Pass the current conversation ID from '
+        'the host; do not invent an ID or reuse a different conversation.',
+      );
+    }
     final Map<String, Object?> body = Map<String, Object?>.of(arguments);
+    body['conversationId'] = conversationId.trim();
     body.putIfAbsent('notificationKind', () => 'attention');
     final String? currentConversationId = _conversationIdResolver()?.trim();
-    if ((body['conversationId'] as String? ?? '').trim().isEmpty) {
-      if (currentConversationId != null && currentConversationId.isNotEmpty) {
-        body['conversationId'] = currentConversationId;
-      }
-    }
     final String? source = resolveActivitySource(
       (body['source'] as String? ?? '').trim().isEmpty
           ? _lastBridgeSource

@@ -66,6 +66,7 @@ final class SettingsRepository {
       _backend.read(_notificationRulesKey),
       _backend.read(_allowBetaUpdatesKey),
       _backend.read(_quickPanelAgentCountKey),
+      _backend.read(_notchBubbleDirectionKey),
     ]);
     final bool mcpAccessSeen = values[11] is bool ? values[11]! as bool : false;
     final int agentSetupAcknowledgedRevision =
@@ -121,6 +122,7 @@ final class SettingsRepository {
       agentActivityCountHours: values[14] is int ? values[14]! as int : 24,
       quickPanelAgentCount: values[38] is int ? values[38]! as int : 21,
       hideDockIcon: values[15] is bool ? values[15]! as bool : false,
+      notchBubbleDirection: NotchBubbleDirection.parse(values[39]),
       trayNotificationColor: TrayNotificationColor.parse(
         values[16],
         fallback: defaultTrayNotificationColor,
@@ -212,6 +214,10 @@ final class SettingsRepository {
       ),
       _backend.write(_hideDockIconKey, settings.hideDockIcon),
       _backend.write(
+        _notchBubbleDirectionKey,
+        settings.notchBubbleDirection.name,
+      ),
+      _backend.write(
         _trayNotificationColorKey,
         settings.trayNotificationColor.name,
       ),
@@ -301,6 +307,7 @@ const String _agentActivityCountHoursKey = 'dingdong.agentActivity.countHours';
 const String _quickPanelAgentCountKey =
     'dingdong.agentActivity.quickPanelCount';
 const String _hideDockIconKey = 'dingdong.macos.hideDockIcon';
+const String _notchBubbleDirectionKey = 'dingdong.macos.notchBubbleDirection';
 const String _trayNotificationColorKey = 'dingdong.macos.trayNotificationColor';
 const String _globalHotKeyKey = 'dingdong.shortcut.openClipboard';
 const String _workspaceShortcutsKey = 'dingdong.shortcut.workspaces';

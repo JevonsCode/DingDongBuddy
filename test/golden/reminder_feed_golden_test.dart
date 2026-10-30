@@ -118,6 +118,12 @@ void main() {
           ),
         ),
       );
+      await tester.runAsync(
+        () => precacheImage(
+          const AssetImage('Assets/Symbols/today.png'),
+          tester.element(find.byType(AgentActivityManagerScreen)),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       await expectLater(

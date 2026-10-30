@@ -1,14 +1,18 @@
 import 'dart:async';
 
+import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
 import 'package:dingdong/core/platform/desktop_platform_policy.dart';
 import 'package:dingdong/core/platform/desktop_window_policy.dart';
 import 'package:dingdong/core/theme/popup_style.dart';
+import 'package:dingdong/core/widgets/desktop_action_button.dart';
+import 'package:dingdong/core/widgets/desktop_dialog.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/activity/ui/activity_screen.dart';
+import 'package:dingdong/features/agent_api/domain/agent_install.dart';
 import 'package:dingdong/features/agent_api/ui/agent_api_screen.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_content_launcher.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_preview_launcher.dart';
@@ -58,6 +62,7 @@ class ShellScreen extends StatefulWidget {
     this.deviceLinkManagerLauncher,
     this.libraryTransferGateway,
     this.resourceManagerLauncher,
+    this.agentInstallGateway,
     this.settingsWindowLauncher,
     this.soundFileGateway,
     this.soundPreviewGateway,
@@ -87,6 +92,7 @@ class ShellScreen extends StatefulWidget {
   final DeviceLinkManagerLauncher? deviceLinkManagerLauncher;
   final LibraryTransferGateway? libraryTransferGateway;
   final ResourceManagerLauncher? resourceManagerLauncher;
+  final AgentInstallGateway? agentInstallGateway;
   final SettingsWindowLauncher? settingsWindowLauncher;
   final SoundFileGateway? soundFileGateway;
   final SoundPreviewGateway? soundPreviewGateway;
@@ -110,6 +116,95 @@ class _ShellScreenState extends State<ShellScreen> {
   bool _clipboardFiltersExpanded = false;
   bool _clipboardPreviewOpen = false;
   bool _focusMcpOnOpen = false;
+  bool? _agentSetupNeedsUpdate;
+  bool _installScanBusy = false;
+  bool _installOfferShown = false;
+  bool _installDialogOpen = false;
+  late int _lastAgentInstallPreviewRevision;
+
+  void _installScanCompleted(List<AgentInstallClient> clients) {
+    if (!mounted) return;
+    setState(
+      () => _agentSetupNeedsUpdate = clients.any(
+        (client) =>
+            client.detected &&
+            client.state == AgentInstallState.updateAvailable,
+      ),
+    );
+  }
+
+  Future<void> _refreshInstallStatus() async {
+    final gateway = widget.agentInstallGateway;
+    if (gateway == null || _installScanBusy) return;
+    _installScanBusy = true;
+    try {
+      _installScanCompleted(await gateway.scan());
+    } on Object {
+      // A failed read is unknown, never evidence that setup is current.
+      if (mounted) setState(() => _agentSetupNeedsUpdate = null);
+    } finally {
+      _installScanBusy = false;
+    }
+  }
+
+  void _handleInstallVisibility() {
+    if (widget.windowVisible?.value == false) return;
+    unawaited(_refreshInstallStatus());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _offerAgentInstall());
+  }
+
+  void _handleInstallSettingsLoaded() {
+    if (widget.settingsViewModel.isLoaded) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _offerAgentInstall());
+    }
+  }
+
+  Future<void> _offerAgentInstall({bool preview = false}) async {
+    if (!mounted ||
+        _installDialogOpen ||
+        widget.agentInstallGateway == null ||
+        !widget.settingsViewModel.isLoaded ||
+        (preview && !widget.developmentBuild)) {
+      return;
+    }
+    if (!preview &&
+        (_installOfferShown ||
+            widget.settingsViewModel.settings.mcpAccessSeen ||
+            widget.windowVisible?.value == false ||
+            widget.controller.selectedIndex == 3)) {
+      return;
+    }
+    if (!preview) _installOfferShown = true;
+    _installDialogOpen = true;
+    try {
+      final install = await showDialog<bool>(
+        context: context,
+        builder: (context) => DesktopAlertDialog(
+          key: const Key('agent-install-onboarding'),
+          title: Text(context.l10n.agentInstallWelcomeTitle),
+          content: Text(context.l10n.agentInstallWelcomeDescription),
+          actions: [
+            DesktopActionButton(
+              key: const Key('agent-install-skip'),
+              label: context.l10n.agentInstallSkip,
+              onPressed: () => Navigator.of(context).pop(false),
+            ),
+            DesktopActionButton(
+              key: const Key('agent-install-start'),
+              label: context.l10n.agentInstallStart,
+              tone: DesktopActionTone.primary,
+              onPressed: () => Navigator.of(context).pop(true),
+            ),
+          ],
+        ),
+      );
+      if (!preview) await widget.settingsViewModel.markMcpAccessSeen();
+      if (mounted && install == true) await _openAgentApi();
+    } finally {
+      _installDialogOpen = false;
+    }
+  }
+
   int _clipboardShortcutStartIndex = 0;
   int _clipboardGroupShortcutStartIndex = 0;
   late int _lastClipboardFilterToggleRevision;
@@ -129,6 +224,8 @@ class _ShellScreenState extends State<ShellScreen> {
     _lastClipboardRefreshRevision = widget.controller.clipboardRefreshRevision;
     _lastLibraryRefreshRevision = widget.controller.libraryRefreshRevision;
     _lastSelectedIndex = widget.controller.selectedIndex;
+    _lastAgentInstallPreviewRevision =
+        widget.controller.agentInstallPreviewRevision;
     widget.controller.addListener(_handleNavigationChanged);
     widget.shortcutHints?.addListener(_handleExternalShortcutHints);
     _lastDeviceShareRevision =
@@ -136,11 +233,18 @@ class _ShellScreenState extends State<ShellScreen> {
     widget.deviceLinkController?.addListener(_handleDeviceLinkChanged);
     widget.clipboardViewModel.load();
     widget.libraryViewModel.load();
+    widget.settingsViewModel.addListener(_handleInstallSettingsLoaded);
+    widget.windowVisible?.addListener(_handleInstallVisibility);
+    _handleInstallVisibility();
   }
 
   @override
   void didUpdateWidget(covariant ShellScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.windowVisible != widget.windowVisible) {
+      oldWidget.windowVisible?.removeListener(_handleInstallVisibility);
+      widget.windowVisible?.addListener(_handleInstallVisibility);
+    }
     if (oldWidget.controller != widget.controller) {
       _cancelSearchClearHold();
       oldWidget.controller.removeListener(_handleNavigationChanged);
@@ -151,6 +255,8 @@ class _ShellScreenState extends State<ShellScreen> {
           widget.controller.clipboardRefreshRevision;
       _lastLibraryRefreshRevision = widget.controller.libraryRefreshRevision;
       _lastSelectedIndex = widget.controller.selectedIndex;
+      _lastAgentInstallPreviewRevision =
+          widget.controller.agentInstallPreviewRevision;
     }
     if (oldWidget.shortcutHints != widget.shortcutHints) {
       oldWidget.shortcutHints?.removeListener(_handleExternalShortcutHints);
@@ -171,10 +277,19 @@ class _ShellScreenState extends State<ShellScreen> {
     widget.controller.removeListener(_handleNavigationChanged);
     widget.shortcutHints?.removeListener(_handleExternalShortcutHints);
     widget.deviceLinkController?.removeListener(_handleDeviceLinkChanged);
+    widget.settingsViewModel.removeListener(_handleInstallSettingsLoaded);
+    widget.windowVisible?.removeListener(_handleInstallVisibility);
     super.dispose();
   }
 
   void _handleNavigationChanged() {
+    final previewRevision = widget.controller.agentInstallPreviewRevision;
+    if (previewRevision != _lastAgentInstallPreviewRevision) {
+      _lastAgentInstallPreviewRevision = previewRevision;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        unawaited(_offerAgentInstall(preview: true));
+      });
+    }
     final int selectedIndex = widget.controller.selectedIndex;
     if (selectedIndex != 2) {
       _cancelSearchClearHold();
@@ -686,6 +801,9 @@ class _ShellScreenState extends State<ShellScreen> {
         onOpenWorkspace: widget.controller.open,
         onOpenAgentApi: () => unawaited(_openAgentApi()),
         agentBaseUri: widget.agentBaseUri,
+        agentSetupNeedsUpdate: widget.agentInstallGateway == null
+            ? null
+            : (_agentSetupNeedsUpdate ?? false),
         onHideWindow: widget.onHideWindow,
         windowVisible: widget.windowVisible,
         resourceManagerLauncher: _resourceManagerLauncher(),
@@ -733,6 +851,8 @@ class _ShellScreenState extends State<ShellScreen> {
         activityController: widget.activityController,
         issueCenterController: widget.issueCenterController,
         resourceManagerLauncher: _resourceManagerLauncher(),
+        agentInstallGateway: widget.agentInstallGateway,
+        onInstallScanCompleted: _installScanCompleted,
         focusMcpOnOpen: _focusMcpOnOpen,
         onMcpFocusHandled: _handleMcpFocusHandled,
         onBack: () => widget.controller.open(0),

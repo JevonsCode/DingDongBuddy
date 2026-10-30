@@ -9,13 +9,13 @@
 <h1 align="center">DingDong</h1>
 
 <p align="center">
-  <a href="https://github.com/JevonsCode/DingDongCodexPet">叮咚 Logo 的 Codex 宠物 · 项目地址</a><br>
+  <a href="https://github.com/JevonsCode/DingDongCodexPet">DingDong Logo 的 Codex 宠物 · 项目地址</a><br>
   <sub>宠物仓库目前为私有，需要仓库访问权限。</sub>
 </p>
 
 
 <p align="center">
-  <strong>复制的内容，整理好再复用<br>统一管理提示词、Skill、MCP<br>接入的 Agent 消息一处收好，叮咚哪一声由你定</strong>
+  <strong>复制的内容，整理好再复用<br>统一管理提示词、Skill、MCP<br>接入的 Agent 消息一处收好，DingDong 的提醒声由你定</strong>
 </p>
 
 DingDong 是一个免费开源的桌面小伙伴，帮你整理内容、用好本地 Agent：
@@ -23,13 +23,13 @@ DingDong 是一个免费开源的桌面小伙伴，帮你整理内容、用好�
 只维护一份；接入的 Agent 消息统一收好，桌面提示声由你选。重要提醒和选中的
 剪贴板内容，也能送到你配对的可信手机。
 
-**DingDong 1.10.3（构建 82）** 更新社区声音，区分 Claude Desktop 与 Claude Code，
-并用提醒颜色标识未读 Agent 通知。
+**DingDong 1.11.0（构建 83）** 支持检测本机 Agent 并引导接入和清理，
+记录已打开的通知，并增加更宽的设置目录。
 
 配置方式和数据边界见 [AI+ 使用说明](docs/product/ai-companion.md)，完整入口见[使用文档](docs/product/README.md)。
 
 快捷面板与资源管理中的剪贴板历史均每批加载 50 条，搜索和筛选覆盖完整历史。
-快捷面板默认显示最近 21 个 Agents，在“**设置 → 最近 Agent → 快捷面板显示条数**”
+快捷面板默认显示最近 21 个 Agents，在“**设置 → 快捷面板显示条数**”
 修改。详见[剪贴板历史](docs/product/clipboard-history.md)和[提醒与最近 Agents](docs/product/reminders.md)。
 
 支持的 Agent 每次完整回复后，DingDong 还会附上一行“资源小票”：本轮生效的
@@ -104,18 +104,21 @@ AI+ 不再分析剪贴板、生成洞察或安排主动关怀；打开页面、�
 可供 Agent 做判断、选择和评分，并独立显示 Token 用量。第三方服务的使用规则见
 [Jev 官网](https://typesafe.ai/)。更多插件陆续增加中。
 
-## 可选的 Windows 截图与划词插件
+## 系统截图与 Windows 划词插件
 
-DingDong 1.10.3 在“**资源管理 → 插件**”中提供可选的 Windows 截图与划词。
-启用截图后按 **Ctrl+Alt+A** 框选，在内置编辑器标注，再复制或保存 PNG。
-划词提供复制、翻译、解释和润色，只有主动点击模型动作才发送文字，
-密码框和无法读取的选区不触发。插件详情展示来源、许可与上游版本；
+当前开发版的“**资源管理 → 插件 → 截图**”只提供系统截图快捷键，
+可录制自己的组合键、恢复默认或立即截图。默认 Windows 为 **Ctrl+Alt+A**，
+转发到 **Win+Shift+S**；macOS 为 **⌘⌥A**，打开系统“截屏”。
+截图、标注、复制与保存由系统工具处理，DingDong 不提供内置截图编辑器。
+
+Windows 划词提供复制、翻译、解释和润色，只有主动点击模型动作才发送文字，
+密码框和无法读取的选区不触发。划词详情展示来源、许可与上游版本；
 其他 Agent 客户端的插件清单独立放在“资源”中。
 
-Windows 托盘保留叮咚原始形象，提供可选的摇摆动画，悬浮胶囊按提醒分组显示数量，
+Windows 托盘保留 DingDong 原始形象，提供可选的摇摆动画，悬浮胶囊按提醒分组显示数量，
 并遵循静态提醒和减少动态效果设置。
 
-设置、数据边界与尚待跨应用验收的范围见 [Windows 插件指南](docs/product/screenshot-plugin.md)。
+设置、数据边界与尚待跨应用验收的范围见 [截图与划词指南](docs/product/screenshot-plugin.md)。
 
 ## 可选的 macOS 系统级划词
 
@@ -253,11 +256,11 @@ Android Chrome 链路已经完成包括后台通知在内的端到端实测。iP
 [INSTALL_WITH_AGENT.md](INSTALL_WITH_AGENT.md)。它安装官方 Release，不会克隆
 或编译仓库。
 
-已发布的稳定安装包 · 1.10.3：
+已发布的稳定安装包 · 1.11.0：
 
-- [macOS · Apple 芯片 · 1.10.3](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.3/DingDong-1.10.3-macos-arm64.dmg)
-- [macOS · Intel · 1.10.3](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.3/DingDong-1.10.3-macos-x64.dmg)
-- [Windows x64 · 1.10.3](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.10.3/DingDong-1.10.3-windows-x64-Setup.exe)
+- [macOS · Apple 芯片 · 1.11.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.0/DingDong-1.11.0-macos-arm64.dmg)
+- [macOS · Intel · 1.11.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.0/DingDong-1.11.0-macos-x64.dmg)
+- [Windows x64 · 1.11.0](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.0/DingDong-1.11.0-windows-x64-Setup.exe)
 
 macOS 需要 13 或更高版本。快速粘贴需要辅助功能权限；普通剪贴板历史不需要
 “完全磁盘访问”或“屏幕录制”权限。
@@ -290,6 +293,11 @@ DingDong 在 Codex 中使用三条互相独立的原生链路：
 已配置完成 Hook 时，Agent 不需要为同一个已完成任务再次调用 `dingdong_notify`。
 这个工具用于阻塞、等待用户处理，或没有完成 Hook 的客户端。
 
+也可以直接在 DingDong 里接入：打开“**Agent 连接中心 → MCP 接入 → 安装到 Agent**”，
+DingDong 会列出这台电脑上找到的 Agent，先显示要修改的文件，再把 MCP 和 Hook
+装到你勾选的 Agent 里。
+DEV 版本会显示真实检测结果和只读改动预览，不修改本机 Agent 配置。
+
 自动接入会保留原生文件里的无关内容，包括 `~/.codex/config.toml`、
 `~/.claude/settings.json`、`~/.cursor/hooks.json` 和
 `~/.gemini/settings.json`。可执行文件或 MCP 配置变化后，Codex 可能要求
@@ -321,7 +329,7 @@ DingDong 在 Codex 中使用三条互相独立的原生链路：
 | 默认页面 | 动态 | 动态 / 资源库 / 剪贴板 |
 | 剪贴板监听 | 关闭 | 开启 / 关闭 |
 | 剪贴板保留 | 5000 条、120 天 | 20–5000 条；1–730 天 |
-| 完成提示声 | 经典叮咚 | 内置、自定义、系统声音或静音 |
+| 完成提示声 | DingDong 经典 | 内置、自定义、系统声音或静音 |
 | 语言 | 跟随系统 | English / 简体中文 / Español |
 | Agent 回复尾部符号 | ♥ / ♦ / ♠ | Prompt、Skill 和 MCP 可分别自定义 |
 | 会话 Token 用量 | 开启 | 只显示 Codex、Claude Code、Pi 已支持会话的准确值；不支持时省略而不估算 |

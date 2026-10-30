@@ -7,6 +7,8 @@ enum TrayIconLayoutTest {
         let app = NSApplication.shared
         app.setActivationPolicy(.accessory)
         let icon = TrayIcon()
+        precondition(icon.responds(to: NSSelectorFromString("previewNotchBubble:")),
+            "Tray icon must expose the native notch bubble preview")
         let asset = NSImage(contentsOfFile: CommandLine.arguments[1])!
         asset.size = NSSize(width: 22, height: 22)
         icon.setImage(asset, "left")

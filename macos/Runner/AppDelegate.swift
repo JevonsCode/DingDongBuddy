@@ -14,7 +14,7 @@ private func ddAppDelegateString(_ key: String) -> String {
   )
 }
 
-private struct GlobalHotKeyConfiguration: Equatable {
+struct GlobalHotKeyConfiguration: Equatable {
   let keyCode: UInt32
   let modifiers: UInt32
 
@@ -127,6 +127,7 @@ class AppDelegate: FlutterAppDelegate {
   private var applicationUpdater: DingDongUpdater?
   private var selectionPluginChannel: FlutterMethodChannel?
   private var selectionPluginController: SelectionPluginController?
+  private var screenshotPluginController: ScreenshotPluginController?
   private let accessibilityPermissionAssistant =
     AccessibilityPermissionAssistant()
   private var desktopShellReady = false
@@ -141,6 +142,13 @@ class AppDelegate: FlutterAppDelegate {
   override func applicationDidFinishLaunching(_ notification: Notification) {
 #if DEBUG
     installDebugTerminationHandler()
+    if let menu = NSApp.mainMenu?.items.first?.submenu {
+      let item = NSMenuItem(title: ddAppDelegateString("test_panel"),
+                            action: #selector(showTestPanelFromAppMenu(_:)),
+                            keyEquivalent: "")
+      item.target = self
+      menu.insertItem(item, at: min(1, menu.items.count))
+    }
 #endif
     let openedInteractively = NSApp.isActive ||
       NSWorkspace.shared.frontmostApplication?.processIdentifier == ProcessInfo.processInfo.processIdentifier
@@ -322,6 +330,9 @@ class AppDelegate: FlutterAppDelegate {
         }
       }
       self.hotKeyChannel = hotKeyChannel
+      self.screenshotPluginController = ScreenshotPluginController(
+        messenger: controller.engine.binaryMessenger
+      )
       let selectionPluginController = SelectionPluginController()
       selectionPluginController.onOpenAccessibilitySettings = { [weak self] in
         self?.accessibilityPermissionAssistant.show()
@@ -550,10 +561,15 @@ class AppDelegate: FlutterAppDelegate {
     }
     unregisterClipboardHotKey()
     selectionPluginController?.shutdown()
+    screenshotPluginController?.shutdown()
     super.applicationWillTerminate(notification)
   }
 
 #if DEBUG
+  @objc private func showTestPanelFromAppMenu(_ sender: NSMenuItem) {
+    hotKeyChannel?.invokeMethod("showTestPanel", arguments: nil)
+  }
+
   private func installDebugTerminationHandler() {
     signal(SIGTERM, SIG_IGN)
     let source = DispatchSource.makeSignalSource(signal: SIGTERM, queue: .main)
@@ -672,8 +688,14 @@ class AppDelegate: FlutterAppDelegate {
     )
     let handlerStatus = InstallEventHandler(
       GetApplicationEventTarget(),
-      { _, _, userData in
-        guard let userData else { return noErr }
+      { _, event, userData in
+        guard let userData, let event else { return OSStatus(eventNotHandledErr) }
+        var id = EventHotKeyID()
+        guard GetEventParameter(event, EventParamName(kEventParamDirectObject),
+          EventParamType(typeEventHotKeyID), nil, MemoryLayout<EventHotKeyID>.size,
+          nil, &id) == noErr, id.signature == 0x44444356, id.id == 1 else {
+          return OSStatus(eventNotHandledErr)
+        }
         let app = Unmanaged<AppDelegate>.fromOpaque(userData).takeUnretainedValue()
         let foreground = NSWorkspace.shared.frontmostApplication
         if foreground?.bundleIdentifier != Bundle.main.bundleIdentifier {

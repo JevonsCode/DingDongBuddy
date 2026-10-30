@@ -11,6 +11,7 @@ final class ShellController extends ChangeNotifier {
   int _clipboardRefreshRevision = 0;
   int _clipboardSearchFocusRevision = 0;
   int _libraryRefreshRevision = 0;
+  int _agentInstallPreviewRevision = 0;
   TrayBuddyState _mascotState = TrayBuddyState.normal;
 
   int get selectedIndex => _selectedIndex;
@@ -18,6 +19,7 @@ final class ShellController extends ChangeNotifier {
   int get clipboardRefreshRevision => _clipboardRefreshRevision;
   int get clipboardSearchFocusRevision => _clipboardSearchFocusRevision;
   int get libraryRefreshRevision => _libraryRefreshRevision;
+  int get agentInstallPreviewRevision => _agentInstallPreviewRevision;
   TrayBuddyState get mascotState => _mascotState;
 
   void open(int index) {
@@ -46,6 +48,11 @@ final class ShellController extends ChangeNotifier {
 
   void requestLibraryRefresh() {
     _libraryRefreshRevision += 1;
+    notifyListeners();
+  }
+
+  void requestAgentInstallPreview() {
+    _agentInstallPreviewRevision += 1;
     notifyListeners();
   }
 
