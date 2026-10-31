@@ -29,6 +29,10 @@ constexpr int kBallDiameter = 24;
 constexpr int kBallGap = 6;
 constexpr int kCapsulePadding = 8;
 constexpr size_t kMaximumGroups = 64;
+// One group adds nothing the tray icon's own color and motion don't already
+// say, and a capsule around a single circle reads as a bullseye. Hovering
+// opens the column only once there is something to compare.
+constexpr size_t kMinimumGroups = 2;
 // Motion matches the web dock's pin stack: the capsule fades and rises, then
 // each ball springs in from 80% scale, the one nearest the icon first.
 constexpr UINT_PTR kAnimationTimer = 2;
@@ -200,9 +204,13 @@ TrayHoverCard::~TrayHoverCard() {
   }
 }
 
+bool TrayHoverCard::HasPreview() const {
+  return preview_.total_count > 0 && preview_.rows.size() >= kMinimumGroups;
+}
+
 void TrayHoverCard::SetPreview(ReminderPreview preview) {
   preview_ = std::move(preview);
-  if (preview_.total_count <= 0 || preview_.rows.empty()) {
+  if (!HasPreview()) {
     Reset();
   } else if (visible_) {
     RECT anchor;
@@ -247,7 +255,7 @@ bool TrayHoverCard::ReadAnchor(RECT* rect) const {
 
 void TrayHoverCard::OnTrayMouseMove(
     const NOTIFYICONIDENTIFIER& identifier) {
-  if (!enabled_ || preview_.total_count <= 0 || preview_.rows.empty()) {
+  if (!enabled_ || !HasPreview()) {
     return;
   }
   identifier_ = identifier;
@@ -289,8 +297,7 @@ bool TrayHoverCard::PointerIsInside(const POINT& point) const {
 void TrayHoverCard::PollPointer() {
   RECT anchor;
   POINT point;
-  if (!enabled_ || preview_.total_count <= 0 || preview_.rows.empty() ||
-      !ReadAnchor(&anchor) ||
+  if (!enabled_ || !HasPreview() || !ReadAnchor(&anchor) ||
       !GetCursorPos(&point)) {
     Reset();
     return;

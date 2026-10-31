@@ -61,6 +61,7 @@ class TrayHoverCard {
   };
   static LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wparam,
                                      LPARAM lparam);
+  bool HasPreview() const;
   bool EnsureWindow();
   bool ReadAnchor(RECT* rect) const;
   bool PointerIsInside(const POINT& point) const;
