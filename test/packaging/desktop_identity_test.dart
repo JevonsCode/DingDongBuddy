@@ -900,7 +900,7 @@ void main() {
       pagesWorkflow,
       matches(
         RegExp(
-          r'sparse-checkout:\s*\|\s+/docs/index\.html\s+/docs/voices/\s+/docs/product/\s+/\.github/scripts/',
+          r'sparse-checkout:\s*\|\s+/docs/index\.html\s+/docs/styles\.css\s+/docs/voices/\s+/docs/product/\s+/\.github/scripts/',
         ),
       ),
     );

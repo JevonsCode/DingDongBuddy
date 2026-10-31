@@ -2054,6 +2054,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         }
         localStorage.setItem("dingdong-site-language", lang);
         renderDemo();
+        if (storyScene) playStoryScene();
         renderDownloadRecommendation();
         renderDownloadStats();
       };
@@ -2096,9 +2097,424 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         card.addEventListener("click", () => playSoundPreview(card));
       });
 
+      // Scroll story: on wide, tall screens with motion allowed, the demo stays
+      // beside the text and acts out the section being read. The added layers are
+      // decorative (aria-hidden); the same information is in the page copy.
+      const storyCopy = {
+        en: {
+          manageTitle: "Resource Manager",
+          resources: [
+            ["prompt", "Project rules", "DingDongBuddy"],
+            ["skill", "Release flow", "Codex · Claude Code"],
+            ["skill", "UI hardening", "All Agents"],
+            ["mcp", "GitHub", "DingDongBuddy"],
+            ["mcp", "Browser", "Claude Code"]
+          ],
+          usageTitle: "Token usage",
+          usageMeta: "Last 18 weeks · Codex, Claude Code, Pi",
+          usageTotal: "≥ 1.24M Token",
+          usageUnknown: "Unknown",
+          usageDay: ["Oct 28", "86.4K"],
+          usageSources: [["Codex", "62.4K"], ["Claude Code", "21.8K"], ["Pi", "2.2K"]],
+          less: "Less",
+          more: "More",
+          pluginsTitle: "Plugins",
+          plugins: [["Jev", "Judgments, choices, and scores"], ["Selection", "Copy, translate, explain, polish"]],
+          install: "Install",
+          installed: "Installed",
+          selection: ["构建在", "所有平台上都通过了", "。"],
+          selectionActions: ["Copy", "Translate", "Explain", "Polish"],
+          selectionResult: "passed on every platform",
+          agentsTitle: "Connect Agents",
+          agentsMeta: "Found on this computer",
+          connecting: "Connecting…",
+          connected: "Connected",
+          notifications: [
+            ["MacBook Pro", "Agent finished", "Codex fixed the login page."],
+            ["Studio PC", "Needs your decision", "Claude Code is waiting for a merge choice."]
+          ],
+          ring: ["Needs your decision", "Claude Code · just now"],
+          now: "now"
+        },
+        zh: {
+          manageTitle: "资源管理",
+          resources: [
+            ["prompt", "项目规范", "DingDongBuddy"],
+            ["skill", "发布流程", "Codex · Claude Code"],
+            ["skill", "界面加固", "全部 Agent"],
+            ["mcp", "GitHub", "DingDongBuddy"],
+            ["mcp", "Browser", "Claude Code"]
+          ],
+          usageTitle: "Token 用量",
+          usageMeta: "最近 18 周 · Codex、Claude Code、Pi",
+          usageTotal: "≥ 124 万 Token",
+          usageUnknown: "未知",
+          usageDay: ["10 月 28 日", "8.64 万"],
+          usageSources: [["Codex", "6.24 万"], ["Claude Code", "2.18 万"], ["Pi", "2,200"]],
+          less: "少",
+          more: "多",
+          pluginsTitle: "插件",
+          plugins: [["Jev", "判断、选择和打分"], ["划词", "复制、翻译、解释、润色"]],
+          install: "安装",
+          installed: "已安装",
+          selection: ["The build ", "passed on every platform", "."],
+          selectionActions: ["复制", "翻译", "解释", "润色"],
+          selectionResult: "在所有平台上都通过了",
+          agentsTitle: "接入 Agent",
+          agentsMeta: "在这台电脑上找到",
+          connecting: "接入中…",
+          connected: "已接入",
+          notifications: [
+            ["MacBook Pro", "Agent 做完了", "Codex 修好了登录页。"],
+            ["工作室台式机", "等你决定", "Claude Code 在等你选合并方式。"]
+          ],
+          ring: ["等你决定", "Claude Code · 刚刚"],
+          now: "刚刚"
+        }
+      };
+      const storyKeys = detectedDownloadPlatform === "windows"
+        ? { open: ["Ctrl", "Shift", "V"], tabs: [["Alt", "Q"], ["Alt", "W"], ["Alt", "E"]] }
+        : { open: ["⌘", "⇧", "V"], tabs: [["⌃", "Q"], ["⌃", "W"], ["⌃", "E"]] };
+      const storyAgents = ["Codex", "Claude Code", "Cursor", "Gemini CLI", "GitHub Copilot CLI", "OpenCode"];
+      const storySheetScenes = ["token-history", "plugins", "mcp"];
+      const storyQuery = window.matchMedia(
+        "(min-width: 1180px) and (min-height: 760px) and (prefers-reduced-motion: no-preference)"
+      );
+      const storyMain = document.querySelector("main");
+      const storyHero = document.querySelector(".hero");
+      const productStage = document.querySelector(".product-stage");
+      const demoWindow = productStage.querySelector(".demo-window");
+      const storySections = ["product", "features", "devices", "resources", "token-history", "plugins", "defaults", "sounds", "mcp"]
+        .map((id) => document.getElementById(id));
+      const storyRail = createDemoElement("div", "story-rail");
+      const storyLayer = createDemoElement("div", "story-layer");
+      const storyFloat = createDemoElement("div", "story-float");
+      const storyPointer = createDemoElement("span", "story-pointer");
+      storyPointer.innerHTML = '<svg viewBox="0 0 20 20"><path d="M4 2.5v13.2l3.4-3.1 2.3 5.1 2.4-1.1-2.3-5h4.6z"/></svg>';
+      [storyLayer, storyFloat, storyPointer].forEach((node) => node.setAttribute("aria-hidden", "true"));
+      let storyObserver = null;
+      let storyScene = null;
+      let storyTimers = [];
+
+      const storyLater = (delay, callback) => {
+        storyTimers.push(window.setTimeout(callback, delay));
+      };
+
+      const storyText = () => storyCopy[demoState.language];
+
+      const showStoryTab = (tab) => {
+        demoState.activeTab = tab;
+        renderDemo();
+      };
+
+      const createStoryAvatar = (label) => createDemoElement("span", "story-avatar", label.slice(0, 1));
+
+      const createStorySheetHead = (symbol, title) => {
+        const head = createDemoElement("div", "story-sheet-head");
+        head.append(
+          createDemoSymbol(symbol, ""),
+          createDemoElement("strong", "", title),
+          createDemoElement("span", "story-close", "×")
+        );
+        return head;
+      };
+
+      const storySheetRenderers = {
+        resources: () => {
+          const text = storyText();
+          const counts = createDemoElement("div", "story-type-counts");
+          ["prompt", "skill", "mcp"].forEach((type) => {
+            const total = text.resources.filter(([kind]) => kind === type).length;
+            counts.append(createDemoElement("span", `is-${type}`, `${type === "mcp" ? "MCP" : type[0].toUpperCase() + type.slice(1)} ${total}`));
+          });
+          const body = createDemoElement("div", "story-sheet-body");
+          text.resources.forEach(([type, title, scope], index) => {
+            const row = createDemoElement("div", "story-row");
+            row.style.setProperty("--i", index);
+            const label = createDemoElement("div", "");
+            label.append(createDemoElement("b", "", title), createDemoElement("small", "", scope));
+            const status = createDemoElement("span", "story-check");
+            status.append(createDemoStatusIcon(true));
+            row.append(createDemoSymbol(type, ""), label, status);
+            body.append(row);
+          });
+          return [createStorySheetHead("manage", text.manageTitle), counts, body];
+        },
+        usage: () => {
+          const text = storyText();
+          const summary = createDemoElement("div", "story-usage-summary");
+          summary.append(createDemoElement("strong", "", text.usageTotal), createDemoElement("small", "", text.usageMeta));
+          const heatmap = createDemoElement("div", "story-heatmap");
+          for (let index = 0; index < 126; index += 1) {
+            const column = Math.floor(index / 7);
+            const weekday = index % 7;
+            const noise = Math.abs(Math.sin(index * 12.9898) * 43758.5453) % 1;
+            const level = Math.min(4, Math.floor(noise * (weekday > 4 ? 2.4 : 5)));
+            const unknown = index >= 64 && index <= 66;
+            const selected = index === 115;
+            const cell = createDemoElement("span", unknown ? "is-unknown" : `level-${selected ? 4 : level}${selected ? " is-selected" : ""}`);
+            cell.style.setProperty("--col", column);
+            heatmap.append(cell);
+          }
+          const legend = createDemoElement("div", "story-heatmap-legend");
+          legend.append(createDemoElement("span", "", text.less));
+          [0, 1, 2, 3, 4].forEach((level) => legend.append(createDemoElement("i", `level-${level}`)));
+          legend.append(
+            createDemoElement("span", "", text.more),
+            createDemoElement("i", "is-unknown"),
+            createDemoElement("span", "", text.usageUnknown)
+          );
+          const day = createDemoElement("div", "story-usage-day");
+          [text.usageDay, ...text.usageSources].forEach(([label, value]) => {
+            const line = createDemoElement("div", "");
+            line.append(createDemoElement("span", "", label), createDemoElement("span", "", value));
+            day.append(line);
+          });
+          return [createStorySheetHead("today", text.usageTitle), summary, heatmap, legend, day];
+        },
+        plugins: () => {
+          const text = storyText();
+          const body = createDemoElement("div", "story-sheet-body");
+          text.plugins.forEach(([name, detail], index) => {
+            const row = createDemoElement("div", "story-row");
+            row.style.setProperty("--i", index);
+            const label = createDemoElement("div", "");
+            label.append(createDemoElement("b", "", name), createDemoElement("small", "", detail));
+            row.append(createStoryAvatar(name), label, createDemoElement("span", "story-install", text.install));
+            body.append(row);
+          });
+          return [createStorySheetHead("manage", text.pluginsTitle), body];
+        },
+        agents: () => {
+          const text = storyText();
+          const meta = createDemoElement("p", "story-sheet-meta", text.agentsMeta);
+          const body = createDemoElement("div", "story-sheet-body");
+          storyAgents.forEach((name, index) => {
+            const row = createDemoElement("div", "story-row");
+            row.style.setProperty("--i", index);
+            const status = createDemoElement("span", "story-status", text.connecting);
+            row.append(createStoryAvatar(name), createDemoElement("b", "", name), status);
+            body.append(row);
+          });
+          return [createStorySheetHead("mcp", text.agentsTitle), meta, body];
+        }
+      };
+
+      const openStorySheet = (kind, origin) => {
+        const sheet = createDemoElement("div", "story-sheet");
+        sheet.append(...storySheetRenderers[kind]());
+        const current = storyLayer.querySelector(".story-sheet");
+        if (current && !storyLayer.classList.contains("is-closing")) {
+          sheet.classList.add("is-swapped");
+          current.replaceWith(sheet);
+        } else {
+          storyLayer.classList.remove("is-closing");
+          storyLayer.replaceChildren(createDemoElement("div", "story-scrim"), sheet);
+        }
+        if (origin) {
+          const windowBox = demoWindow.getBoundingClientRect();
+          const originBox = origin.getBoundingClientRect();
+          const x = originBox.left + originBox.width / 2 - windowBox.left - 12;
+          const y = originBox.top + originBox.height / 2 - windowBox.top - 58;
+          sheet.style.transformOrigin = `${x}px ${y}px`;
+        }
+        return sheet;
+      };
+
+      const closeStorySheet = () => {
+        if (!storyLayer.firstChild) return;
+        storyLayer.classList.add("is-closing");
+        storyLater(220, () => {
+          storyLayer.classList.remove("is-closing");
+          storyLayer.replaceChildren();
+        });
+      };
+
+      const pointStoryAt = (target) => {
+        const stageBox = productStage.getBoundingClientRect();
+        const box = target.getBoundingClientRect();
+        const x = box.left - stageBox.left + box.width * 0.55;
+        const y = box.top - stageBox.top + box.height * 0.6;
+        storyPointer.style.transform = `translate(${x}px, ${y}px)`;
+      };
+
+      const clickStoryTarget = (target, onClick) => {
+        const stageBox = productStage.getBoundingClientRect();
+        storyPointer.classList.add("is-instant");
+        storyPointer.style.transform = `translate(${stageBox.width - 36}px, ${stageBox.height - 150}px)`;
+        void storyPointer.offsetWidth;
+        storyPointer.classList.remove("is-instant");
+        storyPointer.classList.add("is-visible");
+        storyLater(80, () => pointStoryAt(target));
+        storyLater(860, () => {
+          storyPointer.classList.add("is-pressing");
+          target.classList.add("is-story-pressed");
+        });
+        storyLater(1040, () => {
+          storyPointer.classList.remove("is-pressing");
+          target.classList.remove("is-story-pressed");
+          onClick();
+        });
+        storyLater(1900, () => storyPointer.classList.remove("is-visible"));
+      };
+
+      const showStoryKeys = (keys) => {
+        const toast = createDemoElement("div", "story-keys");
+        keys.forEach((key) => toast.append(createDemoElement("kbd", "", key)));
+        storyFloat.replaceChildren(toast);
+      };
+
+      const storyScenes = {
+        product: () => showStoryTab("library"),
+        features: () => {
+          showStoryTab("clipboard");
+          storyLater(250, () => showStoryKeys(storyKeys.open));
+        },
+        devices: () => {
+          showStoryTab("today");
+          const text = storyText();
+          const phone = createDemoElement("div", "story-phone");
+          text.notifications.forEach(([source, title, body], index) => {
+            const notice = createDemoElement("div", "story-notice");
+            notice.style.setProperty("--i", index);
+            const icon = document.createElement("img");
+            icon.src = "./assets/dingdong-pwa-192.png";
+            icon.alt = "";
+            const meta = createDemoElement("span", "story-notice-meta");
+            meta.append(createDemoElement("span", "", `DingDong · ${source}`), createDemoElement("time", "", text.now));
+            const noticeCopy = createDemoElement("div", "");
+            noticeCopy.append(meta, createDemoElement("b", "", title), createDemoElement("p", "", body));
+            notice.append(icon, noticeCopy);
+            phone.append(notice);
+          });
+          storyFloat.replaceChildren(phone);
+        },
+        resources: () => {
+          showStoryTab("library");
+          const manage = demoPanel.querySelector(".demo-manage-button");
+          storyLater(300, () => clickStoryTarget(manage, () => openStorySheet("resources", manage)));
+        },
+        "token-history": () => {
+          showStoryTab("library");
+          openStorySheet("usage");
+        },
+        plugins: () => {
+          showStoryTab("library");
+          const sheet = openStorySheet("plugins");
+          const install = sheet.querySelectorAll(".story-install")[1];
+          storyLater(600, () => clickStoryTarget(install, () => {
+            const text = storyText();
+            install.textContent = text.installed;
+            install.classList.add("is-done");
+            const selection = createDemoElement("div", "story-selection");
+            const sentence = createDemoElement("p", "");
+            sentence.append(
+              document.createTextNode(text.selection[0]),
+              createDemoElement("mark", "", text.selection[1]),
+              document.createTextNode(text.selection[2])
+            );
+            const actions = createDemoElement("div", "story-selection-actions");
+            text.selectionActions.forEach((label, index) => {
+              actions.append(createDemoElement("span", index === 1 ? "is-active" : "", label));
+            });
+            selection.append(sentence, actions, createDemoElement("p", "story-selection-result", text.selectionResult));
+            storyLater(500, () => sheet.append(selection));
+          }));
+        },
+        defaults: () => {
+          ["today", "library", "clipboard"].forEach((tab, index) => {
+            storyLater(index * 1500, () => {
+              showStoryTab(tab);
+              showStoryKeys(storyKeys.tabs[index]);
+            });
+          });
+        },
+        sounds: () => {
+          showStoryTab("today");
+          const [title, detail] = storyText().ring;
+          const toast = createDemoElement("div", "story-ring");
+          const copyBlock = createDemoElement("div", "");
+          copyBlock.append(createDemoElement("b", "", title), createDemoElement("small", "", detail));
+          toast.append(createDemoElement("i", ""), copyBlock);
+          const alert = productStage.querySelector(".menu-alert.is-orange");
+          const ring = () => {
+            alert.classList.remove("is-story-ringing");
+            demoMascot.classList.remove("is-shaking");
+            void alert.offsetWidth;
+            alert.classList.add("is-story-ringing");
+            demoMascot.classList.add("is-shaking");
+          };
+          storyLater(200, () => {
+            storyFloat.replaceChildren(toast);
+            ring();
+          });
+          storyLater(2600, ring);
+        },
+        mcp: () => {
+          showStoryTab("today");
+          const sheet = openStorySheet("agents");
+          sheet.querySelectorAll(".story-row").forEach((row, index) => {
+            storyLater(700 + index * 360, () => {
+              const status = row.querySelector(".story-status");
+              status.textContent = storyText().connected;
+              status.prepend(createDemoStatusIcon(true));
+              row.classList.add("is-connected");
+            });
+          });
+        }
+      };
+
+      const playStoryScene = () => {
+        storyTimers.forEach((timer) => window.clearTimeout(timer));
+        storyTimers = [];
+        storyFloat.replaceChildren();
+        storyPointer.classList.remove("is-visible", "is-pressing");
+        if (!storySheetScenes.includes(storyScene)) closeStorySheet();
+        storyScenes[storyScene]();
+      };
+
+      const enableStory = () => {
+        storyMain.classList.add("is-story");
+        storyRail.style.gridRow = `1 / span ${storySections.length}`;
+        storyRail.append(productStage);
+        storyHero.after(storyRail);
+        demoWindow.append(storyLayer);
+        productStage.append(storyFloat, storyPointer);
+        demoPanel.setAttribute("aria-live", "off");
+        storyObserver = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting || entry.target.id === storyScene) return;
+            storyScene = entry.target.id;
+            playStoryScene();
+          });
+        }, { rootMargin: "-42% 0px -52% 0px" });
+        storySections.forEach((section) => storyObserver.observe(section));
+      };
+
+      const disableStory = () => {
+        storyObserver.disconnect();
+        storyTimers.forEach((timer) => window.clearTimeout(timer));
+        storyTimers = [];
+        storyScene = null;
+        storyLayer.className = "story-layer";
+        storyLayer.replaceChildren();
+        storyFloat.replaceChildren();
+        [storyLayer, storyFloat, storyPointer].forEach((node) => node.remove());
+        storyHero.append(productStage);
+        storyRail.remove();
+        storyMain.classList.remove("is-story");
+        demoPanel.setAttribute("aria-live", "polite");
+        showStoryTab("library");
+      };
+
       const preferredLanguage = localStorage.getItem("dingdong-site-language") ||
         (navigator.language && navigator.language.toLowerCase().startsWith("zh") ? "zh" : "en");
       applyLanguage(preferredLanguage);
+      if (storyQuery.matches) enableStory();
+      storyQuery.addEventListener("change", () => {
+        if (storyQuery.matches) enableStory();
+        else disableStory();
+      });
       detectRecommendedDownload();
       if (showDownloadStats) {
         downloadStats.hidden = false;
