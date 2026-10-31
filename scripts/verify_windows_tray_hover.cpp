@@ -50,6 +50,9 @@ static int test_captures = 0;
 static bool test_force_light = false;
 static std::vector<BYTE> test_last_pixels;
 static SIZE test_last_size = {};
+static BYTE test_last_alpha = 0;
+// Static layout checks read settled frames; the motion section turns it on.
+static bool test_motion = false;
 
 static HRESULT TestAnchor(const NOTIFYICONIDENTIFIER*, RECT* rect) {
   *rect = test_anchor;
@@ -82,6 +85,7 @@ static BOOL TestLayer(HWND window, HDC destination, POINT* pos, SIZE* size,
   test_last_pixels.assign(bytes_begin,
                             bytes_begin + dib.dsBm.bmWidthBytes * size->cy);
   test_last_size = *size;
+  test_last_alpha = blend->SourceConstantAlpha;
   if (!test_capture.empty()) {
     Gdiplus::Bitmap image(size->cx, size->cy, dib.dsBm.bmWidthBytes,
                           PixelFormat32bppPARGB,
@@ -103,6 +107,16 @@ static BOOL TestLayer(HWND window, HDC destination, POINT* pos, SIZE* size,
   return UpdateLayeredWindow(window, destination, pos, size, source, src, color, blend, flags);
 }
 
+static BOOL TestSystemParameters(UINT action, UINT param, PVOID data, UINT flags) {
+  if (action == SPI_GETCLIENTAREAANIMATION) {
+    *static_cast<BOOL*>(data) = test_motion ? TRUE : FALSE;
+    return TRUE;
+  }
+  return SystemParametersInfoW(action, param, data, flags);
+}
+// The real pointer stays put, so real tracking would post an instant leave.
+static BOOL TestTrackMouse(TRACKMOUSEEVENT*) { return TRUE; }
+
 #define Shell_NotifyIconGetRect TestAnchor
 #define GetCursorPos TestCursor
 #define GetTickCount64 TestClock
@@ -110,6 +124,8 @@ static BOOL TestLayer(HWND window, HDC destination, POINT* pos, SIZE* size,
 #define GetDpiForMonitor TestDpi
 #define UpdateLayeredWindow TestLayer
 #define RegGetValueW TestTheme
+#define SystemParametersInfoW TestSystemParameters
+#define TrackMouseEvent TestTrackMouse
 #include "tray_hover_card.cpp"
 #undef Shell_NotifyIconGetRect
 #undef GetCursorPos
@@ -118,6 +134,8 @@ static BOOL TestLayer(HWND window, HDC destination, POINT* pos, SIZE* size,
 #undef GetDpiForMonitor
 #undef UpdateLayeredWindow
 #undef RegGetValueW
+#undef SystemParametersInfoW
+#undef TrackMouseEvent
 
 #define CHECK(condition) do { ++test_checks; if (!(condition)) { ++test_failures; std::cerr << "FAIL line " << __LINE__ << ": " << #condition << "\n"; } } while (0)
 
@@ -435,6 +453,82 @@ int wmain(int argc, wchar_t* argv[]) {
   CHECK(card.MakeLayout(600, 600).ball_centers.empty());
   card.OnTrayMouseMove(identifier);
   CHECK(!card.visible_ && !card.timer_active_);
+
+  // Motion: the fake clock drives the entrance, hover spring and exit fade.
+  test_motion = true;
+  test_dpi = 96;
+  test_force_light = false;
+  card.SetPreview(preview);
+  test_pointer = away; card.PollPointer();
+  hover(20000);
+  CHECK(card.visible_ && card.motion_ && card.animation_timer_active_);
+  CHECK(test_last_alpha == 0);
+  test_now = 20470; card.Animate();
+  CHECK(test_last_alpha > 0 && test_last_alpha < 255);
+  CHECK(test_last_pixels != baseline_pixels);
+  test_now = 22400; card.Animate();
+  CHECK(test_last_alpha == 255 && !card.animation_timer_active_);
+  // Once settled, the animated card is pixel-identical to the static one.
+  CHECK(test_last_pixels == baseline_pixels);
+  const POINT second_ball = {
+      tray_manager::kShadowMargin + normal_layout.ball_centers[1].x,
+      tray_manager::kBodyTop + normal_layout.ball_centers[1].y};
+  SendMessageW(card.window_, WM_MOUSEMOVE, 0,
+               MAKELPARAM(second_ball.x, second_ball.y));
+  CHECK(card.hovered_ball_ == 1 && card.animation_timer_active_);
+  test_now = 23400; card.Animate();
+  CHECK(!card.animation_timer_active_ && test_last_pixels != baseline_pixels);
+  SendMessageW(card.window_, WM_MOUSELEAVE, 0, 0);
+  CHECK(card.hovered_ball_ == -1);
+  test_now = 24400; card.Animate();
+  CHECK(test_last_pixels == baseline_pixels);
+  CHECK(card.visible_ && visibility.back());
+  test_pointer = away;
+  test_now = 24500; card.PollPointer();
+  test_now = 24720; card.PollPointer();
+  // Hidden for input and callbacks at once, still painting its fade.
+  CHECK(!card.visible_ && card.closing_ && IsWindowVisible(card.window_));
+  CHECK(!visibility.back());
+  CHECK(SendMessageW(card.window_, WM_NCHITTEST, 0,
+                     MAKELPARAM(first_circle.x, first_circle.y)) == HTTRANSPARENT);
+  test_now = 24790; card.Animate();
+  CHECK(test_last_alpha > 0 && test_last_alpha < 255 && IsWindowVisible(card.window_));
+  test_now = 24900; card.Animate();
+  CHECK(!card.closing_ && !IsWindowVisible(card.window_) && !card.animation_timer_active_);
+  // Re-entering mid-fade restarts the entrance instead of resurrecting the fade.
+  hover(25000);
+  test_pointer = away;
+  test_now = 25500; card.PollPointer();
+  test_now = 25720; card.PollPointer();
+  CHECK(card.closing_);
+  hover(25750);
+  CHECK(card.visible_ && !card.closing_ && card.shown_at_ == 26150);
+  card.Reset();
+  test_now = 27000; card.Animate();
+  CHECK(!IsWindowVisible(card.window_) && !card.animation_timer_active_);
+  // With Windows animations off, everything is immediate.
+  test_motion = false;
+  test_pointer = away; card.PollPointer();
+  hover(28000);
+  CHECK(card.visible_ && test_last_alpha == 255 && !card.animation_timer_active_);
+  CHECK(test_last_pixels == baseline_pixels);
+  card.Reset();
+  CHECK(!IsWindowVisible(card.window_) && !card.closing_);
+
+  // A single group opens nothing; the tray icon already carries it.
+  auto one_group = preview;
+  one_group.rows.resize(1);
+  card.SetPreview(one_group);
+  test_pointer = away; card.PollPointer();
+  hover(29000);
+  CHECK(!card.visible_ && !card.timer_active_);
+  card.SetPreview(preview);
+  hover(30000);
+  CHECK(card.visible_);
+  // Dropping to one group while open closes the column.
+  card.SetPreview(one_group);
+  CHECK(!card.visible_ && !card.timer_active_);
+
   const RECT work = {0, 0, 1920, 1040};
   const SIZE size = {64, 154};
   for (RECT anchor : {RECT{1800, 1050, 1824, 1074}, RECT{1800, -30, 1824, -6},
