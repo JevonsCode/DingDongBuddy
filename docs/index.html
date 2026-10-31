@@ -517,7 +517,6 @@
         <div class="section-heading sound-heading">
           <h2 data-i18n="sounds.title">Choose the sound that brings you back.</h2>
           <p data-i18n="sounds.body">Connected Agents can send a reminder when they finish, get stuck, or need a decision. Pick a built-in sound or import an audio file.</p>
-          <p class="sound-catalog-link"><a href="https://xn--8ovp9s.xn--m8txu.com/dingdong-voices/" data-i18n="sounds.catalog">Explore community voices →</a></p>
           <p data-i18n="sounds.profiles">In Settings → Notifications, control completion and needs-input separately, or add named reminders with their own sound, color, tray style and phone switch. Agents select one by reminderId; saving a condition does not start a monitor. Import PCM WAV audio up to 15 seconds and 5 MiB.</p>
           <a href="https://github.com/JevonsCode/DingDongBuddy/blob/main/docs/product/agent-reminders.md" data-i18n="sounds.guide">Reminder setup and Agent tools →</a>
         </div>
@@ -548,6 +547,25 @@
             <span data-i18n="sounds.deepBody">Low and easy to notice</span>
             <span class="sound-listen" data-i18n="sounds.listen">Listen</span>
           </button>
+        </div>
+
+        <div class="voice-library">
+          <div class="voice-library-copy">
+            <h3 data-i18n="sounds.libraryTitle">Community voice library</h3>
+            <p data-i18n="sounds.libraryBody">Short clips shared by other DingDong users: funny sounds, classic game and movie lines, cartoon effects. Each is 3 seconds or less. Preview one, click Install, and it goes straight into DingDong.</p>
+            <ul class="voice-library-samples">
+              <li>Get over here!</li>
+              <li>Nani</li>
+              <li>HOOYA</li>
+              <li>Pew!</li>
+              <li>Target neutralized</li>
+              <li>John Cena</li>
+            </ul>
+          </div>
+          <div class="voice-library-actions">
+            <a class="voice-library-open" href="https://xn--8ovp9s.xn--m8txu.com/dingdong-voices/" data-i18n="sounds.catalog">Open the voice library →</a>
+            <a class="voice-library-submit" href="https://github.com/JevonsCode/dingdong-voices/issues/new?template=voice.yml" target="_blank" rel="noopener noreferrer" data-i18n="sounds.librarySubmit">Submit your own sound ↗</a>
+          </div>
         </div>
 
         <div class="sound-custom">
@@ -738,7 +756,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "sounds.profiles": "In Settings → Notifications, set completion and needs-input reminders separately, or add your own with a sound, a color, and a phone switch.",
           "sounds.guide": "Reminder setup and Agent tools →",
           "nav.voices": "Voices",
-          "sounds.catalog": "Explore community voices →",
+          "sounds.catalog": "Open the voice library →",
           "footer.pet": "Codex pet project (access required)",
           "nav.product": "Features",
           "nav.devices": "Devices",
@@ -754,6 +772,9 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "story.pluginsBrief": "Install Jev and the selection tools when you want them. Select text to translate, explain, or polish it.",
           "story.mcpBrief": "DingDong finds the Agents on this computer and connects them for you.",
           "story.closeHint": "Close the window with the red button to read the full details.",
+          "sounds.libraryTitle": "Community voice library",
+          "sounds.libraryBody": "Short clips shared by other DingDong users: funny sounds, classic game and movie lines, cartoon effects. Each is 3 seconds or less. Preview one, click Install, and it goes straight into DingDong.",
+          "sounds.librarySubmit": "Submit your own sound ↗",
           "features.title": "What it does for you",
           "features.devices.title": "Take it to your phone",
           "features.devices.body": "Pair your phone to receive Agent reminders and to send files and clipboard items between devices. Connections go direct when possible; the relay is end-to-end encrypted.",
@@ -933,7 +954,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "value.classic": "DingDong Classic",
           "value.orange": "Orange",
           "sounds.title": "Choose the sound that brings you back.",
-          "sounds.body": "DingDong rings when an Agent finishes, gets stuck, or needs your decision.",
+          "sounds.body": "DingDong rings when an Agent finishes, gets stuck, or needs your decision. Give finishing and needs-you different sounds, and you’ll know which it is without looking.",
           "sounds.classic": "Classic",
           "sounds.classicBody": "Balanced and familiar",
           "sounds.soft": "Soft",
@@ -1016,7 +1037,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "sounds.profiles": "在“设置 → 通知”里，完成和需要处理可以分开设置；也可以加自己的提醒，各配一个声音、颜色，并决定要不要推到手机。",
           "sounds.guide": "提醒设置与 Agent 工具说明 →",
           "nav.voices": "声音库",
-          "sounds.catalog": "打开社区声音库 →",
+          "sounds.catalog": "打开声音库 →",
           "footer.pet": "Codex 宠物项目（需访问权限）",
           "nav.product": "功能",
           "nav.devices": "多设备",
@@ -1032,6 +1053,9 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "story.pluginsBrief": "Jev 和划词工具按需安装，选中文字就能翻译、解释、润色。",
           "story.mcpBrief": "DingDong 会找到这台电脑上的 Agent，帮你接好。",
           "story.closeHint": "点窗口左上角的红色按钮，看完整介绍。",
+          "sounds.libraryTitle": "社区声音库",
+          "sounds.libraryBody": "大家投稿的短音效：搞怪声音、经典游戏和影视台词、卡通拟音，每条不超过 3 秒。试听后点「安装」，就直接装进 DingDong。",
+          "sounds.librarySubmit": "投稿你的声音 ↗",
           "features.title": "能帮你做的事",
           "features.devices.title": "手机上接着看",
           "features.devices.body": "配对手机后，可以收 Agent 提醒，也能在设备之间互传文件和剪贴板内容。能直连就直连，走中继时也是端到端加密。",
@@ -1211,7 +1235,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "value.classic": "DingDong 经典",
           "value.orange": "橙黄",
           "sounds.title": "选择 DingDong 的提醒声",
-          "sounds.body": "Agent 做完了、卡住了，或者在等你决定时，DingDong 会响一声。",
+          "sounds.body": "Agent 做完了、卡住了，或者在等你决定时，DingDong 会响一声。做完和等你处理用不同的声音，不用看屏幕也知道是哪件事。",
           "sounds.classic": "DingDong 经典",
           "sounds.classicBody": "均衡，适合作为默认声",
           "sounds.soft": "DingDong 轻柔",
@@ -2179,7 +2203,17 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           ],
           ring: ["Needs your decision", "Claude Code · just now"],
           now: "now",
-          close: "Close Resource Manager"
+          close: "Close Resource Manager",
+          connect: {
+            title: "Connected devices",
+            host: "This computer · Host",
+            hostName: "MacBook Pro",
+            waiting: "Waiting for scan",
+            scan: "Scan with the device you want to trust.",
+            online: "Online devices",
+            devices: [["Pixel 8", "Online"], ["iPhone 15", "Just connected"]],
+            another: "Connect another computer"
+          }
         },
         zh: {
           workspace: "管理",
@@ -2227,7 +2261,17 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           ],
           ring: ["等你决定", "Claude Code · 刚刚"],
           now: "刚刚",
-          close: "关闭资源管理"
+          close: "关闭资源管理",
+          connect: {
+            title: "连接设备",
+            host: "这台电脑 · 主机",
+            hostName: "MacBook Pro",
+            waiting: "等待扫码",
+            scan: "请使用要信任的设备扫码。",
+            online: "当前在线",
+            devices: [["Pixel 8", "在线"], ["iPhone 15", "刚刚连接"]],
+            another: "连接另一台电脑"
+          }
         }
       };
       const storyKeys = detectedDownloadPlatform === "windows"
@@ -2511,6 +2555,79 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         storyFloat.replaceChildren(toast);
       };
 
+      // A pairing QR drawn like the real one: three finder squares and a
+      // fixed pseudo-random module pattern (it encodes nothing).
+      const createStoryQr = () => {
+        const namespace = "http://www.w3.org/2000/svg";
+        const size = 25;
+        const svg = document.createElementNS(namespace, "svg");
+        svg.setAttribute("viewBox", `0 0 ${size} ${size}`);
+        const finder = (x, y) => (
+          x < 8 && y < 8) || (x >= size - 8 && y < 8) || (x < 8 && y >= size - 8);
+        const dark = [];
+        for (let y = 0; y < size; y += 1) {
+          for (let x = 0; x < size; x += 1) {
+            if (finder(x, y)) continue;
+            const noise = Math.abs(Math.sin((x + 1) * 12.9898 + (y + 1) * 78.233) * 43758.5453) % 1;
+            if (noise > 0.52) dark.push(`M${x} ${y}h1v1h-1z`);
+          }
+        }
+        [[0, 0], [size - 7, 0], [0, size - 7]].forEach(([x, y]) => {
+          dark.push(`M${x} ${y}h7v7h-7zM${x + 1} ${y + 1}v5h5v-5zM${x + 2} ${y + 2}h3v3h-3z`);
+        });
+        const path = document.createElementNS(namespace, "path");
+        path.setAttribute("d", dark.join(""));
+        path.setAttribute("fill-rule", "evenodd");
+        svg.append(path);
+        return svg;
+      };
+
+      const renderStoryConnections = () => {
+        const text = storyText().connect;
+        const view = createDemoElement("section", "story-connect");
+        const host = createDemoElement("div", "story-connect-host");
+        const hostCopy = createDemoElement("div", "");
+        hostCopy.append(createDemoElement("small", "", text.host), createDemoElement("b", "", text.hostName));
+        host.append(createDemoSymbol("link", ""), hostCopy, createDemoElement("span", "story-connect-badge", text.waiting));
+        const qr = createDemoElement("div", "story-connect-qr");
+        qr.append(createStoryQr());
+        const online = createDemoElement("div", "story-connect-online");
+        online.append(createDemoElement("h4", "demo-section-label", text.online));
+        text.devices.forEach(([name, status], index) => {
+          const row = createDemoElement("div", `story-connect-device${index === 1 ? " is-new" : ""}`);
+          row.append(createDemoElement("i", ""), createDemoElement("b", "", name), createDemoElement("span", "", status));
+          online.append(row);
+        });
+        view.append(
+          createDemoElement("h4", "story-connect-title", text.title),
+          host,
+          qr,
+          createDemoElement("p", "story-connect-caption", text.scan),
+          online,
+          createDemoElement("span", "story-connect-another", text.another)
+        );
+        return view;
+      };
+
+      const showStoryPhone = () => {
+        const text = storyText();
+        const phone = createDemoElement("div", "story-phone");
+        text.notifications.forEach(([source, title, body], index) => {
+          const notice = createDemoElement("div", "story-notice");
+          notice.style.setProperty("--i", index);
+          const icon = document.createElement("img");
+          icon.src = "./assets/dingdong-pwa-192.png";
+          icon.alt = "";
+          const meta = createDemoElement("span", "story-notice-meta");
+          meta.append(createDemoElement("span", "", `DingDong · ${source}`), createDemoElement("time", "", text.now));
+          const noticeCopy = createDemoElement("div", "");
+          noticeCopy.append(meta, createDemoElement("b", "", title), createDemoElement("p", "", body));
+          notice.append(icon, noticeCopy);
+          phone.append(notice);
+        });
+        storyFloat.replaceChildren(phone);
+      };
+
       const storyScenes = {
         // A window section is on screen but the window can't open yet (wide
         // text from a neighbouring section is still visible), or the visitor
@@ -2524,22 +2641,18 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         },
         devices: () => {
           showStoryTab("today");
-          const text = storyText();
-          const phone = createDemoElement("div", "story-phone");
-          text.notifications.forEach(([source, title, body], index) => {
-            const notice = createDemoElement("div", "story-notice");
-            notice.style.setProperty("--i", index);
-            const icon = document.createElement("img");
-            icon.src = "./assets/dingdong-pwa-192.png";
-            icon.alt = "";
-            const meta = createDemoElement("span", "story-notice-meta");
-            meta.append(createDemoElement("span", "", `DingDong · ${source}`), createDemoElement("time", "", text.now));
-            const noticeCopy = createDemoElement("div", "");
-            noticeCopy.append(meta, createDemoElement("b", "", title), createDemoElement("p", "", body));
-            notice.append(icon, noticeCopy);
-            phone.append(notice);
-          });
-          storyFloat.replaceChildren(phone);
+          const link = productStage.querySelector(".demo-connections");
+          storyLater(300, () => clickStoryTarget(link, () => {
+            demoPanel.replaceChildren(renderStoryConnections());
+            // The phone scans the code, joins the online list, then gets reminders.
+            storyLater(1600, () => {
+              const view = demoPanel.querySelector(".story-connect");
+              if (!view) return;
+              view.classList.add("is-paired");
+              view.querySelector(".story-connect-badge").textContent = storyText().connect.devices[1][1];
+              showStoryPhone();
+            });
+          }));
         },
         resources: () => {
           showStoryTab("library");

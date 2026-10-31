@@ -2433,6 +2433,79 @@ html[lang="zh-CN"] .defaults-panel th {
   background: var(--accent);
 }
 
+.voice-library {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 24px;
+  align-items: center;
+  margin-top: 16px;
+  padding: 22px 24px;
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-medium);
+  background: var(--accent-soft);
+}
+
+.voice-library h3 {
+  margin: 0;
+  font-size: 19px;
+}
+
+.voice-library p {
+  max-width: 620px;
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.voice-library-samples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.voice-library-samples li {
+  padding: 4px 10px;
+  border-radius: 999px;
+  color: var(--ink);
+  background: var(--surface);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.voice-library-actions {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+}
+
+.voice-library-open {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  padding: 0 18px;
+  border-radius: var(--radius-small);
+  color: #fff;
+  background: var(--accent);
+  font-size: 14px;
+  font-weight: 720;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.voice-library-open:hover {
+  background: var(--accent-hover);
+}
+
+.voice-library-submit {
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 650;
+}
+
 .sound-custom {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) minmax(160px, auto);
@@ -2486,6 +2559,12 @@ html[lang="zh-CN"] .defaults-panel th {
   max-width: 760px;
   margin: 14px 0 0;
   font-size: 17px;
+}
+
+/* The generic paragraph margin above would pull the heading up against it. */
+.section-heading .section-tag {
+  margin: 0 0 18px;
+  font-size: 12px;
 }
 
 .agent-prompt-card {
@@ -3000,6 +3079,14 @@ footer span {
 
   .sound-custom {
     grid-template-columns: auto 1fr;
+  }
+
+  .voice-library {
+    grid-template-columns: 1fr;
+  }
+
+  .voice-library-actions {
+    justify-items: start;
   }
 
   #sound-status {
@@ -3636,6 +3723,173 @@ main.is-story .demo-window {
   background: #fff;
   box-shadow: inset 0 -2px 0 rgb(0 0 0 / 12%);
   font: 700 13px/1 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+}
+
+.demo-connections.is-story-pressed {
+  background: var(--accent-soft);
+  transform: scale(0.92);
+}
+
+.demo-title-actions span {
+  transition: transform 140ms ease, background-color 140ms ease;
+}
+
+/* Connected devices panel, as the popover shows it while pairing. */
+.story-connect {
+  display: grid;
+  height: 100%;
+  align-content: start;
+  gap: 10px;
+  padding: 14px 16px 12px;
+  overflow: hidden;
+  animation: story-fade 260ms ease both;
+}
+
+.story-connect-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 760;
+}
+
+.story-connect-host {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface);
+}
+
+.story-connect-host img {
+  width: 18px;
+  height: 18px;
+  justify-self: center;
+  opacity: 0.7;
+}
+
+.story-connect-host small,
+.story-connect-host b {
+  display: block;
+}
+
+.story-connect-host small {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.story-connect-host b {
+  margin-top: 2px;
+  font-size: 12px;
+}
+
+.story-connect-badge {
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  font-size: 9px;
+  font-weight: 750;
+  transition: color 200ms ease, background-color 200ms ease;
+}
+
+.story-connect.is-paired .story-connect-badge {
+  color: #2f7651;
+  background: rgb(47 118 81 / 12%);
+}
+
+.story-connect-qr {
+  justify-self: center;
+  width: 168px;
+  height: 168px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+  animation: story-sheet-pop 420ms cubic-bezier(0.2, 0.8, 0.2, 1) 120ms both;
+  transition: opacity 300ms ease, transform 300ms ease;
+}
+
+.story-connect.is-paired .story-connect-qr {
+  opacity: 0.35;
+  transform: scale(0.96);
+}
+
+.story-connect-qr svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: #1b242c;
+}
+
+.story-connect-caption {
+  margin: 0;
+  color: var(--muted);
+  font-size: 10px;
+  text-align: center;
+}
+
+.story-connect-online {
+  display: grid;
+  gap: 6px;
+}
+
+.story-connect-online .demo-section-label {
+  margin: 4px 0 0;
+}
+
+.story-connect-device {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  font-size: 11px;
+}
+
+.story-connect-device i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2f9d68;
+}
+
+.story-connect-device span {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.story-connect-device.is-new {
+  display: none;
+}
+
+.story-connect.is-paired .story-connect-device.is-new {
+  display: grid;
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
+  animation: story-row-in 360ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.story-connect-another {
+  justify-self: start;
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  background: var(--surface);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+@keyframes story-sheet-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
 }
 
 .story-phone {
