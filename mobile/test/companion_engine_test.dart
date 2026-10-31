@@ -77,8 +77,13 @@ final class RecordingNotifier implements AgentNotifier {
 String _link() =>
     'https://dingdong.xn--m8txu.com/app/#pair=${DevicePairingPayload(room: _room, secret: _secret, hostId: 'host-1', hostName: '工作电脑', relayUrl: Uri.parse('https://dingdong.xn--m8txu.com')).encode()}';
 
-Future<void> _settle() =>
-    Future<void>.delayed(const Duration(milliseconds: 30));
+/// Gives the fake relay, the message codec and the engine time to finish their
+/// async work. One 30 ms delay was too short on slow Windows CI runners.
+Future<void> _settle() async {
+  for (int step = 0; step < 10; step += 1) {
+    await Future<void>.delayed(const Duration(milliseconds: 25));
+  }
+}
 
 void main() {
   late Directory temp;
@@ -136,7 +141,16 @@ void main() {
 
   tearDown(() async {
     await engine.dispose();
-    await temp.delete(recursive: true);
+    // Windows can keep the store file locked for a moment after dispose.
+    for (int attempt = 0; ; attempt += 1) {
+      try {
+        await temp.delete(recursive: true);
+        break;
+      } on FileSystemException {
+        if (attempt >= 10) rethrow;
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+      }
+    }
   });
 
   test('pairs, says hello as an Android phone and pins the relay', () async {
