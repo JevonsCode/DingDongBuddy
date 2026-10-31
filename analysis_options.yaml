@@ -3,6 +3,9 @@ include: package:flutter_lints/flutter.yaml
 analyzer:
   exclude:
     - build/**
+    # Separate packages with their own pubspec; CI analyzes them on their own.
+    - mobile/**
+    - packages/dingdong_link_protocol/**
   errors:
     missing_required_param: error
     missing_return: error

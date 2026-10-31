@@ -114,6 +114,13 @@ packages:
       relative: true
     source: path
     version: "0.3.0"
+  dingdong_link_protocol:
+    dependency: "direct main"
+    description:
+      path: "packages/dingdong_link_protocol"
+      relative: true
+    source: path
+    version: "1.0.0"
   fake_async:
     dependency: "direct dev"
     description:

@@ -32,20 +32,23 @@ class _ResourceCards extends StatelessWidget {
       key: const Key('resource-list'),
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       itemCount: resources.length,
-      itemExtent: 116,
+      // Each card is 116 tall; the extra 8 is the gap between cards.
+      itemExtent: 124,
       itemBuilder: (BuildContext context, int index) {
         final Resource resource = resources[index];
-        return _ResourceCard(
-          resource: resource,
-          showDivider: index < resources.length - 1,
-          onToggleEnabled: () => unawaited(_toggleEnabled(resource)),
-          onCopy: clipboardGateway == null
-              ? null
-              : () => clipboardGateway!.writeText(resource.content),
-          onEdit: launcher == null
-              ? null
-              : () => launcher!.show(editingResourceId: resource.id),
-          onDelete: () => _confirmDelete(context, resource),
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: _ResourceCard(
+            resource: resource,
+            onToggleEnabled: () => unawaited(_toggleEnabled(resource)),
+            onCopy: clipboardGateway == null
+                ? null
+                : () => clipboardGateway!.writeText(resource.content),
+            onEdit: launcher == null
+                ? null
+                : () => launcher!.show(editingResourceId: resource.id),
+            onDelete: () => _confirmDelete(context, resource),
+          ),
         );
       },
     );
@@ -90,7 +93,6 @@ class _ResourceCards extends StatelessWidget {
 class _ResourceCard extends StatelessWidget {
   const _ResourceCard({
     required this.resource,
-    required this.showDivider,
     required this.onToggleEnabled,
     required this.onCopy,
     required this.onEdit,
@@ -98,7 +100,6 @@ class _ResourceCard extends StatelessWidget {
   });
 
   final Resource resource;
-  final bool showDivider;
   final VoidCallback onToggleEnabled;
   final Future<void> Function()? onCopy;
   final Future<void> Function()? onEdit;
@@ -114,17 +115,16 @@ class _ResourceCard extends StatelessWidget {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
     final PopupPalette palette = PopupStyle.of(context);
     final BoxDecoration decoration = BoxDecoration(
-      color: palette.surface,
-      border: showDivider
-          ? Border(bottom: BorderSide(color: palette.border))
-          : null,
+      color: _resourceCardSurface(resource.type, palette, isDark: isDark),
+      borderRadius: BorderRadius.circular(10),
+      border: Border.all(color: palette.border),
     );
     return Opacity(
       opacity: resource.enabled ? 1 : 0.58,
       child: Container(
         key: Key('resource-card-${resource.id}'),
         decoration: decoration,
-        padding: const EdgeInsets.fromLTRB(2, 12, 8, 10),
+        padding: const EdgeInsets.fromLTRB(6, 12, 8, 10),
         child: Row(
           children: <Widget>[
             SizedBox(
@@ -406,6 +406,23 @@ String _resourceSymbol(ResourceType type) {
     ResourceType.mcp => 'mcp',
     ResourceType.knowledge => 'knowledge',
     ResourceType.clipboard => 'clipboard',
+  };
+}
+
+Color _resourceCardSurface(
+  ResourceType type,
+  PopupPalette palette, {
+  bool isDark = false,
+}) {
+  final Brightness brightness = isDark ? Brightness.dark : Brightness.light;
+  return switch (type) {
+    ResourceType.prompt => palette.warmSurface,
+    ResourceType.skill => palette.skillSurface,
+    ResourceType.mcp => Color.alphaBlend(
+      PopupStyle.mcpSurface(brightness, opacity: 0.08),
+      palette.surface,
+    ),
+    ResourceType.knowledge || ResourceType.clipboard => palette.surface,
   };
 }
 

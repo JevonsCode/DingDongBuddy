@@ -1,0 +1,14 @@
+name: dingdong_link_protocol
+description: Pure-Dart DingDong device-link wire format shared by the desktop app and the Android companion.
+publish_to: none
+version: 1.0.0
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  cryptography: ^2.9.0
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  test: ^1.25.0

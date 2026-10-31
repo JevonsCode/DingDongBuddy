@@ -856,8 +856,15 @@ description: Use when product decisions should follow saved preferences.
       find.byKey(const Key('resource-card-mcp-resource')),
     );
     final BoxDecoration cardDecoration = card.decoration! as BoxDecoration;
-    expect(cardDecoration.color, PopupStyle.light.surface);
-    expect(cardDecoration.border, isNull);
+    // Cards are separated by spacing, each with a light tint of its type.
+    expect(
+      cardDecoration.color,
+      Color.alphaBlend(
+        PopupStyle.mcpSurface(Brightness.light, opacity: 0.08),
+        PopupStyle.light.surface,
+      ),
+    );
+    expect(cardDecoration.border, Border.all(color: PopupStyle.light.border));
     expect(find.text('STDIO · npx local-mcp'), findsOneWidget);
     final Finder tags = find.byKey(
       const Key('resource-card-tags-mcp-resource'),

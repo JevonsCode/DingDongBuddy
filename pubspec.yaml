@@ -19,6 +19,8 @@ dependencies:
   cryptography: ^2.9.0
   desktop_multi_window:
     path: packages/desktop_multi_window
+  dingdong_link_protocol:
+    path: packages/dingdong_link_protocol
   file_selector: ^1.1.0
   flutter:
     sdk: flutter
