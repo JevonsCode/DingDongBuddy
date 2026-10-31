@@ -182,6 +182,9 @@ final class CompanionStore {
     return next;
   }
 
+  /// Completes once every queued save has reached the disk.
+  Future<void> flush() => _saving;
+
   Future<void> _write() async {
     await file.parent.create(recursive: true);
     final File temporary = File('${file.path}.tmp');
