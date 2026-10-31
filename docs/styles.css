@@ -559,6 +559,37 @@ h3 {
   opacity: 0.58;
 }
 
+.demo-agent-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 8px;
+}
+
+.demo-agent-heading .demo-section-label {
+  margin: 0;
+}
+
+.demo-agent-window {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  background: var(--surface);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.demo-agent-clock {
+  width: 8px;
+  height: 8px;
+  border: 1.2px solid currentColor;
+  border-radius: 50%;
+}
+
 .demo-connections b {
   position: absolute;
   top: -1px;

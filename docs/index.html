@@ -287,11 +287,11 @@
 
         <div class="agent-strip">
           <span data-i18n="resources.clients">Built-in Agent adapters</span>
-          <strong>Codex</strong><strong>Claude Code</strong><strong>Cursor</strong><strong>Gemini CLI</strong><strong>GitHub Copilot CLI</strong><strong>OpenCode</strong><strong>Kiro</strong><strong>Antigravity</strong><strong>Windsurf</strong><strong>Pi</strong><strong>Grok Build</strong>
+          <strong>Codex</strong><strong>Claude Code</strong><strong>Cursor</strong><strong>Gemini CLI</strong><strong>GitHub Copilot CLI</strong><strong>OpenCode</strong><strong>Kiro</strong><strong>Antigravity</strong><strong>Antigravity CLI</strong><strong>Windsurf</strong><strong>Pi</strong><strong>Grok Build</strong>
           <a class="agent-strip-request" href="https://github.com/JevonsCode/DingDongBuddy/issues/new?template=feature-request.yml" target="_blank" rel="noopener noreferrer" data-i18n="resources.requestAgent">Missing your Agent? Open an issue</a>
         </div>
 
-        <p class="agent-support-note" data-i18n="resources.clientNote">Pi and Grok Build currently support Skill syncing. MCP setup and completion hooks vary by client; check the options shown in DingDong.</p>
+        <p class="agent-support-note" data-i18n="resources.clientNote">Pi, Grok Build, and Windsurf sync Skills only for now. MCP and completion alerts vary by client; DingDong shows what each one supports.</p>
 
         <div class="conversation-heading">
           <h3 data-i18n="resourceUpdates.title">Choose what arrives. Keep what changed.</h3>
@@ -384,6 +384,11 @@
             <h3 data-i18n="plugins.jevTitle">Ask Jev for a judgment or score.</h3>
             <p class="example-result" data-i18n="plugins.jevBody">Install Jev and add your own API key. Your Agent can call it for judgments, choices, and scoring, with Jev token usage tracked separately.</p>
             <a href="https://typesafe.ai/" target="_blank" rel="noopener noreferrer" data-i18n="plugins.official">Jev website and terms</a>
+          </article>
+          <article class="conversation-example">
+            <span class="example-kind" data-i18n="plugins.screenshotLabel">macOS · Windows · Screenshot</span>
+            <h3 data-i18n="plugins.screenshotTitle">Open the system screenshot tool with your own shortcut.</h3>
+            <p class="example-result" data-i18n="plugins.screenshotBody">Defaults to ⌘⌥A on macOS and Ctrl+Alt+A on Windows. DingDong only opens the system tool; it never reads the screenshot.</p>
           </article>
           <article class="conversation-example">
             <span class="example-kind" data-i18n="plugins.selectionLabel">macOS · Selection tools</span>
@@ -503,11 +508,17 @@
                   <tr><td data-i18n="settings.monitoring">Clipboard monitoring</td><td data-i18n="value.off">Off</td><td data-i18n="value.onOff">On / off</td></tr>
                   <tr><td data-i18n="settings.retention">Clipboard retention</td><td data-i18n="settings.retentionDefault">5,000 items · 120 days</td><td data-i18n="settings.retentionOptions">20–5,000 items · 1–730 days</td></tr>
                   <tr><td data-i18n="settings.rememberAgents">Remember Recent Agents</td><td data-i18n="value.on">On</td><td data-i18n="value.onOff">On / off</td></tr>
+                  <tr><td data-i18n="settings.panelAgents">Quick panel Agent count</td><td>21</td><td>1–500</td></tr>
                   <tr><td data-i18n="settings.agentLimits">Recent Agent limits</td><td data-i18n="settings.agentLimitsDefault">500 details · 24-hour count</td><td data-i18n="settings.agentLimitsOptions">1–5,000 details · 1–8,760 hours</td></tr>
-                  <tr><td data-i18n="settings.sound">Completion sound</td><td data-i18n="value.classic">DingDong Classic</td><td data-i18n="settings.soundOptions">Built-in, custom, system, or muted</td></tr>
+                  <tr><td data-i18n="settings.sound">Reminder sounds</td><td data-i18n="settings.soundDefault">DingDong Classic · needs input: same as completion</td><td data-i18n="settings.soundOptions">Per reminder: built-in, custom WAV, system, or muted</td></tr>
                   <tr><td data-i18n="settings.footerSymbols">Agent reply footer symbols</td><td>♥ / ♦ / ♠</td><td data-i18n="settings.footerSymbolOptions">Customize Prompt, Skill, and MCP separately</td></tr>
                   <tr><td data-i18n="settings.tokenUsage">Conversation Token usage</td><td data-i18n="value.on">On</td><td data-i18n="settings.tokenUsageOptions">Exact totals for supported Codex, Claude Code, and Pi sessions; unsupported evidence is omitted</td></tr>
-                  <tr><td data-i18n="settings.alertColor">Menu bar alert color (macOS)</td><td data-i18n="value.orange">Orange</td><td data-i18n="settings.alertColorOptions">Orange / Pink / Blue / Green / Purple</td></tr>
+                  <tr><td data-i18n="settings.alertColor">Reminder colors</td><td data-i18n="settings.alertColorDefault">Completion: orange · needs input: amber</td><td data-i18n="settings.alertColorOptions">Per reminder: orange / pink / blue / green / purple / amber</td></tr>
+                  <tr><td data-i18n="settings.quietHours">Quiet hours</td><td data-i18n="value.off">Off</td><td data-i18n="settings.quietHoursOptions">22:00–08:00 by default, adjustable</td></tr>
+                  <tr><td data-i18n="settings.phoneAlerts">Send reminders to paired phones</td><td data-i18n="value.on">On</td><td data-i18n="settings.phoneAlertsOptions">Completion and needs-input separately</td></tr>
+                  <tr><td data-i18n="settings.agentClipboard">Allow Agents to read clipboard content</td><td data-i18n="value.off">Off</td><td data-i18n="value.onOff">On / off</td></tr>
+                  <tr><td data-i18n="settings.beta">Allow beta updates</td><td data-i18n="value.off">Off</td><td data-i18n="value.onOff">On / off</td></tr>
+                  <tr><td data-i18n="settings.stats">Anonymous install and update statistics</td><td data-i18n="value.on">On</td><td data-i18n="value.onOff">On / off</td></tr>
                   <tr><td data-i18n="settings.apiPort">Local Agent API port</td><td><code>2333</code></td><td data-i18n="settings.apiPortOptions">1024–65535 · restart required</td></tr>
                 </tbody>
               </table>
@@ -677,7 +688,19 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           <article><code>dingdong_get_asset</code><p data-i18n="tools.asset">Open one resource. Start with the description, then read the full text if needed.</p></article>
           <article><code>dingdong_load_skill</code><p data-i18n="tools.skill">Load the Skill the Agent has decided to use.</p></article>
           <article><code>dingdong_recommend_mcp</code><p data-i18n="tools.recommend">Find an MCP configuration that fits the current task.</p></article>
-          <article><code>dingdong_notify</code><p data-i18n="tools.notify">Ring when the task is done, stuck, or waiting for you.</p></article>
+          <article><code>dingdong_notify</code><p data-i18n="tools.notify">Ring when the Agent is stuck or needs you, or play a named reminder. The completion alert comes from the hook.</p></article>
+          <article><code>dingdong_read_skill_file</code><p data-i18n="tools.readSkillFile">Read one supporting file of a loaded Skill.</p></article>
+          <article><code>dingdong_confirm_mcp_use</code><p data-i18n="tools.confirmMcp">Record that a returned MCP tool was used (not needed in Claude Code).</p></article>
+          <article><code>dingdong_upsert_trigger_group</code><p data-i18n="tools.triggerGroup">Create or replace a trigger group for a project path, repository, or source.</p></article>
+          <article><code>dingdong_set_skill_delivery</code><p data-i18n="tools.skillDelivery">Choose how a Skill reaches each Agent: dynamic, user-level, or project-level.</p></article>
+          <article><code>dingdong_get_skill_deployments</code><p data-i18n="tools.skillDeployments">Read a Skill’s delivery policy and where it is actually installed.</p></article>
+          <article><code>dingdong_reconcile_skill</code><p data-i18n="tools.reconcileSkill">Sync a Skill to the Agents again and report the result.</p></article>
+          <article><code>dingdong_list_reminders</code><p data-i18n="tools.listReminders">List named reminders and imported sounds.</p></article>
+          <article><code>dingdong_upsert_reminder</code><p data-i18n="tools.upsertReminder">Create or edit a named reminder (up to 32 of your own).</p></article>
+          <article><code>dingdong_delete_reminder</code><p data-i18n="tools.deleteReminder">Delete a custom reminder; built-in ones can only be turned off.</p></article>
+          <article><code>dingdong_import_reminder_sound</code><p data-i18n="tools.importSound">Import a PCM WAV of up to 15 seconds and 5 MiB.</p></article>
+          <article><code>dingdong_set_reminder_sounds</code><p data-i18n="tools.reminderSounds">Save the sounds for completion and needs-input reminders.</p></article>
+          <article><code>dingdong_jev_*</code><p data-i18n="tools.jev">With Jev installed: status, check, choose, and score.</p></article>
         </div>
       </section>
 
@@ -751,7 +774,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
       <a href="https://github.com/JevonsCode/DingDongBuddy">GitHub</a>
       <a href="https://github.com/JevonsCode/DingDongBuddy/releases/latest" data-i18n="footer.releases">Releases</a>
       <a href="https://github.com/JevonsCode/DingDongBuddy/blob/main/docs/product/README.md" data-i18n="nav.docs">Docs</a>
-      <a href="https://github.com/JevonsCode/DingDongCodexPet" data-i18n="footer.pet">Codex pet project (access required)</a>
+      <a href="https://github.com/JevonsCode/DingDongCodexPet" data-i18n="footer.pet">DingDong Codex pet</a>
       <a href="https://github.com/JevonsCode/DingDongBuddy/issues/new?template=bug-report.yml" data-i18n="footer.feedback">Feedback</a>
       <a href="./dingdong-release.json" data-i18n="footer.metadata">Metadata</a>
     </footer>
@@ -781,7 +804,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "sounds.guide": "Reminder setup and Agent tools →",
           "nav.voices": "Voices",
           "sounds.catalog": "Open the voice library →",
-          "footer.pet": "Codex pet project (access required)",
+          "footer.pet": "DingDong Codex pet",
           "nav.product": "Features",
           "nav.devices": "Devices",
           "nav.resources": "Resources",
@@ -789,11 +812,11 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "nav.download": "Download",
           "meta.title": "DingDong — a desktop companion for your clipboard and AI Agents",
           "features.setup.title": "Connects to the Agents you already use",
-          "features.setup.body": "On first launch, DingDong finds the Agents on this computer and connects them. Updates and removals show the exact configuration changes before anything is written.",
+          "features.setup.body": "On first launch, DingDong finds the Agents on this computer and offers to connect them; you can skip and come back later. Updates and removals show the exact configuration changes before anything is written.",
           "download.earlyAccess": "Want new features early? In DingDong, turn on “Allow beta updates” under Settings → Version.",
           "story.resourcesBrief": "Keep one copy of each Prompt, Skill, and MCP server, then choose which projects or Agents get it.",
           "story.usageBrief": "See each Agent’s daily Token use on a heatmap. Only the numbers are stored, never the chats.",
-          "story.pluginsBrief": "Install Jev and the selection tools when you want them. Select text to translate, explain, or polish it.",
+          "story.pluginsBrief": "Install Jev, Screenshot, and the selection tools when you want them. Select text to translate, explain, or polish it.",
           "story.mcpBrief": "Built-in Agents connect in one click. For anything else, copy the setup instruction into it, or open an issue and tell us.",
           "story.closeHint": "Close the window with the red button to read the full details.",
           "sounds.libraryTitle": "Community voice library",
@@ -807,6 +830,31 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "mcp.pathIssueBody": "Tell us which Agent you use, and we’ll look at adding it to one-click setup.",
           "mcp.pathIssueLink": "Open an issue →",
           "story.devicesBrief": "Scan the QR code on your computer to pair your phone. Files, clipboard items, and Agent reminders stay grouped by the computer they came from.",
+          "settings.soundDefault": "DingDong Classic · needs input: same as completion",
+          "settings.alertColorDefault": "Completion: orange · needs input: amber",
+          "settings.quietHours": "Quiet hours",
+          "settings.quietHoursOptions": "22:00–08:00 by default, adjustable",
+          "settings.phoneAlerts": "Send reminders to paired phones",
+          "settings.phoneAlertsOptions": "Completion and needs-input separately",
+          "settings.agentClipboard": "Allow Agents to read clipboard content",
+          "settings.beta": "Allow beta updates",
+          "settings.stats": "Anonymous install and update statistics",
+          "settings.panelAgents": "Quick panel Agent count",
+          "plugins.screenshotLabel": "macOS · Windows · Screenshot",
+          "plugins.screenshotTitle": "Open the system screenshot tool with your own shortcut.",
+          "plugins.screenshotBody": "Defaults to ⌘⌥A on macOS and Ctrl+Alt+A on Windows. DingDong only opens the system tool; it never reads the screenshot.",
+          "tools.readSkillFile": "Read one supporting file of a loaded Skill.",
+          "tools.confirmMcp": "Record that a returned MCP tool was used (not needed in Claude Code).",
+          "tools.triggerGroup": "Create or replace a trigger group for a project path, repository, or source.",
+          "tools.skillDelivery": "Choose how a Skill reaches each Agent: dynamic, user-level, or project-level.",
+          "tools.skillDeployments": "Read a Skill’s delivery policy and where it is actually installed.",
+          "tools.reconcileSkill": "Sync a Skill to the Agents again and report the result.",
+          "tools.listReminders": "List named reminders and imported sounds.",
+          "tools.upsertReminder": "Create or edit a named reminder (up to 32 of your own).",
+          "tools.deleteReminder": "Delete a custom reminder; built-in ones can only be turned off.",
+          "tools.importSound": "Import a PCM WAV of up to 15 seconds and 5 MiB.",
+          "tools.reminderSounds": "Save the sounds for completion and needs-input reminders.",
+          "tools.jev": "With Jev installed: status, check, choose, and score.",
           "features.title": "What it does for you",
           "features.devices.title": "Take it to your phone",
           "features.devices.body": "Pair your phone to receive Agent reminders and to send files and clipboard items between devices. Connections go direct when possible; the relay is end-to-end encrypted.",
@@ -844,7 +892,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "usage.localTitle": "Store counts, not conversations.",
           "usage.localBody": "Only numeric totals are saved, on this computer, without any chat text. They are never sent with the anonymous install statistics. Token counts measure usage, not cost.",
           "plugins.title": "Plugins, when you want them.",
-          "plugins.body": "Jev and the selection tools live in Resource Manager → Plugins. Nothing is installed until you choose it.",
+          "plugins.body": "Jev, Screenshot, and the selection tools live in Resource Manager → Plugins. Nothing is installed until you choose it.",
           "plugins.jevTitle": "Ask Jev for a judgment or score.",
           "plugins.jevBody": "Install Jev and add your own API key. Your Agent can call it for judgments, choices, and scoring, with Jev token usage tracked separately.",
           "plugins.official": "Jev website and terms",
@@ -913,7 +961,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "examples.mcpMessage": "“Use my GitHub tools to find why the latest main workflow failed.”",
           "examples.mcpResult": "The configured MCP is available, and its tools are called only when needed.",
           "chatFooter.title": "See which resources were available.",
-          "chatFooter.body": "Supported Agents end each reply with a DingDong line: the Prompts in effect, the Skills that matched, the MCP servers available, and the Token total when the session reports one. Claude Code can also show it in the status line, next to your existing HUD.",
+          "chatFooter.body": "Supported Agents end each reply with a DingDong line: the Prompts in effect, the Skills that matched, the MCP servers available, and the Token total when the session reports one. Claude Code shows the same line in its status line instead, and can keep the status line you already use.",
           "chatFooter.note": "A * after a Skill means its full instructions were loaded. A * after an MCP means one of its tools was called, even if the call failed. Prompts carry no marker. You can hide the Token total in Settings.",
           "chatFooter.sampleHint": "Try a message below to see a simulated reply and resource line.",
           "chatFooter.sampleInputLabel": "Demo Agent message",
@@ -967,14 +1015,14 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "settings.agentLimits": "Recent Agent limits",
           "settings.agentLimitsDefault": "500 details · 24-hour count",
           "settings.agentLimitsOptions": "1–5,000 details · 1–8,760 hours",
-          "settings.sound": "Completion sound",
-          "settings.soundOptions": "Built-in, custom, system, or muted",
+          "settings.sound": "Reminder sounds",
+          "settings.soundOptions": "Per reminder: built-in, custom WAV, system, or muted",
           "settings.footerSymbols": "Agent reply footer symbols",
           "settings.footerSymbolOptions": "Customize Prompt, Skill, and MCP separately",
           "settings.tokenUsage": "Conversation Token usage",
           "settings.tokenUsageOptions": "Exact totals for supported Codex, Claude Code, and Pi sessions; unsupported evidence is omitted",
-          "settings.alertColor": "Menu bar alert color (macOS)",
-          "settings.alertColorOptions": "Orange / Pink / Blue / Green / Purple",
+          "settings.alertColor": "Reminder colors",
+          "settings.alertColorOptions": "Per reminder: orange / pink / blue / green / purple / amber",
           "settings.apiPort": "Local Agent API port",
           "settings.apiPortOptions": "1024–65535 · restart required",
           "value.off": "Off",
@@ -1027,7 +1075,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "tools.asset": "Open one resource. Start with the description, then read the full text if needed.",
           "tools.skill": "Load the Skill the Agent has decided to use.",
           "tools.recommend": "Find an MCP configuration that fits the current task.",
-          "tools.notify": "Ring when the task is done, stuck, or waiting for you.",
+          "tools.notify": "Ring when the Agent is stuck or needs you, or play a named reminder. The completion alert comes from the hook.",
           "api.title": "You can use scripts too.",
           "api.body": "The local API can check status, search resources, read a clipboard overview, and open a DingDong page.",
           "download.macosArm64": "Mac with Apple silicon",
@@ -1070,7 +1118,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "sounds.guide": "提醒设置与 Agent 工具说明 →",
           "nav.voices": "声音库",
           "sounds.catalog": "打开声音库 →",
-          "footer.pet": "Codex 宠物项目（需访问权限）",
+          "footer.pet": "DingDong Codex 宠物",
           "nav.product": "功能",
           "nav.devices": "多设备",
           "nav.resources": "资源库",
@@ -1078,11 +1126,11 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "nav.download": "下载",
           "meta.title": "DingDong — 剪贴板和 Agent 的桌面小伙伴",
           "features.setup.title": "你在用的 Agent，帮你接好",
-          "features.setup.body": "第一次打开时，DingDong 会找出这台电脑上的 Agent 并帮你接入。之后更新或移除，都会先列出要改的配置，你确认了才动手。",
+          "features.setup.body": "第一次打开时，DingDong 会找出这台电脑上的 Agent，引导你接入，也可以先跳过。之后更新或移除，都会先列出要改的配置，你确认了才动手。",
           "download.earlyAccess": "想提前用新功能？在 DingDong 的“设置 → 版本”里打开“允许安装测试版（Beta）”。",
           "story.resourcesBrief": "提示词、Skill、MCP 只维护一份，再选给哪个项目或 Agent 用。",
           "story.usageBrief": "每个 Agent 每天用了多少 Token，热力图一眼看清；只存数字，不存聊天。",
-          "story.pluginsBrief": "Jev 和划词工具按需安装，选中文字就能翻译、解释、润色。",
+          "story.pluginsBrief": "Jev、截图和划词工具按需安装，选中文字就能翻译、解释、润色。",
           "story.mcpBrief": "内置的 Agent 一键接入；不在列表里的，复制接入指令发给它，或者提个 issue 告诉我们。",
           "story.closeHint": "点窗口左上角的红色按钮，看完整介绍。",
           "sounds.libraryTitle": "社区声音库",
@@ -1096,6 +1144,31 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "mcp.pathIssueBody": "告诉我们你在用哪个 Agent，我们会考虑把它加进一键接入。",
           "mcp.pathIssueLink": "提个 issue →",
           "story.devicesBrief": "扫一下电脑上的二维码，手机就配好了。文件、剪贴板和 Agent 提醒都按来源电脑分开。",
+          "settings.soundDefault": "DingDong 经典 · 需要处理：同完成提醒",
+          "settings.alertColorDefault": "完成：橙黄 · 需要处理：琥珀",
+          "settings.quietHours": "免打扰时段",
+          "settings.quietHoursOptions": "默认 22:00–08:00，可调整",
+          "settings.phoneAlerts": "推送到已配对手机",
+          "settings.phoneAlertsOptions": "完成和需要处理分开设置",
+          "settings.agentClipboard": "允许 Agent 读取剪贴板正文",
+          "settings.beta": "允许安装测试版（Beta）",
+          "settings.stats": "匿名安装与更新统计",
+          "settings.panelAgents": "快捷面板显示条数",
+          "plugins.screenshotLabel": "macOS · Windows · 截图",
+          "plugins.screenshotTitle": "用自己的快捷键打开系统截图",
+          "plugins.screenshotBody": "macOS 默认 ⌘⌥A，Windows 默认 Ctrl+Alt+A。DingDong 只负责打开系统截图工具，不读取截图内容。",
+          "tools.readSkillFile": "读取已加载 Skill 的一个配套文件。",
+          "tools.confirmMcp": "记录用过了返回的 MCP 工具（Claude Code 不需要）。",
+          "tools.triggerGroup": "按项目路径、仓库或来源新建或替换触发分组。",
+          "tools.skillDelivery": "设置 Skill 怎么交付给每个 Agent：动态、用户级或项目级。",
+          "tools.skillDeployments": "查看 Skill 的交付策略和实际安装位置。",
+          "tools.reconcileSkill": "重新把 Skill 同步到各 Agent，并返回结果。",
+          "tools.listReminders": "列出命名提醒和导入的声音。",
+          "tools.upsertReminder": "新建或修改命名提醒（自定义最多 32 个）。",
+          "tools.deleteReminder": "删除自定义提醒；内置提醒只能停用。",
+          "tools.importSound": "导入 15 秒、5 MiB 以内的 PCM WAV。",
+          "tools.reminderSounds": "保存完成提醒和需要处理提醒的声音。",
+          "tools.jev": "安装 Jev 后：状态、检查、选择和打分。",
           "features.title": "能帮你做的事",
           "features.devices.title": "手机上接着看",
           "features.devices.body": "配对手机后，可以收 Agent 提醒，也能在设备之间互传文件和剪贴板内容。能直连就直连，走中继时也是端到端加密。",
@@ -1133,7 +1206,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "usage.localTitle": "存数字，不存聊天正文",
           "usage.localBody": "只在本机保存数字汇总，不含任何聊天内容，也不会随匿名安装统计上传。Token 衡量的是用量，不是花费。",
           "plugins.title": "插件按需安装",
-          "plugins.body": "Jev 和划词工具都在“资源管理 → 插件”里。你不点安装，就什么都不会装。",
+          "plugins.body": "Jev、截图和划词工具都在“资源管理 → 插件”里。你不点安装，就什么都不会装。",
           "plugins.jevTitle": "让 Jev 帮 Agent 做判断、打分",
           "plugins.jevBody": "按需安装 Jev，填入自己的 API Key。Agent 可以调用它做判断、选择和评分，Jev 的 Token 用量单独看。",
           "plugins.official": "Jev 官网与使用条款",
@@ -1202,7 +1275,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "examples.mcpMessage": "“用我配置好的 GitHub 工具，查一下 main 最近一次工作流为什么失败。”",
           "examples.mcpResult": "对应 MCP 已在客户端就绪，Agent 只在真正查询时调用工具。",
           "chatFooter.title": "看看这轮有哪些资源",
-          "chatFooter.body": "支持的 Agent 会在回复末尾附一行 DingDong：本轮生效的 Prompt、匹配到的 Skill、可用的 MCP，会话提供用量时再加上 Token 总数。Claude Code 还可以把它放进状态栏，和原来的 HUD 并排显示。",
+          "chatFooter.body": "支持的 Agent 会在回复末尾附一行 DingDong：本轮生效的 Prompt、匹配到的 Skill、可用的 MCP，会话提供用量时再加上 Token 总数。Claude Code 则把这一行放进状态栏，原来的状态栏也能保留。",
           "chatFooter.note": "Skill 带 * 表示已读入完整指令；MCP 带 * 表示调用过它的工具，即使那次调用失败也会标记。Prompt 不加标记。Token 总数可以在设置里关掉。",
           "chatFooter.sampleHint": "在下面输入一句话，试试看模拟回复和资源提示。",
           "chatFooter.sampleInputLabel": "演示 Agent 消息",
@@ -1256,14 +1329,14 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "settings.agentLimits": "最近 Agent 上限",
           "settings.agentLimitsDefault": "500 条详情 · 24 小时计数",
           "settings.agentLimitsOptions": "1–5000 条 · 1–8760 小时",
-          "settings.sound": "完成提示音",
-          "settings.soundOptions": "内置、自定义、系统声音或静音",
+          "settings.sound": "提醒声音",
+          "settings.soundOptions": "每个提醒单独选：内置、自定义 WAV、系统声音或静音",
           "settings.footerSymbols": "Agent 回复尾部符号",
           "settings.footerSymbolOptions": "Prompt、Skill 和 MCP 可分别自定义",
           "settings.tokenUsage": "会话 Token 用量",
           "settings.tokenUsageOptions": "只显示 Codex、Claude Code、Pi 已支持会话的准确值；不支持时省略",
-          "settings.alertColor": "菜单栏提醒颜色（macOS）",
-          "settings.alertColorOptions": "橙黄 / 粉色 / 蓝色 / 绿色 / 紫色",
+          "settings.alertColor": "提醒颜色",
+          "settings.alertColorOptions": "每个提醒可选：橙黄 / 粉色 / 蓝色 / 绿色 / 紫色 / 琥珀",
           "settings.apiPort": "本地 Agent API 端口",
           "settings.apiPortOptions": "1024–65535 · 修改后需要重启",
           "value.off": "关闭",
@@ -1316,7 +1389,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "tools.asset": "打开一条资源；先看简介，需要时再读正文",
           "tools.skill": "确定要用哪个 Skill 后再载入",
           "tools.recommend": "按手头的任务找合适的 MCP",
-          "tools.notify": "做完、卡住或等你时，DingDong 提醒你",
+          "tools.notify": "卡住或需要你时提醒，或触发指定的提醒；完成提醒由 Hook 发送。",
           "api.title": "想写脚本，也有本地 API",
           "api.body": "可以查状态、找资源、看剪贴板概览，或打开 DingDong 的某个页面。",
           "download.macosArm64": "Mac（Apple 芯片）",
@@ -1346,11 +1419,12 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
       const demoContent = {
         en: {
           today: {
-            metrics: [["3", "Resources"], ["708", "Clipboard"], ["Check", "Agent connections"]],
+            metrics: [["3", "Resource library"], ["708", "Clipboard history"], ["2333", "API | Agent connections"]],
+            window: "24 h",
             agents: [
-              { source: "Codex", time: "17:16", body: "Release checks passed. DingDong collected the Agent alert and played the selected sound." },
-              { source: "Claude Code", time: "16:42", body: "The online Skill was refreshed from its source." },
-              { source: "Cursor", time: "16:08", body: "Project trigger rules selected the matching resources." }
+              { source: "Codex", time: "5:38 PM", body: "Release checks passed; layout and local preview verified" },
+              { source: "Claude Code", time: "5:31 PM", body: "Needs your choice of merge method" },
+              { source: "Cursor", time: "4:58 PM", body: "Online Skill updated from its source" }
             ]
           },
           library: {
@@ -1390,11 +1464,12 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         },
         zh: {
           today: {
-            metrics: [["3", "资源"], ["708", "剪贴板"], ["待确认", "Agent 连接"]],
+            metrics: [["3", "资源"], ["708", "剪贴板"], ["2333", "API | Agent 连接"]],
+            window: "24 小时",
             agents: [
-              { source: "Codex", time: "17:16", body: "发布检查通过，DingDong 已收好 Agent 提醒并播放所选声音" },
-              { source: "Claude Code", time: "16:42", body: "在线 Skill 已从来源更新" },
-              { source: "Cursor", time: "16:08", body: "项目触发规则已选中匹配资源" }
+              { source: "Codex", time: "下午 5:38", body: "发布检查已通过，页面和本地预览都看过了" },
+              { source: "Claude Code", time: "下午 5:31", body: "需要你确认合并方式" },
+              { source: "Cursor", time: "下午 4:58", body: "在线 Skill 已从来源更新" }
             ]
           },
           library: {
@@ -1486,7 +1561,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         activeTab: "library",
         libraryFilter: "all",
         libraryGroup: "all",
-        clipboardFilter: true,
+        clipboardFilter: false,
         clipboardCategory: "all",
         resourceEnabled: { "reply-star": true, "user-taste": true, "dingdong-mcp": true },
         copies: [],
@@ -1673,7 +1748,10 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           metrics.append(metric);
         });
 
-        const heading = createDemoElement("h4", "demo-section-label", content.labels.recentAgents);
+        const heading = createDemoElement("div", "demo-agent-heading");
+        const windowChip = createDemoElement("span", "demo-agent-window");
+        windowChip.append(createDemoElement("span", "demo-agent-clock"), document.createTextNode(`${content.today.window} · ${content.today.agents.length}`));
+        heading.append(createDemoElement("h4", "demo-section-label", content.labels.recentAgents), windowChip);
         const agents = createDemoElement("div", "demo-agent-list");
         content.today.agents.forEach((agent) => {
           const row = createDemoElement("article", "demo-agent-row");
@@ -1690,31 +1768,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           agents.append(row);
         });
 
-        const enabledHeading = createDemoElement("h4", "demo-section-label", content.labels.enabled);
-        const enabledList = createDemoElement("div", "demo-enabled-list");
-        content.library.items
-          .filter((item) => demoState.resourceEnabled[item.id] !== false)
-          .forEach((item) => {
-            const row = createDemoElement("article", `demo-enabled-card type-${item.type}`);
-            const resourceCopy = createDemoElement("div", "demo-resource-copy");
-            resourceCopy.append(
-              createDemoElement("b", "", item.title),
-              createDemoElement("p", "", item.body)
-            );
-            const tags = createDemoElement("div", "demo-resource-tags");
-            item.tags.slice(0, 4).forEach((tag) => tags.append(createDemoElement("span", "", tag)));
-            resourceCopy.append(tags);
-            const enabledStatus = createDemoElement("span", "demo-enabled-status");
-            enabledStatus.append(createDemoStatusIcon(true));
-            row.append(
-              createDemoSymbol(item.type, "demo-resource-symbol"),
-              resourceCopy,
-              enabledStatus
-            );
-            enabledList.append(row);
-          });
-
-        section.append(metrics, heading, agents, enabledHeading, enabledList);
+        section.append(metrics, heading, agents);
         return section;
       };
 
@@ -2243,7 +2297,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           unknown: "Unknown",
           less: "Less",
           more: "More",
-          plugins: [["Jev", "Judgments, choices, and scores"], ["Selection", "Copy, translate, explain, polish"]],
+          plugins: [["Jev", "Judgments, choices, and scores"], ["Screenshot", "Open the system screenshot tool"], ["Selection", "Copy, translate, explain, polish"]],
           install: "Install",
           installed: "Installed",
           selection: ["构建在", "所有平台上都通过了", "。"],
@@ -2295,7 +2349,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           unknown: "未知",
           less: "少",
           more: "多",
-          plugins: [["Jev", "判断、选择和打分"], ["划词", "复制、翻译、解释、润色"]],
+          plugins: [["Jev", "判断、选择和打分"], ["截图", "用快捷键打开系统截图"], ["划词", "复制、翻译、解释、润色"]],
           install: "安装",
           installed: "已安装",
           selection: ["The build ", "passed on every platform", "."],
@@ -2696,7 +2750,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         },
         "token-history": () => goToStoryPage("tokens"),
         plugins: () => goToStoryPage("plugins", () => {
-          const install = storyMac.querySelectorAll(".story-install")[1];
+          const install = storyMac.querySelectorAll(".story-install")[2];
           clickStoryTarget(install, () => {
             const text = storyText();
             install.textContent = text.installed;
