@@ -564,7 +564,8 @@ void main() {
     expect(websiteStyles, contains('.device-guardrails'));
     expect(website, contains('快捷键，换成自己顺手的'));
     expect(website, contains('选择 DingDong 的提醒声'));
-    expect(website, contains('下面几个声音，先听听再选。'));
+    // The sound cards already say Listen; the extra hint was removed.
+    expect(website, isNot(contains('下面几个声音，先听听再选。')));
     expect(website, contains('demo-enabled-card'));
     expect(website, contains('"Scoped"'));
     expect(website, contains('"有触发范围"'));

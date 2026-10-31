@@ -144,8 +144,12 @@
             <dd data-i18n="features.library.body">Add Prompts, Skills, and MCP servers once, then choose which projects or Agents get each one. You can also ask your Agent to add or change them for you.</dd>
           </div>
           <div>
-            <dt data-i18n="features.notify.title">Hear when an Agent needs you</dt>
-            <dd data-i18n="features.notify.body">Finished, stuck, or waiting on a decision: events from connected Agents land in one list, with unread counts and the sound you pick. Each client’s own notifications keep working.</dd>
+            <dt data-i18n="features.notify.title">Know which reminder it is by ear</dt>
+            <dd data-i18n="features.notify.body">Finished, stuck, or waiting on a decision: give each kind its own sound and color, or set a one-time reminder for the next task. A “Last seen here” line separates new events from ones you’ve read.</dd>
+          </div>
+          <div>
+            <dt data-i18n="features.setup.title">Connects to the Agents you already use</dt>
+            <dd data-i18n="features.setup.body">On first launch, DingDong finds the Agents on this computer and connects them. Updates and removals show the exact configuration changes before anything is written.</dd>
           </div>
           <div>
             <dt data-i18n="features.devices.title">Take it to your phone</dt>
@@ -228,7 +232,7 @@
         </div>
         <p class="device-platform-note" data-i18n="devices.history">The desktop device manager separates Online devices from Connection history. Open Transfer history for the latest 100 finished file records saved locally across restarts. A history entry is not a file backup or a transfer you can resume after restarting.</p>
         <p><a href="https://github.com/JevonsCode/DingDongBuddy/blob/main/docs/product/connected-devices.md" data-i18n="devices.guide">Pairing and transfer guide →</a></p>
-        <p class="device-platform-note" data-i18n="devices.platformNote">On the same local network, DingDong tries a direct WebRTC connection first. Otherwise it uses an end-to-end encrypted relay. Android can use the web app without installing it. On iPhone and iPad, add it to the Home Screen to enable push notifications. Tap the tabs or swipe between them on mobile; a notification opens Agent reminders. Your phone controls notification vibration.</p>
+        <p class="device-platform-note" data-i18n="devices.platformNote">On the same local network, DingDong connects directly; otherwise it uses an end-to-end encrypted relay. Android works in the browser without installing. On iPhone and iPad, add it to the Home Screen to get push notifications. Tap the tabs or swipe between them on mobile; a notification opens Agent reminders.</p>
       </section>
 
       <section class="resource-system" id="resources">
@@ -274,7 +278,7 @@
 
         <div class="agent-strip">
           <span data-i18n="resources.clients">Built-in Agent adapters</span>
-          <strong>Codex</strong><strong>Claude Code</strong><strong>Cursor</strong><strong>Gemini CLI</strong><strong>Kiro</strong><strong>Pi</strong><strong>Grok Build</strong>
+          <strong>Codex</strong><strong>Claude Code</strong><strong>Cursor</strong><strong>Gemini CLI</strong><strong>GitHub Copilot CLI</strong><strong>OpenCode</strong><strong>Kiro</strong><strong>Antigravity</strong><strong>Windsurf</strong><strong>Pi</strong><strong>Grok Build</strong>
           <a class="agent-strip-request" href="https://github.com/JevonsCode/DingDongBuddy/issues/new?template=feature-request.yml" target="_blank" rel="noopener noreferrer" data-i18n="resources.requestAgent">Missing your Agent? Open an issue</a>
         </div>
 
@@ -501,7 +505,6 @@
           <h2 data-i18n="sounds.title">Choose the sound that brings you back.</h2>
           <p data-i18n="sounds.body">Connected Agents can send a reminder when they finish, get stuck, or need a decision. Pick a built-in sound or import an audio file.</p>
           <p class="sound-catalog-link"><a href="https://xn--8ovp9s.xn--m8txu.com/dingdong-voices/" data-i18n="sounds.catalog">Explore community voices →</a></p>
-          <p class="sound-life-note" data-i18n="sounds.note">Listen to a few below before choosing.</p>
           <p data-i18n="sounds.profiles">In Settings → Notifications, control completion and needs-input separately, or add named reminders with their own sound, color, tray style and phone switch. Agents select one by reminderId; saving a condition does not start a monitor. Import PCM WAV audio up to 15 seconds and 5 MiB.</p>
           <a href="https://github.com/JevonsCode/DingDongBuddy/blob/main/docs/product/agent-reminders.md" data-i18n="sounds.guide">Reminder setup and Agent tools →</a>
         </div>
@@ -543,7 +546,7 @@
             <h3 data-i18n="sounds.customTitle">Use a sound you recognize</h3>
             <p data-i18n="sounds.customBody">Choose a built-in sound or import your own in Settings. DingDong uses it for alerts from connected Agents.</p>
           </div>
-          <p id="sound-status" role="status" aria-live="polite" data-i18n="sounds.ready">Choose a sound to preview it</p>
+          <p id="sound-status" role="status" aria-live="polite" data-i18n="sounds.ready"></p>
         </div>
       </section>
 
@@ -556,9 +559,7 @@
         <div class="agent-prompt-card">
           <div class="agent-prompt-header">
             <div>
-              <p class="agent-prompt-kicker" data-i18n="mcp.promptEyebrow">Let AI handle the setup</p>
               <h3 id="agent-setup-prompt-title" data-i18n="mcp.promptTitle">Copy this instruction to your Agent</h3>
-              <p data-i18n="mcp.promptBody">It uses the MCP path shown in your installed DingDong app, so it works wherever DingDong is installed.</p>
             </div>
             <button
               class="agent-prompt-copy"
@@ -581,7 +582,7 @@
             role="status"
             aria-live="polite"
             data-i18n="mcp.promptReady"
-          >Ready to paste into your Agent</p>
+          ></p>
         </div>
 
         <div class="setup-card">
@@ -675,7 +676,10 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
             <span data-i18n="download.requestHint">What would save you a step? Tell us, or contribute a fix.</span>
           </a>
         </div>
-        <p class="download-help" data-i18n="download.macHelp">Requires macOS 13 or newer. Not sure which Mac you have? Open Apple menu  → About This Mac. “Chip” means Apple silicon; “Processor” means Intel.</p>
+        <div class="download-notes">
+          <p class="download-help" data-i18n="download.macHelp">Requires macOS 13 or newer. Not sure which Mac you have? Open Apple menu  → About This Mac. “Chip” means Apple silicon; “Processor” means Intel.</p>
+          <p class="download-help" data-i18n="download.earlyAccess">Want new features early? In DingDong, turn on “Allow beta updates” under Settings → Version.</p>
+        </div>
         <div class="download-stats" id="download-stats" aria-live="polite" hidden>
           <strong data-i18n="download.statsTitle">Downloads by version</strong>
           <p data-i18n="download.statsLoading">Loading GitHub release asset counts…</p>
@@ -704,17 +708,17 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "nav.docs": "Docs",
           "resourceUpdates.title": "Choose what arrives. Keep what changed.",
           "resourceUpdates.aiTitle": "Select resources for the task.",
-          "resourceUpdates.aiBody": "Automatic resource selection starts off. Enable it in Resource Manager → AI+. Your model can narrow eligible Prompts, Skills and MCP references from the task and candidate descriptions. Required and explicitly named eligible resources stay; failures fall back to local matching.",
+          "resourceUpdates.aiBody": "Off by default; turn it on in Resource Manager → AI+. Your model then picks the Prompts, Skills, and MCP servers this task needs from the eligible ones. Required and named resources always stay, and local matching takes over if the model can’t respond.",
           "resourceUpdates.aiGuide": "AI+ setup and data boundaries →",
           "resourceUpdates.historyTitle": "Compare versions. Restore a complete package.",
           "resourceUpdates.historyBody": "Open Version history on a Skill to compare any two saved versions. Manual saves and online refreshes retain changed documents and package files locally. Restoring creates a new version and preserves the current scope and enablement.",
           "resourceUpdates.historyGuide": "Skill version history guide →",
           "resourceUpdates.bridgeTitle": "Skip content the Agent still has.",
-          "resourceUpdates.bridgeBody": "Agents that retain a complete snapshot can confirm it to receive only changes. Skill loads can also reuse a confirmed version. After losing context, the Agent requests the full content again.",
+          "resourceUpdates.bridgeBody": "When an Agent still has the previous content, it receives only what changed. If it has lost context, it fetches everything again.",
           "resourceUpdates.bridgeGuide": "Bridge integration guide →",
-          "devices.history": "The desktop device manager separates Online devices from Connection history. Open Transfer history for the latest 100 finished file records saved locally across restarts. A history entry is not a file backup or a transfer you can resume after restarting.",
+          "devices.history": "The device manager lists online devices apart from connection history. Transfer history keeps the last 100 records across restarts; it isn’t a file backup.",
           "devices.guide": "Pairing and transfer guide →",
-          "sounds.profiles": "In Settings → Notifications, control completion and needs-input separately, or add named reminders with their own sound, color, tray style and phone switch. Agents select one by reminderId; saving a condition does not start a monitor. Import PCM WAV audio up to 15 seconds and 5 MiB.",
+          "sounds.profiles": "In Settings → Notifications, set completion and needs-input reminders separately, or add your own with a sound, a color, and a phone switch.",
           "sounds.guide": "Reminder setup and Agent tools →",
           "nav.voices": "Voices",
           "sounds.catalog": "Explore community voices →",
@@ -725,6 +729,9 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "nav.mcp": "Connect",
           "nav.download": "Download",
           "meta.title": "DingDong — a desktop companion for your clipboard and AI Agents",
+          "features.setup.title": "Connects to the Agents you already use",
+          "features.setup.body": "On first launch, DingDong finds the Agents on this computer and connects them. Updates and removals show the exact configuration changes before anything is written.",
+          "download.earlyAccess": "Want new features early? In DingDong, turn on “Allow beta updates” under Settings → Version.",
           "features.title": "What it does for you",
           "features.devices.title": "Take it to your phone",
           "features.devices.body": "Pair your phone to receive Agent reminders and to send files and clipboard items between devices. Connections go direct when possible; the relay is end-to-end encrypted.",
@@ -762,19 +769,19 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "usage.localTitle": "Store counts, not conversations.",
           "usage.localBody": "Only numeric totals are saved, on this computer, without any chat text. They are never sent with the anonymous install statistics. Token counts measure usage, not cost.",
           "plugins.title": "Plugins, when you want them.",
-          "plugins.body": "Find Jev and the macOS selection tools in Resource Manager → Plugins. Nothing is installed or turned on until you choose it.",
+          "plugins.body": "Jev and the selection tools live in Resource Manager → Plugins. Nothing is installed until you choose it.",
           "plugins.jevTitle": "Ask Jev for a judgment or score.",
           "plugins.jevBody": "Install Jev and add your own API key. Your Agent can call it for judgments, choices, and scoring, with Jev token usage tracked separately.",
           "plugins.official": "Jev website and terms",
-          "plugins.selectionLabel": "macOS · Selection tools",
+          "plugins.selectionLabel": "macOS · Windows · Selection",
           "plugins.selectionTitle": "Translate the sentence you selected.",
-          "plugins.selectionBody": "Copy selected text, or translate and explain it with your configured model. Supports local models and OpenAI- or Anthropic-compatible proxies.",
+          "plugins.selectionBody": "Copy selected text, or have your configured model translate, explain, or polish it. Text goes to the model only when you click an action.",
           "features.library.title": "One library for every Agent",
           "features.library.body": "Add Prompts, Skills, and MCP servers once, then choose which projects or Agents get each one. You can also ask your Agent to add or change them for you.",
           "features.clipboard.title": "Find what you copied",
-          "features.clipboard.body": "Press ⌘⇧V (Ctrl+Shift+V on Windows), filter by links, images, files, or text, preview, then press Return to use it. Pin the things you reuse.",
-          "features.notify.title": "Hear when an Agent needs you",
-          "features.notify.body": "Finished, stuck, or waiting on a decision: events from connected Agents land in one list, with unread counts and the sound you pick. Each client’s own notifications keep working.",
+          "features.clipboard.body": "Press ⌘⇧V (Ctrl+Shift+V on Windows). Search your whole history, filter by type or source, and press Return to use an item. Pin what you reuse.",
+          "features.notify.title": "Know which reminder it is by ear",
+          "features.notify.body": "Finished, stuck, or waiting on a decision: give each kind its own sound and color, or set a one-time reminder for the next task. A “Last seen here” line separates new events from ones you’ve read.",
           "devices.title": "Check several computers from one phone.",
           "devices.body": "Scan each computer's QR code to pair it. You can see which computers are online and switch the active one. Files, clipboard items, and reminders stay grouped by their source computer.",
           "devices.illustrationAria": "Illustration of DingDong Connected Devices",
@@ -803,7 +810,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "devices.phonePrivateBody": "The web app does not read it. Choose text or a file and tap Send to share it.",
           "devices.connectionTitle": "Keep the source computer connected",
           "devices.connectionBody": "Verified local connections have no file-size limit. Other routes keep the 25 MB limit. Follow progress on desktop or mobile, and pause or resume while both apps stay open.",
-          "devices.platformNote": "On the same local network, DingDong tries a direct WebRTC connection first. Otherwise it uses an end-to-end encrypted relay. Android can use the web app without installing it. On iPhone and iPad, add it to the Home Screen to enable push notifications. Tap the tabs or swipe between them on mobile; a notification opens Agent reminders. Your phone controls notification vibration.",
+          "devices.platformNote": "On the same local network, DingDong connects directly; otherwise it uses an end-to-end encrypted relay. Android works in the browser without installing. On iPhone and iPad, add it to the Home Screen to get push notifications. Tap the tabs or swipe between them on mobile; a notification opens Agent reminders.",
           "resources.title": "Manage a resource once, then choose where it applies.",
           "resources.body": "Set the project or Agent for each resource. Matching Prompts arrive at task start. Dynamic Skills show a description before the Agent loads them. MCP servers are added to supported clients.",
           "resources.prompt": "Rules and working preferences",
@@ -904,8 +911,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "value.classic": "DingDong Classic",
           "value.orange": "Orange",
           "sounds.title": "Choose the sound that brings you back.",
-          "sounds.body": "Connected Agents can send a reminder when they finish, get stuck, or need a decision. Pick a built-in sound or import an audio file.",
-          "sounds.note": "Listen to a few below before choosing.",
+          "sounds.body": "DingDong rings when an Agent finishes, gets stuck, or needs your decision.",
           "sounds.classic": "Classic",
           "sounds.classicBody": "Balanced and familiar",
           "sounds.soft": "Soft",
@@ -917,25 +923,23 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "sounds.deep": "Deep",
           "sounds.deepBody": "Low and easy to notice",
           "sounds.listen": "Listen",
-          "sounds.customTitle": "Use a sound you recognize",
-          "sounds.customBody": "Choose a built-in sound or import your own in Settings. DingDong uses it for alerts from connected Agents.",
-          "sounds.ready": "Choose a sound to preview it",
+          "sounds.customTitle": "Or use your own sound",
+          "sounds.customBody": "Import a WAV clip of up to 15 seconds, or pick one from the community library.",
+          "sounds.ready": "",
           "sounds.playing": "Playing",
-          "sounds.finished": "Ready for another preview",
+          "sounds.finished": "",
           "sounds.error": "This sound could not be played",
           "mcp.title": "Connect DingDong to your Agent.",
-          "mcp.body": "The quickest way: copy the instruction below and paste it into your Agent. It adds DingDong as an MCP server and keeps your existing settings.",
-          "mcp.promptEyebrow": "Let AI handle the setup",
+          "mcp.body": "DingDong detects the Agents on this computer and connects them from the app. Or paste the instruction below into your Agent and let it do the setup.",
           "mcp.promptTitle": "Copy this instruction to your Agent",
-          "mcp.promptBody": "It uses the MCP path shown in your installed DingDong app, so it works wherever DingDong is installed.",
           "mcp.copyPrompt": "Copy setup instruction",
           "mcp.promptCopied": "Copied",
-          "mcp.promptReady": "Ready to paste into your Agent",
+          "mcp.promptReady": "",
           "mcp.promptSuccess": "Setup instruction copied. Paste it into your Agent.",
           "mcp.promptError": "Could not copy automatically. Select the prompt and copy it manually.",
           "mcp.agentPrompt": agentSetupPrompts.en,
           "mcp.installTitle": "Prefer manual setup?",
-          "mcp.installBody": "For a client that supports MCP, add the matching snippet to its settings. The examples below use the macOS installation path.",
+          "mcp.installBody": "Clients that support MCP can also use the snippet below (macOS install path shown).",
           "mcp.step1": "Install DingDong in /Applications.",
           "mcp.step2": "Point the Agent at DingDong's built-in MCP command.",
           "mcp.step3": "Manage the shared resources in DingDong.",
@@ -971,23 +975,23 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "footer.releases": "Releases",
           "footer.metadata": "Metadata",
           "footer.feedback": "Feedback",
-          "resources.clientNote": "Pi and Grok Build currently support Skill syncing. MCP setup and completion hooks vary by client; check the options shown in DingDong.",
+          "resources.clientNote": "Pi, Grok Build, and Windsurf sync Skills only for now. MCP and completion alerts vary by client; DingDong shows what each one supports.",
         },
         zh: {
           "nav.docs": "文档",
           "resourceUpdates.title": "按任务选资源，改过的也能找回来",
           "resourceUpdates.aiTitle": "AI+ 帮 Agent 筛选当前需要的资源",
-          "resourceUpdates.aiBody": "自动资源筛选默认关闭，在“资源管理 → AI+”按需开启。模型根据任务和候选简介，缩小符合范围的 Prompt、Skill 和 MCP 目录；必需资源、明确点名且符合范围的资源会保留，失败时回退到本地匹配。",
+          "resourceUpdates.aiBody": "默认关闭，在“资源管理 → AI+”里打开。开启后，模型会根据任务，从符合条件的 Prompt、Skill、MCP 里挑出这次用得上的；必需的和你点名的不会被筛掉，模型连不上时改用本地匹配。",
           "resourceUpdates.aiGuide": "AI+ 配置与数据边界 →",
           "resourceUpdates.historyTitle": "比较版本，恢复完整 Skill 包",
           "resourceUpdates.historyBody": "打开 Skill 的“版本历史”，任意选择两个已存版本比较。手动保存和在线刷新会在内容变化时，本地保留文档和配套文件；恢复会生成新版本，保留当前作用域和启用状态。",
           "resourceUpdates.historyGuide": "Skill 版本历史使用说明 →",
           "resourceUpdates.bridgeTitle": "Agent 仍保留的内容，省去重复交付",
-          "resourceUpdates.bridgeBody": "Agent 仍持有完整快照时，可确认基线，只接收变化；Skill 加载也能复用已确认的版本。上下文丢失后，重新请求完整内容。",
+          "resourceUpdates.bridgeBody": "Agent 还记得上次的内容时，只会收到变化的部分；上下文丢了，再重新拿完整内容。",
           "resourceUpdates.bridgeGuide": "Bridge 接入说明 →",
-          "devices.history": "桌面设备管理将“在线设备”与“连接历史”分开显示。打开“传输历史”，查看跨重启保留在本机的最近 100 条已结束文件记录。历史记录不等于文件备份，也不代表重启后还能续传。",
+          "devices.history": "设备管理里，在线设备和连接历史分开放。传输历史保留最近 100 条记录，重启后还在，但它不是文件备份。",
           "devices.guide": "设备配对与传输说明 →",
-          "sounds.profiles": "在“设置 → 通知”中分别控制完成与需要处理提醒，也可添加命名提醒，单独选择声音、颜色、托盘样式和手机开关。Agent 通过 reminderId 选择提醒；保存条件不会自行启动监控。自定义音频支持不超过 15 秒、5 MiB 的 PCM WAV。",
+          "sounds.profiles": "在“设置 → 通知”里，完成和需要处理可以分开设置；也可以加自己的提醒，各配一个声音、颜色，并决定要不要推到手机。",
           "sounds.guide": "提醒设置与 Agent 工具说明 →",
           "nav.voices": "声音库",
           "sounds.catalog": "打开社区声音库 →",
@@ -998,6 +1002,9 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "nav.mcp": "接入 Agent",
           "nav.download": "下载",
           "meta.title": "DingDong — 剪贴板和 Agent 的桌面小伙伴",
+          "features.setup.title": "你在用的 Agent，帮你接好",
+          "features.setup.body": "第一次打开时，DingDong 会找出这台电脑上的 Agent 并帮你接入。之后更新或移除，都会先列出要改的配置，你确认了才动手。",
+          "download.earlyAccess": "想提前用新功能？在 DingDong 的“设置 → 版本”里打开“允许安装测试版（Beta）”。",
           "features.title": "能帮你做的事",
           "features.devices.title": "手机上接着看",
           "features.devices.body": "配对手机后，可以收 Agent 提醒，也能在设备之间互传文件和剪贴板内容。能直连就直连，走中继时也是端到端加密。",
@@ -1035,19 +1042,19 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "usage.localTitle": "存数字，不存聊天正文",
           "usage.localBody": "只在本机保存数字汇总，不含任何聊天内容，也不会随匿名安装统计上传。Token 衡量的是用量，不是花费。",
           "plugins.title": "插件按需安装",
-          "plugins.body": "在“资源管理 → 插件”里找到 Jev 和 macOS 划词。你不选，就不会安装或开启。",
+          "plugins.body": "Jev 和划词工具都在“资源管理 → 插件”里。你不点安装，就什么都不会装。",
           "plugins.jevTitle": "让 Jev 帮 Agent 做判断、打分",
           "plugins.jevBody": "按需安装 Jev，填入自己的 API Key。Agent 可以调用它做判断、选择和评分，Jev 的 Token 用量单独看。",
           "plugins.official": "Jev 官网与使用条款",
-          "plugins.selectionLabel": "macOS · 系统划词",
+          "plugins.selectionLabel": "macOS · Windows · 划词",
           "plugins.selectionTitle": "选中这句话，翻译一下",
-          "plugins.selectionBody": "选中文字就能复制，也可以交给你配置的模型翻译或解释。支持本地模型，以及 OpenAI、Anthropic 兼容的反向代理。",
+          "plugins.selectionBody": "选中文字后可以直接复制，也可以交给你配置的模型翻译、解释或润色。只有你点了按钮，文字才会发给模型。",
           "features.library.title": "一份资源，几个 Agent 共用",
           "features.library.body": "Prompt、Skill、MCP 添加一次，再选好给哪些项目或 Agent 用。也可以直接让 Agent 帮你添加和修改。",
           "features.clipboard.title": "找回复制过的内容",
-          "features.clipboard.body": "按 ⌘⇧V（Windows 是 Ctrl+Shift+V）打开，按链接、图片、文件、文字筛选，预览后回车就能用。常用的可以固定。",
-          "features.notify.title": "Agent 需要你时，DingDong 提醒你",
-          "features.notify.body": "做完了、卡住了、等你决定，接入的 Agent 事件都收进一个列表，带未读数和你选的提示音。客户端自己的通知照常工作。",
+          "features.clipboard.body": "按 ⌘⇧V（Windows 是 Ctrl+Shift+V）打开。全部历史都能直接搜，按类型或来源筛选，回车就用；常用的固定在上面。",
+          "features.notify.title": "听声音，就知道是哪件事",
+          "features.notify.body": "做完了、卡住了、等你拍板，每种提醒都能配自己的声音和颜色，也可以设一个只响下一次的临时提醒。列表里有一条“上次看到这里”，新旧一眼分开。",
           "devices.title": "一部手机，看几台电脑",
           "devices.body": "依次扫描电脑上的二维码就能配对。看看哪些电脑在线，再切换到需要的那一台。文件、剪贴板和 Agent 提醒都按来源电脑分开。",
           "devices.illustrationAria": "DingDong 连接设备界面示意",
@@ -1076,7 +1083,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "devices.phonePrivateBody": "网页不会读取手机剪贴板。只有你选好文字或文件，再点“发送”，内容才会传出去。",
           "devices.connectionTitle": "源电脑需要保持连接",
           "devices.connectionBody": "自动确认局域网后，文件大小不设产品上限；其他路径仍限 25 MB。电脑和手机都能查看进度、暂停和继续，续传时请保持应用打开。",
-          "devices.platformNote": "同一局域网内优先用 WebRTC 直连，连不上时改用端到端加密中继。Android 不安装也能直接使用网页；iPhone 和 iPad 要先添加到主屏幕，才能开启推送。手机上可以点标签或左右滑动切换页面，点击通知会直接进入 Agent 提醒。通知是否震动，由手机系统决定。",
+          "devices.platformNote": "同一局域网内优先直连，连不上时走端到端加密中继。Android 不安装也能直接使用网页；iPhone 和 iPad 要先添加到主屏幕，才能收到推送。手机上点标签或左右滑动都能切换页面，点击通知会直接进入 Agent 提醒。",
           "resources.title": "配好一份，再选给谁用",
           "resources.body": "给每条资源选好项目或 Agent。匹配的提示词在任务开始时生效；动态 Skill 先展示简介，需要时再读正文；MCP 写入支持它的客户端配置。",
           "resources.prompt": "规则、偏好和工作约束",
@@ -1177,8 +1184,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "value.classic": "DingDong 经典",
           "value.orange": "橙黄",
           "sounds.title": "选择 DingDong 的提醒声",
-          "sounds.body": "接入的 Agent 做完了、卡住了，或者等你决定时，可以发来提醒。提示声用内置的，也可以导入自己的音频。",
-          "sounds.note": "下面几个声音，先听听再选。",
+          "sounds.body": "Agent 做完了、卡住了，或者在等你决定时，DingDong 会响一声。",
           "sounds.classic": "DingDong 经典",
           "sounds.classicBody": "均衡，适合作为默认声",
           "sounds.soft": "DingDong 轻柔",
@@ -1190,25 +1196,23 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "sounds.deep": "DingDong 低沉",
           "sounds.deepBody": "频率更低，辨识度高",
           "sounds.listen": "试听",
-          "sounds.customTitle": "也可以换成自己的声音",
-          "sounds.customBody": "在设置里挑一个内置声音，或导入音频文件。接入 Agent 的桌面提醒就用这一声。",
-          "sounds.ready": "点一个声音试听",
+          "sounds.customTitle": "也可以用你自己的声音",
+          "sounds.customBody": "导入 15 秒以内的 WAV 音频，或去社区声音库挑一个。",
+          "sounds.ready": "",
           "sounds.playing": "正在播放",
-          "sounds.finished": "可以继续试听",
+          "sounds.finished": "",
           "sounds.error": "这个声音暂时无法播放",
           "mcp.title": "把 DingDong 接到你的 Agent",
-          "mcp.body": "最省事的办法：复制下面这段话发给 Agent，它会把 DingDong 接成 MCP，并保留你原有的配置。",
-          "mcp.promptEyebrow": "交给 AI 配置",
+          "mcp.body": "DingDong 会自动找到这台电脑上的 Agent，在应用里就能接入。想让 Agent 自己配，也可以把下面这段话发给它。",
           "mcp.promptTitle": "复制这段话，发给 Agent",
-          "mcp.promptBody": "指令里用的是已安装的 DingDong 显示的 MCP 路径，装在哪里都能用。",
           "mcp.copyPrompt": "复制接入指令",
           "mcp.promptCopied": "已复制",
-          "mcp.promptReady": "复制后，粘贴到 Agent 对话里",
+          "mcp.promptReady": "",
           "mcp.promptSuccess": "接入指令已复制，粘贴给 Agent 就可以了。",
           "mcp.promptError": "自动复制失败，请选中提示词手动复制。",
           "mcp.agentPrompt": agentSetupPrompts.zh,
           "mcp.installTitle": "想手动配置？",
-          "mcp.installBody": "支持 MCP 的客户端，也可以把对应配置手动写进去。下面的示例使用 macOS 安装路径。",
+          "mcp.installBody": "支持 MCP 的客户端，也可以手动加入下面的配置（示例用的是 macOS 安装路径）。",
           "mcp.step1": "DingDong 放在 /Applications",
           "mcp.step2": "让 Agent 指向 DingDong 自带的 MCP 命令",
           "mcp.step3": "共用的资源回到 DingDong 里管理",
@@ -1244,7 +1248,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "footer.releases": "版本",
           "footer.metadata": "元数据",
           "footer.feedback": "反馈",
-          "resources.clientNote": "Pi 和 Grok Build 目前支持 Skill 同步。MCP 接入、完成提醒等能力因客户端而异，以 DingDong 中显示的选项为准。",
+          "resources.clientNote": "Pi、Grok Build 和 Windsurf 目前只同步 Skill。MCP、完成提醒等能力各客户端不同，以 DingDong 里显示的为准。",
         }
       };
 

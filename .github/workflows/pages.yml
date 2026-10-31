@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
     paths:
+      - 'docs/index.html'
+      - 'docs/styles.css'
       - 'docs/voices/**'
       - 'docs/product/**'
       - '.github/scripts/pages-overlay*'
@@ -72,9 +74,25 @@ jobs:
           sparse-checkout-cone-mode: false
           sparse-checkout: |
             /docs/index.html
+            /docs/styles.css
             /docs/voices/
             /docs/product/
             /.github/scripts/
+      - name: Use current homepage copy when it advertises the published release
+        env:
+          RELEASE_TAG: ${{ steps.source.outputs.ref }}
+        run: |
+          # Website edits made on main after a release go live without waiting for
+          # the next one, but only while every download link points at the
+          # published release, so an unreleased version is never advertised.
+          downloads=$(grep -oE 'releases/download/[^/"]+/' community-source/docs/index.html | sort -u)
+          if [ "$downloads" = "releases/download/$RELEASE_TAG/" ]; then
+            cp community-source/docs/index.html docs/index.html
+            cp community-source/docs/styles.css docs/styles.css
+            echo "Using main homepage copy for $RELEASE_TAG."
+          else
+            echo "Main homepage links other downloads; keeping the $RELEASE_TAG homepage."
+          fi
       - name: Apply current routing and remove deleted product pages
         run: |
           rm -rf docs/voices

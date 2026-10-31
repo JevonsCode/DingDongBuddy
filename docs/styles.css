@@ -2590,6 +2590,13 @@ html[lang="zh-CN"] .defaults-panel th {
   line-height: 1.45;
 }
 
+/* Stays in the accessibility tree as a live region; takes no space until it has a message. */
+.agent-prompt-status:empty {
+  min-height: 0;
+  padding: 0;
+  border-top: 0;
+}
+
 .setup-card {
   display: grid;
   grid-template-columns: minmax(240px, 0.82fr) minmax(0, 1.18fr);
@@ -2851,6 +2858,15 @@ pre {
 .download-card.is-recommended {
   border-color: var(--accent-border);
   background: var(--accent-soft);
+}
+
+.download-notes {
+  display: grid;
+  gap: 4px;
+}
+
+.download-notes .download-help {
+  margin: 0;
 }
 
 .download-help {
