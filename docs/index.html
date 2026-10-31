@@ -168,6 +168,10 @@
           <h2 data-i18n="devices.title">Check several computers from one phone.</h2>
           <p data-i18n="devices.body">Scan each computer's QR code to pair it. You can see which computers are online and switch the active one. Files, clipboard items, and reminders stay grouped by their source computer.</p>
         </div>
+        <div class="story-brief">
+          <p data-i18n="story.devicesBrief">Scan the QR code on your computer to pair your phone. Files, clipboard items, and Agent reminders stay grouped by the computer they came from.</p>
+          <p class="story-brief-hint" data-i18n="story.closeHint">Close the window with the red button to read the full details.</p>
+        </div>
 
         <div class="device-showcase" aria-label="Illustration of DingDong Connected Devices" data-i18n-aria-label="devices.illustrationAria">
           <span class="illustration-label" data-i18n="devices.illustration">Illustrative UI</span>
@@ -241,7 +245,7 @@
           <h2 data-i18n="resources.title">Manage a resource once, then choose where it applies.</h2>
           <p data-i18n="resources.body">Set the project or Agent for each resource. Matching Prompts arrive at task start. Dynamic Skills show a description before the Agent loads them. MCP servers are added to supported clients.</p>
         </div>
-        <div class="story-brief" aria-hidden="true">
+        <div class="story-brief">
           <p data-i18n="story.resourcesBrief">Keep one copy of each Prompt, Skill, and MCP server, then choose which projects or Agents get it.</p>
           <p class="story-brief-hint" data-i18n="story.closeHint">Close the window with the red button to read the full details.</p>
         </div>
@@ -342,7 +346,7 @@
           <h2 data-i18n="usage.title">See your Token usage, day by day.</h2>
           <p data-i18n="usage.body">Open Token usage for a daily heatmap, date and source filters, day details and CSV export. Optionally include DingDong’s own model usage or view it separately; changing filters makes no model request.</p>
         </div>
-        <div class="story-brief" aria-hidden="true">
+        <div class="story-brief">
           <p data-i18n="story.usageBrief">See each Agent’s daily Token use on a heatmap. Only the numbers are stored, never the chats.</p>
           <p class="story-brief-hint" data-i18n="story.closeHint">Close the window with the red button to read the full details.</p>
         </div>
@@ -370,7 +374,7 @@
           <h2 data-i18n="plugins.title">Plugins, when you want them.</h2>
           <p data-i18n="plugins.body">Find Jev and the macOS selection tools in Resource Manager → Plugins. Nothing is installed or turned on until you choose it.</p>
         </div>
-        <div class="story-brief" aria-hidden="true">
+        <div class="story-brief">
           <p data-i18n="story.pluginsBrief">Install Jev and the selection tools when you want them. Select text to translate, explain, or polish it.</p>
           <p class="story-brief-hint" data-i18n="story.closeHint">Close the window with the red button to read the full details.</p>
         </div>
@@ -586,10 +590,30 @@
           <h2 data-i18n="mcp.title">Connect DingDong to your Agent.</h2>
           <p data-i18n="mcp.body">The quickest way: copy the instruction below and paste it into your Agent. It adds DingDong as an MCP server and keeps your existing settings.</p>
         </div>
-        <div class="story-brief" aria-hidden="true">
-          <p data-i18n="story.mcpBrief">DingDong finds the Agents on this computer and connects them for you.</p>
+        <div class="story-brief">
+          <p data-i18n="story.mcpBrief">Built-in Agents connect in one click. For anything else, copy the setup instruction into it, or open an issue and tell us.</p>
+          <div class="story-brief-actions">
+            <button type="button" class="story-brief-copy" id="story-brief-copy" data-i18n="mcp.copyPrompt">Copy setup instruction</button>
+            <a href="https://github.com/JevonsCode/DingDongBuddy/issues/new?template=feature-request.yml" target="_blank" rel="noopener noreferrer" data-i18n="mcp.pathIssueLink">Open an issue →</a>
+          </div>
           <p class="story-brief-hint" data-i18n="story.closeHint">Close the window with the red button to read the full details.</p>
         </div>
+
+        <ol class="connect-paths">
+          <li>
+            <strong data-i18n="mcp.pathAutoTitle">Connect in one click</strong>
+            <p data-i18n="mcp.pathAutoBody">DingDong finds Codex, Claude Code, Cursor, Gemini CLI and the other built-in Agents on this computer. Click once in Resource Manager → Agent access; it lists the configuration changes before writing them.</p>
+          </li>
+          <li>
+            <strong data-i18n="mcp.pathPromptTitle">Not on the list? Copy the instruction</strong>
+            <p data-i18n="mcp.pathPromptBody">Send the setup instruction below to your Agent. It adds DingDong as an MCP server and keeps your existing settings.</p>
+          </li>
+          <li>
+            <strong data-i18n="mcp.pathIssueTitle">Want it built in?</strong>
+            <p data-i18n="mcp.pathIssueBody">Tell us which Agent you use, and we’ll look at adding it to one-click setup.</p>
+            <a href="https://github.com/JevonsCode/DingDongBuddy/issues/new?template=feature-request.yml" target="_blank" rel="noopener noreferrer" data-i18n="mcp.pathIssueLink">Open an issue →</a>
+          </li>
+        </ol>
 
         <div class="agent-prompt-card">
           <div class="agent-prompt-header">
@@ -770,11 +794,19 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "story.resourcesBrief": "Keep one copy of each Prompt, Skill, and MCP server, then choose which projects or Agents get it.",
           "story.usageBrief": "See each Agent’s daily Token use on a heatmap. Only the numbers are stored, never the chats.",
           "story.pluginsBrief": "Install Jev and the selection tools when you want them. Select text to translate, explain, or polish it.",
-          "story.mcpBrief": "DingDong finds the Agents on this computer and connects them for you.",
+          "story.mcpBrief": "Built-in Agents connect in one click. For anything else, copy the setup instruction into it, or open an issue and tell us.",
           "story.closeHint": "Close the window with the red button to read the full details.",
           "sounds.libraryTitle": "Community voice library",
           "sounds.libraryBody": "Short clips shared by other DingDong users: funny sounds, classic game and movie lines, cartoon effects. Each is 3 seconds or less. Preview one, click Install, and it goes straight into DingDong.",
           "sounds.librarySubmit": "Submit your own sound ↗",
+          "mcp.pathAutoTitle": "Connect in one click",
+          "mcp.pathAutoBody": "DingDong finds Codex, Claude Code, Cursor, Gemini CLI and the other built-in Agents on this computer. Click once in Resource Manager → Agent access; it lists the configuration changes before writing them.",
+          "mcp.pathPromptTitle": "Not on the list? Copy the instruction",
+          "mcp.pathPromptBody": "Send the setup instruction below to your Agent. It adds DingDong as an MCP server and keeps your existing settings.",
+          "mcp.pathIssueTitle": "Want it built in?",
+          "mcp.pathIssueBody": "Tell us which Agent you use, and we’ll look at adding it to one-click setup.",
+          "mcp.pathIssueLink": "Open an issue →",
+          "story.devicesBrief": "Scan the QR code on your computer to pair your phone. Files, clipboard items, and Agent reminders stay grouped by the computer they came from.",
           "features.title": "What it does for you",
           "features.devices.title": "Take it to your phone",
           "features.devices.body": "Pair your phone to receive Agent reminders and to send files and clipboard items between devices. Connections go direct when possible; the relay is end-to-end encrypted.",
@@ -973,7 +1005,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "sounds.finished": "",
           "sounds.error": "This sound could not be played",
           "mcp.title": "Connect DingDong to your Agent.",
-          "mcp.body": "DingDong detects the Agents on this computer and connects them from the app. Or paste the instruction below into your Agent and let it do the setup.",
+          "mcp.body": "Pick whichever way fits your Agent.",
           "mcp.promptTitle": "Copy this instruction to your Agent",
           "mcp.copyPrompt": "Copy setup instruction",
           "mcp.promptCopied": "Copied",
@@ -1051,11 +1083,19 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "story.resourcesBrief": "提示词、Skill、MCP 只维护一份，再选给哪个项目或 Agent 用。",
           "story.usageBrief": "每个 Agent 每天用了多少 Token，热力图一眼看清；只存数字，不存聊天。",
           "story.pluginsBrief": "Jev 和划词工具按需安装，选中文字就能翻译、解释、润色。",
-          "story.mcpBrief": "DingDong 会找到这台电脑上的 Agent，帮你接好。",
+          "story.mcpBrief": "内置的 Agent 一键接入；不在列表里的，复制接入指令发给它，或者提个 issue 告诉我们。",
           "story.closeHint": "点窗口左上角的红色按钮，看完整介绍。",
           "sounds.libraryTitle": "社区声音库",
           "sounds.libraryBody": "大家投稿的短音效：搞怪声音、经典游戏和影视台词、卡通拟音，每条不超过 3 秒。试听后点「安装」，就直接装进 DingDong。",
           "sounds.librarySubmit": "投稿你的声音 ↗",
+          "mcp.pathAutoTitle": "一键接入",
+          "mcp.pathAutoBody": "DingDong 会找出这台电脑上的 Codex、Claude Code、Cursor、Gemini CLI 等内置 Agent，在“资源管理 → Agent 接入”里点一下就接好；写入前会先列出要改的配置。",
+          "mcp.pathPromptTitle": "不在列表里？复制接入指令",
+          "mcp.pathPromptBody": "把下面这段接入指令发给你的 Agent，它会自己把 DingDong 加成 MCP，原有配置不动。",
+          "mcp.pathIssueTitle": "想要内置支持",
+          "mcp.pathIssueBody": "告诉我们你在用哪个 Agent，我们会考虑把它加进一键接入。",
+          "mcp.pathIssueLink": "提个 issue →",
+          "story.devicesBrief": "扫一下电脑上的二维码，手机就配好了。文件、剪贴板和 Agent 提醒都按来源电脑分开。",
           "features.title": "能帮你做的事",
           "features.devices.title": "手机上接着看",
           "features.devices.body": "配对手机后，可以收 Agent 提醒，也能在设备之间互传文件和剪贴板内容。能直连就直连，走中继时也是端到端加密。",
@@ -1254,7 +1294,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "sounds.finished": "",
           "sounds.error": "这个声音暂时无法播放",
           "mcp.title": "把 DingDong 接到你的 Agent",
-          "mcp.body": "DingDong 会自动找到这台电脑上的 Agent，在应用里就能接入。想让 Agent 自己配，也可以把下面这段话发给它。",
+          "mcp.body": "三种方式，挑适合你的那一种。",
           "mcp.promptTitle": "复制这段话，发给 Agent",
           "mcp.copyPrompt": "复制接入指令",
           "mcp.promptCopied": "已复制",
@@ -2140,6 +2180,20 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
       demoCopyAction.addEventListener("click", copyDemoSample);
       terminalDemoForm.addEventListener("submit", submitTerminalDemo);
       agentPromptCopy.addEventListener("click", copyAgentSetupPrompt);
+      const storyBriefCopy = document.getElementById("story-brief-copy");
+      let storyBriefCopyTimer = null;
+      storyBriefCopy.addEventListener("click", async () => {
+        window.clearTimeout(storyBriefCopyTimer);
+        try {
+          await writeDemoClipboard(agentSetupPrompt.textContent);
+          storyBriefCopy.textContent = copy[demoState.language]["mcp.promptCopied"];
+        } catch {
+          storyBriefCopy.textContent = copy[demoState.language]["mcp.promptError"];
+        }
+        storyBriefCopyTimer = window.setTimeout(() => {
+          storyBriefCopy.textContent = copy[demoState.language]["mcp.copyPrompt"];
+        }, 2200);
+      });
       demoMascot.addEventListener("click", () => {
         demoMascot.classList.remove("is-shaking");
         void demoMascot.offsetWidth;
@@ -2197,6 +2251,8 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           selectionResult: "passed on every platform",
           connecting: "Connecting…",
           connected: "Connected",
+          agentsMissing: "Not on the list?",
+          agentsFallbacks: ["Copy setup instruction", "Open an issue"],
           notifications: [
             ["MacBook Pro", "Agent finished", "Codex fixed the login page."],
             ["Studio PC", "Needs your decision", "Claude Code is waiting for a merge choice."]
@@ -2204,16 +2260,8 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           ring: ["Needs your decision", "Claude Code · just now"],
           now: "now",
           close: "Close Resource Manager",
-          connect: {
-            title: "Connected devices",
-            host: "This computer · Host",
-            hostName: "MacBook Pro",
-            waiting: "Waiting for scan",
-            scan: "Scan with the device you want to trust.",
-            online: "Online devices",
-            devices: [["Pixel 8", "Online"], ["iPhone 15", "Just connected"]],
-            another: "Connect another computer"
-          }
+          devicesWindow: "DingDong · Connected Devices",
+          devicesClose: "Close Connected devices"
         },
         zh: {
           workspace: "管理",
@@ -2255,6 +2303,8 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           selectionResult: "在所有平台上都通过了",
           connecting: "接入中…",
           connected: "已接入",
+          agentsMissing: "没找到你的 Agent？",
+          agentsFallbacks: ["复制接入指令", "提个 issue"],
           notifications: [
             ["MacBook Pro", "Agent 做完了", "Codex 修好了登录页。"],
             ["工作室台式机", "等你决定", "Claude Code 在等你选合并方式。"]
@@ -2262,16 +2312,8 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           ring: ["等你决定", "Claude Code · 刚刚"],
           now: "刚刚",
           close: "关闭资源管理",
-          connect: {
-            title: "连接设备",
-            host: "这台电脑 · 主机",
-            hostName: "MacBook Pro",
-            waiting: "等待扫码",
-            scan: "请使用要信任的设备扫码。",
-            online: "当前在线",
-            devices: [["Pixel 8", "在线"], ["iPhone 15", "刚刚连接"]],
-            another: "连接另一台电脑"
-          }
+          devicesWindow: "DingDong · 连接设备",
+          devicesClose: "关闭连接设备"
         }
       };
       const storyKeys = detectedDownloadPlatform === "windows"
@@ -2289,7 +2331,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         agents: "M6.5 9.5 9.5 6.5M7 5l1-1a2.5 2.5 0 0 1 3.5 3.5l-1 1M9 11l-1 1A2.5 2.5 0 0 1 4.5 8.5l1-1",
         issues: "M8 2.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11zM8 5.5v3M8 10.5v.5"
       };
-      const storyMacScenes = ["resources", "token-history", "plugins", "mcp"];
+      const storyMacScenes = ["devices", "resources", "token-history", "plugins", "mcp"];
       const storyQuery = window.matchMedia(
         "(min-width: 1240px) and (min-height: 760px) and (prefers-reduced-motion: no-preference)"
       );
@@ -2441,11 +2483,16 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
             row.append(createStoryAvatar(name), createDemoElement("b", "", name), status);
             list.append(row);
           });
-          return [createStoryPageHead(text.nav.agents), list];
+          const missing = createDemoElement("div", "story-agents-missing");
+          missing.append(createDemoElement("span", "", text.agentsMissing));
+          text.agentsFallbacks.forEach((label) => missing.append(createDemoElement("b", "", label)));
+          return [createStoryPageHead(text.nav.agents), list, missing];
         }
       };
 
-      const storyMacIsOpen = () => storyMac.classList.contains("is-open") && !storyMac.classList.contains("is-closing");
+      const storyMacIsOpen = () => storyMac.classList.contains("is-open")
+        && !storyMac.classList.contains("is-closing")
+        && !storyMac.classList.contains("is-devices");
 
       const setStoryMacPage = (page) => {
         storyMac.querySelectorAll("[data-story-page]").forEach((item) => {
@@ -2454,15 +2501,68 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         storyMac.querySelector(".story-mac-main").replaceChildren(...storyPages[page]());
       };
 
-      const openStoryMac = (page, origin) => {
-        const text = storyText();
+      const createStoryLights = (label) => {
         const lights = createDemoElement("div", "story-mac-lights");
         const close = createDemoElement("button", "story-mac-close");
         close.type = "button";
-        close.setAttribute("aria-label", text.close);
-        close.title = text.close;
+        close.setAttribute("aria-label", label);
+        close.title = label;
         close.addEventListener("click", showStoryDetail);
         lights.append(close, createDemoElement("i", ""), createDemoElement("i", ""));
+        return lights;
+      };
+
+      const showStoryWindow = (origin) => {
+        if (origin) {
+          const macBox = storyMac.getBoundingClientRect();
+          const originBox = origin.getBoundingClientRect();
+          const x = originBox.left + originBox.width / 2 - macBox.left;
+          const y = originBox.top + originBox.height / 2 - macBox.top;
+          storyMac.style.transformOrigin = `${x}px ${y}px`;
+        }
+        storyMac.classList.remove("is-closing");
+        storyMac.classList.add("is-open");
+        productStage.classList.add("is-window-open");
+        storyMain.classList.add("is-window-open");
+      };
+
+      // Connected devices, as the real window renders it (captured from the
+      // Flutter screen in its three pairing states).
+      const storyDeviceTarget = { left: 24 / 620, top: 161 / 610, width: 282 / 620, height: 34 / 610 };
+      const setStoryDevicesShot = (state) => {
+        storyMac.querySelectorAll(".story-devices-shot img").forEach((image) => {
+          image.classList.toggle("is-active", image.dataset.state === state);
+        });
+      };
+
+      const openStoryDevices = (origin) => {
+        const text = storyText();
+        const titlebar = createDemoElement("div", "story-mac-titlebar");
+        titlebar.append(createStoryLights(text.devicesClose), createDemoElement("span", "", text.devicesWindow));
+        const shot = createDemoElement("div", "story-devices-shot");
+        shot.setAttribute("aria-hidden", "true");
+        ["idle", "qr", "paired"].forEach((state) => {
+          const image = document.createElement("img");
+          image.src = `./assets/screens/devices-${state}-${demoState.language}.png`;
+          image.alt = "";
+          image.dataset.state = state;
+          shot.append(image);
+        });
+        const target = createDemoElement("span", "story-devices-target");
+        target.style.left = `${storyDeviceTarget.left * 100}%`;
+        target.style.top = `${storyDeviceTarget.top * 100}%`;
+        target.style.width = `${storyDeviceTarget.width * 100}%`;
+        target.style.height = `${storyDeviceTarget.height * 100}%`;
+        shot.append(target);
+        storyMac.classList.add("is-devices");
+        storyMac.replaceChildren(titlebar, shot);
+        setStoryDevicesShot("idle");
+        showStoryWindow(origin);
+      };
+
+      const openStoryMac = (page, origin) => {
+        const text = storyText();
+        const lights = createStoryLights(text.close);
         const sidebar = createDemoElement("div", "story-mac-sidebar");
         const sidebarItems = createDemoElement("div", "story-mac-sidebar-items");
         sidebarItems.setAttribute("aria-hidden", "true");
@@ -2478,19 +2578,10 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         sidebar.append(lights, sidebarItems);
         const main = createDemoElement("div", "story-mac-main");
         main.setAttribute("aria-hidden", "true");
+        storyMac.classList.remove("is-devices");
         storyMac.replaceChildren(sidebar, main);
         setStoryMacPage(page);
-        if (origin) {
-          const macBox = storyMac.getBoundingClientRect();
-          const originBox = origin.getBoundingClientRect();
-          const x = originBox.left + originBox.width / 2 - macBox.left;
-          const y = originBox.top + originBox.height / 2 - macBox.top;
-          storyMac.style.transformOrigin = `${x}px ${y}px`;
-        }
-        storyMac.classList.remove("is-closing");
-        storyMac.classList.add("is-open");
-        productStage.classList.add("is-window-open");
-        storyMain.classList.add("is-window-open");
+        showStoryWindow(origin);
       };
 
       const closeStoryMac = () => {
@@ -2520,15 +2611,15 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           storyPointer.classList.add("is-visible");
         }
         storyLater(80, () => pointStoryAt(target));
-        storyLater(860, () => {
+        storyLater(600, () => {
           storyPointer.classList.add("is-pressing");
           target.classList.add("is-story-pressed");
         });
-        storyLater(1040, () => {
+        storyLater(760, () => {
           storyPointer.classList.remove("is-pressing");
           target.classList.remove("is-story-pressed");
           onClick();
-          storyPointerHide = window.setTimeout(() => storyPointer.classList.remove("is-visible"), 900);
+          storyPointerHide = window.setTimeout(() => storyPointer.classList.remove("is-visible"), 700);
         });
       };
 
@@ -2555,63 +2646,9 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         storyFloat.replaceChildren(toast);
       };
 
-      // A pairing QR drawn like the real one: three finder squares and a
-      // fixed pseudo-random module pattern (it encodes nothing).
-      const createStoryQr = () => {
-        const namespace = "http://www.w3.org/2000/svg";
-        const size = 25;
-        const svg = document.createElementNS(namespace, "svg");
-        svg.setAttribute("viewBox", `0 0 ${size} ${size}`);
-        const finder = (x, y) => (
-          x < 8 && y < 8) || (x >= size - 8 && y < 8) || (x < 8 && y >= size - 8);
-        const dark = [];
-        for (let y = 0; y < size; y += 1) {
-          for (let x = 0; x < size; x += 1) {
-            if (finder(x, y)) continue;
-            const noise = Math.abs(Math.sin((x + 1) * 12.9898 + (y + 1) * 78.233) * 43758.5453) % 1;
-            if (noise > 0.52) dark.push(`M${x} ${y}h1v1h-1z`);
-          }
-        }
-        [[0, 0], [size - 7, 0], [0, size - 7]].forEach(([x, y]) => {
-          dark.push(`M${x} ${y}h7v7h-7zM${x + 1} ${y + 1}v5h5v-5zM${x + 2} ${y + 2}h3v3h-3z`);
-        });
-        const path = document.createElementNS(namespace, "path");
-        path.setAttribute("d", dark.join(""));
-        path.setAttribute("fill-rule", "evenodd");
-        svg.append(path);
-        return svg;
-      };
-
-      const renderStoryConnections = () => {
-        const text = storyText().connect;
-        const view = createDemoElement("section", "story-connect");
-        const host = createDemoElement("div", "story-connect-host");
-        const hostCopy = createDemoElement("div", "");
-        hostCopy.append(createDemoElement("small", "", text.host), createDemoElement("b", "", text.hostName));
-        host.append(createDemoSymbol("link", ""), hostCopy, createDemoElement("span", "story-connect-badge", text.waiting));
-        const qr = createDemoElement("div", "story-connect-qr");
-        qr.append(createStoryQr());
-        const online = createDemoElement("div", "story-connect-online");
-        online.append(createDemoElement("h4", "demo-section-label", text.online));
-        text.devices.forEach(([name, status], index) => {
-          const row = createDemoElement("div", `story-connect-device${index === 1 ? " is-new" : ""}`);
-          row.append(createDemoElement("i", ""), createDemoElement("b", "", name), createDemoElement("span", "", status));
-          online.append(row);
-        });
-        view.append(
-          createDemoElement("h4", "story-connect-title", text.title),
-          host,
-          qr,
-          createDemoElement("p", "story-connect-caption", text.scan),
-          online,
-          createDemoElement("span", "story-connect-another", text.another)
-        );
-        return view;
-      };
-
-      const showStoryPhone = () => {
+      const showStoryPhone = (besideWindow = false) => {
         const text = storyText();
-        const phone = createDemoElement("div", "story-phone");
+        const phone = createDemoElement("div", `story-phone${besideWindow ? " is-beside-window" : ""}`);
         text.notifications.forEach(([source, title, body], index) => {
           const notice = createDemoElement("div", "story-notice");
           notice.style.setProperty("--i", index);
@@ -2642,16 +2679,14 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         devices: () => {
           showStoryTab("today");
           const link = productStage.querySelector(".demo-connections");
-          storyLater(300, () => clickStoryTarget(link, () => {
-            demoPanel.replaceChildren(renderStoryConnections());
-            // The phone scans the code, joins the online list, then gets reminders.
-            storyLater(1600, () => {
-              const view = demoPanel.querySelector(".story-connect");
-              if (!view) return;
-              view.classList.add("is-paired");
-              view.querySelector(".story-connect-badge").textContent = storyText().connect.devices[1][1];
-              showStoryPhone();
-            });
+          storyLater(250, () => clickStoryTarget(link, () => {
+            openStoryDevices(link);
+            // Show the pairing QR, the phone scans it, then the phone is online.
+            storyLater(650, () => clickStoryTarget(storyMac.querySelector(".story-devices-target"), () => {
+              setStoryDevicesShot("qr");
+              storyLater(1300, () => showStoryPhone(true));
+              storyLater(2300, () => setStoryDevicesShot("paired"));
+            }));
           }));
         },
         resources: () => {
@@ -2728,7 +2763,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         window.clearTimeout(storyPointerHide);
         storyFloat.replaceChildren();
         storyPointer.classList.remove("is-visible", "is-pressing");
-        if (storyScene === "resources" || !storyMacScenes.includes(storyScene)) closeStoryMac();
+        if (["devices", "resources"].includes(storyScene) || !storyMacScenes.includes(storyScene)) closeStoryMac();
         storyScenes[storyScene]();
       };
 
