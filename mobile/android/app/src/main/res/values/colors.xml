@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="launcher_background">#FFFFFFFF</color>
+    <!-- The PWA surface color, so launch and Flutter's first frame match. -->
+    <color name="window_background">#FFFFFEFC</color>
+</resources>
