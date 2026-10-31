@@ -12,6 +12,13 @@ reminder colors, priority order, and read semantics.
 - Hover: a vertical capsule stacks colored circles in reminder priority order.
   Each circle contains its own group's count. Long lists scroll vertically.
   No outside badge, visible titles, names, footer or app label.
+  It opens only for two or more unread groups; with one group the tray icon's
+  own color and motion carry the reminder and hovering shows nothing.
+  Motion follows the web dock's pin stack: the capsule fades and rises from the
+  icon, circles spring in nearest-first with a 35 ms stagger, a hovered circle
+  grows 1.12×, and leaving fades it back. Windows' client-area animation
+  setting turns all of it off. `scripts/verify_windows_tray_hover.cpp` drives
+  this with a simulated clock.
   The capsule does not acknowledge reminders. Clicking uses the existing tray-open
   behavior. Leaving, clearing reminders, or opening the menu dismisses it.
 - Counts come from the existing unread controller. Unknown per-group counts from

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pairing secrets (files/companion.json, written via
+     getApplicationSupportDirectory) must never leave the device through
+     backup or transfer. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="file" path="." />
+        <exclude domain="sharedpref" path="." />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="file" path="." />
+        <exclude domain="sharedpref" path="." />
+    </device-transfer>
+</data-extraction-rules>
