@@ -72,5 +72,46 @@
       "Usa las herramientas de captura del sistema en macOS y Windows y elimina el editor de capturas de la aplicación.",
       "Unifica el nombre DingDong en las interfaces localizadas y en la documentación."
     ]
+  },
+  "beta": {
+    "latestVersion": "1.9.2-beta.1",
+    "latestBuild": "79",
+    "publishedAt": "2026-10-23T20:20:13Z",
+    "prerelease": true,
+    "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.9.2-beta.1",
+    "notes": [
+      "Adds optional screenshot and selection tools, tray buddy improvements, and community voice subscriptions.",
+      "Beta for testing; manual desktop GUI acceptance remains pending."
+    ],
+    "notesByLanguage": {
+      "en": [
+        "Adds optional screenshot and selection tools, tray buddy improvements, and community voice subscriptions."
+      ],
+      "zh": [
+        "新增可选截图与划词工具、托盘提醒优化，以及社区声音订阅。",
+        "测试版，人工桌面交互验收仍待完成。"
+      ],
+      "es": [
+        "Añade captura y selección opcionales, mejoras de bandeja y suscripciones a voces de la comunidad."
+      ]
+    },
+    "downloads": {
+      "macOS": {
+        "arm64": {
+          "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.9.2-beta.1/DingDong-1.9.2-beta.1-macos-arm64.dmg",
+          "beta": true
+        },
+        "x86_64": {
+          "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.9.2-beta.1/DingDong-1.9.2-beta.1-macos-x64.dmg",
+          "beta": true
+        }
+      },
+      "windows": {
+        "x86_64": {
+          "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.9.2-beta.1/DingDong-1.9.2-beta.1-windows-x64-Setup.exe",
+          "beta": true
+        }
+      }
+    }
   }
 }
