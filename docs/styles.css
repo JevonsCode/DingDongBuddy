@@ -3224,60 +3224,45 @@ footer span {
 
 
 /* Scroll story: on wide, tall screens with motion allowed (see storyQuery in
-   index.html) the demo stays beside the text and acts out each section. */
+   index.html) the popover stays on the right and acts out each section.
+   Resource Manager opens in the middle of the screen with a short intro on
+   either side; closing it shows the full sections again. */
+html.is-story-page :is(.site-header, main, footer) {
+  width: min(1440px, calc(100% - 96px));
+}
+
 main.is-story {
+  --story-popover: 390px;
+  --story-gap: 64px;
+  --story-window-w: clamp(600px, 54vw, 780px);
+  --story-window-h: clamp(520px, calc(100svh - 150px), 700px);
   display: grid;
-  grid-template-columns: minmax(0, 460px) minmax(0, 1fr);
-  column-gap: clamp(40px, 4.4vw, 60px);
+  grid-template-columns: minmax(0, 1fr);
   align-items: start;
 }
 
 main.is-story > section {
   grid-column: 1;
   min-width: 0;
+  margin-right: calc(var(--story-popover) + var(--story-gap));
 }
 
-main.is-story > .api-band,
-main.is-story > .download-section {
-  grid-column: 1 / -1;
+main.is-story > :is(.api-band, .download-section) {
+  margin-right: 0;
 }
 
-/* The text column is narrow, so its blocks stack like the tablet layout. */
-main.is-story :is(
-  .hero,
-  .feature-section,
-  .feature-list > div,
-  .device-showcase,
-  .device-guardrails,
-  .resource-map,
-  .conversation-heading,
-  .conversation-receipt,
-  .conversation-grid,
-  .defaults-grid,
-  .setup-card,
-  .tool-grid
-) {
+main.is-story .hero {
   grid-template-columns: minmax(0, 1fr);
 }
 
-main.is-story .hero-title {
-  font-size: 40px;
-}
-
-main.is-story .feature-section {
-  gap: 22px;
-}
-
-main.is-story .feature-list > div {
-  gap: 4px;
-}
-
-main.is-story .device-route-line {
-  width: min(72%, 320px);
-}
-
 main.is-story .resource-map {
-  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+main.is-story .resource-bridge-node {
+  grid-column: 1 / -1;
+  grid-row: 1;
 }
 
 main.is-story .resource-stack::after,
@@ -3285,41 +3270,78 @@ main.is-story .resource-bridge-node::after {
   display: none;
 }
 
-main.is-story .user-message {
-  min-height: 0;
-}
-
-main.is-story .agent-strip > span {
-  flex-basis: 100%;
-}
-
 main.is-story .sound-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-main.is-story .sound-custom {
-  grid-template-columns: auto 1fr;
+/* Brief mode: the window sections keep only their heading and a short intro,
+   placed on either side of the centred window. */
+.story-brief {
+  display: none;
 }
 
-main.is-story #sound-status {
-  grid-column: 1 / -1;
-  text-align: left;
+main.is-story.is-brief > :is(#resources, #token-history, #plugins, #mcp) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--story-window-w) minmax(0, 1fr);
+  column-gap: 40px;
+  align-items: start;
+  min-height: 130svh;
+  margin-right: 0;
+  padding: 30svh 0 0;
+  border: 0;
+  background: none;
 }
 
-main.is-story .agent-prompt-header {
-  align-items: stretch;
-  flex-direction: column;
-  gap: 16px;
+main.is-story.is-brief > :is(#resources, #token-history, #plugins, #mcp) > :not(.section-heading, .story-brief) {
+  display: none;
 }
 
-main.is-story .agent-prompt-copy {
-  width: 100%;
+main.is-story.is-brief > :is(#resources, #token-history, #plugins, #mcp) > .section-heading {
+  position: sticky;
+  top: 34svh;
+  grid-column: 1;
 }
 
+main.is-story.is-brief > :is(#resources, #token-history, #plugins, #mcp) > .section-heading > p:not(.section-tag) {
+  display: none;
+}
+
+main.is-story.is-brief > :is(#resources, #token-history, #plugins, #mcp) > .story-brief {
+  position: sticky;
+  top: 34svh;
+  display: block;
+  grid-column: 3;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 320ms ease, transform 320ms ease;
+}
+
+main.is-story.is-window-open > :is(#resources, #token-history, #plugins, #mcp) > .story-brief {
+  opacity: 1;
+  transform: none;
+}
+
+.story-brief p {
+  margin: 0;
+  color: var(--ink);
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+.story-brief .story-brief-hint {
+  margin-top: 14px;
+  color: var(--soft);
+  font-size: 12px;
+}
+
+/* The stage covers the whole story column; only its own controls take clicks. */
 .story-rail {
-  grid-column: 2;
+  position: relative;
+  z-index: 3;
+  grid-column: 1;
   align-self: stretch;
   padding: 54px 0 72px;
+  pointer-events: none;
 }
 
 .story-rail .product-stage {
@@ -3329,9 +3351,9 @@ main.is-story .agent-prompt-copy {
 }
 
 .story-rail .product-stage > :is(.macos-menu-bar, .demo-window, .demo-copy-simulator) {
-  width: 390px;
-  margin-right: auto;
+  width: var(--story-popover);
   margin-left: auto;
+  pointer-events: auto;
 }
 
 main.is-story .demo-window {
@@ -3592,7 +3614,7 @@ main.is-story .demo-window {
 .story-keys {
   position: absolute;
   top: 46%;
-  left: 50%;
+  left: calc(100% - var(--story-popover) / 2);
   display: flex;
   gap: 6px;
   padding: 10px 12px;
@@ -3618,7 +3640,7 @@ main.is-story .demo-window {
 
 .story-phone {
   position: absolute;
-  right: calc(50% - 209px);
+  right: -14px;
   bottom: 30px;
   width: 214px;
   min-height: 228px;
@@ -3686,7 +3708,7 @@ main.is-story .demo-window {
 .story-ring {
   position: absolute;
   top: 40px;
-  right: calc(50% - 185px);
+  right: 10px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -3809,6 +3831,7 @@ main.is-story .product-stage > :is(.macos-menu-bar, .demo-window, .demo-copy-sim
 }
 
 main.is-story .product-stage.is-window-open > :is(.macos-menu-bar, .demo-window, .demo-copy-simulator) {
+  pointer-events: none;
   opacity: 0;
   transform: scale(0.96);
 }
@@ -3817,13 +3840,13 @@ main.is-story .product-stage.is-window-open > :is(.macos-menu-bar, .demo-window,
    traffic lights over the sidebar, the page on a white canvas. */
 .story-mac {
   position: absolute;
-  top: 0;
-  right: 0;
-  left: 0;
+  top: max(0px, calc((100svh - 84px - var(--story-window-h)) / 2 - 12px));
+  left: calc(50% - var(--story-window-w) / 2);
   z-index: 4;
   display: grid;
-  grid-template-columns: 156px minmax(0, 1fr);
-  height: clamp(540px, calc(100svh - 120px), 760px);
+  grid-template-columns: 168px minmax(0, 1fr);
+  width: var(--story-window-w);
+  height: var(--story-window-h);
   overflow: hidden;
   border-radius: 12px;
   color: #1b242c;
@@ -3841,6 +3864,7 @@ main.is-story .product-stage.is-window-open > :is(.macos-menu-bar, .demo-window,
 .story-mac.is-open {
   opacity: 1;
   visibility: visible;
+  pointer-events: auto;
   animation: story-mac-in 460ms cubic-bezier(0.16, 0.9, 0.24, 1) both;
 }
 
@@ -3852,7 +3876,6 @@ main.is-story .product-stage.is-window-open > :is(.macos-menu-bar, .demo-window,
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: 1px;
   padding: 12px 8px;
   background: #f1f0ed;
   box-shadow: inset -0.5px 0 0 rgb(0 0 0 / 10%);
@@ -3864,12 +3887,36 @@ main.is-story .product-stage.is-window-open > :is(.macos-menu-bar, .demo-window,
   padding: 0 4px 14px;
 }
 
-.story-mac-lights i {
-  width: 11px;
-  height: 11px;
+.story-mac-lights :is(i, button) {
+  width: 12px;
+  height: 12px;
+  padding: 0;
+  border: 0;
   border-radius: 50%;
   background: #ff5f57;
   box-shadow: inset 0 0 0 0.5px rgb(0 0 0 / 14%);
+}
+
+/* The close light is a real button; like macOS it shows its glyph on hover. */
+.story-mac-close {
+  position: relative;
+  cursor: pointer;
+}
+
+.story-mac-close::after {
+  position: absolute;
+  inset: 0;
+  color: rgb(77 0 0 / 70%);
+  content: "×";
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 12px;
+  opacity: 0;
+}
+
+.story-mac-lights:hover .story-mac-close::after,
+.story-mac-close:focus-visible::after {
+  opacity: 1;
 }
 
 .story-mac-lights i:nth-child(2) {
@@ -3878,6 +3925,21 @@ main.is-story .product-stage.is-window-open > :is(.macos-menu-bar, .demo-window,
 
 .story-mac-lights i:nth-child(3) {
   background: #28c840;
+}
+
+.story-mac-sidebar-items {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.story-mac-nav[data-story-page="resources"],
+.story-mac-nav[data-story-page="plugins"],
+.story-mac-nav[data-story-page="tokens"],
+.story-mac-nav[data-story-page="agents"] {
+  cursor: pointer;
 }
 
 .story-mac-brand {

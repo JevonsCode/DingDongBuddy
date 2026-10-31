@@ -241,6 +241,10 @@
           <h2 data-i18n="resources.title">Manage a resource once, then choose where it applies.</h2>
           <p data-i18n="resources.body">Set the project or Agent for each resource. Matching Prompts arrive at task start. Dynamic Skills show a description before the Agent loads them. MCP servers are added to supported clients.</p>
         </div>
+        <div class="story-brief" aria-hidden="true">
+          <p data-i18n="story.resourcesBrief">Keep one copy of each Prompt, Skill, and MCP server, then choose which projects or Agents get it.</p>
+          <p class="story-brief-hint" data-i18n="story.closeHint">Close the window with the red button to read the full details.</p>
+        </div>
 
         <div class="resource-map" aria-label="How DingDong routes Prompts, Skills, and MCP servers to Agent clients">
           <div class="resource-stack">
@@ -338,6 +342,10 @@
           <h2 data-i18n="usage.title">See your Token usage, day by day.</h2>
           <p data-i18n="usage.body">Open Token usage for a daily heatmap, date and source filters, day details and CSV export. Optionally include DingDong’s own model usage or view it separately; changing filters makes no model request.</p>
         </div>
+        <div class="story-brief" aria-hidden="true">
+          <p data-i18n="story.usageBrief">See each Agent’s daily Token use on a heatmap. Only the numbers are stored, never the chats.</p>
+          <p class="story-brief-hint" data-i18n="story.closeHint">Close the window with the red button to read the full details.</p>
+        </div>
         <div class="conversation-grid">
           <article class="conversation-example">
             <span class="example-kind">Codex · Claude Code · Pi</span>
@@ -361,6 +369,10 @@
         <div class="section-heading">
           <h2 data-i18n="plugins.title">Plugins, when you want them.</h2>
           <p data-i18n="plugins.body">Find Jev and the macOS selection tools in Resource Manager → Plugins. Nothing is installed or turned on until you choose it.</p>
+        </div>
+        <div class="story-brief" aria-hidden="true">
+          <p data-i18n="story.pluginsBrief">Install Jev and the selection tools when you want them. Select text to translate, explain, or polish it.</p>
+          <p class="story-brief-hint" data-i18n="story.closeHint">Close the window with the red button to read the full details.</p>
         </div>
         <div class="conversation-grid">
           <article class="conversation-example">
@@ -556,6 +568,10 @@
           <h2 data-i18n="mcp.title">Connect DingDong to your Agent.</h2>
           <p data-i18n="mcp.body">The quickest way: copy the instruction below and paste it into your Agent. It adds DingDong as an MCP server and keeps your existing settings.</p>
         </div>
+        <div class="story-brief" aria-hidden="true">
+          <p data-i18n="story.mcpBrief">DingDong finds the Agents on this computer and connects them for you.</p>
+          <p class="story-brief-hint" data-i18n="story.closeHint">Close the window with the red button to read the full details.</p>
+        </div>
 
         <div class="agent-prompt-card">
           <div class="agent-prompt-header">
@@ -733,6 +749,11 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "features.setup.title": "Connects to the Agents you already use",
           "features.setup.body": "On first launch, DingDong finds the Agents on this computer and connects them. Updates and removals show the exact configuration changes before anything is written.",
           "download.earlyAccess": "Want new features early? In DingDong, turn on “Allow beta updates” under Settings → Version.",
+          "story.resourcesBrief": "Keep one copy of each Prompt, Skill, and MCP server, then choose which projects or Agents get it.",
+          "story.usageBrief": "See each Agent’s daily Token use on a heatmap. Only the numbers are stored, never the chats.",
+          "story.pluginsBrief": "Install Jev and the selection tools when you want them. Select text to translate, explain, or polish it.",
+          "story.mcpBrief": "DingDong finds the Agents on this computer and connects them for you.",
+          "story.closeHint": "Close the window with the red button to read the full details.",
           "features.title": "What it does for you",
           "features.devices.title": "Take it to your phone",
           "features.devices.body": "Pair your phone to receive Agent reminders and to send files and clipboard items between devices. Connections go direct when possible; the relay is end-to-end encrypted.",
@@ -1006,6 +1027,11 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "features.setup.title": "你在用的 Agent，帮你接好",
           "features.setup.body": "第一次打开时，DingDong 会找出这台电脑上的 Agent 并帮你接入。之后更新或移除，都会先列出要改的配置，你确认了才动手。",
           "download.earlyAccess": "想提前用新功能？在 DingDong 的“设置 → 版本”里打开“允许安装测试版（Beta）”。",
+          "story.resourcesBrief": "提示词、Skill、MCP 只维护一份，再选给哪个项目或 Agent 用。",
+          "story.usageBrief": "每个 Agent 每天用了多少 Token，热力图一眼看清；只存数字，不存聊天。",
+          "story.pluginsBrief": "Jev 和划词工具按需安装，选中文字就能翻译、解释、润色。",
+          "story.mcpBrief": "DingDong 会找到这台电脑上的 Agent，帮你接好。",
+          "story.closeHint": "点窗口左上角的红色按钮，看完整介绍。",
           "features.title": "能帮你做的事",
           "features.devices.title": "手机上接着看",
           "features.devices.body": "配对手机后，可以收 Agent 提醒，也能在设备之间互传文件和剪贴板内容。能直连就直连，走中继时也是端到端加密。",
@@ -1642,6 +1668,10 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           createDemoElement("span", "", content.labels.manage)
         );
         manage.addEventListener("click", () => {
+          if (storyMain.classList.contains("is-story")) {
+            reopenStoryWindow();
+            return;
+          }
           demoFeedback.textContent = demoState.language === "zh" ? "资源管理会在 Mac 应用中打开" : "Manage opens in the Mac app.";
         });
         header.append(context, manage);
@@ -2148,7 +2178,8 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
             ["Studio PC", "Needs your decision", "Claude Code is waiting for a merge choice."]
           ],
           ring: ["Needs your decision", "Claude Code · just now"],
-          now: "now"
+          now: "now",
+          close: "Close Resource Manager"
         },
         zh: {
           workspace: "管理",
@@ -2195,7 +2226,8 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
             ["工作室台式机", "等你决定", "Claude Code 在等你选合并方式。"]
           ],
           ring: ["等你决定", "Claude Code · 刚刚"],
-          now: "刚刚"
+          now: "刚刚",
+          close: "关闭资源管理"
         }
       };
       const storyKeys = detectedDownloadPlatform === "windows"
@@ -2215,7 +2247,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
       };
       const storyMacScenes = ["resources", "token-history", "plugins", "mcp"];
       const storyQuery = window.matchMedia(
-        "(min-width: 1180px) and (min-height: 760px) and (prefers-reduced-motion: no-preference)"
+        "(min-width: 1240px) and (min-height: 760px) and (prefers-reduced-motion: no-preference)"
       );
       const storyMain = document.querySelector("main");
       const storyHero = document.querySelector(".hero");
@@ -2228,8 +2260,11 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
       const storyFloat = createDemoElement("div", "story-float");
       const storyPointer = createDemoElement("span", "story-pointer");
       storyPointer.innerHTML = '<svg viewBox="0 0 20 20"><path d="M4 2.5v13.2l3.4-3.1 2.3 5.1 2.4-1.1-2.3-5h4.6z"/></svg>';
-      [storyMac, storyFloat, storyPointer].forEach((node) => node.setAttribute("aria-hidden", "true"));
-      let storyObserver = null;
+      [storyFloat, storyPointer].forEach((node) => node.setAttribute("aria-hidden", "true"));
+      // "brief": the window sections show a short intro beside Resource Manager.
+      // "detail": the visitor closed the window, so the full sections show.
+      let storyMode = "brief";
+      let storyFrame = 0;
       let storyScene = null;
       let storyTimers = [];
       let storyPointerHide = null;
@@ -2377,18 +2412,29 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
 
       const openStoryMac = (page, origin) => {
         const text = storyText();
-        const sidebar = createDemoElement("div", "story-mac-sidebar");
         const lights = createDemoElement("div", "story-mac-lights");
-        lights.append(createDemoElement("i", ""), createDemoElement("i", ""), createDemoElement("i", ""));
-        sidebar.append(lights, createDemoElement("strong", "story-mac-brand", "DingDong"), createDemoElement("span", "story-mac-label", text.workspace));
+        const close = createDemoElement("button", "story-mac-close");
+        close.type = "button";
+        close.setAttribute("aria-label", text.close);
+        close.title = text.close;
+        close.addEventListener("click", showStoryDetail);
+        lights.append(close, createDemoElement("i", ""), createDemoElement("i", ""));
+        const sidebar = createDemoElement("div", "story-mac-sidebar");
+        const sidebarItems = createDemoElement("div", "story-mac-sidebar-items");
+        sidebarItems.setAttribute("aria-hidden", "true");
+        sidebarItems.append(createDemoElement("strong", "story-mac-brand", "DingDong"), createDemoElement("span", "story-mac-label", text.workspace));
         Object.entries(text.nav).forEach(([key, label]) => {
           const item = createDemoElement("span", "story-mac-nav");
           item.dataset.storyPage = key;
           item.append(createStoryIcon(storyNavIcons[key]), createDemoElement("span", "", label));
-          sidebar.append(item);
+          if (storyPages[key]) item.addEventListener("click", () => setStoryMacPage(key));
+          sidebarItems.append(item);
         });
-        sidebar.append(createDemoElement("span", "story-mac-foot", text.stored));
-        storyMac.replaceChildren(sidebar, createDemoElement("div", "story-mac-main"));
+        sidebarItems.append(createDemoElement("span", "story-mac-foot", text.stored));
+        sidebar.append(lights, sidebarItems);
+        const main = createDemoElement("div", "story-mac-main");
+        main.setAttribute("aria-hidden", "true");
+        storyMac.replaceChildren(sidebar, main);
         setStoryMacPage(page);
         if (origin) {
           const macBox = storyMac.getBoundingClientRect();
@@ -2400,10 +2446,12 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         storyMac.classList.remove("is-closing");
         storyMac.classList.add("is-open");
         productStage.classList.add("is-window-open");
+        storyMain.classList.add("is-window-open");
       };
 
       const closeStoryMac = () => {
         productStage.classList.remove("is-window-open");
+        storyMain.classList.remove("is-window-open");
         if (!storyMac.classList.contains("is-open")) return;
         storyMac.classList.add("is-closing");
         storyLater(220, () => storyMac.classList.remove("is-open", "is-closing"));
@@ -2464,6 +2512,11 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
       };
 
       const storyScenes = {
+        // A window section is on screen but the window can't open yet (wide
+        // text from a neighbouring section is still visible), or the visitor
+        // asked for the detailed sections.
+        approach: () => showStoryTab("library"),
+        detail: () => showStoryTab("library"),
         product: () => showStoryTab("library"),
         features: () => {
           showStoryTab("clipboard");
@@ -2566,25 +2619,90 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         storyScenes[storyScene]();
       };
 
+      // Resource Manager opens only while window sections fill the screen, so it
+      // never covers the wide text of a neighbouring section.
+      const storyWindowFits = () => Array.from(storyMain.children).every((child) => {
+        if (child === storyRail) return true;
+        const box = child.getBoundingClientRect();
+        if (box.bottom <= 64 || box.top >= window.innerHeight) return true;
+        return storyMacScenes.includes(child.id);
+      });
+
+      const updateStoryScene = () => {
+        storyFrame = 0;
+        const band = window.innerHeight * 0.42;
+        const section = storySections.find((item) => {
+          const box = item.getBoundingClientRect();
+          return box.top <= band && box.bottom > band;
+        });
+        if (!section) return;
+        let scene = section.id;
+        if (storyMacScenes.includes(scene)) {
+          if (storyMode === "detail") scene = "detail";
+          else if (!storyWindowFits()) scene = "approach";
+        }
+        if (scene === storyScene) return;
+        storyScene = scene;
+        playStoryScene();
+      };
+
+      const queueStoryScene = () => {
+        if (!storyFrame) storyFrame = window.requestAnimationFrame(updateStoryScene);
+      };
+
+      const scrollToStorySection = (id) => {
+        const section = document.getElementById(id);
+        window.scrollTo({ top: section.getBoundingClientRect().top + window.scrollY - 64, behavior: "instant" });
+      };
+
+      // The red close button: show the full sections, starting where the visitor is.
+      function showStoryDetail() {
+        const current = storySections.find((item) => item.getBoundingClientRect().bottom > window.innerHeight * 0.42);
+        storyMode = "detail";
+        storyMain.classList.remove("is-brief");
+        closeStoryMac();
+        if (current) scrollToStorySection(current.id);
+        storyScene = null;
+        updateStoryScene();
+      }
+
+      // Clicking Resource Manager in the popover brings the window back.
+      const reopenStoryWindow = () => {
+        storyMode = "brief";
+        storyMain.classList.add("is-brief");
+        scrollToStorySection("resources");
+        storyTimers.forEach((timer) => window.clearTimeout(timer));
+        storyTimers = [];
+        storyScene = "resources";
+        showStoryTab("library");
+        openStoryMac("resources", demoPanel.querySelector(".demo-manage-button"));
+      };
+
       const enableStory = () => {
+        document.documentElement.classList.add("is-story-page");
         storyMain.classList.add("is-story");
+        storyMain.classList.toggle("is-brief", storyMode === "brief");
+        storySections.forEach((section, index) => {
+          section.style.gridRow = String(index + 1);
+        });
         storyRail.style.gridRow = `1 / span ${storySections.length}`;
         storyRail.append(productStage);
         storyHero.after(storyRail);
         productStage.append(storyMac, storyFloat, storyPointer);
         demoPanel.setAttribute("aria-live", "off");
-        storyObserver = new IntersectionObserver((entries) => {
-          entries.forEach((entry) => {
-            if (!entry.isIntersecting || entry.target.id === storyScene) return;
-            storyScene = entry.target.id;
-            playStoryScene();
-          });
-        }, { rootMargin: "-42% 0px -52% 0px" });
-        storySections.forEach((section) => storyObserver.observe(section));
+        window.addEventListener("scroll", queueStoryScene, { passive: true });
+        window.addEventListener("resize", queueStoryScene);
+        updateStoryScene();
       };
 
       const disableStory = () => {
-        storyObserver.disconnect();
+        window.removeEventListener("scroll", queueStoryScene);
+        window.removeEventListener("resize", queueStoryScene);
+        window.cancelAnimationFrame(storyFrame);
+        storyFrame = 0;
+        document.documentElement.classList.remove("is-story-page");
+        storySections.forEach((section) => section.style.removeProperty("grid-row"));
+        storyMain.classList.remove("is-brief", "is-window-open");
         storyTimers.forEach((timer) => window.clearTimeout(timer));
         storyTimers = [];
         storyScene = null;
