@@ -105,6 +105,8 @@ final class CompanionEngine {
       _cancelFileRequests(session);
       await session.peer?.close();
     }
+    // A stop right after an event must not drop its queued save.
+    await store.flush();
   }
 
   void _cancelFileRequests(_ComputerSession session) {
