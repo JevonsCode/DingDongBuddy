@@ -534,28 +534,48 @@ h3 {
   88% { transform: translateX(0) rotate(-2deg); }
 }
 
+/* Connected devices, Settings, Hide: the same three buttons as the app header. */
 .demo-title-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
+  gap: 5px;
 }
 
 .demo-title-actions span {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: 1px solid var(--border);
+  width: 30px;
+  height: 30px;
   border-radius: 8px;
   color: var(--muted);
-  background: var(--surface);
+  background: var(--surface-muted);
 }
 
 .demo-title-actions img {
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
   opacity: 0.58;
+}
+
+.demo-connections b {
+  position: absolute;
+  top: -1px;
+  right: -2px;
+  display: inline-flex;
+  min-width: 15px;
+  height: 15px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  border: 1.5px solid var(--chrome);
+  border-radius: 8px;
+  color: #fff;
+  background: var(--accent);
+  font-size: 8px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .demo-tabs {
@@ -3207,7 +3227,7 @@ footer span {
    index.html) the demo stays beside the text and acts out each section. */
 main.is-story {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 390px;
+  grid-template-columns: minmax(0, 460px) minmax(0, 1fr);
   column-gap: clamp(40px, 4.4vw, 60px);
   align-items: start;
 }
@@ -3222,23 +3242,42 @@ main.is-story > .download-section {
   grid-column: 1 / -1;
 }
 
-main.is-story .hero,
-main.is-story .feature-section {
+/* The text column is narrow, so its blocks stack like the tablet layout. */
+main.is-story :is(
+  .hero,
+  .feature-section,
+  .feature-list > div,
+  .device-showcase,
+  .device-guardrails,
+  .resource-map,
+  .conversation-heading,
+  .conversation-receipt,
+  .conversation-grid,
+  .defaults-grid,
+  .setup-card,
+  .tool-grid
+) {
   grid-template-columns: minmax(0, 1fr);
+}
+
+main.is-story .hero-title {
+  font-size: 40px;
 }
 
 main.is-story .feature-section {
   gap: 22px;
 }
 
-main.is-story .resource-map {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 18px;
+main.is-story .feature-list > div {
+  gap: 4px;
 }
 
-main.is-story .resource-bridge-node {
-  grid-column: 1 / -1;
-  grid-row: 1;
+main.is-story .device-route-line {
+  width: min(72%, 320px);
+}
+
+main.is-story .resource-map {
+  gap: 10px;
 }
 
 main.is-story .resource-stack::after,
@@ -3246,8 +3285,35 @@ main.is-story .resource-bridge-node::after {
   display: none;
 }
 
+main.is-story .user-message {
+  min-height: 0;
+}
+
+main.is-story .agent-strip > span {
+  flex-basis: 100%;
+}
+
 main.is-story .sound-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+main.is-story .sound-custom {
+  grid-template-columns: auto 1fr;
+}
+
+main.is-story #sound-status {
+  grid-column: 1 / -1;
+  text-align: left;
+}
+
+main.is-story .agent-prompt-header {
+  align-items: stretch;
+  flex-direction: column;
+  gap: 16px;
+}
+
+main.is-story .agent-prompt-copy {
+  width: 100%;
 }
 
 .story-rail {
@@ -3259,6 +3325,13 @@ main.is-story .sound-grid {
 .story-rail .product-stage {
   position: sticky;
   top: 84px;
+  width: 100%;
+}
+
+.story-rail .product-stage > :is(.macos-menu-bar, .demo-window, .demo-copy-simulator) {
+  width: 390px;
+  margin-right: auto;
+  margin-left: auto;
 }
 
 main.is-story .demo-window {
@@ -3545,7 +3618,7 @@ main.is-story .demo-window {
 
 .story-phone {
   position: absolute;
-  right: -14px;
+  right: calc(50% - 209px);
   bottom: 30px;
   width: 214px;
   min-height: 228px;
@@ -3613,7 +3686,7 @@ main.is-story .demo-window {
 .story-ring {
   position: absolute;
   top: 40px;
-  right: 10px;
+  right: calc(50% - 185px);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -3731,26 +3804,26 @@ main.is-story .demo-window {
   }
 }
 
-main.is-story .demo-window {
-  transition: transform 360ms ease, filter 360ms ease;
+main.is-story .product-stage > :is(.macos-menu-bar, .demo-window, .demo-copy-simulator) {
+  transition: opacity 240ms ease, transform 240ms ease;
 }
 
-main.is-story .demo-window.is-story-behind {
-  filter: saturate(0.85) brightness(0.96);
-  transform: scale(0.97) translateY(6px);
+main.is-story .product-stage.is-window-open > :is(.macos-menu-bar, .demo-window, .demo-copy-simulator) {
+  opacity: 0;
+  transform: scale(0.96);
 }
 
 /* Resource Manager as its own macOS window, drawn after the real app:
    traffic lights over the sidebar, the page on a white canvas. */
 .story-mac {
   position: absolute;
-  top: 28px;
+  top: 0;
   right: 0;
+  left: 0;
   z-index: 4;
   display: grid;
-  grid-template-columns: 132px minmax(0, 1fr);
-  width: 440px;
-  height: clamp(500px, calc(100svh - 270px), 712px);
+  grid-template-columns: 156px minmax(0, 1fr);
+  height: clamp(540px, calc(100svh - 120px), 760px);
   overflow: hidden;
   border-radius: 12px;
   color: #1b242c;
@@ -3873,7 +3946,7 @@ main.is-story .demo-window.is-story-behind {
 
 .story-mac-main {
   min-width: 0;
-  padding: 16px 14px 12px;
+  padding: 18px 18px 14px;
   overflow: hidden;
 }
 
@@ -3883,24 +3956,16 @@ main.is-story .demo-window.is-story-behind {
 
 .story-page-head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .story-page-head strong {
   display: block;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 780;
-}
-
-.story-page-head small {
-  display: block;
-  margin-top: 3px;
-  color: #6d7274;
-  font-size: 10px;
-  line-height: 1.4;
 }
 
 .story-mac-button {
@@ -3953,16 +4018,24 @@ main.is-story .demo-window.is-story-behind {
 }
 
 .story-mac-table {
-  margin: 0 -14px;
+  margin: 0 -18px;
 }
 
 .story-mac-thead,
 .story-mac-row {
   display: grid;
-  grid-template-columns: 62px minmax(0, 1fr) 28px;
+  grid-template-columns: 66px minmax(0, 1fr) 96px 44px 28px;
   align-items: center;
-  gap: 8px;
-  padding: 0 14px;
+  gap: 10px;
+  padding: 0 18px;
+}
+
+.story-cell {
+  overflow: hidden;
+  color: #6d7274;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .story-mac-thead {
@@ -4045,7 +4118,7 @@ main.is-story .demo-window.is-story-behind {
 
 .story-stats {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   margin-bottom: 12px;
 }
@@ -4100,8 +4173,8 @@ main.is-story .demo-window.is-story-behind {
   display: grid;
   grid-auto-flow: column;
   grid-template-rows: repeat(7, auto);
-  grid-template-columns: repeat(18, minmax(0, 1fr));
-  gap: 2px;
+  grid-template-columns: repeat(26, minmax(0, 1fr));
+  gap: 3px;
 }
 
 .story-heatmap span {

@@ -103,6 +103,7 @@
                 </div>
               </div>
               <div class="demo-title-actions" aria-hidden="true">
+                <span class="demo-connections"><img src="./assets/symbols/link.png" alt=""><b>2</b></span>
                 <span><img src="./assets/symbols/settings.png" alt=""></span>
                 <span><img src="./assets/symbols/collapse.png" alt=""></span>
               </div>
@@ -2115,20 +2116,18 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
             issues: "Issues"
           },
           stored: "Stored on this device",
-          resourcesSubtitle: "Curated content reusable by agents",
           newResource: "New resource",
           search: "Search prompts, skills, and MCP",
           filters: ["All", "Prompts", "Skills", "MCP"],
-          columns: ["Type", "Resource", "Status"],
+          columns: ["Type", "Resource", "Scope", "Source", "Status"],
           resources: [
-            ["prompt", "Project rules", "DingDongBuddy · Always"],
-            ["skill", "Release flow", "Codex, Claude Code · Task match"],
-            ["skill", "UI hardening", "All Agents · Task match"],
-            ["mcp", "GitHub", "DingDongBuddy · Task match"],
-            ["mcp", "Browser", "Claude Code · Manual"]
+            ["prompt", "Project rules", "Review UI against the team rules", "DingDongBuddy", "Local"],
+            ["skill", "Release flow", "Run every check, then prepare a release", "Codex, Claude Code", "Online"],
+            ["skill", "UI hardening", "Keyboard, narrow screens, empty states", "All Agents", "Online"],
+            ["mcp", "GitHub", "STDIO · github-mcp", "DingDongBuddy", "Local"],
+            ["mcp", "Browser", "STDIO · browser-mcp", "Claude Code", "Built-in"]
           ],
-          tokensSubtitle: "Daily usage across Agents and DingDong.",
-          stats: [["Today", "284,350"], ["Range total", "7,192,324"]],
+          stats: [["Today", "284,350"], ["Range total", "7,192,324"], ["Days with usage", "220"]],
           dailyActivity: "Daily activity",
           weekdays: ["Mon", "", "Wed", "", "Fri", "", ""],
           dayDetail: ["Fri, Oct 9", "Daily detail"],
@@ -2136,14 +2135,12 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           unknown: "Unknown",
           less: "Less",
           more: "More",
-          pluginsSubtitle: "Nothing is installed until you choose it.",
           plugins: [["Jev", "Judgments, choices, and scores"], ["Selection", "Copy, translate, explain, polish"]],
           install: "Install",
           installed: "Installed",
           selection: ["构建在", "所有平台上都通过了", "。"],
           selectionActions: ["Copy", "Translate", "Explain", "Polish"],
           selectionResult: "passed on every platform",
-          agentsSubtitle: "Found on this computer",
           connecting: "Connecting…",
           connected: "Connected",
           notifications: [
@@ -2166,20 +2163,18 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
             issues: "问题"
           },
           stored: "数据保存在本机",
-          resourcesSubtitle: "整理后可被 Agent 复用的内容",
           newResource: "新建资源",
           search: "搜索提示词、Skills 和 MCP",
           filters: ["全部", "提示词", "技能", "MCP"],
-          columns: ["类型", "资源", "状态"],
+          columns: ["类型", "资源", "作用域", "来源", "状态"],
           resources: [
-            ["prompt", "项目规范", "DingDongBuddy · 始终"],
-            ["skill", "发布流程", "Codex、Claude Code · 任务匹配"],
-            ["skill", "界面加固", "全部 Agent · 任务匹配"],
-            ["mcp", "GitHub", "DingDongBuddy · 任务匹配"],
-            ["mcp", "Browser", "Claude Code · 手动"]
+            ["prompt", "项目规范", "按团队规范检查界面", "DingDongBuddy", "本地"],
+            ["skill", "发布流程", "跑完所有检查再准备发布", "Codex、Claude Code", "在线"],
+            ["skill", "界面加固", "键盘、窄屏和空状态", "全部 Agent", "在线"],
+            ["mcp", "GitHub", "STDIO · github-mcp", "DingDongBuddy", "本地"],
+            ["mcp", "Browser", "STDIO · browser-mcp", "Claude Code", "内置"]
           ],
-          tokensSubtitle: "查看 Agent 和 DingDong 自身的每日 Token 用量。",
-          stats: [["今天", "284,350"], ["区间合计", "7,192,324"]],
+          stats: [["今天", "284,350"], ["区间合计", "7,192,324"], ["有用量的天数", "220"]],
           dailyActivity: "每日用量",
           weekdays: ["周一", "", "周三", "", "周五", "", ""],
           dayDetail: ["10 月 9 日 周五", "当日明细"],
@@ -2187,14 +2182,12 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           unknown: "未知",
           less: "少",
           more: "多",
-          pluginsSubtitle: "你不点安装，就什么都不会装。",
           plugins: [["Jev", "判断、选择和打分"], ["划词", "复制、翻译、解释、润色"]],
           install: "安装",
           installed: "已安装",
           selection: ["The build ", "passed on every platform", "."],
           selectionActions: ["复制", "翻译", "解释", "润色"],
           selectionResult: "在所有平台上都通过了",
-          agentsSubtitle: "在这台电脑上找到",
           connecting: "接入中…",
           connected: "已接入",
           notifications: [
@@ -2264,11 +2257,9 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
 
       const createStoryAvatar = (label) => createDemoElement("span", "story-avatar", label.slice(0, 1));
 
-      const createStoryPageHead = (title, subtitle, action) => {
+      const createStoryPageHead = (title, action) => {
         const head = createDemoElement("div", "story-page-head");
-        const heading = createDemoElement("div", "");
-        heading.append(createDemoElement("strong", "", title), createDemoElement("small", "", subtitle));
-        head.append(heading);
+        head.append(createDemoElement("strong", "", title));
         if (action) head.append(createDemoElement("span", "story-mac-button", action));
         return head;
       };
@@ -2286,17 +2277,23 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           const header = createDemoElement("div", "story-mac-thead");
           text.columns.forEach((label) => header.append(createDemoElement("span", "", label)));
           table.append(header);
-          text.resources.forEach(([type, title, scope], index) => {
+          text.resources.forEach(([type, title, summary, scope, source], index) => {
             const row = createDemoElement("div", "story-mac-row");
             row.style.setProperty("--i", index);
             const kind = createDemoElement("span", `story-type is-${type}`);
             kind.append(createDemoSymbol(type, ""), createDemoElement("span", "", type === "mcp" ? "MCP" : type[0].toUpperCase() + type.slice(1)));
             const name = createDemoElement("div", "");
-            name.append(createDemoElement("b", "", title), createDemoElement("small", "", scope));
-            row.append(kind, name, createDemoElement("span", "story-switch"));
+            name.append(createDemoElement("b", "", title), createDemoElement("small", "", summary));
+            row.append(
+              kind,
+              name,
+              createDemoElement("span", "story-cell", scope),
+              createDemoElement("span", "story-cell", source),
+              createDemoElement("span", "story-switch")
+            );
             table.append(row);
           });
-          return [createStoryPageHead(text.nav.resources, text.resourcesSubtitle, text.newResource), search, filters, table];
+          return [createStoryPageHead(text.nav.resources, text.newResource), search, filters, table];
         },
         tokens: () => {
           const text = storyText();
@@ -2310,15 +2307,15 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           const weekdays = createDemoElement("div", "story-weekdays");
           text.weekdays.forEach((label) => weekdays.append(createDemoElement("span", "", label)));
           const heatmap = createDemoElement("div", "story-heatmap");
-          for (let index = 0; index < 126; index += 1) {
+          for (let index = 0; index < 182; index += 1) {
             const column = Math.floor(index / 7);
             const weekday = index % 7;
             const noise = Math.abs(Math.sin(index * 12.9898) * 43758.5453) % 1;
-            const level = Math.min(4, Math.floor(noise * (weekday > 4 ? 2.4 : 5) + column / 9));
+            const level = Math.min(4, Math.floor(noise * (weekday > 4 ? 2.4 : 5) + column / 13));
             let className = `level-${level}`;
-            if (index >= 64 && index <= 66) className = "is-unknown";
-            if (index === 116) className = "level-4 is-selected";
-            if (index > 116) className = "is-future";
+            if (index >= 92 && index <= 94) className = "is-unknown";
+            if (index === 165) className = "level-4 is-selected";
+            if (index > 165) className = "is-future";
             const cell = createDemoElement("span", className);
             cell.style.setProperty("--col", column);
             heatmap.append(cell);
@@ -2340,7 +2337,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
             line.append(createDemoElement("span", "", label), createDemoElement("span", "", value));
             day.append(line);
           });
-          return [createStoryPageHead(text.nav.tokens, text.tokensSubtitle), stats, card, day];
+          return [createStoryPageHead(text.nav.tokens), stats, card, day];
         },
         plugins: () => {
           const text = storyText();
@@ -2353,7 +2350,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
             row.append(createStoryAvatar(name), label, createDemoElement("span", "story-install", text.install));
             list.append(row);
           });
-          return [createStoryPageHead(text.nav.plugins, text.pluginsSubtitle), list];
+          return [createStoryPageHead(text.nav.plugins), list];
         },
         agents: () => {
           const text = storyText();
@@ -2365,7 +2362,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
             row.append(createStoryAvatar(name), createDemoElement("b", "", name), status);
             list.append(row);
           });
-          return [createStoryPageHead(text.nav.agents, text.agentsSubtitle), list];
+          return [createStoryPageHead(text.nav.agents), list];
         }
       };
 
@@ -2402,11 +2399,11 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         }
         storyMac.classList.remove("is-closing");
         storyMac.classList.add("is-open");
-        demoWindow.classList.add("is-story-behind");
+        productStage.classList.add("is-window-open");
       };
 
       const closeStoryMac = () => {
-        demoWindow.classList.remove("is-story-behind");
+        productStage.classList.remove("is-window-open");
         if (!storyMac.classList.contains("is-open")) return;
         storyMac.classList.add("is-closing");
         storyLater(220, () => storyMac.classList.remove("is-open", "is-closing"));
@@ -2595,7 +2592,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         storyMac.replaceChildren();
         storyFloat.replaceChildren();
         [storyMac, storyFloat, storyPointer].forEach((node) => node.remove());
-        demoWindow.classList.remove("is-story-behind");
+        productStage.classList.remove("is-window-open");
         storyHero.append(productStage);
         storyRail.remove();
         storyMain.classList.remove("is-story");
