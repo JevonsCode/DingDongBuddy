@@ -562,7 +562,7 @@ void main() {
     expect(website, contains('点击通知会直接进入 Agent 提醒'));
     expect(websiteStyles, contains('.device-showcase'));
     expect(websiteStyles, contains('.device-guardrails'));
-    expect(website, contains('快捷键，换成自己顺手的'));
+    expect(website, contains('所有快捷键，一页看完'));
     expect(website, contains('选择 DingDong 的提醒声'));
     // The sound cards already say Listen; the extra hint was removed.
     expect(website, isNot(contains('下面几个声音，先听听再选。')));

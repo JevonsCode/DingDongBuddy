@@ -404,8 +404,93 @@
           <p data-i18n="defaults.body">These are the defaults. Record your own global or workspace shortcuts in Settings; they take effect immediately.</p>
         </div>
 
+        <div class="shortcut-sheet" id="shortcut-sheet" data-platform="mac">
+          <div class="shortcut-platform" role="group" aria-label="Keyboard layout" data-i18n-aria-label="sheet.platform">
+            <button type="button" data-shortcut-platform="mac" aria-pressed="true">macOS</button>
+            <button type="button" data-shortcut-platform="win" aria-pressed="false">Windows</button>
+          </div>
+          <div class="shortcut-groups">
+            <section class="shortcut-group">
+              <h3 data-i18n="sheet.anywhere">Anywhere</h3>
+              <dl>
+                <div>
+                  <dt><span class="shortcut-mac"><kbd>⌘</kbd><kbd>⇧</kbd><kbd>V</kbd></span><span class="shortcut-win"><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>V</kbd></span></dt>
+                  <dd data-i18n="sheet.open">Open or hide DingDong</dd>
+                </div>
+                <div>
+                  <dt><span class="shortcut-mac"><kbd>⌃</kbd><kbd>Q</kbd> <kbd>⌃</kbd><kbd>W</kbd> <kbd>⌃</kbd><kbd>E</kbd></span><span class="shortcut-win"><kbd>Alt</kbd><kbd>Q</kbd> <kbd>Alt</kbd><kbd>W</kbd> <kbd>Alt</kbd><kbd>E</kbd></span></dt>
+                  <dd data-i18n="sheet.tabs">Dynamic / Library / Clipboard</dd>
+                </div>
+                <div>
+                  <dt><span class="shortcut-mac"><kbd>Esc</kbd></span><span class="shortcut-win"><kbd>Esc</kbd></span></dt>
+                  <dd data-i18n="sheet.esc">Close the preview, then hide the panel</dd>
+                </div>
+              </dl>
+            </section>
+            <section class="shortcut-group">
+              <h3 data-i18n="sheet.list">In the clipboard list</h3>
+              <dl>
+                <div>
+                  <dt><span class="shortcut-mac"><kbd>↑</kbd><kbd>↓</kbd></span><span class="shortcut-win"><kbd>↑</kbd><kbd>↓</kbd></span></dt>
+                  <dd data-i18n="sheet.upDown">Move up and down the list</dd>
+                </div>
+                <div>
+                  <dt><span class="shortcut-mac"><kbd>←</kbd><kbd>→</kbd></span><span class="shortcut-win"><kbd>←</kbd><kbd>→</kbd></span></dt>
+                  <dd data-i18n="sheet.leftRight">Switch between groups</dd>
+                </div>
+                <div>
+                  <dt><span class="shortcut-mac"><kbd>Space</kbd></span><span class="shortcut-win"><kbd>Space</kbd></span></dt>
+                  <dd data-i18n="sheet.space">Preview the selected item</dd>
+                </div>
+                <div>
+                  <dt><span class="shortcut-mac"><kbd>Return</kbd></span><span class="shortcut-win"><kbd>Enter</kbd></span></dt>
+                  <dd data-i18n="sheet.enter">Use the selected item</dd>
+                </div>
+                <div>
+                  <dt><span class="shortcut-mac"><kbd>⌘</kbd><kbd>1–9</kbd></span><span class="shortcut-win"><kbd>Ctrl</kbd><kbd>1–9</kbd></span></dt>
+                  <dd data-i18n="sheet.number">Use item 1–9 directly</dd>
+                </div>
+                <div class="is-mac-only">
+                  <dt><span class="shortcut-mac"><kbd>⌥</kbd><kbd>⌘</kbd><kbd>1–9</kbd></span><span class="shortcut-win"></span></dt>
+                  <dd data-i18n="sheet.plain">Use item 1–9 as plain text</dd>
+                </div>
+                <div>
+                  <dt><span class="shortcut-mac"><kbd>⌃</kbd><kbd>1–5</kbd></span><span class="shortcut-win"><kbd>Alt</kbd><kbd>1–5</kbd></span></dt>
+                  <dd data-i18n="sheet.group">Jump to group 1–5</dd>
+                </div>
+              </dl>
+            </section>
+            <section class="shortcut-group">
+              <h3 data-i18n="sheet.searchGroup">Search and filters</h3>
+              <dl>
+                <div>
+                  <dt><span class="shortcut-mac"><kbd>⌘</kbd><kbd>F</kbd></span><span class="shortcut-win"><kbd>Ctrl</kbd><kbd>F</kbd></span></dt>
+                  <dd data-i18n="sheet.search">Focus search; hold for 2 seconds to clear it</dd>
+                </div>
+                <div>
+                  <dt><span class="shortcut-mac"><kbd>⌘</kbd><kbd>R</kbd></span><span class="shortcut-win"><kbd>Ctrl</kbd><kbd>R</kbd></span></dt>
+                  <dd data-i18n="sheet.filters">Press once to open filters; again to clear them, or to close when none are set</dd>
+                </div>
+              </dl>
+            </section>
+            <section class="shortcut-group">
+              <h3 data-i18n="sheet.hints">Hold to see hints</h3>
+              <dl>
+                <div>
+                  <dt><span class="shortcut-mac"><kbd>⌘</kbd></span><span class="shortcut-win"><kbd>Ctrl</kbd></span></dt>
+                  <dd data-i18n="sheet.holdNumbers">Show 1–9 next to the visible items</dd>
+                </div>
+                <div>
+                  <dt><span class="shortcut-mac"><kbd>⌃</kbd></span><span class="shortcut-win"><kbd>Alt</kbd></span></dt>
+                  <dd data-i18n="sheet.holdGroups">Show tab and group numbers</dd>
+                </div>
+              </dl>
+            </section>
+          </div>
+        </div>
+
         <details class="defaults-details">
-        <summary data-i18n="defaults.summary">Show every shortcut and default setting</summary>
+        <summary data-i18n="defaults.summary">Show the full shortcut table and default settings</summary>
         <div class="defaults-grid">
           <article class="defaults-panel">
             <h3 data-i18n="defaults.shortcutsTitle">Default keyboard shortcuts</h3>
@@ -855,12 +940,31 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "tools.importSound": "Import a PCM WAV of up to 15 seconds and 5 MiB.",
           "tools.reminderSounds": "Save the sounds for completion and needs-input reminders.",
           "tools.jev": "With Jev installed: status, check, choose, and score.",
+          "sheet.platform": "Keyboard layout",
+          "sheet.anywhere": "Anywhere",
+          "sheet.open": "Open or hide DingDong",
+          "sheet.tabs": "Dynamic / Library / Clipboard",
+          "sheet.esc": "Close the preview, then hide the panel",
+          "sheet.list": "In the clipboard list",
+          "sheet.upDown": "Move up and down the list",
+          "sheet.leftRight": "Switch between groups",
+          "sheet.space": "Preview the selected item",
+          "sheet.enter": "Use the selected item",
+          "sheet.number": "Use item 1–9 directly",
+          "sheet.plain": "Use item 1–9 as plain text",
+          "sheet.group": "Jump to group 1–5",
+          "sheet.searchGroup": "Search and filters",
+          "sheet.search": "Focus search; hold for 2 seconds to clear it",
+          "sheet.filters": "Press once to open filters; again to clear them, or to close when none are set",
+          "sheet.hints": "Hold to see hints",
+          "sheet.holdNumbers": "Show 1–9 next to the visible items",
+          "sheet.holdGroups": "Show tab and group numbers",
           "features.title": "What it does for you",
           "features.devices.title": "Take it to your phone",
           "features.devices.body": "Pair your phone to receive Agent reminders and to send files and clipboard items between devices. Connections go direct when possible; the relay is end-to-end encrypted.",
           "features.local.title": "Stays on your computer",
           "features.local.body": "Clipboard history and resources are stored locally. Agents can’t read clipboard content until you turn that on in Settings.",
-          "defaults.summary": "Show every shortcut and default setting",
+          "defaults.summary": "Show the full shortcut table and default settings",
           "hero.eyebrow": "Free and open source, for macOS and Windows",
           "hero.title.clipboard": "Everything you copied, one search away.",
           "hero.title.resources": "Agent setup, written once.",
@@ -974,8 +1078,8 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "chatFooter.sampleSkillResource": "♦ Release flow*",
           "chatFooter.sampleMcpResource": "♠ GitHub*",
           "chatFooter.sampleStatus": "Agent · connected",
-          "defaults.title": "Shortcuts you can change.",
-          "defaults.body": "These are the defaults. Record your own global or workspace shortcuts in Settings; they take effect immediately.",
+          "defaults.title": "Every shortcut, on one page.",
+          "defaults.body": "These are the defaults. Record your own global or workspace shortcuts in Settings → Keyboard shortcuts; they take effect immediately.",
           "defaults.shortcutsTitle": "Default keyboard shortcuts",
           "defaults.shortcutsBody": "Open Settings → Keyboard shortcuts to record a combination. Hold Control on macOS or Alt on Windows to select the first five visible clipboard groups with 1–5. Combinations already used by DingDong or reserved actions cannot be saved.",
           "defaults.settingsTitle": "Settings defaults",
@@ -1169,12 +1273,31 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "tools.importSound": "导入 15 秒、5 MiB 以内的 PCM WAV。",
           "tools.reminderSounds": "保存完成提醒和需要处理提醒的声音。",
           "tools.jev": "安装 Jev 后：状态、检查、选择和打分。",
+          "sheet.platform": "键盘布局",
+          "sheet.anywhere": "任何时候",
+          "sheet.open": "打开或隐藏 DingDong",
+          "sheet.tabs": "动态 / 资源库 / 剪贴板",
+          "sheet.esc": "先关预览，再隐藏面板",
+          "sheet.list": "在剪贴板列表里",
+          "sheet.upDown": "上下选择条目",
+          "sheet.leftRight": "左右切换分组",
+          "sheet.space": "预览选中的条目",
+          "sheet.enter": "使用选中的条目",
+          "sheet.number": "直接使用第 1–9 条",
+          "sheet.plain": "以纯文本使用第 1–9 条",
+          "sheet.group": "跳到第 1–5 个分组",
+          "sheet.searchGroup": "搜索和筛选",
+          "sheet.search": "聚焦搜索；按住 2 秒清空搜索",
+          "sheet.filters": "按一次展开筛选；再按一次清空筛选条件，没有条件时收起",
+          "sheet.hints": "按住看提示",
+          "sheet.holdNumbers": "可见条目旁显示 1–9",
+          "sheet.holdGroups": "显示标签页和分组编号",
           "features.title": "能帮你做的事",
           "features.devices.title": "手机上接着看",
           "features.devices.body": "配对手机后，可以收 Agent 提醒，也能在设备之间互传文件和剪贴板内容。能直连就直连，走中继时也是端到端加密。",
           "features.local.title": "数据留在本机",
           "features.local.body": "剪贴板记录和资源默认只存在本机。Agent 读取剪贴板内容默认关闭，要在设置里打开才行。",
-          "defaults.summary": "展开全部快捷键和默认设置",
+          "defaults.summary": "展开完整快捷键表和默认设置",
           "hero.eyebrow": "免费开源，支持 macOS 和 Windows",
           "hero.title.clipboard": "复制过的，一搜就有。",
           "hero.title.resources": "Agent 配置，只写一遍。",
@@ -1288,8 +1411,8 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "chatFooter.sampleSkillResource": "♦ 发布流程*",
           "chatFooter.sampleMcpResource": "♠ GitHub*",
           "chatFooter.sampleStatus": "Agent · 已接入",
-          "defaults.title": "快捷键，换成自己顺手的",
-          "defaults.body": "下面列的是默认值。全局快捷键和工作区快捷键都能在设置里重新录入，改完就生效。",
+          "defaults.title": "所有快捷键，一页看完",
+          "defaults.body": "下面是默认值。全局快捷键和工作区快捷键都能在“设置 → 键盘快捷键”里重新录入，改完就生效。",
           "defaults.shortcutsTitle": "默认键盘快捷键",
           "defaults.shortcutsBody": "打开“设置 → 键盘快捷键”，按下想用的组合即可。macOS 按住 Control、Windows 按住 Alt，再按 1–5，可以选择当前可见的前五个剪贴板分组。与 DingDong 已有快捷键或保留操作冲突的组合不能保存。",
           "defaults.settingsTitle": "设置默认值",
@@ -2232,6 +2355,17 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
       });
 
       demoCopyAction.addEventListener("click", copyDemoSample);
+      const shortcutSheet = document.getElementById("shortcut-sheet");
+      const setShortcutPlatform = (platform) => {
+        shortcutSheet.dataset.platform = platform;
+        shortcutSheet.querySelectorAll("[data-shortcut-platform]").forEach((button) => {
+          button.setAttribute("aria-pressed", String(button.dataset.shortcutPlatform === platform));
+        });
+      };
+      shortcutSheet.querySelectorAll("[data-shortcut-platform]").forEach((button) => {
+        button.addEventListener("click", () => setShortcutPlatform(button.dataset.shortcutPlatform));
+      });
+      setShortcutPlatform(detectedDownloadPlatform === "windows" ? "win" : "mac");
       terminalDemoForm.addEventListener("submit", submitTerminalDemo);
       agentPromptCopy.addEventListener("click", copyAgentSetupPrompt);
       const storyBriefCopy = document.getElementById("story-brief-copy");
