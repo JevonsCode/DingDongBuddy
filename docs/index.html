@@ -2098,35 +2098,52 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
       });
 
       // Scroll story: on wide, tall screens with motion allowed, the demo stays
-      // beside the text and acts out the section being read. The added layers are
-      // decorative (aria-hidden); the same information is in the page copy.
+      // beside the text and acts out the section being read. Resource Manager
+      // opens as its own macOS-style window, drawn after the real app. The added
+      // layers are decorative (aria-hidden); the same information is in the copy.
       const storyCopy = {
         en: {
-          manageTitle: "Resource Manager",
+          workspace: "WORKSPACE",
+          nav: {
+            resources: "Resources",
+            plugins: "Plugins",
+            clipboard: "Clipboard",
+            notifications: "Recent notifications",
+            tokens: "Token history",
+            ai: "AI+",
+            agents: "Agent access",
+            issues: "Issues"
+          },
+          stored: "Stored on this device",
+          resourcesSubtitle: "Curated content reusable by agents",
+          newResource: "New resource",
+          search: "Search prompts, skills, and MCP",
+          filters: ["All", "Prompts", "Skills", "MCP"],
+          columns: ["Type", "Resource", "Status"],
           resources: [
-            ["prompt", "Project rules", "DingDongBuddy"],
-            ["skill", "Release flow", "Codex · Claude Code"],
-            ["skill", "UI hardening", "All Agents"],
-            ["mcp", "GitHub", "DingDongBuddy"],
-            ["mcp", "Browser", "Claude Code"]
+            ["prompt", "Project rules", "DingDongBuddy · Always"],
+            ["skill", "Release flow", "Codex, Claude Code · Task match"],
+            ["skill", "UI hardening", "All Agents · Task match"],
+            ["mcp", "GitHub", "DingDongBuddy · Task match"],
+            ["mcp", "Browser", "Claude Code · Manual"]
           ],
-          usageTitle: "Token usage",
-          usageMeta: "Last 18 weeks · Codex, Claude Code, Pi",
-          usageTotal: "≥ 1.24M Token",
-          usageUnknown: "Unknown",
-          usageDay: ["Oct 28", "86.4K"],
-          usageSources: [["Codex", "62.4K"], ["Claude Code", "21.8K"], ["Pi", "2.2K"]],
+          tokensSubtitle: "Daily usage across Agents and DingDong.",
+          stats: [["Today", "284,350"], ["Range total", "7,192,324"]],
+          dailyActivity: "Daily activity",
+          weekdays: ["Mon", "", "Wed", "", "Fri", "", ""],
+          dayDetail: ["Fri, Oct 9", "Daily detail"],
+          daySources: [["Codex", "251,800"], ["Claude Code", "29,350"], ["Pi", "3,200"]],
+          unknown: "Unknown",
           less: "Less",
           more: "More",
-          pluginsTitle: "Plugins",
+          pluginsSubtitle: "Nothing is installed until you choose it.",
           plugins: [["Jev", "Judgments, choices, and scores"], ["Selection", "Copy, translate, explain, polish"]],
           install: "Install",
           installed: "Installed",
           selection: ["构建在", "所有平台上都通过了", "。"],
           selectionActions: ["Copy", "Translate", "Explain", "Polish"],
           selectionResult: "passed on every platform",
-          agentsTitle: "Connect Agents",
-          agentsMeta: "Found on this computer",
+          agentsSubtitle: "Found on this computer",
           connecting: "Connecting…",
           connected: "Connected",
           notifications: [
@@ -2137,31 +2154,47 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           now: "now"
         },
         zh: {
-          manageTitle: "资源管理",
+          workspace: "管理",
+          nav: {
+            resources: "资源",
+            plugins: "插件",
+            clipboard: "剪贴板",
+            notifications: "最近通知",
+            tokens: "Token 用量",
+            ai: "AI+",
+            agents: "Agent 接入",
+            issues: "问题"
+          },
+          stored: "数据保存在本机",
+          resourcesSubtitle: "整理后可被 Agent 复用的内容",
+          newResource: "新建资源",
+          search: "搜索提示词、Skills 和 MCP",
+          filters: ["全部", "提示词", "技能", "MCP"],
+          columns: ["类型", "资源", "状态"],
           resources: [
-            ["prompt", "项目规范", "DingDongBuddy"],
-            ["skill", "发布流程", "Codex · Claude Code"],
-            ["skill", "界面加固", "全部 Agent"],
-            ["mcp", "GitHub", "DingDongBuddy"],
-            ["mcp", "Browser", "Claude Code"]
+            ["prompt", "项目规范", "DingDongBuddy · 始终"],
+            ["skill", "发布流程", "Codex、Claude Code · 任务匹配"],
+            ["skill", "界面加固", "全部 Agent · 任务匹配"],
+            ["mcp", "GitHub", "DingDongBuddy · 任务匹配"],
+            ["mcp", "Browser", "Claude Code · 手动"]
           ],
-          usageTitle: "Token 用量",
-          usageMeta: "最近 18 周 · Codex、Claude Code、Pi",
-          usageTotal: "≥ 124 万 Token",
-          usageUnknown: "未知",
-          usageDay: ["10 月 28 日", "8.64 万"],
-          usageSources: [["Codex", "6.24 万"], ["Claude Code", "2.18 万"], ["Pi", "2,200"]],
+          tokensSubtitle: "查看 Agent 和 DingDong 自身的每日 Token 用量。",
+          stats: [["今天", "284,350"], ["区间合计", "7,192,324"]],
+          dailyActivity: "每日用量",
+          weekdays: ["周一", "", "周三", "", "周五", "", ""],
+          dayDetail: ["10 月 9 日 周五", "当日明细"],
+          daySources: [["Codex", "251,800"], ["Claude Code", "29,350"], ["Pi", "3,200"]],
+          unknown: "未知",
           less: "少",
           more: "多",
-          pluginsTitle: "插件",
+          pluginsSubtitle: "你不点安装，就什么都不会装。",
           plugins: [["Jev", "判断、选择和打分"], ["划词", "复制、翻译、解释、润色"]],
           install: "安装",
           installed: "已安装",
           selection: ["The build ", "passed on every platform", "."],
           selectionActions: ["复制", "翻译", "解释", "润色"],
           selectionResult: "在所有平台上都通过了",
-          agentsTitle: "接入 Agent",
-          agentsMeta: "在这台电脑上找到",
+          agentsSubtitle: "在这台电脑上找到",
           connecting: "接入中…",
           connected: "已接入",
           notifications: [
@@ -2176,7 +2209,18 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         ? { open: ["Ctrl", "Shift", "V"], tabs: [["Alt", "Q"], ["Alt", "W"], ["Alt", "E"]] }
         : { open: ["⌘", "⇧", "V"], tabs: [["⌃", "Q"], ["⌃", "W"], ["⌃", "E"]] };
       const storyAgents = ["Codex", "Claude Code", "Cursor", "Gemini CLI", "GitHub Copilot CLI", "OpenCode"];
-      const storySheetScenes = ["token-history", "plugins", "mcp"];
+      // Line icons for the window sidebar, in the order the real app lists them.
+      const storyNavIcons = {
+        resources: "M8 2.5 2.5 5.5 8 8.5l5.5-3zM2.5 8.5 8 11.5l5.5-3M2.5 11 8 14l5.5-3",
+        plugins: "M6 2.5h4v2.5h2.5v3.5H10V13H6v-2.5H3.5V7H6z",
+        clipboard: "M5.5 2.5h5v2h-5zM4.5 3.5h-1v10h9v-10h-1",
+        notifications: "M8 2.5 9.3 6.7 13.5 8 9.3 9.3 8 13.5 6.7 9.3 2.5 8 6.7 6.7z",
+        tokens: "M3 4h10v9H3zM3 7h10M6 2.5v3M10 2.5v3",
+        ai: "M6.5 3 7.6 6.4 11 7.5 7.6 8.6 6.5 12 5.4 8.6 2 7.5 5.4 6.4zM11.5 2.5v3M10 4h3",
+        agents: "M6.5 9.5 9.5 6.5M7 5l1-1a2.5 2.5 0 0 1 3.5 3.5l-1 1M9 11l-1 1A2.5 2.5 0 0 1 4.5 8.5l1-1",
+        issues: "M8 2.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11zM8 5.5v3M8 10.5v.5"
+      };
+      const storyMacScenes = ["resources", "token-history", "plugins", "mcp"];
       const storyQuery = window.matchMedia(
         "(min-width: 1180px) and (min-height: 760px) and (prefers-reduced-motion: no-preference)"
       );
@@ -2187,14 +2231,15 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
       const storySections = ["product", "features", "devices", "resources", "token-history", "plugins", "defaults", "sounds", "mcp"]
         .map((id) => document.getElementById(id));
       const storyRail = createDemoElement("div", "story-rail");
-      const storyLayer = createDemoElement("div", "story-layer");
+      const storyMac = createDemoElement("div", "story-mac");
       const storyFloat = createDemoElement("div", "story-float");
       const storyPointer = createDemoElement("span", "story-pointer");
       storyPointer.innerHTML = '<svg viewBox="0 0 20 20"><path d="M4 2.5v13.2l3.4-3.1 2.3 5.1 2.4-1.1-2.3-5h4.6z"/></svg>';
-      [storyLayer, storyFloat, storyPointer].forEach((node) => node.setAttribute("aria-hidden", "true"));
+      [storyMac, storyFloat, storyPointer].forEach((node) => node.setAttribute("aria-hidden", "true"));
       let storyObserver = null;
       let storyScene = null;
       let storyTimers = [];
+      let storyPointerHide = null;
 
       const storyLater = (delay, callback) => {
         storyTimers.push(window.setTimeout(callback, delay));
@@ -2207,144 +2252,184 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         renderDemo();
       };
 
+      const createStoryIcon = (path) => {
+        const namespace = "http://www.w3.org/2000/svg";
+        const icon = document.createElementNS(namespace, "svg");
+        const line = document.createElementNS(namespace, "path");
+        icon.setAttribute("viewBox", "0 0 16 16");
+        line.setAttribute("d", path);
+        icon.append(line);
+        return icon;
+      };
+
       const createStoryAvatar = (label) => createDemoElement("span", "story-avatar", label.slice(0, 1));
 
-      const createStorySheetHead = (symbol, title) => {
-        const head = createDemoElement("div", "story-sheet-head");
-        head.append(
-          createDemoSymbol(symbol, ""),
-          createDemoElement("strong", "", title),
-          createDemoElement("span", "story-close", "×")
-        );
+      const createStoryPageHead = (title, subtitle, action) => {
+        const head = createDemoElement("div", "story-page-head");
+        const heading = createDemoElement("div", "");
+        heading.append(createDemoElement("strong", "", title), createDemoElement("small", "", subtitle));
+        head.append(heading);
+        if (action) head.append(createDemoElement("span", "story-mac-button", action));
         return head;
       };
 
-      const storySheetRenderers = {
+      const storyPages = {
         resources: () => {
           const text = storyText();
-          const counts = createDemoElement("div", "story-type-counts");
-          ["prompt", "skill", "mcp"].forEach((type) => {
-            const total = text.resources.filter(([kind]) => kind === type).length;
-            counts.append(createDemoElement("span", `is-${type}`, `${type === "mcp" ? "MCP" : type[0].toUpperCase() + type.slice(1)} ${total}`));
+          const search = createDemoElement("div", "story-mac-search");
+          search.append(createDemoSymbol("search", ""), createDemoElement("span", "", text.search));
+          const filters = createDemoElement("div", "story-mac-filters");
+          text.filters.forEach((label, index) => {
+            filters.append(createDemoElement("span", index === 0 ? "is-active" : "", label));
           });
-          const body = createDemoElement("div", "story-sheet-body");
+          const table = createDemoElement("div", "story-mac-table");
+          const header = createDemoElement("div", "story-mac-thead");
+          text.columns.forEach((label) => header.append(createDemoElement("span", "", label)));
+          table.append(header);
           text.resources.forEach(([type, title, scope], index) => {
-            const row = createDemoElement("div", "story-row");
+            const row = createDemoElement("div", "story-mac-row");
             row.style.setProperty("--i", index);
-            const label = createDemoElement("div", "");
-            label.append(createDemoElement("b", "", title), createDemoElement("small", "", scope));
-            const status = createDemoElement("span", "story-check");
-            status.append(createDemoStatusIcon(true));
-            row.append(createDemoSymbol(type, ""), label, status);
-            body.append(row);
+            const kind = createDemoElement("span", `story-type is-${type}`);
+            kind.append(createDemoSymbol(type, ""), createDemoElement("span", "", type === "mcp" ? "MCP" : type[0].toUpperCase() + type.slice(1)));
+            const name = createDemoElement("div", "");
+            name.append(createDemoElement("b", "", title), createDemoElement("small", "", scope));
+            row.append(kind, name, createDemoElement("span", "story-switch"));
+            table.append(row);
           });
-          return [createStorySheetHead("manage", text.manageTitle), counts, body];
+          return [createStoryPageHead(text.nav.resources, text.resourcesSubtitle, text.newResource), search, filters, table];
         },
-        usage: () => {
+        tokens: () => {
           const text = storyText();
-          const summary = createDemoElement("div", "story-usage-summary");
-          summary.append(createDemoElement("strong", "", text.usageTotal), createDemoElement("small", "", text.usageMeta));
+          const stats = createDemoElement("div", "story-stats");
+          text.stats.forEach(([label, value]) => {
+            const stat = createDemoElement("div", "");
+            stat.append(createDemoElement("span", "", label), createDemoElement("b", "", value));
+            stats.append(stat);
+          });
+          const card = createDemoElement("div", "story-card");
+          const weekdays = createDemoElement("div", "story-weekdays");
+          text.weekdays.forEach((label) => weekdays.append(createDemoElement("span", "", label)));
           const heatmap = createDemoElement("div", "story-heatmap");
           for (let index = 0; index < 126; index += 1) {
             const column = Math.floor(index / 7);
             const weekday = index % 7;
             const noise = Math.abs(Math.sin(index * 12.9898) * 43758.5453) % 1;
-            const level = Math.min(4, Math.floor(noise * (weekday > 4 ? 2.4 : 5)));
-            const unknown = index >= 64 && index <= 66;
-            const selected = index === 115;
-            const cell = createDemoElement("span", unknown ? "is-unknown" : `level-${selected ? 4 : level}${selected ? " is-selected" : ""}`);
+            const level = Math.min(4, Math.floor(noise * (weekday > 4 ? 2.4 : 5) + column / 9));
+            let className = `level-${level}`;
+            if (index >= 64 && index <= 66) className = "is-unknown";
+            if (index === 116) className = "level-4 is-selected";
+            if (index > 116) className = "is-future";
+            const cell = createDemoElement("span", className);
             cell.style.setProperty("--col", column);
             heatmap.append(cell);
           }
+          const grid = createDemoElement("div", "story-heatwrap");
+          grid.append(weekdays, heatmap);
           const legend = createDemoElement("div", "story-heatmap-legend");
-          legend.append(createDemoElement("span", "", text.less));
+          legend.append(createDemoElement("i", "is-unknown"), createDemoElement("span", "", text.unknown));
+          legend.append(createDemoElement("span", "story-legend-gap", text.less));
           [0, 1, 2, 3, 4].forEach((level) => legend.append(createDemoElement("i", `level-${level}`)));
-          legend.append(
-            createDemoElement("span", "", text.more),
-            createDemoElement("i", "is-unknown"),
-            createDemoElement("span", "", text.usageUnknown)
-          );
-          const day = createDemoElement("div", "story-usage-day");
-          [text.usageDay, ...text.usageSources].forEach(([label, value]) => {
+          legend.append(createDemoElement("span", "", text.more));
+          card.append(createDemoElement("strong", "story-card-title", text.dailyActivity), grid, legend);
+          const day = createDemoElement("div", "story-day");
+          const dayHead = createDemoElement("div", "story-day-head");
+          dayHead.append(createDemoElement("b", "", text.dayDetail[0]), createDemoElement("small", "", text.dayDetail[1]));
+          day.append(dayHead);
+          text.daySources.forEach(([label, value]) => {
             const line = createDemoElement("div", "");
             line.append(createDemoElement("span", "", label), createDemoElement("span", "", value));
             day.append(line);
           });
-          return [createStorySheetHead("today", text.usageTitle), summary, heatmap, legend, day];
+          return [createStoryPageHead(text.nav.tokens, text.tokensSubtitle), stats, card, day];
         },
         plugins: () => {
           const text = storyText();
-          const body = createDemoElement("div", "story-sheet-body");
+          const list = createDemoElement("div", "story-mac-list");
           text.plugins.forEach(([name, detail], index) => {
             const row = createDemoElement("div", "story-row");
             row.style.setProperty("--i", index);
             const label = createDemoElement("div", "");
             label.append(createDemoElement("b", "", name), createDemoElement("small", "", detail));
             row.append(createStoryAvatar(name), label, createDemoElement("span", "story-install", text.install));
-            body.append(row);
+            list.append(row);
           });
-          return [createStorySheetHead("manage", text.pluginsTitle), body];
+          return [createStoryPageHead(text.nav.plugins, text.pluginsSubtitle), list];
         },
         agents: () => {
           const text = storyText();
-          const meta = createDemoElement("p", "story-sheet-meta", text.agentsMeta);
-          const body = createDemoElement("div", "story-sheet-body");
+          const list = createDemoElement("div", "story-mac-list");
           storyAgents.forEach((name, index) => {
             const row = createDemoElement("div", "story-row");
             row.style.setProperty("--i", index);
             const status = createDemoElement("span", "story-status", text.connecting);
             row.append(createStoryAvatar(name), createDemoElement("b", "", name), status);
-            body.append(row);
+            list.append(row);
           });
-          return [createStorySheetHead("mcp", text.agentsTitle), meta, body];
+          return [createStoryPageHead(text.nav.agents, text.agentsSubtitle), list];
         }
       };
 
-      const openStorySheet = (kind, origin) => {
-        const sheet = createDemoElement("div", "story-sheet");
-        sheet.append(...storySheetRenderers[kind]());
-        const current = storyLayer.querySelector(".story-sheet");
-        if (current && !storyLayer.classList.contains("is-closing")) {
-          sheet.classList.add("is-swapped");
-          current.replaceWith(sheet);
-        } else {
-          storyLayer.classList.remove("is-closing");
-          storyLayer.replaceChildren(createDemoElement("div", "story-scrim"), sheet);
-        }
-        if (origin) {
-          const windowBox = demoWindow.getBoundingClientRect();
-          const originBox = origin.getBoundingClientRect();
-          const x = originBox.left + originBox.width / 2 - windowBox.left - 12;
-          const y = originBox.top + originBox.height / 2 - windowBox.top - 58;
-          sheet.style.transformOrigin = `${x}px ${y}px`;
-        }
-        return sheet;
-      };
+      const storyMacIsOpen = () => storyMac.classList.contains("is-open") && !storyMac.classList.contains("is-closing");
 
-      const closeStorySheet = () => {
-        if (!storyLayer.firstChild) return;
-        storyLayer.classList.add("is-closing");
-        storyLater(220, () => {
-          storyLayer.classList.remove("is-closing");
-          storyLayer.replaceChildren();
+      const setStoryMacPage = (page) => {
+        storyMac.querySelectorAll("[data-story-page]").forEach((item) => {
+          item.classList.toggle("is-active", item.dataset.storyPage === page);
         });
+        storyMac.querySelector(".story-mac-main").replaceChildren(...storyPages[page]());
+      };
+
+      const openStoryMac = (page, origin) => {
+        const text = storyText();
+        const sidebar = createDemoElement("div", "story-mac-sidebar");
+        const lights = createDemoElement("div", "story-mac-lights");
+        lights.append(createDemoElement("i", ""), createDemoElement("i", ""), createDemoElement("i", ""));
+        sidebar.append(lights, createDemoElement("strong", "story-mac-brand", "DingDong"), createDemoElement("span", "story-mac-label", text.workspace));
+        Object.entries(text.nav).forEach(([key, label]) => {
+          const item = createDemoElement("span", "story-mac-nav");
+          item.dataset.storyPage = key;
+          item.append(createStoryIcon(storyNavIcons[key]), createDemoElement("span", "", label));
+          sidebar.append(item);
+        });
+        sidebar.append(createDemoElement("span", "story-mac-foot", text.stored));
+        storyMac.replaceChildren(sidebar, createDemoElement("div", "story-mac-main"));
+        setStoryMacPage(page);
+        if (origin) {
+          const macBox = storyMac.getBoundingClientRect();
+          const originBox = origin.getBoundingClientRect();
+          const x = originBox.left + originBox.width / 2 - macBox.left;
+          const y = originBox.top + originBox.height / 2 - macBox.top;
+          storyMac.style.transformOrigin = `${x}px ${y}px`;
+        }
+        storyMac.classList.remove("is-closing");
+        storyMac.classList.add("is-open");
+        demoWindow.classList.add("is-story-behind");
+      };
+
+      const closeStoryMac = () => {
+        demoWindow.classList.remove("is-story-behind");
+        if (!storyMac.classList.contains("is-open")) return;
+        storyMac.classList.add("is-closing");
+        storyLater(220, () => storyMac.classList.remove("is-open", "is-closing"));
       };
 
       const pointStoryAt = (target) => {
         const stageBox = productStage.getBoundingClientRect();
         const box = target.getBoundingClientRect();
-        const x = box.left - stageBox.left + box.width * 0.55;
+        const x = box.left - stageBox.left + Math.min(box.width * 0.55, 40);
         const y = box.top - stageBox.top + box.height * 0.6;
         storyPointer.style.transform = `translate(${x}px, ${y}px)`;
       };
 
       const clickStoryTarget = (target, onClick) => {
-        const stageBox = productStage.getBoundingClientRect();
-        storyPointer.classList.add("is-instant");
-        storyPointer.style.transform = `translate(${stageBox.width - 36}px, ${stageBox.height - 150}px)`;
-        void storyPointer.offsetWidth;
-        storyPointer.classList.remove("is-instant");
-        storyPointer.classList.add("is-visible");
+        window.clearTimeout(storyPointerHide);
+        if (!storyPointer.classList.contains("is-visible")) {
+          const stageBox = productStage.getBoundingClientRect();
+          storyPointer.classList.add("is-instant");
+          storyPointer.style.transform = `translate(${stageBox.width - 36}px, ${stageBox.height - 150}px)`;
+          void storyPointer.offsetWidth;
+          storyPointer.classList.remove("is-instant");
+          storyPointer.classList.add("is-visible");
+        }
         storyLater(80, () => pointStoryAt(target));
         storyLater(860, () => {
           storyPointer.classList.add("is-pressing");
@@ -2354,8 +2439,25 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           storyPointer.classList.remove("is-pressing");
           target.classList.remove("is-story-pressed");
           onClick();
+          storyPointerHide = window.setTimeout(() => storyPointer.classList.remove("is-visible"), 900);
         });
-        storyLater(1900, () => storyPointer.classList.remove("is-visible"));
+      };
+
+      // Opens Resource Manager if needed, then clicks the sidebar item for the page.
+      const goToStoryPage = (page, then) => {
+        let delay = 250;
+        if (!storyMacIsOpen()) {
+          showStoryTab("library");
+          openStoryMac("resources", demoPanel.querySelector(".demo-manage-button"));
+          delay = 700;
+        }
+        storyLater(delay, () => {
+          const item = storyMac.querySelector(`[data-story-page="${page}"]`);
+          clickStoryTarget(item, () => {
+            setStoryMacPage(page);
+            if (then) storyLater(300, then);
+          });
+        });
       };
 
       const showStoryKeys = (keys) => {
@@ -2392,17 +2494,12 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         resources: () => {
           showStoryTab("library");
           const manage = demoPanel.querySelector(".demo-manage-button");
-          storyLater(300, () => clickStoryTarget(manage, () => openStorySheet("resources", manage)));
+          storyLater(300, () => clickStoryTarget(manage, () => openStoryMac("resources", manage)));
         },
-        "token-history": () => {
-          showStoryTab("library");
-          openStorySheet("usage");
-        },
-        plugins: () => {
-          showStoryTab("library");
-          const sheet = openStorySheet("plugins");
-          const install = sheet.querySelectorAll(".story-install")[1];
-          storyLater(600, () => clickStoryTarget(install, () => {
+        "token-history": () => goToStoryPage("tokens"),
+        plugins: () => goToStoryPage("plugins", () => {
+          const install = storyMac.querySelectorAll(".story-install")[1];
+          clickStoryTarget(install, () => {
             const text = storyText();
             install.textContent = text.installed;
             install.classList.add("is-done");
@@ -2418,9 +2515,9 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
               actions.append(createDemoElement("span", index === 1 ? "is-active" : "", label));
             });
             selection.append(sentence, actions, createDemoElement("p", "story-selection-result", text.selectionResult));
-            storyLater(500, () => sheet.append(selection));
-          }));
-        },
+            storyLater(400, () => storyMac.querySelector(".story-mac-main").append(selection));
+          });
+        }),
         defaults: () => {
           ["today", "library", "clipboard"].forEach((tab, index) => {
             storyLater(index * 1500, () => {
@@ -2433,9 +2530,9 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           showStoryTab("today");
           const [title, detail] = storyText().ring;
           const toast = createDemoElement("div", "story-ring");
-          const copyBlock = createDemoElement("div", "");
-          copyBlock.append(createDemoElement("b", "", title), createDemoElement("small", "", detail));
-          toast.append(createDemoElement("i", ""), copyBlock);
+          const ringCopy = createDemoElement("div", "");
+          ringCopy.append(createDemoElement("b", "", title), createDemoElement("small", "", detail));
+          toast.append(createDemoElement("i", ""), ringCopy);
           const alert = productStage.querySelector(".menu-alert.is-orange");
           const ring = () => {
             alert.classList.remove("is-story-ringing");
@@ -2450,26 +2547,25 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           });
           storyLater(2600, ring);
         },
-        mcp: () => {
-          showStoryTab("today");
-          const sheet = openStorySheet("agents");
-          sheet.querySelectorAll(".story-row").forEach((row, index) => {
-            storyLater(700 + index * 360, () => {
+        mcp: () => goToStoryPage("agents", () => {
+          storyMac.querySelectorAll(".story-row").forEach((row, index) => {
+            storyLater(300 + index * 360, () => {
               const status = row.querySelector(".story-status");
               status.textContent = storyText().connected;
               status.prepend(createDemoStatusIcon(true));
               row.classList.add("is-connected");
             });
           });
-        }
+        })
       };
 
       const playStoryScene = () => {
         storyTimers.forEach((timer) => window.clearTimeout(timer));
         storyTimers = [];
+        window.clearTimeout(storyPointerHide);
         storyFloat.replaceChildren();
         storyPointer.classList.remove("is-visible", "is-pressing");
-        if (!storySheetScenes.includes(storyScene)) closeStorySheet();
+        if (storyScene === "resources" || !storyMacScenes.includes(storyScene)) closeStoryMac();
         storyScenes[storyScene]();
       };
 
@@ -2478,8 +2574,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         storyRail.style.gridRow = `1 / span ${storySections.length}`;
         storyRail.append(productStage);
         storyHero.after(storyRail);
-        demoWindow.append(storyLayer);
-        productStage.append(storyFloat, storyPointer);
+        productStage.append(storyMac, storyFloat, storyPointer);
         demoPanel.setAttribute("aria-live", "off");
         storyObserver = new IntersectionObserver((entries) => {
           entries.forEach((entry) => {
@@ -2496,10 +2591,11 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         storyTimers.forEach((timer) => window.clearTimeout(timer));
         storyTimers = [];
         storyScene = null;
-        storyLayer.className = "story-layer";
-        storyLayer.replaceChildren();
+        storyMac.className = "story-mac";
+        storyMac.replaceChildren();
         storyFloat.replaceChildren();
-        [storyLayer, storyFloat, storyPointer].forEach((node) => node.remove());
+        [storyMac, storyFloat, storyPointer].forEach((node) => node.remove());
+        demoWindow.classList.remove("is-story-behind");
         storyHero.append(productStage);
         storyRail.remove();
         storyMain.classList.remove("is-story");
