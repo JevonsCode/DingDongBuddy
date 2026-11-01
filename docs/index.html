@@ -103,6 +103,7 @@
                 </div>
               </div>
               <div class="demo-title-actions" aria-hidden="true">
+                <span class="demo-connections"><img src="./assets/symbols/link.png" alt=""><b>2</b></span>
                 <span><img src="./assets/symbols/settings.png" alt=""></span>
                 <span><img src="./assets/symbols/collapse.png" alt=""></span>
               </div>
@@ -144,8 +145,12 @@
             <dd data-i18n="features.library.body">Add Prompts, Skills, and MCP servers once, then choose which projects or Agents get each one. You can also ask your Agent to add or change them for you.</dd>
           </div>
           <div>
-            <dt data-i18n="features.notify.title">Hear when an Agent needs you</dt>
-            <dd data-i18n="features.notify.body">Finished, stuck, or waiting on a decision: events from connected Agents land in one list, with unread counts and the sound you pick. Each client’s own notifications keep working.</dd>
+            <dt data-i18n="features.notify.title">Know which reminder it is by ear</dt>
+            <dd data-i18n="features.notify.body">Finished, stuck, or waiting on a decision: give each kind its own sound and color, or set a one-time reminder for the next task. A “Last seen here” line separates new events from ones you’ve read.</dd>
+          </div>
+          <div>
+            <dt data-i18n="features.setup.title">Connects to the Agents you already use</dt>
+            <dd data-i18n="features.setup.body">On first launch, DingDong finds the Agents on this computer and connects them. Updates and removals show the exact configuration changes before anything is written.</dd>
           </div>
           <div>
             <dt data-i18n="features.devices.title">Take it to your phone</dt>
@@ -162,6 +167,10 @@
         <div class="section-heading device-section-heading">
           <h2 data-i18n="devices.title">Check several computers from one phone.</h2>
           <p data-i18n="devices.body">Scan each computer's QR code to pair it. You can see which computers are online and switch the active one. Files, clipboard items, and reminders stay grouped by their source computer.</p>
+        </div>
+        <div class="story-brief">
+          <p data-i18n="story.devicesBrief">Scan the QR code on your computer to pair your phone. Files, clipboard items, and Agent reminders stay grouped by the computer they came from.</p>
+          <p class="story-brief-hint" data-i18n="story.closeHint">Close the window with the red button to read the full details.</p>
         </div>
 
         <div class="device-showcase" aria-label="Illustration of DingDong Connected Devices" data-i18n-aria-label="devices.illustrationAria">
@@ -228,13 +237,17 @@
         </div>
         <p class="device-platform-note" data-i18n="devices.history">The desktop device manager separates Online devices from Connection history. Open Transfer history for the latest 100 finished file records saved locally across restarts. A history entry is not a file backup or a transfer you can resume after restarting.</p>
         <p><a href="https://github.com/JevonsCode/DingDongBuddy/blob/main/docs/product/connected-devices.md" data-i18n="devices.guide">Pairing and transfer guide →</a></p>
-        <p class="device-platform-note" data-i18n="devices.platformNote">On the same local network, DingDong tries a direct WebRTC connection first. Otherwise it uses an end-to-end encrypted relay. Android can use the web app without installing it. On iPhone and iPad, add it to the Home Screen to enable push notifications. Tap the tabs or swipe between them on mobile; a notification opens Agent reminders. Your phone controls notification vibration.</p>
+        <p class="device-platform-note" data-i18n="devices.platformNote">On the same local network, DingDong connects directly; otherwise it uses an end-to-end encrypted relay. Android works in the browser without installing. On iPhone and iPad, add it to the Home Screen to get push notifications. Tap the tabs or swipe between them on mobile; a notification opens Agent reminders.</p>
       </section>
 
       <section class="resource-system" id="resources">
         <div class="section-heading resource-system-heading">
           <h2 data-i18n="resources.title">Manage a resource once, then choose where it applies.</h2>
           <p data-i18n="resources.body">Set the project or Agent for each resource. Matching Prompts arrive at task start. Dynamic Skills show a description before the Agent loads them. MCP servers are added to supported clients.</p>
+        </div>
+        <div class="story-brief">
+          <p data-i18n="story.resourcesBrief">Keep one copy of each Prompt, Skill, and MCP server, then choose which projects or Agents get it.</p>
+          <p class="story-brief-hint" data-i18n="story.closeHint">Close the window with the red button to read the full details.</p>
         </div>
 
         <div class="resource-map" aria-label="How DingDong routes Prompts, Skills, and MCP servers to Agent clients">
@@ -274,11 +287,11 @@
 
         <div class="agent-strip">
           <span data-i18n="resources.clients">Built-in Agent adapters</span>
-          <strong>Codex</strong><strong>Claude Code</strong><strong>Cursor</strong><strong>Gemini CLI</strong><strong>Kiro</strong><strong>Pi</strong><strong>Grok Build</strong>
+          <strong>Codex</strong><strong>Claude Code</strong><strong>Cursor</strong><strong>Gemini CLI</strong><strong>GitHub Copilot CLI</strong><strong>OpenCode</strong><strong>Kiro</strong><strong>Antigravity</strong><strong>Antigravity CLI</strong><strong>Windsurf</strong><strong>Pi</strong><strong>Grok Build</strong>
           <a class="agent-strip-request" href="https://github.com/JevonsCode/DingDongBuddy/issues/new?template=feature-request.yml" target="_blank" rel="noopener noreferrer" data-i18n="resources.requestAgent">Missing your Agent? Open an issue</a>
         </div>
 
-        <p class="agent-support-note" data-i18n="resources.clientNote">Pi and Grok Build currently support Skill syncing. MCP setup and completion hooks vary by client; check the options shown in DingDong.</p>
+        <p class="agent-support-note" data-i18n="resources.clientNote">Pi, Grok Build, and Windsurf sync Skills only for now. MCP and completion alerts vary by client; DingDong shows what each one supports.</p>
 
         <div class="conversation-heading">
           <h3 data-i18n="resourceUpdates.title">Choose what arrives. Keep what changed.</h3>
@@ -333,6 +346,10 @@
           <h2 data-i18n="usage.title">See your Token usage, day by day.</h2>
           <p data-i18n="usage.body">Open Token usage for a daily heatmap, date and source filters, day details and CSV export. Optionally include DingDong’s own model usage or view it separately; changing filters makes no model request.</p>
         </div>
+        <div class="story-brief">
+          <p data-i18n="story.usageBrief">See each Agent’s daily Token use on a heatmap. Only the numbers are stored, never the chats.</p>
+          <p class="story-brief-hint" data-i18n="story.closeHint">Close the window with the red button to read the full details.</p>
+        </div>
         <div class="conversation-grid">
           <article class="conversation-example">
             <span class="example-kind">Codex · Claude Code · Pi</span>
@@ -357,12 +374,21 @@
           <h2 data-i18n="plugins.title">Plugins, when you want them.</h2>
           <p data-i18n="plugins.body">Find Jev and the macOS selection tools in Resource Manager → Plugins. Nothing is installed or turned on until you choose it.</p>
         </div>
+        <div class="story-brief">
+          <p data-i18n="story.pluginsBrief">Install Jev and the selection tools when you want them. Select text to translate, explain, or polish it.</p>
+          <p class="story-brief-hint" data-i18n="story.closeHint">Close the window with the red button to read the full details.</p>
+        </div>
         <div class="conversation-grid">
           <article class="conversation-example">
             <span class="example-kind">Jev</span>
             <h3 data-i18n="plugins.jevTitle">Ask Jev for a judgment or score.</h3>
             <p class="example-result" data-i18n="plugins.jevBody">Install Jev and add your own API key. Your Agent can call it for judgments, choices, and scoring, with Jev token usage tracked separately.</p>
             <a href="https://typesafe.ai/" target="_blank" rel="noopener noreferrer" data-i18n="plugins.official">Jev website and terms</a>
+          </article>
+          <article class="conversation-example">
+            <span class="example-kind" data-i18n="plugins.screenshotLabel">macOS · Windows · Screenshot</span>
+            <h3 data-i18n="plugins.screenshotTitle">Open the system screenshot tool with your own shortcut.</h3>
+            <p class="example-result" data-i18n="plugins.screenshotBody">Defaults to ⌘⌥A on macOS and Ctrl+Alt+A on Windows. DingDong only opens the system tool; it never reads the screenshot.</p>
           </article>
           <article class="conversation-example">
             <span class="example-kind" data-i18n="plugins.selectionLabel">macOS · Selection tools</span>
@@ -378,8 +404,93 @@
           <p data-i18n="defaults.body">These are the defaults. Record your own global or workspace shortcuts in Settings; they take effect immediately.</p>
         </div>
 
+        <div class="shortcut-sheet" id="shortcut-sheet" data-platform="mac">
+          <div class="shortcut-platform" role="group" aria-label="Keyboard layout" data-i18n-aria-label="sheet.platform">
+            <button type="button" data-shortcut-platform="mac" aria-pressed="true">macOS</button>
+            <button type="button" data-shortcut-platform="win" aria-pressed="false">Windows</button>
+          </div>
+          <div class="shortcut-groups">
+            <section class="shortcut-group">
+              <h3 data-i18n="sheet.anywhere">Anywhere</h3>
+              <dl>
+                <div>
+                  <dt><span class="shortcut-mac"><kbd>⌘</kbd><kbd>⇧</kbd><kbd>V</kbd></span><span class="shortcut-win"><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>V</kbd></span></dt>
+                  <dd data-i18n="sheet.open">Open or hide DingDong</dd>
+                </div>
+                <div>
+                  <dt><span class="shortcut-mac"><kbd>⌃</kbd><kbd>Q</kbd> <kbd>⌃</kbd><kbd>W</kbd> <kbd>⌃</kbd><kbd>E</kbd></span><span class="shortcut-win"><kbd>Alt</kbd><kbd>Q</kbd> <kbd>Alt</kbd><kbd>W</kbd> <kbd>Alt</kbd><kbd>E</kbd></span></dt>
+                  <dd data-i18n="sheet.tabs">Dynamic / Library / Clipboard</dd>
+                </div>
+                <div>
+                  <dt><span class="shortcut-mac"><kbd>Esc</kbd></span><span class="shortcut-win"><kbd>Esc</kbd></span></dt>
+                  <dd data-i18n="sheet.esc">Close the preview, then hide the panel</dd>
+                </div>
+              </dl>
+            </section>
+            <section class="shortcut-group">
+              <h3 data-i18n="sheet.list">In the clipboard list</h3>
+              <dl>
+                <div>
+                  <dt><span class="shortcut-mac"><kbd>↑</kbd><kbd>↓</kbd></span><span class="shortcut-win"><kbd>↑</kbd><kbd>↓</kbd></span></dt>
+                  <dd data-i18n="sheet.upDown">Move up and down the list</dd>
+                </div>
+                <div>
+                  <dt><span class="shortcut-mac"><kbd>←</kbd><kbd>→</kbd></span><span class="shortcut-win"><kbd>←</kbd><kbd>→</kbd></span></dt>
+                  <dd data-i18n="sheet.leftRight">Switch between groups</dd>
+                </div>
+                <div>
+                  <dt><span class="shortcut-mac"><kbd>Space</kbd></span><span class="shortcut-win"><kbd>Space</kbd></span></dt>
+                  <dd data-i18n="sheet.space">Preview the selected item</dd>
+                </div>
+                <div>
+                  <dt><span class="shortcut-mac"><kbd>Return</kbd></span><span class="shortcut-win"><kbd>Enter</kbd></span></dt>
+                  <dd data-i18n="sheet.enter">Use the selected item</dd>
+                </div>
+                <div>
+                  <dt><span class="shortcut-mac"><kbd>⌘</kbd><kbd>1–9</kbd></span><span class="shortcut-win"><kbd>Ctrl</kbd><kbd>1–9</kbd></span></dt>
+                  <dd data-i18n="sheet.number">Use item 1–9 directly</dd>
+                </div>
+                <div class="is-mac-only">
+                  <dt><span class="shortcut-mac"><kbd>⌥</kbd><kbd>⌘</kbd><kbd>1–9</kbd></span><span class="shortcut-win"></span></dt>
+                  <dd data-i18n="sheet.plain">Use item 1–9 as plain text</dd>
+                </div>
+                <div>
+                  <dt><span class="shortcut-mac"><kbd>⌃</kbd><kbd>1–5</kbd></span><span class="shortcut-win"><kbd>Alt</kbd><kbd>1–5</kbd></span></dt>
+                  <dd data-i18n="sheet.group">Jump to group 1–5</dd>
+                </div>
+              </dl>
+            </section>
+            <section class="shortcut-group">
+              <h3 data-i18n="sheet.searchGroup">Search and filters</h3>
+              <dl>
+                <div>
+                  <dt><span class="shortcut-mac"><kbd>⌘</kbd><kbd>F</kbd></span><span class="shortcut-win"><kbd>Ctrl</kbd><kbd>F</kbd></span></dt>
+                  <dd data-i18n="sheet.search">Focus search; hold for 2 seconds to clear it</dd>
+                </div>
+                <div>
+                  <dt><span class="shortcut-mac"><kbd>⌘</kbd><kbd>R</kbd></span><span class="shortcut-win"><kbd>Ctrl</kbd><kbd>R</kbd></span></dt>
+                  <dd data-i18n="sheet.filters">Press once to open filters; again to clear them, or to close when none are set</dd>
+                </div>
+              </dl>
+            </section>
+            <section class="shortcut-group">
+              <h3 data-i18n="sheet.hints">Hold to see hints</h3>
+              <dl>
+                <div>
+                  <dt><span class="shortcut-mac"><kbd>⌘</kbd></span><span class="shortcut-win"><kbd>Ctrl</kbd></span></dt>
+                  <dd data-i18n="sheet.holdNumbers">Show 1–9 next to the visible items</dd>
+                </div>
+                <div>
+                  <dt><span class="shortcut-mac"><kbd>⌃</kbd></span><span class="shortcut-win"><kbd>Alt</kbd></span></dt>
+                  <dd data-i18n="sheet.holdGroups">Show tab and group numbers</dd>
+                </div>
+              </dl>
+            </section>
+          </div>
+        </div>
+
         <details class="defaults-details">
-        <summary data-i18n="defaults.summary">Show every shortcut and default setting</summary>
+        <summary data-i18n="defaults.summary">Show the full shortcut table and default settings</summary>
         <div class="defaults-grid">
           <article class="defaults-panel">
             <h3 data-i18n="defaults.shortcutsTitle">Default keyboard shortcuts</h3>
@@ -482,11 +593,17 @@
                   <tr><td data-i18n="settings.monitoring">Clipboard monitoring</td><td data-i18n="value.off">Off</td><td data-i18n="value.onOff">On / off</td></tr>
                   <tr><td data-i18n="settings.retention">Clipboard retention</td><td data-i18n="settings.retentionDefault">5,000 items · 120 days</td><td data-i18n="settings.retentionOptions">20–5,000 items · 1–730 days</td></tr>
                   <tr><td data-i18n="settings.rememberAgents">Remember Recent Agents</td><td data-i18n="value.on">On</td><td data-i18n="value.onOff">On / off</td></tr>
+                  <tr><td data-i18n="settings.panelAgents">Quick panel Agent count</td><td>21</td><td>1–500</td></tr>
                   <tr><td data-i18n="settings.agentLimits">Recent Agent limits</td><td data-i18n="settings.agentLimitsDefault">500 details · 24-hour count</td><td data-i18n="settings.agentLimitsOptions">1–5,000 details · 1–8,760 hours</td></tr>
-                  <tr><td data-i18n="settings.sound">Completion sound</td><td data-i18n="value.classic">DingDong Classic</td><td data-i18n="settings.soundOptions">Built-in, custom, system, or muted</td></tr>
+                  <tr><td data-i18n="settings.sound">Reminder sounds</td><td data-i18n="settings.soundDefault">DingDong Classic · needs input: same as completion</td><td data-i18n="settings.soundOptions">Per reminder: built-in, custom WAV, system, or muted</td></tr>
                   <tr><td data-i18n="settings.footerSymbols">Agent reply footer symbols</td><td>♥ / ♦ / ♠</td><td data-i18n="settings.footerSymbolOptions">Customize Prompt, Skill, and MCP separately</td></tr>
                   <tr><td data-i18n="settings.tokenUsage">Conversation Token usage</td><td data-i18n="value.on">On</td><td data-i18n="settings.tokenUsageOptions">Exact totals for supported Codex, Claude Code, and Pi sessions; unsupported evidence is omitted</td></tr>
-                  <tr><td data-i18n="settings.alertColor">Menu bar alert color (macOS)</td><td data-i18n="value.orange">Orange</td><td data-i18n="settings.alertColorOptions">Orange / Pink / Blue / Green / Purple</td></tr>
+                  <tr><td data-i18n="settings.alertColor">Reminder colors</td><td data-i18n="settings.alertColorDefault">Completion: orange · needs input: amber</td><td data-i18n="settings.alertColorOptions">Per reminder: orange / pink / blue / green / purple / amber</td></tr>
+                  <tr><td data-i18n="settings.quietHours">Quiet hours</td><td data-i18n="value.off">Off</td><td data-i18n="settings.quietHoursOptions">22:00–08:00 by default, adjustable</td></tr>
+                  <tr><td data-i18n="settings.phoneAlerts">Send reminders to paired phones</td><td data-i18n="value.on">On</td><td data-i18n="settings.phoneAlertsOptions">Completion and needs-input separately</td></tr>
+                  <tr><td data-i18n="settings.agentClipboard">Allow Agents to read clipboard content</td><td data-i18n="value.off">Off</td><td data-i18n="value.onOff">On / off</td></tr>
+                  <tr><td data-i18n="settings.beta">Allow beta updates</td><td data-i18n="value.off">Off</td><td data-i18n="value.onOff">On / off</td></tr>
+                  <tr><td data-i18n="settings.stats">Anonymous install and update statistics</td><td data-i18n="value.on">On</td><td data-i18n="value.onOff">On / off</td></tr>
                   <tr><td data-i18n="settings.apiPort">Local Agent API port</td><td><code>2333</code></td><td data-i18n="settings.apiPortOptions">1024–65535 · restart required</td></tr>
                 </tbody>
               </table>
@@ -500,8 +617,6 @@
         <div class="section-heading sound-heading">
           <h2 data-i18n="sounds.title">Choose the sound that brings you back.</h2>
           <p data-i18n="sounds.body">Connected Agents can send a reminder when they finish, get stuck, or need a decision. Pick a built-in sound or import an audio file.</p>
-          <p class="sound-catalog-link"><a href="https://xn--8ovp9s.xn--m8txu.com/dingdong-voices/" data-i18n="sounds.catalog">Explore community voices →</a></p>
-          <p class="sound-life-note" data-i18n="sounds.note">Listen to a few below before choosing.</p>
           <p data-i18n="sounds.profiles">In Settings → Notifications, control completion and needs-input separately, or add named reminders with their own sound, color, tray style and phone switch. Agents select one by reminderId; saving a condition does not start a monitor. Import PCM WAV audio up to 15 seconds and 5 MiB.</p>
           <a href="https://github.com/JevonsCode/DingDongBuddy/blob/main/docs/product/agent-reminders.md" data-i18n="sounds.guide">Reminder setup and Agent tools →</a>
         </div>
@@ -534,6 +649,25 @@
           </button>
         </div>
 
+        <div class="voice-library">
+          <div class="voice-library-copy">
+            <h3 data-i18n="sounds.libraryTitle">Community voice library</h3>
+            <p data-i18n="sounds.libraryBody">Short clips shared by other DingDong users: funny sounds, classic game and movie lines, cartoon effects. Each is 3 seconds or less. Preview one, click Install, and it goes straight into DingDong.</p>
+            <ul class="voice-library-samples">
+              <li>Get over here!</li>
+              <li>Nani</li>
+              <li>HOOYA</li>
+              <li>Pew!</li>
+              <li>Target neutralized</li>
+              <li>John Cena</li>
+            </ul>
+          </div>
+          <div class="voice-library-actions">
+            <a class="voice-library-open" href="https://xn--8ovp9s.xn--m8txu.com/dingdong-voices/" data-i18n="sounds.catalog">Open the voice library →</a>
+            <a class="voice-library-submit" href="https://github.com/JevonsCode/dingdong-voices/issues/new?template=voice.yml" target="_blank" rel="noopener noreferrer" data-i18n="sounds.librarySubmit">Submit your own sound ↗</a>
+          </div>
+        </div>
+
         <div class="sound-custom">
           <span class="mascot-swap mascot-swap-rest sound-custom-mascot" aria-hidden="true">
             <img class="mascot-frame mascot-frame-one" src="./assets/dingdong-sleeping-icon.png" alt="">
@@ -543,7 +677,7 @@
             <h3 data-i18n="sounds.customTitle">Use a sound you recognize</h3>
             <p data-i18n="sounds.customBody">Choose a built-in sound or import your own in Settings. DingDong uses it for alerts from connected Agents.</p>
           </div>
-          <p id="sound-status" role="status" aria-live="polite" data-i18n="sounds.ready">Choose a sound to preview it</p>
+          <p id="sound-status" role="status" aria-live="polite" data-i18n="sounds.ready"></p>
         </div>
       </section>
 
@@ -552,13 +686,35 @@
           <h2 data-i18n="mcp.title">Connect DingDong to your Agent.</h2>
           <p data-i18n="mcp.body">The quickest way: copy the instruction below and paste it into your Agent. It adds DingDong as an MCP server and keeps your existing settings.</p>
         </div>
+        <div class="story-brief">
+          <p data-i18n="story.mcpBrief">Built-in Agents connect in one click. For anything else, copy the setup instruction into it, or open an issue and tell us.</p>
+          <div class="story-brief-actions">
+            <button type="button" class="story-brief-copy" id="story-brief-copy" data-i18n="mcp.copyPrompt">Copy setup instruction</button>
+            <a href="https://github.com/JevonsCode/DingDongBuddy/issues/new?template=feature-request.yml" target="_blank" rel="noopener noreferrer" data-i18n="mcp.pathIssueLink">Open an issue →</a>
+          </div>
+          <p class="story-brief-hint" data-i18n="story.closeHint">Close the window with the red button to read the full details.</p>
+        </div>
+
+        <ol class="connect-paths">
+          <li>
+            <strong data-i18n="mcp.pathAutoTitle">Connect in one click</strong>
+            <p data-i18n="mcp.pathAutoBody">DingDong finds Codex, Claude Code, Cursor, Gemini CLI and the other built-in Agents on this computer. Click once in Resource Manager → Agent access; it lists the configuration changes before writing them.</p>
+          </li>
+          <li>
+            <strong data-i18n="mcp.pathPromptTitle">Not on the list? Copy the instruction</strong>
+            <p data-i18n="mcp.pathPromptBody">Send the setup instruction below to your Agent. It adds DingDong as an MCP server and keeps your existing settings.</p>
+          </li>
+          <li>
+            <strong data-i18n="mcp.pathIssueTitle">Want it built in?</strong>
+            <p data-i18n="mcp.pathIssueBody">Tell us which Agent you use, and we’ll look at adding it to one-click setup.</p>
+            <a href="https://github.com/JevonsCode/DingDongBuddy/issues/new?template=feature-request.yml" target="_blank" rel="noopener noreferrer" data-i18n="mcp.pathIssueLink">Open an issue →</a>
+          </li>
+        </ol>
 
         <div class="agent-prompt-card">
           <div class="agent-prompt-header">
             <div>
-              <p class="agent-prompt-kicker" data-i18n="mcp.promptEyebrow">Let AI handle the setup</p>
               <h3 id="agent-setup-prompt-title" data-i18n="mcp.promptTitle">Copy this instruction to your Agent</h3>
-              <p data-i18n="mcp.promptBody">It uses the MCP path shown in your installed DingDong app, so it works wherever DingDong is installed.</p>
             </div>
             <button
               class="agent-prompt-copy"
@@ -581,7 +737,7 @@
             role="status"
             aria-live="polite"
             data-i18n="mcp.promptReady"
-          >Ready to paste into your Agent</p>
+          ></p>
         </div>
 
         <div class="setup-card">
@@ -617,7 +773,19 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           <article><code>dingdong_get_asset</code><p data-i18n="tools.asset">Open one resource. Start with the description, then read the full text if needed.</p></article>
           <article><code>dingdong_load_skill</code><p data-i18n="tools.skill">Load the Skill the Agent has decided to use.</p></article>
           <article><code>dingdong_recommend_mcp</code><p data-i18n="tools.recommend">Find an MCP configuration that fits the current task.</p></article>
-          <article><code>dingdong_notify</code><p data-i18n="tools.notify">Ring when the task is done, stuck, or waiting for you.</p></article>
+          <article><code>dingdong_notify</code><p data-i18n="tools.notify">Ring when the Agent is stuck or needs you, or play a named reminder. The completion alert comes from the hook.</p></article>
+          <article><code>dingdong_read_skill_file</code><p data-i18n="tools.readSkillFile">Read one supporting file of a loaded Skill.</p></article>
+          <article><code>dingdong_confirm_mcp_use</code><p data-i18n="tools.confirmMcp">Record that a returned MCP tool was used (not needed in Claude Code).</p></article>
+          <article><code>dingdong_upsert_trigger_group</code><p data-i18n="tools.triggerGroup">Create or replace a trigger group for a project path, repository, or source.</p></article>
+          <article><code>dingdong_set_skill_delivery</code><p data-i18n="tools.skillDelivery">Choose how a Skill reaches each Agent: dynamic, user-level, or project-level.</p></article>
+          <article><code>dingdong_get_skill_deployments</code><p data-i18n="tools.skillDeployments">Read a Skill’s delivery policy and where it is actually installed.</p></article>
+          <article><code>dingdong_reconcile_skill</code><p data-i18n="tools.reconcileSkill">Sync a Skill to the Agents again and report the result.</p></article>
+          <article><code>dingdong_list_reminders</code><p data-i18n="tools.listReminders">List named reminders and imported sounds.</p></article>
+          <article><code>dingdong_upsert_reminder</code><p data-i18n="tools.upsertReminder">Create or edit a named reminder (up to 32 of your own).</p></article>
+          <article><code>dingdong_delete_reminder</code><p data-i18n="tools.deleteReminder">Delete a custom reminder; built-in ones can only be turned off.</p></article>
+          <article><code>dingdong_import_reminder_sound</code><p data-i18n="tools.importSound">Import a PCM WAV of up to 15 seconds and 5 MiB.</p></article>
+          <article><code>dingdong_set_reminder_sounds</code><p data-i18n="tools.reminderSounds">Save the sounds for completion and needs-input reminders.</p></article>
+          <article><code>dingdong_jev_*</code><p data-i18n="tools.jev">With Jev installed: status, check, choose, and score.</p></article>
         </div>
       </section>
 
@@ -675,7 +843,10 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
             <span data-i18n="download.requestHint">What would save you a step? Tell us, or contribute a fix.</span>
           </a>
         </div>
-        <p class="download-help" data-i18n="download.macHelp">Requires macOS 13 or newer. Not sure which Mac you have? Open Apple menu  → About This Mac. “Chip” means Apple silicon; “Processor” means Intel.</p>
+        <div class="download-notes">
+          <p class="download-help" data-i18n="download.macHelp">Requires macOS 13 or newer. Not sure which Mac you have? Open Apple menu  → About This Mac. “Chip” means Apple silicon; “Processor” means Intel.</p>
+          <p class="download-help" data-i18n="download.earlyAccess">Want new features early? In DingDong, turn on “Allow beta updates” under Settings → Version.</p>
+        </div>
         <div class="download-stats" id="download-stats" aria-live="polite" hidden>
           <strong data-i18n="download.statsTitle">Downloads by version</strong>
           <p data-i18n="download.statsLoading">Loading GitHub release asset counts…</p>
@@ -688,7 +859,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
       <a href="https://github.com/JevonsCode/DingDongBuddy">GitHub</a>
       <a href="https://github.com/JevonsCode/DingDongBuddy/releases/latest" data-i18n="footer.releases">Releases</a>
       <a href="https://github.com/JevonsCode/DingDongBuddy/blob/main/docs/product/README.md" data-i18n="nav.docs">Docs</a>
-      <a href="https://github.com/JevonsCode/DingDongCodexPet" data-i18n="footer.pet">Codex pet project (access required)</a>
+      <a href="https://github.com/JevonsCode/DingDongCodexPet" data-i18n="footer.pet">DingDong Codex pet</a>
       <a href="https://github.com/JevonsCode/DingDongBuddy/issues/new?template=bug-report.yml" data-i18n="footer.feedback">Feedback</a>
       <a href="./dingdong-release.json" data-i18n="footer.metadata">Metadata</a>
     </footer>
@@ -704,33 +875,96 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "nav.docs": "Docs",
           "resourceUpdates.title": "Choose what arrives. Keep what changed.",
           "resourceUpdates.aiTitle": "Select resources for the task.",
-          "resourceUpdates.aiBody": "Automatic resource selection starts off. Enable it in Resource Manager → AI+. Your model can narrow eligible Prompts, Skills and MCP references from the task and candidate descriptions. Required and explicitly named eligible resources stay; failures fall back to local matching.",
+          "resourceUpdates.aiBody": "Off by default; turn it on in Resource Manager → AI+. Your model then picks the Prompts, Skills, and MCP servers this task needs from the eligible ones. Required and named resources always stay, and local matching takes over if the model can’t respond.",
           "resourceUpdates.aiGuide": "AI+ setup and data boundaries →",
           "resourceUpdates.historyTitle": "Compare versions. Restore a complete package.",
           "resourceUpdates.historyBody": "Open Version history on a Skill to compare any two saved versions. Manual saves and online refreshes retain changed documents and package files locally. Restoring creates a new version and preserves the current scope and enablement.",
           "resourceUpdates.historyGuide": "Skill version history guide →",
           "resourceUpdates.bridgeTitle": "Skip content the Agent still has.",
-          "resourceUpdates.bridgeBody": "Agents that retain a complete snapshot can confirm it to receive only changes. Skill loads can also reuse a confirmed version. After losing context, the Agent requests the full content again.",
+          "resourceUpdates.bridgeBody": "When an Agent still has the previous content, it receives only what changed. If it has lost context, it fetches everything again.",
           "resourceUpdates.bridgeGuide": "Bridge integration guide →",
-          "devices.history": "The desktop device manager separates Online devices from Connection history. Open Transfer history for the latest 100 finished file records saved locally across restarts. A history entry is not a file backup or a transfer you can resume after restarting.",
+          "devices.history": "The device manager lists online devices apart from connection history. Transfer history keeps the last 100 records across restarts; it isn’t a file backup.",
           "devices.guide": "Pairing and transfer guide →",
-          "sounds.profiles": "In Settings → Notifications, control completion and needs-input separately, or add named reminders with their own sound, color, tray style and phone switch. Agents select one by reminderId; saving a condition does not start a monitor. Import PCM WAV audio up to 15 seconds and 5 MiB.",
+          "sounds.profiles": "In Settings → Notifications, set completion and needs-input reminders separately, or add your own with a sound, a color, and a phone switch.",
           "sounds.guide": "Reminder setup and Agent tools →",
           "nav.voices": "Voices",
-          "sounds.catalog": "Explore community voices →",
-          "footer.pet": "Codex pet project (access required)",
+          "sounds.catalog": "Open the voice library →",
+          "footer.pet": "DingDong Codex pet",
           "nav.product": "Features",
           "nav.devices": "Devices",
           "nav.resources": "Resources",
           "nav.mcp": "Connect",
           "nav.download": "Download",
           "meta.title": "DingDong — a desktop companion for your clipboard and AI Agents",
+          "features.setup.title": "Connects to the Agents you already use",
+          "features.setup.body": "On first launch, DingDong finds the Agents on this computer and offers to connect them; you can skip and come back later. Updates and removals show the exact configuration changes before anything is written.",
+          "download.earlyAccess": "Want new features early? In DingDong, turn on “Allow beta updates” under Settings → Version.",
+          "story.resourcesBrief": "Keep one copy of each Prompt, Skill, and MCP server, then choose which projects or Agents get it.",
+          "story.usageBrief": "See each Agent’s daily Token use on a heatmap. Only the numbers are stored, never the chats.",
+          "story.pluginsBrief": "Install Jev, Screenshot, and the selection tools when you want them. Select text to translate, explain, or polish it.",
+          "story.mcpBrief": "Built-in Agents connect in one click. For anything else, copy the setup instruction into it, or open an issue and tell us.",
+          "story.closeHint": "Close the window with the red button to read the full details.",
+          "sounds.libraryTitle": "Community voice library",
+          "sounds.libraryBody": "Short clips shared by other DingDong users: funny sounds, classic game and movie lines, cartoon effects. Each is 3 seconds or less. Preview one, click Install, and it goes straight into DingDong.",
+          "sounds.librarySubmit": "Submit your own sound ↗",
+          "mcp.pathAutoTitle": "Connect in one click",
+          "mcp.pathAutoBody": "DingDong finds Codex, Claude Code, Cursor, Gemini CLI and the other built-in Agents on this computer. Click once in Resource Manager → Agent access; it lists the configuration changes before writing them.",
+          "mcp.pathPromptTitle": "Not on the list? Copy the instruction",
+          "mcp.pathPromptBody": "Send the setup instruction below to your Agent. It adds DingDong as an MCP server and keeps your existing settings.",
+          "mcp.pathIssueTitle": "Want it built in?",
+          "mcp.pathIssueBody": "Tell us which Agent you use, and we’ll look at adding it to one-click setup.",
+          "mcp.pathIssueLink": "Open an issue →",
+          "story.devicesBrief": "Scan the QR code on your computer to pair your phone. Files, clipboard items, and Agent reminders stay grouped by the computer they came from.",
+          "settings.soundDefault": "DingDong Classic · needs input: same as completion",
+          "settings.alertColorDefault": "Completion: orange · needs input: amber",
+          "settings.quietHours": "Quiet hours",
+          "settings.quietHoursOptions": "22:00–08:00 by default, adjustable",
+          "settings.phoneAlerts": "Send reminders to paired phones",
+          "settings.phoneAlertsOptions": "Completion and needs-input separately",
+          "settings.agentClipboard": "Allow Agents to read clipboard content",
+          "settings.beta": "Allow beta updates",
+          "settings.stats": "Anonymous install and update statistics",
+          "settings.panelAgents": "Quick panel Agent count",
+          "plugins.screenshotLabel": "macOS · Windows · Screenshot",
+          "plugins.screenshotTitle": "Open the system screenshot tool with your own shortcut.",
+          "plugins.screenshotBody": "Defaults to ⌘⌥A on macOS and Ctrl+Alt+A on Windows. DingDong only opens the system tool; it never reads the screenshot.",
+          "tools.readSkillFile": "Read one supporting file of a loaded Skill.",
+          "tools.confirmMcp": "Record that a returned MCP tool was used (not needed in Claude Code).",
+          "tools.triggerGroup": "Create or replace a trigger group for a project path, repository, or source.",
+          "tools.skillDelivery": "Choose how a Skill reaches each Agent: dynamic, user-level, or project-level.",
+          "tools.skillDeployments": "Read a Skill’s delivery policy and where it is actually installed.",
+          "tools.reconcileSkill": "Sync a Skill to the Agents again and report the result.",
+          "tools.listReminders": "List named reminders and imported sounds.",
+          "tools.upsertReminder": "Create or edit a named reminder (up to 32 of your own).",
+          "tools.deleteReminder": "Delete a custom reminder; built-in ones can only be turned off.",
+          "tools.importSound": "Import a PCM WAV of up to 15 seconds and 5 MiB.",
+          "tools.reminderSounds": "Save the sounds for completion and needs-input reminders.",
+          "tools.jev": "With Jev installed: status, check, choose, and score.",
+          "sheet.platform": "Keyboard layout",
+          "sheet.anywhere": "Anywhere",
+          "sheet.open": "Open or hide DingDong",
+          "sheet.tabs": "Dynamic / Library / Clipboard",
+          "sheet.esc": "Close the preview, then hide the panel",
+          "sheet.list": "In the clipboard list",
+          "sheet.upDown": "Move up and down the list",
+          "sheet.leftRight": "Switch between groups",
+          "sheet.space": "Preview the selected item",
+          "sheet.enter": "Use the selected item",
+          "sheet.number": "Use item 1–9 directly",
+          "sheet.plain": "Use item 1–9 as plain text",
+          "sheet.group": "Jump to group 1–5",
+          "sheet.searchGroup": "Search and filters",
+          "sheet.search": "Focus search; hold for 2 seconds to clear it",
+          "sheet.filters": "Press once to open filters; again to clear them, or to close when none are set",
+          "sheet.hints": "Hold to see hints",
+          "sheet.holdNumbers": "Show 1–9 next to the visible items",
+          "sheet.holdGroups": "Show tab and group numbers",
           "features.title": "What it does for you",
           "features.devices.title": "Take it to your phone",
           "features.devices.body": "Pair your phone to receive Agent reminders and to send files and clipboard items between devices. Connections go direct when possible; the relay is end-to-end encrypted.",
           "features.local.title": "Stays on your computer",
           "features.local.body": "Clipboard history and resources are stored locally. Agents can’t read clipboard content until you turn that on in Settings.",
-          "defaults.summary": "Show every shortcut and default setting",
+          "defaults.summary": "Show the full shortcut table and default settings",
           "hero.eyebrow": "Free and open source, for macOS and Windows",
           "hero.title.clipboard": "Everything you copied, one search away.",
           "hero.title.resources": "Agent setup, written once.",
@@ -762,19 +996,19 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "usage.localTitle": "Store counts, not conversations.",
           "usage.localBody": "Only numeric totals are saved, on this computer, without any chat text. They are never sent with the anonymous install statistics. Token counts measure usage, not cost.",
           "plugins.title": "Plugins, when you want them.",
-          "plugins.body": "Find Jev and the macOS selection tools in Resource Manager → Plugins. Nothing is installed or turned on until you choose it.",
+          "plugins.body": "Jev, Screenshot, and the selection tools live in Resource Manager → Plugins. Nothing is installed until you choose it.",
           "plugins.jevTitle": "Ask Jev for a judgment or score.",
           "plugins.jevBody": "Install Jev and add your own API key. Your Agent can call it for judgments, choices, and scoring, with Jev token usage tracked separately.",
           "plugins.official": "Jev website and terms",
-          "plugins.selectionLabel": "macOS · Selection tools",
+          "plugins.selectionLabel": "macOS · Windows · Selection",
           "plugins.selectionTitle": "Translate the sentence you selected.",
-          "plugins.selectionBody": "Copy selected text, or translate and explain it with your configured model. Supports local models and OpenAI- or Anthropic-compatible proxies.",
+          "plugins.selectionBody": "Copy selected text, or have your configured model translate, explain, or polish it. Text goes to the model only when you click an action.",
           "features.library.title": "One library for every Agent",
           "features.library.body": "Add Prompts, Skills, and MCP servers once, then choose which projects or Agents get each one. You can also ask your Agent to add or change them for you.",
           "features.clipboard.title": "Find what you copied",
-          "features.clipboard.body": "Press ⌘⇧V (Ctrl+Shift+V on Windows), filter by links, images, files, or text, preview, then press Return to use it. Pin the things you reuse.",
-          "features.notify.title": "Hear when an Agent needs you",
-          "features.notify.body": "Finished, stuck, or waiting on a decision: events from connected Agents land in one list, with unread counts and the sound you pick. Each client’s own notifications keep working.",
+          "features.clipboard.body": "Press ⌘⇧V (Ctrl+Shift+V on Windows). Search your whole history, filter by type or source, and press Return to use an item. Pin what you reuse.",
+          "features.notify.title": "Know which reminder it is by ear",
+          "features.notify.body": "Finished, stuck, or waiting on a decision: give each kind its own sound and color, or set a one-time reminder for the next task. A “Last seen here” line separates new events from ones you’ve read.",
           "devices.title": "Check several computers from one phone.",
           "devices.body": "Scan each computer's QR code to pair it. You can see which computers are online and switch the active one. Files, clipboard items, and reminders stay grouped by their source computer.",
           "devices.illustrationAria": "Illustration of DingDong Connected Devices",
@@ -803,7 +1037,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "devices.phonePrivateBody": "The web app does not read it. Choose text or a file and tap Send to share it.",
           "devices.connectionTitle": "Keep the source computer connected",
           "devices.connectionBody": "Verified local connections have no file-size limit. Other routes keep the 25 MB limit. Follow progress on desktop or mobile, and pause or resume while both apps stay open.",
-          "devices.platformNote": "On the same local network, DingDong tries a direct WebRTC connection first. Otherwise it uses an end-to-end encrypted relay. Android can use the web app without installing it. On iPhone and iPad, add it to the Home Screen to enable push notifications. Tap the tabs or swipe between them on mobile; a notification opens Agent reminders. Your phone controls notification vibration.",
+          "devices.platformNote": "On the same local network, DingDong connects directly; otherwise it uses an end-to-end encrypted relay. Android works in the browser without installing. On iPhone and iPad, add it to the Home Screen to get push notifications. Tap the tabs or swipe between them on mobile; a notification opens Agent reminders.",
           "resources.title": "Manage a resource once, then choose where it applies.",
           "resources.body": "Set the project or Agent for each resource. Matching Prompts arrive at task start. Dynamic Skills show a description before the Agent loads them. MCP servers are added to supported clients.",
           "resources.prompt": "Rules and working preferences",
@@ -831,7 +1065,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "examples.mcpMessage": "“Use my GitHub tools to find why the latest main workflow failed.”",
           "examples.mcpResult": "The configured MCP is available, and its tools are called only when needed.",
           "chatFooter.title": "See which resources were available.",
-          "chatFooter.body": "Supported Agents end each reply with a DingDong line: the Prompts in effect, the Skills that matched, the MCP servers available, and the Token total when the session reports one. Claude Code can also show it in the status line, next to your existing HUD.",
+          "chatFooter.body": "Supported Agents end each reply with a DingDong line: the Prompts in effect, the Skills that matched, the MCP servers available, and the Token total when the session reports one. Claude Code shows the same line in its status line instead, and can keep the status line you already use.",
           "chatFooter.note": "A * after a Skill means its full instructions were loaded. A * after an MCP means one of its tools was called, even if the call failed. Prompts carry no marker. You can hide the Token total in Settings.",
           "chatFooter.sampleHint": "Try a message below to see a simulated reply and resource line.",
           "chatFooter.sampleInputLabel": "Demo Agent message",
@@ -844,8 +1078,8 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "chatFooter.sampleSkillResource": "♦ Release flow*",
           "chatFooter.sampleMcpResource": "♠ GitHub*",
           "chatFooter.sampleStatus": "Agent · connected",
-          "defaults.title": "Shortcuts you can change.",
-          "defaults.body": "These are the defaults. Record your own global or workspace shortcuts in Settings; they take effect immediately.",
+          "defaults.title": "Every shortcut, on one page.",
+          "defaults.body": "These are the defaults. Record your own global or workspace shortcuts in Settings → Keyboard shortcuts; they take effect immediately.",
           "defaults.shortcutsTitle": "Default keyboard shortcuts",
           "defaults.shortcutsBody": "Open Settings → Keyboard shortcuts to record a combination. Hold Control on macOS or Alt on Windows to select the first five visible clipboard groups with 1–5. Combinations already used by DingDong or reserved actions cannot be saved.",
           "defaults.settingsTitle": "Settings defaults",
@@ -885,14 +1119,14 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "settings.agentLimits": "Recent Agent limits",
           "settings.agentLimitsDefault": "500 details · 24-hour count",
           "settings.agentLimitsOptions": "1–5,000 details · 1–8,760 hours",
-          "settings.sound": "Completion sound",
-          "settings.soundOptions": "Built-in, custom, system, or muted",
+          "settings.sound": "Reminder sounds",
+          "settings.soundOptions": "Per reminder: built-in, custom WAV, system, or muted",
           "settings.footerSymbols": "Agent reply footer symbols",
           "settings.footerSymbolOptions": "Customize Prompt, Skill, and MCP separately",
           "settings.tokenUsage": "Conversation Token usage",
           "settings.tokenUsageOptions": "Exact totals for supported Codex, Claude Code, and Pi sessions; unsupported evidence is omitted",
-          "settings.alertColor": "Menu bar alert color (macOS)",
-          "settings.alertColorOptions": "Orange / Pink / Blue / Green / Purple",
+          "settings.alertColor": "Reminder colors",
+          "settings.alertColorOptions": "Per reminder: orange / pink / blue / green / purple / amber",
           "settings.apiPort": "Local Agent API port",
           "settings.apiPortOptions": "1024–65535 · restart required",
           "value.off": "Off",
@@ -904,8 +1138,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "value.classic": "DingDong Classic",
           "value.orange": "Orange",
           "sounds.title": "Choose the sound that brings you back.",
-          "sounds.body": "Connected Agents can send a reminder when they finish, get stuck, or need a decision. Pick a built-in sound or import an audio file.",
-          "sounds.note": "Listen to a few below before choosing.",
+          "sounds.body": "DingDong rings when an Agent finishes, gets stuck, or needs your decision. Give finishing and needs-you different sounds, and you’ll know which it is without looking.",
           "sounds.classic": "Classic",
           "sounds.classicBody": "Balanced and familiar",
           "sounds.soft": "Soft",
@@ -917,25 +1150,23 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "sounds.deep": "Deep",
           "sounds.deepBody": "Low and easy to notice",
           "sounds.listen": "Listen",
-          "sounds.customTitle": "Use a sound you recognize",
-          "sounds.customBody": "Choose a built-in sound or import your own in Settings. DingDong uses it for alerts from connected Agents.",
-          "sounds.ready": "Choose a sound to preview it",
+          "sounds.customTitle": "Or use your own sound",
+          "sounds.customBody": "Import a WAV clip of up to 15 seconds, or pick one from the community library.",
+          "sounds.ready": "",
           "sounds.playing": "Playing",
-          "sounds.finished": "Ready for another preview",
+          "sounds.finished": "",
           "sounds.error": "This sound could not be played",
           "mcp.title": "Connect DingDong to your Agent.",
-          "mcp.body": "The quickest way: copy the instruction below and paste it into your Agent. It adds DingDong as an MCP server and keeps your existing settings.",
-          "mcp.promptEyebrow": "Let AI handle the setup",
+          "mcp.body": "Pick whichever way fits your Agent.",
           "mcp.promptTitle": "Copy this instruction to your Agent",
-          "mcp.promptBody": "It uses the MCP path shown in your installed DingDong app, so it works wherever DingDong is installed.",
           "mcp.copyPrompt": "Copy setup instruction",
           "mcp.promptCopied": "Copied",
-          "mcp.promptReady": "Ready to paste into your Agent",
+          "mcp.promptReady": "",
           "mcp.promptSuccess": "Setup instruction copied. Paste it into your Agent.",
           "mcp.promptError": "Could not copy automatically. Select the prompt and copy it manually.",
           "mcp.agentPrompt": agentSetupPrompts.en,
           "mcp.installTitle": "Prefer manual setup?",
-          "mcp.installBody": "For a client that supports MCP, add the matching snippet to its settings. The examples below use the macOS installation path.",
+          "mcp.installBody": "Clients that support MCP can also use the snippet below (macOS install path shown).",
           "mcp.step1": "Install DingDong in /Applications.",
           "mcp.step2": "Point the Agent at DingDong's built-in MCP command.",
           "mcp.step3": "Manage the shared resources in DingDong.",
@@ -948,7 +1179,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "tools.asset": "Open one resource. Start with the description, then read the full text if needed.",
           "tools.skill": "Load the Skill the Agent has decided to use.",
           "tools.recommend": "Find an MCP configuration that fits the current task.",
-          "tools.notify": "Ring when the task is done, stuck, or waiting for you.",
+          "tools.notify": "Ring when the Agent is stuck or needs you, or play a named reminder. The completion alert comes from the hook.",
           "api.title": "You can use scripts too.",
           "api.body": "The local API can check status, search resources, read a clipboard overview, and open a DingDong page.",
           "download.macosArm64": "Mac with Apple silicon",
@@ -971,39 +1202,102 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "footer.releases": "Releases",
           "footer.metadata": "Metadata",
           "footer.feedback": "Feedback",
-          "resources.clientNote": "Pi and Grok Build currently support Skill syncing. MCP setup and completion hooks vary by client; check the options shown in DingDong.",
+          "resources.clientNote": "Pi, Grok Build, and Windsurf sync Skills only for now. MCP and completion alerts vary by client; DingDong shows what each one supports.",
         },
         zh: {
           "nav.docs": "文档",
           "resourceUpdates.title": "按任务选资源，改过的也能找回来",
           "resourceUpdates.aiTitle": "AI+ 帮 Agent 筛选当前需要的资源",
-          "resourceUpdates.aiBody": "自动资源筛选默认关闭，在“资源管理 → AI+”按需开启。模型根据任务和候选简介，缩小符合范围的 Prompt、Skill 和 MCP 目录；必需资源、明确点名且符合范围的资源会保留，失败时回退到本地匹配。",
+          "resourceUpdates.aiBody": "默认关闭，在“资源管理 → AI+”里打开。开启后，模型会根据任务，从符合条件的 Prompt、Skill、MCP 里挑出这次用得上的；必需的和你点名的不会被筛掉，模型连不上时改用本地匹配。",
           "resourceUpdates.aiGuide": "AI+ 配置与数据边界 →",
           "resourceUpdates.historyTitle": "比较版本，恢复完整 Skill 包",
           "resourceUpdates.historyBody": "打开 Skill 的“版本历史”，任意选择两个已存版本比较。手动保存和在线刷新会在内容变化时，本地保留文档和配套文件；恢复会生成新版本，保留当前作用域和启用状态。",
           "resourceUpdates.historyGuide": "Skill 版本历史使用说明 →",
           "resourceUpdates.bridgeTitle": "Agent 仍保留的内容，省去重复交付",
-          "resourceUpdates.bridgeBody": "Agent 仍持有完整快照时，可确认基线，只接收变化；Skill 加载也能复用已确认的版本。上下文丢失后，重新请求完整内容。",
+          "resourceUpdates.bridgeBody": "Agent 还记得上次的内容时，只会收到变化的部分；上下文丢了，再重新拿完整内容。",
           "resourceUpdates.bridgeGuide": "Bridge 接入说明 →",
-          "devices.history": "桌面设备管理将“在线设备”与“连接历史”分开显示。打开“传输历史”，查看跨重启保留在本机的最近 100 条已结束文件记录。历史记录不等于文件备份，也不代表重启后还能续传。",
+          "devices.history": "设备管理里，在线设备和连接历史分开放。传输历史保留最近 100 条记录，重启后还在，但它不是文件备份。",
           "devices.guide": "设备配对与传输说明 →",
-          "sounds.profiles": "在“设置 → 通知”中分别控制完成与需要处理提醒，也可添加命名提醒，单独选择声音、颜色、托盘样式和手机开关。Agent 通过 reminderId 选择提醒；保存条件不会自行启动监控。自定义音频支持不超过 15 秒、5 MiB 的 PCM WAV。",
+          "sounds.profiles": "在“设置 → 通知”里，完成和需要处理可以分开设置；也可以加自己的提醒，各配一个声音、颜色，并决定要不要推到手机。",
           "sounds.guide": "提醒设置与 Agent 工具说明 →",
           "nav.voices": "声音库",
-          "sounds.catalog": "打开社区声音库 →",
-          "footer.pet": "Codex 宠物项目（需访问权限）",
+          "sounds.catalog": "打开声音库 →",
+          "footer.pet": "DingDong Codex 宠物",
           "nav.product": "功能",
           "nav.devices": "多设备",
           "nav.resources": "资源库",
           "nav.mcp": "接入 Agent",
           "nav.download": "下载",
           "meta.title": "DingDong — 剪贴板和 Agent 的桌面小伙伴",
+          "features.setup.title": "你在用的 Agent，帮你接好",
+          "features.setup.body": "第一次打开时，DingDong 会找出这台电脑上的 Agent，引导你接入，也可以先跳过。之后更新或移除，都会先列出要改的配置，你确认了才动手。",
+          "download.earlyAccess": "想提前用新功能？在 DingDong 的“设置 → 版本”里打开“允许安装测试版（Beta）”。",
+          "story.resourcesBrief": "提示词、Skill、MCP 只维护一份，再选给哪个项目或 Agent 用。",
+          "story.usageBrief": "每个 Agent 每天用了多少 Token，热力图一眼看清；只存数字，不存聊天。",
+          "story.pluginsBrief": "Jev、截图和划词工具按需安装，选中文字就能翻译、解释、润色。",
+          "story.mcpBrief": "内置的 Agent 一键接入；不在列表里的，复制接入指令发给它，或者提个 issue 告诉我们。",
+          "story.closeHint": "点窗口左上角的红色按钮，看完整介绍。",
+          "sounds.libraryTitle": "社区声音库",
+          "sounds.libraryBody": "大家投稿的短音效：搞怪声音、经典游戏和影视台词、卡通拟音，每条不超过 3 秒。试听后点「安装」，就直接装进 DingDong。",
+          "sounds.librarySubmit": "投稿你的声音 ↗",
+          "mcp.pathAutoTitle": "一键接入",
+          "mcp.pathAutoBody": "DingDong 会找出这台电脑上的 Codex、Claude Code、Cursor、Gemini CLI 等内置 Agent，在“资源管理 → Agent 接入”里点一下就接好；写入前会先列出要改的配置。",
+          "mcp.pathPromptTitle": "不在列表里？复制接入指令",
+          "mcp.pathPromptBody": "把下面这段接入指令发给你的 Agent，它会自己把 DingDong 加成 MCP，原有配置不动。",
+          "mcp.pathIssueTitle": "想要内置支持",
+          "mcp.pathIssueBody": "告诉我们你在用哪个 Agent，我们会考虑把它加进一键接入。",
+          "mcp.pathIssueLink": "提个 issue →",
+          "story.devicesBrief": "扫一下电脑上的二维码，手机就配好了。文件、剪贴板和 Agent 提醒都按来源电脑分开。",
+          "settings.soundDefault": "DingDong 经典 · 需要处理：同完成提醒",
+          "settings.alertColorDefault": "完成：橙黄 · 需要处理：琥珀",
+          "settings.quietHours": "免打扰时段",
+          "settings.quietHoursOptions": "默认 22:00–08:00，可调整",
+          "settings.phoneAlerts": "推送到已配对手机",
+          "settings.phoneAlertsOptions": "完成和需要处理分开设置",
+          "settings.agentClipboard": "允许 Agent 读取剪贴板正文",
+          "settings.beta": "允许安装测试版（Beta）",
+          "settings.stats": "匿名安装与更新统计",
+          "settings.panelAgents": "快捷面板显示条数",
+          "plugins.screenshotLabel": "macOS · Windows · 截图",
+          "plugins.screenshotTitle": "用自己的快捷键打开系统截图",
+          "plugins.screenshotBody": "macOS 默认 ⌘⌥A，Windows 默认 Ctrl+Alt+A。DingDong 只负责打开系统截图工具，不读取截图内容。",
+          "tools.readSkillFile": "读取已加载 Skill 的一个配套文件。",
+          "tools.confirmMcp": "记录用过了返回的 MCP 工具（Claude Code 不需要）。",
+          "tools.triggerGroup": "按项目路径、仓库或来源新建或替换触发分组。",
+          "tools.skillDelivery": "设置 Skill 怎么交付给每个 Agent：动态、用户级或项目级。",
+          "tools.skillDeployments": "查看 Skill 的交付策略和实际安装位置。",
+          "tools.reconcileSkill": "重新把 Skill 同步到各 Agent，并返回结果。",
+          "tools.listReminders": "列出命名提醒和导入的声音。",
+          "tools.upsertReminder": "新建或修改命名提醒（自定义最多 32 个）。",
+          "tools.deleteReminder": "删除自定义提醒；内置提醒只能停用。",
+          "tools.importSound": "导入 15 秒、5 MiB 以内的 PCM WAV。",
+          "tools.reminderSounds": "保存完成提醒和需要处理提醒的声音。",
+          "tools.jev": "安装 Jev 后：状态、检查、选择和打分。",
+          "sheet.platform": "键盘布局",
+          "sheet.anywhere": "任何时候",
+          "sheet.open": "打开或隐藏 DingDong",
+          "sheet.tabs": "动态 / 资源库 / 剪贴板",
+          "sheet.esc": "先关预览，再隐藏面板",
+          "sheet.list": "在剪贴板列表里",
+          "sheet.upDown": "上下选择条目",
+          "sheet.leftRight": "左右切换分组",
+          "sheet.space": "预览选中的条目",
+          "sheet.enter": "使用选中的条目",
+          "sheet.number": "直接使用第 1–9 条",
+          "sheet.plain": "以纯文本使用第 1–9 条",
+          "sheet.group": "跳到第 1–5 个分组",
+          "sheet.searchGroup": "搜索和筛选",
+          "sheet.search": "聚焦搜索；按住 2 秒清空搜索",
+          "sheet.filters": "按一次展开筛选；再按一次清空筛选条件，没有条件时收起",
+          "sheet.hints": "按住看提示",
+          "sheet.holdNumbers": "可见条目旁显示 1–9",
+          "sheet.holdGroups": "显示标签页和分组编号",
           "features.title": "能帮你做的事",
           "features.devices.title": "手机上接着看",
           "features.devices.body": "配对手机后，可以收 Agent 提醒，也能在设备之间互传文件和剪贴板内容。能直连就直连，走中继时也是端到端加密。",
           "features.local.title": "数据留在本机",
           "features.local.body": "剪贴板记录和资源默认只存在本机。Agent 读取剪贴板内容默认关闭，要在设置里打开才行。",
-          "defaults.summary": "展开全部快捷键和默认设置",
+          "defaults.summary": "展开完整快捷键表和默认设置",
           "hero.eyebrow": "免费开源，支持 macOS 和 Windows",
           "hero.title.clipboard": "复制过的，一搜就有。",
           "hero.title.resources": "Agent 配置，只写一遍。",
@@ -1035,19 +1329,19 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "usage.localTitle": "存数字，不存聊天正文",
           "usage.localBody": "只在本机保存数字汇总，不含任何聊天内容，也不会随匿名安装统计上传。Token 衡量的是用量，不是花费。",
           "plugins.title": "插件按需安装",
-          "plugins.body": "在“资源管理 → 插件”里找到 Jev 和 macOS 划词。你不选，就不会安装或开启。",
+          "plugins.body": "Jev、截图和划词工具都在“资源管理 → 插件”里。你不点安装，就什么都不会装。",
           "plugins.jevTitle": "让 Jev 帮 Agent 做判断、打分",
           "plugins.jevBody": "按需安装 Jev，填入自己的 API Key。Agent 可以调用它做判断、选择和评分，Jev 的 Token 用量单独看。",
           "plugins.official": "Jev 官网与使用条款",
-          "plugins.selectionLabel": "macOS · 系统划词",
+          "plugins.selectionLabel": "macOS · Windows · 划词",
           "plugins.selectionTitle": "选中这句话，翻译一下",
-          "plugins.selectionBody": "选中文字就能复制，也可以交给你配置的模型翻译或解释。支持本地模型，以及 OpenAI、Anthropic 兼容的反向代理。",
+          "plugins.selectionBody": "选中文字后可以直接复制，也可以交给你配置的模型翻译、解释或润色。只有你点了按钮，文字才会发给模型。",
           "features.library.title": "一份资源，几个 Agent 共用",
           "features.library.body": "Prompt、Skill、MCP 添加一次，再选好给哪些项目或 Agent 用。也可以直接让 Agent 帮你添加和修改。",
           "features.clipboard.title": "找回复制过的内容",
-          "features.clipboard.body": "按 ⌘⇧V（Windows 是 Ctrl+Shift+V）打开，按链接、图片、文件、文字筛选，预览后回车就能用。常用的可以固定。",
-          "features.notify.title": "Agent 需要你时，DingDong 提醒你",
-          "features.notify.body": "做完了、卡住了、等你决定，接入的 Agent 事件都收进一个列表，带未读数和你选的提示音。客户端自己的通知照常工作。",
+          "features.clipboard.body": "按 ⌘⇧V（Windows 是 Ctrl+Shift+V）打开。全部历史都能直接搜，按类型或来源筛选，回车就用；常用的固定在上面。",
+          "features.notify.title": "听声音，就知道是哪件事",
+          "features.notify.body": "做完了、卡住了、等你拍板，每种提醒都能配自己的声音和颜色，也可以设一个只响下一次的临时提醒。列表里有一条“上次看到这里”，新旧一眼分开。",
           "devices.title": "一部手机，看几台电脑",
           "devices.body": "依次扫描电脑上的二维码就能配对。看看哪些电脑在线，再切换到需要的那一台。文件、剪贴板和 Agent 提醒都按来源电脑分开。",
           "devices.illustrationAria": "DingDong 连接设备界面示意",
@@ -1076,7 +1370,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "devices.phonePrivateBody": "网页不会读取手机剪贴板。只有你选好文字或文件，再点“发送”，内容才会传出去。",
           "devices.connectionTitle": "源电脑需要保持连接",
           "devices.connectionBody": "自动确认局域网后，文件大小不设产品上限；其他路径仍限 25 MB。电脑和手机都能查看进度、暂停和继续，续传时请保持应用打开。",
-          "devices.platformNote": "同一局域网内优先用 WebRTC 直连，连不上时改用端到端加密中继。Android 不安装也能直接使用网页；iPhone 和 iPad 要先添加到主屏幕，才能开启推送。手机上可以点标签或左右滑动切换页面，点击通知会直接进入 Agent 提醒。通知是否震动，由手机系统决定。",
+          "devices.platformNote": "同一局域网内优先直连，连不上时走端到端加密中继。Android 不安装也能直接使用网页；iPhone 和 iPad 要先添加到主屏幕，才能收到推送。手机上点标签或左右滑动都能切换页面，点击通知会直接进入 Agent 提醒。",
           "resources.title": "配好一份，再选给谁用",
           "resources.body": "给每条资源选好项目或 Agent。匹配的提示词在任务开始时生效；动态 Skill 先展示简介，需要时再读正文；MCP 写入支持它的客户端配置。",
           "resources.prompt": "规则、偏好和工作约束",
@@ -1104,7 +1398,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "examples.mcpMessage": "“用我配置好的 GitHub 工具，查一下 main 最近一次工作流为什么失败。”",
           "examples.mcpResult": "对应 MCP 已在客户端就绪，Agent 只在真正查询时调用工具。",
           "chatFooter.title": "看看这轮有哪些资源",
-          "chatFooter.body": "支持的 Agent 会在回复末尾附一行 DingDong：本轮生效的 Prompt、匹配到的 Skill、可用的 MCP，会话提供用量时再加上 Token 总数。Claude Code 还可以把它放进状态栏，和原来的 HUD 并排显示。",
+          "chatFooter.body": "支持的 Agent 会在回复末尾附一行 DingDong：本轮生效的 Prompt、匹配到的 Skill、可用的 MCP，会话提供用量时再加上 Token 总数。Claude Code 则把这一行放进状态栏，原来的状态栏也能保留。",
           "chatFooter.note": "Skill 带 * 表示已读入完整指令；MCP 带 * 表示调用过它的工具，即使那次调用失败也会标记。Prompt 不加标记。Token 总数可以在设置里关掉。",
           "chatFooter.sampleHint": "在下面输入一句话，试试看模拟回复和资源提示。",
           "chatFooter.sampleInputLabel": "演示 Agent 消息",
@@ -1117,8 +1411,8 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "chatFooter.sampleSkillResource": "♦ 发布流程*",
           "chatFooter.sampleMcpResource": "♠ GitHub*",
           "chatFooter.sampleStatus": "Agent · 已接入",
-          "defaults.title": "快捷键，换成自己顺手的",
-          "defaults.body": "下面列的是默认值。全局快捷键和工作区快捷键都能在设置里重新录入，改完就生效。",
+          "defaults.title": "所有快捷键，一页看完",
+          "defaults.body": "下面是默认值。全局快捷键和工作区快捷键都能在“设置 → 键盘快捷键”里重新录入，改完就生效。",
           "defaults.shortcutsTitle": "默认键盘快捷键",
           "defaults.shortcutsBody": "打开“设置 → 键盘快捷键”，按下想用的组合即可。macOS 按住 Control、Windows 按住 Alt，再按 1–5，可以选择当前可见的前五个剪贴板分组。与 DingDong 已有快捷键或保留操作冲突的组合不能保存。",
           "defaults.settingsTitle": "设置默认值",
@@ -1158,14 +1452,14 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "settings.agentLimits": "最近 Agent 上限",
           "settings.agentLimitsDefault": "500 条详情 · 24 小时计数",
           "settings.agentLimitsOptions": "1–5000 条 · 1–8760 小时",
-          "settings.sound": "完成提示音",
-          "settings.soundOptions": "内置、自定义、系统声音或静音",
+          "settings.sound": "提醒声音",
+          "settings.soundOptions": "每个提醒单独选：内置、自定义 WAV、系统声音或静音",
           "settings.footerSymbols": "Agent 回复尾部符号",
           "settings.footerSymbolOptions": "Prompt、Skill 和 MCP 可分别自定义",
           "settings.tokenUsage": "会话 Token 用量",
           "settings.tokenUsageOptions": "只显示 Codex、Claude Code、Pi 已支持会话的准确值；不支持时省略",
-          "settings.alertColor": "菜单栏提醒颜色（macOS）",
-          "settings.alertColorOptions": "橙黄 / 粉色 / 蓝色 / 绿色 / 紫色",
+          "settings.alertColor": "提醒颜色",
+          "settings.alertColorOptions": "每个提醒可选：橙黄 / 粉色 / 蓝色 / 绿色 / 紫色 / 琥珀",
           "settings.apiPort": "本地 Agent API 端口",
           "settings.apiPortOptions": "1024–65535 · 修改后需要重启",
           "value.off": "关闭",
@@ -1177,8 +1471,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "value.classic": "DingDong 经典",
           "value.orange": "橙黄",
           "sounds.title": "选择 DingDong 的提醒声",
-          "sounds.body": "接入的 Agent 做完了、卡住了，或者等你决定时，可以发来提醒。提示声用内置的，也可以导入自己的音频。",
-          "sounds.note": "下面几个声音，先听听再选。",
+          "sounds.body": "Agent 做完了、卡住了，或者在等你决定时，DingDong 会响一声。做完和等你处理用不同的声音，不用看屏幕也知道是哪件事。",
           "sounds.classic": "DingDong 经典",
           "sounds.classicBody": "均衡，适合作为默认声",
           "sounds.soft": "DingDong 轻柔",
@@ -1190,25 +1483,23 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "sounds.deep": "DingDong 低沉",
           "sounds.deepBody": "频率更低，辨识度高",
           "sounds.listen": "试听",
-          "sounds.customTitle": "也可以换成自己的声音",
-          "sounds.customBody": "在设置里挑一个内置声音，或导入音频文件。接入 Agent 的桌面提醒就用这一声。",
-          "sounds.ready": "点一个声音试听",
+          "sounds.customTitle": "也可以用你自己的声音",
+          "sounds.customBody": "导入 15 秒以内的 WAV 音频，或去社区声音库挑一个。",
+          "sounds.ready": "",
           "sounds.playing": "正在播放",
-          "sounds.finished": "可以继续试听",
+          "sounds.finished": "",
           "sounds.error": "这个声音暂时无法播放",
           "mcp.title": "把 DingDong 接到你的 Agent",
-          "mcp.body": "最省事的办法：复制下面这段话发给 Agent，它会把 DingDong 接成 MCP，并保留你原有的配置。",
-          "mcp.promptEyebrow": "交给 AI 配置",
+          "mcp.body": "三种方式，挑适合你的那一种。",
           "mcp.promptTitle": "复制这段话，发给 Agent",
-          "mcp.promptBody": "指令里用的是已安装的 DingDong 显示的 MCP 路径，装在哪里都能用。",
           "mcp.copyPrompt": "复制接入指令",
           "mcp.promptCopied": "已复制",
-          "mcp.promptReady": "复制后，粘贴到 Agent 对话里",
+          "mcp.promptReady": "",
           "mcp.promptSuccess": "接入指令已复制，粘贴给 Agent 就可以了。",
           "mcp.promptError": "自动复制失败，请选中提示词手动复制。",
           "mcp.agentPrompt": agentSetupPrompts.zh,
           "mcp.installTitle": "想手动配置？",
-          "mcp.installBody": "支持 MCP 的客户端，也可以把对应配置手动写进去。下面的示例使用 macOS 安装路径。",
+          "mcp.installBody": "支持 MCP 的客户端，也可以手动加入下面的配置（示例用的是 macOS 安装路径）。",
           "mcp.step1": "DingDong 放在 /Applications",
           "mcp.step2": "让 Agent 指向 DingDong 自带的 MCP 命令",
           "mcp.step3": "共用的资源回到 DingDong 里管理",
@@ -1221,7 +1512,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "tools.asset": "打开一条资源；先看简介，需要时再读正文",
           "tools.skill": "确定要用哪个 Skill 后再载入",
           "tools.recommend": "按手头的任务找合适的 MCP",
-          "tools.notify": "做完、卡住或等你时，DingDong 提醒你",
+          "tools.notify": "卡住或需要你时提醒，或触发指定的提醒；完成提醒由 Hook 发送。",
           "api.title": "想写脚本，也有本地 API",
           "api.body": "可以查状态、找资源、看剪贴板概览，或打开 DingDong 的某个页面。",
           "download.macosArm64": "Mac（Apple 芯片）",
@@ -1244,18 +1535,19 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "footer.releases": "版本",
           "footer.metadata": "元数据",
           "footer.feedback": "反馈",
-          "resources.clientNote": "Pi 和 Grok Build 目前支持 Skill 同步。MCP 接入、完成提醒等能力因客户端而异，以 DingDong 中显示的选项为准。",
+          "resources.clientNote": "Pi、Grok Build 和 Windsurf 目前只同步 Skill。MCP、完成提醒等能力各客户端不同，以 DingDong 里显示的为准。",
         }
       };
 
       const demoContent = {
         en: {
           today: {
-            metrics: [["3", "Resources"], ["708", "Clipboard"], ["Check", "Agent connections"]],
+            metrics: [["3", "Resource library"], ["708", "Clipboard history"], ["2333", "API | Agent connections"]],
+            window: "24 h",
             agents: [
-              { source: "Codex", time: "17:16", body: "Release checks passed. DingDong collected the Agent alert and played the selected sound." },
-              { source: "Claude Code", time: "16:42", body: "The online Skill was refreshed from its source." },
-              { source: "Cursor", time: "16:08", body: "Project trigger rules selected the matching resources." }
+              { source: "Codex", time: "5:38 PM", body: "Release checks passed; layout and local preview verified" },
+              { source: "Claude Code", time: "5:31 PM", body: "Needs your choice of merge method" },
+              { source: "Cursor", time: "4:58 PM", body: "Online Skill updated from its source" }
             ]
           },
           library: {
@@ -1295,11 +1587,12 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         },
         zh: {
           today: {
-            metrics: [["3", "资源"], ["708", "剪贴板"], ["待确认", "Agent 连接"]],
+            metrics: [["3", "资源"], ["708", "剪贴板"], ["2333", "API | Agent 连接"]],
+            window: "24 小时",
             agents: [
-              { source: "Codex", time: "17:16", body: "发布检查通过，DingDong 已收好 Agent 提醒并播放所选声音" },
-              { source: "Claude Code", time: "16:42", body: "在线 Skill 已从来源更新" },
-              { source: "Cursor", time: "16:08", body: "项目触发规则已选中匹配资源" }
+              { source: "Codex", time: "下午 5:38", body: "发布检查已通过，页面和本地预览都看过了" },
+              { source: "Claude Code", time: "下午 5:31", body: "需要你确认合并方式" },
+              { source: "Cursor", time: "下午 4:58", body: "在线 Skill 已从来源更新" }
             ]
           },
           library: {
@@ -1391,7 +1684,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         activeTab: "library",
         libraryFilter: "all",
         libraryGroup: "all",
-        clipboardFilter: true,
+        clipboardFilter: false,
         clipboardCategory: "all",
         resourceEnabled: { "reply-star": true, "user-taste": true, "dingdong-mcp": true },
         copies: [],
@@ -1578,7 +1871,10 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           metrics.append(metric);
         });
 
-        const heading = createDemoElement("h4", "demo-section-label", content.labels.recentAgents);
+        const heading = createDemoElement("div", "demo-agent-heading");
+        const windowChip = createDemoElement("span", "demo-agent-window");
+        windowChip.append(createDemoElement("span", "demo-agent-clock"), document.createTextNode(`${content.today.window} · ${content.today.agents.length}`));
+        heading.append(createDemoElement("h4", "demo-section-label", content.labels.recentAgents), windowChip);
         const agents = createDemoElement("div", "demo-agent-list");
         content.today.agents.forEach((agent) => {
           const row = createDemoElement("article", "demo-agent-row");
@@ -1595,31 +1891,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           agents.append(row);
         });
 
-        const enabledHeading = createDemoElement("h4", "demo-section-label", content.labels.enabled);
-        const enabledList = createDemoElement("div", "demo-enabled-list");
-        content.library.items
-          .filter((item) => demoState.resourceEnabled[item.id] !== false)
-          .forEach((item) => {
-            const row = createDemoElement("article", `demo-enabled-card type-${item.type}`);
-            const resourceCopy = createDemoElement("div", "demo-resource-copy");
-            resourceCopy.append(
-              createDemoElement("b", "", item.title),
-              createDemoElement("p", "", item.body)
-            );
-            const tags = createDemoElement("div", "demo-resource-tags");
-            item.tags.slice(0, 4).forEach((tag) => tags.append(createDemoElement("span", "", tag)));
-            resourceCopy.append(tags);
-            const enabledStatus = createDemoElement("span", "demo-enabled-status");
-            enabledStatus.append(createDemoStatusIcon(true));
-            row.append(
-              createDemoSymbol(item.type, "demo-resource-symbol"),
-              resourceCopy,
-              enabledStatus
-            );
-            enabledList.append(row);
-          });
-
-        section.append(metrics, heading, agents, enabledHeading, enabledList);
+        section.append(metrics, heading, agents);
         return section;
       };
 
@@ -1637,6 +1909,10 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           createDemoElement("span", "", content.labels.manage)
         );
         manage.addEventListener("click", () => {
+          if (storyMain.classList.contains("is-story")) {
+            reopenStoryWindow();
+            return;
+          }
           demoFeedback.textContent = demoState.language === "zh" ? "资源管理会在 Mac 应用中打开" : "Manage opens in the Mac app.";
         });
         header.append(context, manage);
@@ -2050,6 +2326,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         }
         localStorage.setItem("dingdong-site-language", lang);
         renderDemo();
+        if (storyScene) playStoryScene();
         renderDownloadRecommendation();
         renderDownloadStats();
       };
@@ -2078,8 +2355,33 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
       });
 
       demoCopyAction.addEventListener("click", copyDemoSample);
+      const shortcutSheet = document.getElementById("shortcut-sheet");
+      const setShortcutPlatform = (platform) => {
+        shortcutSheet.dataset.platform = platform;
+        shortcutSheet.querySelectorAll("[data-shortcut-platform]").forEach((button) => {
+          button.setAttribute("aria-pressed", String(button.dataset.shortcutPlatform === platform));
+        });
+      };
+      shortcutSheet.querySelectorAll("[data-shortcut-platform]").forEach((button) => {
+        button.addEventListener("click", () => setShortcutPlatform(button.dataset.shortcutPlatform));
+      });
+      setShortcutPlatform(detectedDownloadPlatform === "windows" ? "win" : "mac");
       terminalDemoForm.addEventListener("submit", submitTerminalDemo);
       agentPromptCopy.addEventListener("click", copyAgentSetupPrompt);
+      const storyBriefCopy = document.getElementById("story-brief-copy");
+      let storyBriefCopyTimer = null;
+      storyBriefCopy.addEventListener("click", async () => {
+        window.clearTimeout(storyBriefCopyTimer);
+        try {
+          await writeDemoClipboard(agentSetupPrompt.textContent);
+          storyBriefCopy.textContent = copy[demoState.language]["mcp.promptCopied"];
+        } catch {
+          storyBriefCopy.textContent = copy[demoState.language]["mcp.promptError"];
+        }
+        storyBriefCopyTimer = window.setTimeout(() => {
+          storyBriefCopy.textContent = copy[demoState.language]["mcp.copyPrompt"];
+        }, 2200);
+      });
       demoMascot.addEventListener("click", () => {
         demoMascot.classList.remove("is-shaking");
         void demoMascot.offsetWidth;
@@ -2092,9 +2394,674 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         card.addEventListener("click", () => playSoundPreview(card));
       });
 
+      // Scroll story: on wide, tall screens with motion allowed, the demo stays
+      // beside the text and acts out the section being read. Resource Manager
+      // opens as its own macOS-style window, drawn after the real app. The added
+      // layers are decorative (aria-hidden); the same information is in the copy.
+      const storyCopy = {
+        en: {
+          workspace: "WORKSPACE",
+          nav: {
+            resources: "Resources",
+            plugins: "Plugins",
+            clipboard: "Clipboard",
+            notifications: "Recent notifications",
+            tokens: "Token history",
+            ai: "AI+",
+            agents: "Agent access",
+            issues: "Issues"
+          },
+          stored: "Stored on this device",
+          newResource: "New resource",
+          search: "Search prompts, skills, and MCP",
+          filters: ["All", "Prompts", "Skills", "MCP"],
+          columns: ["Type", "Resource", "Scope", "Source", "Status"],
+          resources: [
+            ["prompt", "Project rules", "Review UI against the team rules", "DingDongBuddy", "Local"],
+            ["skill", "Release flow", "Run every check, then prepare a release", "Codex, Claude Code", "Online"],
+            ["skill", "UI hardening", "Keyboard, narrow screens, empty states", "All Agents", "Online"],
+            ["mcp", "GitHub", "STDIO · github-mcp", "DingDongBuddy", "Local"],
+            ["mcp", "Browser", "STDIO · browser-mcp", "Claude Code", "Built-in"]
+          ],
+          stats: [["Today", "284,350"], ["Range total", "7,192,324"], ["Days with usage", "220"]],
+          dailyActivity: "Daily activity",
+          weekdays: ["Mon", "", "Wed", "", "Fri", "", ""],
+          dayDetail: ["Fri, Oct 9", "Daily detail"],
+          daySources: [["Codex", "251,800"], ["Claude Code", "29,350"], ["Pi", "3,200"]],
+          unknown: "Unknown",
+          less: "Less",
+          more: "More",
+          plugins: [["Jev", "Judgments, choices, and scores"], ["Screenshot", "Open the system screenshot tool"], ["Selection", "Copy, translate, explain, polish"]],
+          install: "Install",
+          installed: "Installed",
+          selection: ["构建在", "所有平台上都通过了", "。"],
+          selectionActions: ["Copy", "Translate", "Explain", "Polish"],
+          selectionResult: "passed on every platform",
+          connecting: "Connecting…",
+          connected: "Connected",
+          agentsMissing: "Not on the list?",
+          agentsFallbacks: ["Copy setup instruction", "Open an issue"],
+          notifications: [
+            ["MacBook Pro", "Agent finished", "Codex fixed the login page."],
+            ["Studio PC", "Needs your decision", "Claude Code is waiting for a merge choice."]
+          ],
+          ring: ["Needs your decision", "Claude Code · just now"],
+          now: "now",
+          close: "Close Resource Manager",
+          devicesWindow: "DingDong · Connected Devices",
+          devicesClose: "Close Connected devices"
+        },
+        zh: {
+          workspace: "管理",
+          nav: {
+            resources: "资源",
+            plugins: "插件",
+            clipboard: "剪贴板",
+            notifications: "最近通知",
+            tokens: "Token 用量",
+            ai: "AI+",
+            agents: "Agent 接入",
+            issues: "问题"
+          },
+          stored: "数据保存在本机",
+          newResource: "新建资源",
+          search: "搜索提示词、Skills 和 MCP",
+          filters: ["全部", "提示词", "技能", "MCP"],
+          columns: ["类型", "资源", "作用域", "来源", "状态"],
+          resources: [
+            ["prompt", "项目规范", "按团队规范检查界面", "DingDongBuddy", "本地"],
+            ["skill", "发布流程", "跑完所有检查再准备发布", "Codex、Claude Code", "在线"],
+            ["skill", "界面加固", "键盘、窄屏和空状态", "全部 Agent", "在线"],
+            ["mcp", "GitHub", "STDIO · github-mcp", "DingDongBuddy", "本地"],
+            ["mcp", "Browser", "STDIO · browser-mcp", "Claude Code", "内置"]
+          ],
+          stats: [["今天", "284,350"], ["区间合计", "7,192,324"], ["有用量的天数", "220"]],
+          dailyActivity: "每日用量",
+          weekdays: ["周一", "", "周三", "", "周五", "", ""],
+          dayDetail: ["10 月 9 日 周五", "当日明细"],
+          daySources: [["Codex", "251,800"], ["Claude Code", "29,350"], ["Pi", "3,200"]],
+          unknown: "未知",
+          less: "少",
+          more: "多",
+          plugins: [["Jev", "判断、选择和打分"], ["截图", "用快捷键打开系统截图"], ["划词", "复制、翻译、解释、润色"]],
+          install: "安装",
+          installed: "已安装",
+          selection: ["The build ", "passed on every platform", "."],
+          selectionActions: ["复制", "翻译", "解释", "润色"],
+          selectionResult: "在所有平台上都通过了",
+          connecting: "接入中…",
+          connected: "已接入",
+          agentsMissing: "没找到你的 Agent？",
+          agentsFallbacks: ["复制接入指令", "提个 issue"],
+          notifications: [
+            ["MacBook Pro", "Agent 做完了", "Codex 修好了登录页。"],
+            ["工作室台式机", "等你决定", "Claude Code 在等你选合并方式。"]
+          ],
+          ring: ["等你决定", "Claude Code · 刚刚"],
+          now: "刚刚",
+          close: "关闭资源管理",
+          devicesWindow: "DingDong · 连接设备",
+          devicesClose: "关闭连接设备"
+        }
+      };
+      const storyKeys = detectedDownloadPlatform === "windows"
+        ? { open: ["Ctrl", "Shift", "V"], tabs: [["Alt", "Q"], ["Alt", "W"], ["Alt", "E"]] }
+        : { open: ["⌘", "⇧", "V"], tabs: [["⌃", "Q"], ["⌃", "W"], ["⌃", "E"]] };
+      const storyAgents = ["Codex", "Claude Code", "Cursor", "Gemini CLI", "GitHub Copilot CLI", "OpenCode"];
+      // Line icons for the window sidebar, in the order the real app lists them.
+      const storyNavIcons = {
+        resources: "M8 2.5 2.5 5.5 8 8.5l5.5-3zM2.5 8.5 8 11.5l5.5-3M2.5 11 8 14l5.5-3",
+        plugins: "M6 2.5h4v2.5h2.5v3.5H10V13H6v-2.5H3.5V7H6z",
+        clipboard: "M5.5 2.5h5v2h-5zM4.5 3.5h-1v10h9v-10h-1",
+        notifications: "M8 2.5 9.3 6.7 13.5 8 9.3 9.3 8 13.5 6.7 9.3 2.5 8 6.7 6.7z",
+        tokens: "M3 4h10v9H3zM3 7h10M6 2.5v3M10 2.5v3",
+        ai: "M6.5 3 7.6 6.4 11 7.5 7.6 8.6 6.5 12 5.4 8.6 2 7.5 5.4 6.4zM11.5 2.5v3M10 4h3",
+        agents: "M6.5 9.5 9.5 6.5M7 5l1-1a2.5 2.5 0 0 1 3.5 3.5l-1 1M9 11l-1 1A2.5 2.5 0 0 1 4.5 8.5l1-1",
+        issues: "M8 2.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11zM8 5.5v3M8 10.5v.5"
+      };
+      const storyMacScenes = ["devices", "resources", "token-history", "plugins", "mcp"];
+      const storyQuery = window.matchMedia(
+        "(min-width: 1240px) and (min-height: 760px) and (prefers-reduced-motion: no-preference)"
+      );
+      const storyMain = document.querySelector("main");
+      const storyHero = document.querySelector(".hero");
+      const productStage = document.querySelector(".product-stage");
+      const demoWindow = productStage.querySelector(".demo-window");
+      const storySections = ["product", "features", "devices", "resources", "token-history", "plugins", "defaults", "sounds", "mcp"]
+        .map((id) => document.getElementById(id));
+      const storyRail = createDemoElement("div", "story-rail");
+      const storyMac = createDemoElement("div", "story-mac");
+      const storyFloat = createDemoElement("div", "story-float");
+      const storyPointer = createDemoElement("span", "story-pointer");
+      storyPointer.innerHTML = '<svg viewBox="0 0 20 20"><path d="M4 2.5v13.2l3.4-3.1 2.3 5.1 2.4-1.1-2.3-5h4.6z"/></svg>';
+      [storyFloat, storyPointer].forEach((node) => node.setAttribute("aria-hidden", "true"));
+      // "brief": the window sections show a short intro beside Resource Manager.
+      // "detail": the visitor closed the window, so the full sections show.
+      let storyMode = "brief";
+      let storyFrame = 0;
+      let storyScene = null;
+      let storyTimers = [];
+      let storyPointerHide = null;
+
+      const storyLater = (delay, callback) => {
+        storyTimers.push(window.setTimeout(callback, delay));
+      };
+
+      const storyText = () => storyCopy[demoState.language];
+
+      const showStoryTab = (tab) => {
+        demoState.activeTab = tab;
+        renderDemo();
+      };
+
+      const createStoryIcon = (path) => {
+        const namespace = "http://www.w3.org/2000/svg";
+        const icon = document.createElementNS(namespace, "svg");
+        const line = document.createElementNS(namespace, "path");
+        icon.setAttribute("viewBox", "0 0 16 16");
+        line.setAttribute("d", path);
+        icon.append(line);
+        return icon;
+      };
+
+      const createStoryAvatar = (label) => createDemoElement("span", "story-avatar", label.slice(0, 1));
+
+      const createStoryPageHead = (title, action) => {
+        const head = createDemoElement("div", "story-page-head");
+        head.append(createDemoElement("strong", "", title));
+        if (action) head.append(createDemoElement("span", "story-mac-button", action));
+        return head;
+      };
+
+      const storyPages = {
+        resources: () => {
+          const text = storyText();
+          const search = createDemoElement("div", "story-mac-search");
+          search.append(createDemoSymbol("search", ""), createDemoElement("span", "", text.search));
+          const filters = createDemoElement("div", "story-mac-filters");
+          text.filters.forEach((label, index) => {
+            filters.append(createDemoElement("span", index === 0 ? "is-active" : "", label));
+          });
+          const table = createDemoElement("div", "story-mac-table");
+          const header = createDemoElement("div", "story-mac-thead");
+          text.columns.forEach((label) => header.append(createDemoElement("span", "", label)));
+          table.append(header);
+          text.resources.forEach(([type, title, summary, scope, source], index) => {
+            const row = createDemoElement("div", "story-mac-row");
+            row.style.setProperty("--i", index);
+            const kind = createDemoElement("span", `story-type is-${type}`);
+            kind.append(createDemoSymbol(type, ""), createDemoElement("span", "", type === "mcp" ? "MCP" : type[0].toUpperCase() + type.slice(1)));
+            const name = createDemoElement("div", "");
+            name.append(createDemoElement("b", "", title), createDemoElement("small", "", summary));
+            row.append(
+              kind,
+              name,
+              createDemoElement("span", "story-cell", scope),
+              createDemoElement("span", "story-cell", source),
+              createDemoElement("span", "story-switch")
+            );
+            table.append(row);
+          });
+          return [createStoryPageHead(text.nav.resources, text.newResource), search, filters, table];
+        },
+        tokens: () => {
+          const text = storyText();
+          const stats = createDemoElement("div", "story-stats");
+          text.stats.forEach(([label, value]) => {
+            const stat = createDemoElement("div", "");
+            stat.append(createDemoElement("span", "", label), createDemoElement("b", "", value));
+            stats.append(stat);
+          });
+          const card = createDemoElement("div", "story-card");
+          const weekdays = createDemoElement("div", "story-weekdays");
+          text.weekdays.forEach((label) => weekdays.append(createDemoElement("span", "", label)));
+          const heatmap = createDemoElement("div", "story-heatmap");
+          for (let index = 0; index < 182; index += 1) {
+            const column = Math.floor(index / 7);
+            const weekday = index % 7;
+            const noise = Math.abs(Math.sin(index * 12.9898) * 43758.5453) % 1;
+            const level = Math.min(4, Math.floor(noise * (weekday > 4 ? 2.4 : 5) + column / 13));
+            let className = `level-${level}`;
+            if (index >= 92 && index <= 94) className = "is-unknown";
+            if (index === 165) className = "level-4 is-selected";
+            if (index > 165) className = "is-future";
+            const cell = createDemoElement("span", className);
+            cell.style.setProperty("--col", column);
+            heatmap.append(cell);
+          }
+          const grid = createDemoElement("div", "story-heatwrap");
+          grid.append(weekdays, heatmap);
+          const legend = createDemoElement("div", "story-heatmap-legend");
+          legend.append(createDemoElement("i", "is-unknown"), createDemoElement("span", "", text.unknown));
+          legend.append(createDemoElement("span", "story-legend-gap", text.less));
+          [0, 1, 2, 3, 4].forEach((level) => legend.append(createDemoElement("i", `level-${level}`)));
+          legend.append(createDemoElement("span", "", text.more));
+          card.append(createDemoElement("strong", "story-card-title", text.dailyActivity), grid, legend);
+          const day = createDemoElement("div", "story-day");
+          const dayHead = createDemoElement("div", "story-day-head");
+          dayHead.append(createDemoElement("b", "", text.dayDetail[0]), createDemoElement("small", "", text.dayDetail[1]));
+          day.append(dayHead);
+          text.daySources.forEach(([label, value]) => {
+            const line = createDemoElement("div", "");
+            line.append(createDemoElement("span", "", label), createDemoElement("span", "", value));
+            day.append(line);
+          });
+          return [createStoryPageHead(text.nav.tokens), stats, card, day];
+        },
+        plugins: () => {
+          const text = storyText();
+          const list = createDemoElement("div", "story-mac-list");
+          text.plugins.forEach(([name, detail], index) => {
+            const row = createDemoElement("div", "story-row");
+            row.style.setProperty("--i", index);
+            const label = createDemoElement("div", "");
+            label.append(createDemoElement("b", "", name), createDemoElement("small", "", detail));
+            row.append(createStoryAvatar(name), label, createDemoElement("span", "story-install", text.install));
+            list.append(row);
+          });
+          return [createStoryPageHead(text.nav.plugins), list];
+        },
+        agents: () => {
+          const text = storyText();
+          const list = createDemoElement("div", "story-mac-list");
+          storyAgents.forEach((name, index) => {
+            const row = createDemoElement("div", "story-row");
+            row.style.setProperty("--i", index);
+            const status = createDemoElement("span", "story-status", text.connecting);
+            row.append(createStoryAvatar(name), createDemoElement("b", "", name), status);
+            list.append(row);
+          });
+          const missing = createDemoElement("div", "story-agents-missing");
+          missing.append(createDemoElement("span", "", text.agentsMissing));
+          text.agentsFallbacks.forEach((label) => missing.append(createDemoElement("b", "", label)));
+          return [createStoryPageHead(text.nav.agents), list, missing];
+        }
+      };
+
+      const storyMacIsOpen = () => storyMac.classList.contains("is-open")
+        && !storyMac.classList.contains("is-closing")
+        && !storyMac.classList.contains("is-devices");
+
+      const setStoryMacPage = (page) => {
+        storyMac.querySelectorAll("[data-story-page]").forEach((item) => {
+          item.classList.toggle("is-active", item.dataset.storyPage === page);
+        });
+        storyMac.querySelector(".story-mac-main").replaceChildren(...storyPages[page]());
+      };
+
+      const createStoryLights = (label) => {
+        const lights = createDemoElement("div", "story-mac-lights");
+        const close = createDemoElement("button", "story-mac-close");
+        close.type = "button";
+        close.setAttribute("aria-label", label);
+        close.title = label;
+        close.addEventListener("click", showStoryDetail);
+        lights.append(close, createDemoElement("i", ""), createDemoElement("i", ""));
+        return lights;
+      };
+
+      const showStoryWindow = (origin) => {
+        if (origin) {
+          const macBox = storyMac.getBoundingClientRect();
+          const originBox = origin.getBoundingClientRect();
+          const x = originBox.left + originBox.width / 2 - macBox.left;
+          const y = originBox.top + originBox.height / 2 - macBox.top;
+          storyMac.style.transformOrigin = `${x}px ${y}px`;
+        }
+        storyMac.classList.remove("is-closing");
+        storyMac.classList.add("is-open");
+        productStage.classList.add("is-window-open");
+        storyMain.classList.add("is-window-open");
+      };
+
+      // Connected devices, as the real window renders it (captured from the
+      // Flutter screen in its three pairing states).
+      const storyDeviceTarget = { left: 24 / 620, top: 161 / 610, width: 282 / 620, height: 34 / 610 };
+      const setStoryDevicesShot = (state) => {
+        storyMac.querySelectorAll(".story-devices-shot img").forEach((image) => {
+          image.classList.toggle("is-active", image.dataset.state === state);
+        });
+      };
+
+      const openStoryDevices = (origin) => {
+        const text = storyText();
+        const titlebar = createDemoElement("div", "story-mac-titlebar");
+        titlebar.append(createStoryLights(text.devicesClose), createDemoElement("span", "", text.devicesWindow));
+        const shot = createDemoElement("div", "story-devices-shot");
+        shot.setAttribute("aria-hidden", "true");
+        ["idle", "qr", "paired"].forEach((state) => {
+          const image = document.createElement("img");
+          image.src = `./assets/screens/devices-${state}-${demoState.language}.png`;
+          image.alt = "";
+          image.dataset.state = state;
+          shot.append(image);
+        });
+        const target = createDemoElement("span", "story-devices-target");
+        target.style.left = `${storyDeviceTarget.left * 100}%`;
+        target.style.top = `${storyDeviceTarget.top * 100}%`;
+        target.style.width = `${storyDeviceTarget.width * 100}%`;
+        target.style.height = `${storyDeviceTarget.height * 100}%`;
+        shot.append(target);
+        storyMac.classList.add("is-devices");
+        storyMac.replaceChildren(titlebar, shot);
+        setStoryDevicesShot("idle");
+        showStoryWindow(origin);
+      };
+
+      const openStoryMac = (page, origin) => {
+        const text = storyText();
+        const lights = createStoryLights(text.close);
+        const sidebar = createDemoElement("div", "story-mac-sidebar");
+        const sidebarItems = createDemoElement("div", "story-mac-sidebar-items");
+        sidebarItems.setAttribute("aria-hidden", "true");
+        sidebarItems.append(createDemoElement("strong", "story-mac-brand", "DingDong"), createDemoElement("span", "story-mac-label", text.workspace));
+        Object.entries(text.nav).forEach(([key, label]) => {
+          const item = createDemoElement("span", "story-mac-nav");
+          item.dataset.storyPage = key;
+          item.append(createStoryIcon(storyNavIcons[key]), createDemoElement("span", "", label));
+          if (storyPages[key]) item.addEventListener("click", () => setStoryMacPage(key));
+          sidebarItems.append(item);
+        });
+        sidebarItems.append(createDemoElement("span", "story-mac-foot", text.stored));
+        sidebar.append(lights, sidebarItems);
+        const main = createDemoElement("div", "story-mac-main");
+        main.setAttribute("aria-hidden", "true");
+        storyMac.classList.remove("is-devices");
+        storyMac.replaceChildren(sidebar, main);
+        setStoryMacPage(page);
+        showStoryWindow(origin);
+      };
+
+      const closeStoryMac = () => {
+        productStage.classList.remove("is-window-open");
+        storyMain.classList.remove("is-window-open");
+        if (!storyMac.classList.contains("is-open")) return;
+        storyMac.classList.add("is-closing");
+        storyLater(220, () => storyMac.classList.remove("is-open", "is-closing"));
+      };
+
+      const pointStoryAt = (target) => {
+        const stageBox = productStage.getBoundingClientRect();
+        const box = target.getBoundingClientRect();
+        const x = box.left - stageBox.left + Math.min(box.width * 0.55, 40);
+        const y = box.top - stageBox.top + box.height * 0.6;
+        storyPointer.style.transform = `translate(${x}px, ${y}px)`;
+      };
+
+      const clickStoryTarget = (target, onClick) => {
+        window.clearTimeout(storyPointerHide);
+        if (!storyPointer.classList.contains("is-visible")) {
+          const stageBox = productStage.getBoundingClientRect();
+          storyPointer.classList.add("is-instant");
+          storyPointer.style.transform = `translate(${stageBox.width - 36}px, ${stageBox.height - 150}px)`;
+          void storyPointer.offsetWidth;
+          storyPointer.classList.remove("is-instant");
+          storyPointer.classList.add("is-visible");
+        }
+        storyLater(80, () => pointStoryAt(target));
+        storyLater(600, () => {
+          storyPointer.classList.add("is-pressing");
+          target.classList.add("is-story-pressed");
+        });
+        storyLater(760, () => {
+          storyPointer.classList.remove("is-pressing");
+          target.classList.remove("is-story-pressed");
+          onClick();
+          storyPointerHide = window.setTimeout(() => storyPointer.classList.remove("is-visible"), 700);
+        });
+      };
+
+      // Opens Resource Manager if needed, then clicks the sidebar item for the page.
+      const goToStoryPage = (page, then) => {
+        let delay = 250;
+        if (!storyMacIsOpen()) {
+          showStoryTab("library");
+          openStoryMac("resources", demoPanel.querySelector(".demo-manage-button"));
+          delay = 700;
+        }
+        storyLater(delay, () => {
+          const item = storyMac.querySelector(`[data-story-page="${page}"]`);
+          clickStoryTarget(item, () => {
+            setStoryMacPage(page);
+            if (then) storyLater(300, then);
+          });
+        });
+      };
+
+      const showStoryKeys = (keys) => {
+        const toast = createDemoElement("div", "story-keys");
+        keys.forEach((key) => toast.append(createDemoElement("kbd", "", key)));
+        storyFloat.replaceChildren(toast);
+      };
+
+      const showStoryPhone = (besideWindow = false) => {
+        const text = storyText();
+        const phone = createDemoElement("div", `story-phone${besideWindow ? " is-beside-window" : ""}`);
+        text.notifications.forEach(([source, title, body], index) => {
+          const notice = createDemoElement("div", "story-notice");
+          notice.style.setProperty("--i", index);
+          const icon = document.createElement("img");
+          icon.src = "./assets/dingdong-pwa-192.png";
+          icon.alt = "";
+          const meta = createDemoElement("span", "story-notice-meta");
+          meta.append(createDemoElement("span", "", `DingDong · ${source}`), createDemoElement("time", "", text.now));
+          const noticeCopy = createDemoElement("div", "");
+          noticeCopy.append(meta, createDemoElement("b", "", title), createDemoElement("p", "", body));
+          notice.append(icon, noticeCopy);
+          phone.append(notice);
+        });
+        storyFloat.replaceChildren(phone);
+      };
+
+      const storyScenes = {
+        // A window section is on screen but the window can't open yet (wide
+        // text from a neighbouring section is still visible), or the visitor
+        // asked for the detailed sections.
+        approach: () => showStoryTab("library"),
+        detail: () => showStoryTab("library"),
+        product: () => showStoryTab("library"),
+        features: () => {
+          showStoryTab("clipboard");
+          storyLater(250, () => showStoryKeys(storyKeys.open));
+        },
+        devices: () => {
+          showStoryTab("today");
+          const link = productStage.querySelector(".demo-connections");
+          storyLater(250, () => clickStoryTarget(link, () => {
+            openStoryDevices(link);
+            // Show the pairing QR, the phone scans it, then the phone is online.
+            storyLater(650, () => clickStoryTarget(storyMac.querySelector(".story-devices-target"), () => {
+              setStoryDevicesShot("qr");
+              storyLater(1300, () => showStoryPhone(true));
+              storyLater(2300, () => setStoryDevicesShot("paired"));
+            }));
+          }));
+        },
+        resources: () => {
+          showStoryTab("library");
+          const manage = demoPanel.querySelector(".demo-manage-button");
+          storyLater(300, () => clickStoryTarget(manage, () => openStoryMac("resources", manage)));
+        },
+        "token-history": () => goToStoryPage("tokens"),
+        plugins: () => goToStoryPage("plugins", () => {
+          const install = storyMac.querySelectorAll(".story-install")[2];
+          clickStoryTarget(install, () => {
+            const text = storyText();
+            install.textContent = text.installed;
+            install.classList.add("is-done");
+            const selection = createDemoElement("div", "story-selection");
+            const sentence = createDemoElement("p", "");
+            sentence.append(
+              document.createTextNode(text.selection[0]),
+              createDemoElement("mark", "", text.selection[1]),
+              document.createTextNode(text.selection[2])
+            );
+            const actions = createDemoElement("div", "story-selection-actions");
+            text.selectionActions.forEach((label, index) => {
+              actions.append(createDemoElement("span", index === 1 ? "is-active" : "", label));
+            });
+            selection.append(sentence, actions, createDemoElement("p", "story-selection-result", text.selectionResult));
+            storyLater(400, () => storyMac.querySelector(".story-mac-main").append(selection));
+          });
+        }),
+        defaults: () => {
+          ["today", "library", "clipboard"].forEach((tab, index) => {
+            storyLater(index * 1500, () => {
+              showStoryTab(tab);
+              showStoryKeys(storyKeys.tabs[index]);
+            });
+          });
+        },
+        sounds: () => {
+          showStoryTab("today");
+          const [title, detail] = storyText().ring;
+          const toast = createDemoElement("div", "story-ring");
+          const ringCopy = createDemoElement("div", "");
+          ringCopy.append(createDemoElement("b", "", title), createDemoElement("small", "", detail));
+          toast.append(createDemoElement("i", ""), ringCopy);
+          const alert = productStage.querySelector(".menu-alert.is-orange");
+          const ring = () => {
+            alert.classList.remove("is-story-ringing");
+            demoMascot.classList.remove("is-shaking");
+            void alert.offsetWidth;
+            alert.classList.add("is-story-ringing");
+            demoMascot.classList.add("is-shaking");
+          };
+          storyLater(200, () => {
+            storyFloat.replaceChildren(toast);
+            ring();
+          });
+          storyLater(2600, ring);
+        },
+        mcp: () => goToStoryPage("agents", () => {
+          storyMac.querySelectorAll(".story-row").forEach((row, index) => {
+            storyLater(300 + index * 360, () => {
+              const status = row.querySelector(".story-status");
+              status.textContent = storyText().connected;
+              status.prepend(createDemoStatusIcon(true));
+              row.classList.add("is-connected");
+            });
+          });
+        })
+      };
+
+      const playStoryScene = () => {
+        storyTimers.forEach((timer) => window.clearTimeout(timer));
+        storyTimers = [];
+        window.clearTimeout(storyPointerHide);
+        storyFloat.replaceChildren();
+        storyPointer.classList.remove("is-visible", "is-pressing");
+        if (["devices", "resources"].includes(storyScene) || !storyMacScenes.includes(storyScene)) closeStoryMac();
+        storyScenes[storyScene]();
+      };
+
+      // Resource Manager opens only while window sections fill the screen, so it
+      // never covers the wide text of a neighbouring section.
+      const storyWindowFits = () => Array.from(storyMain.children).every((child) => {
+        if (child === storyRail) return true;
+        const box = child.getBoundingClientRect();
+        if (box.bottom <= 64 || box.top >= window.innerHeight) return true;
+        return storyMacScenes.includes(child.id);
+      });
+
+      const updateStoryScene = () => {
+        storyFrame = 0;
+        const band = window.innerHeight * 0.42;
+        const section = storySections.find((item) => {
+          const box = item.getBoundingClientRect();
+          return box.top <= band && box.bottom > band;
+        });
+        if (!section) return;
+        let scene = section.id;
+        if (storyMacScenes.includes(scene)) {
+          if (storyMode === "detail") scene = "detail";
+          else if (!storyWindowFits()) scene = "approach";
+        }
+        if (scene === storyScene) return;
+        storyScene = scene;
+        playStoryScene();
+      };
+
+      const queueStoryScene = () => {
+        if (!storyFrame) storyFrame = window.requestAnimationFrame(updateStoryScene);
+      };
+
+      const scrollToStorySection = (id) => {
+        const section = document.getElementById(id);
+        window.scrollTo({ top: section.getBoundingClientRect().top + window.scrollY - 64, behavior: "instant" });
+      };
+
+      // The red close button: show the full sections, starting where the visitor is.
+      function showStoryDetail() {
+        const current = storySections.find((item) => item.getBoundingClientRect().bottom > window.innerHeight * 0.42);
+        storyMode = "detail";
+        storyMain.classList.remove("is-brief");
+        closeStoryMac();
+        if (current) scrollToStorySection(current.id);
+        storyScene = null;
+        updateStoryScene();
+      }
+
+      // Clicking Resource Manager in the popover brings the window back.
+      const reopenStoryWindow = () => {
+        storyMode = "brief";
+        storyMain.classList.add("is-brief");
+        scrollToStorySection("resources");
+        storyTimers.forEach((timer) => window.clearTimeout(timer));
+        storyTimers = [];
+        storyScene = "resources";
+        showStoryTab("library");
+        openStoryMac("resources", demoPanel.querySelector(".demo-manage-button"));
+      };
+
+      const enableStory = () => {
+        document.documentElement.classList.add("is-story-page");
+        storyMain.classList.add("is-story");
+        storyMain.classList.toggle("is-brief", storyMode === "brief");
+        storySections.forEach((section, index) => {
+          section.style.gridRow = String(index + 1);
+        });
+        storyRail.style.gridRow = `1 / span ${storySections.length}`;
+        storyRail.append(productStage);
+        storyHero.after(storyRail);
+        productStage.append(storyMac, storyFloat, storyPointer);
+        demoPanel.setAttribute("aria-live", "off");
+        window.addEventListener("scroll", queueStoryScene, { passive: true });
+        window.addEventListener("resize", queueStoryScene);
+        updateStoryScene();
+      };
+
+      const disableStory = () => {
+        window.removeEventListener("scroll", queueStoryScene);
+        window.removeEventListener("resize", queueStoryScene);
+        window.cancelAnimationFrame(storyFrame);
+        storyFrame = 0;
+        document.documentElement.classList.remove("is-story-page");
+        storySections.forEach((section) => section.style.removeProperty("grid-row"));
+        storyMain.classList.remove("is-brief", "is-window-open");
+        storyTimers.forEach((timer) => window.clearTimeout(timer));
+        storyTimers = [];
+        storyScene = null;
+        storyMac.className = "story-mac";
+        storyMac.replaceChildren();
+        storyFloat.replaceChildren();
+        [storyMac, storyFloat, storyPointer].forEach((node) => node.remove());
+        productStage.classList.remove("is-window-open");
+        storyHero.append(productStage);
+        storyRail.remove();
+        storyMain.classList.remove("is-story");
+        demoPanel.setAttribute("aria-live", "polite");
+        showStoryTab("library");
+      };
+
       const preferredLanguage = localStorage.getItem("dingdong-site-language") ||
         (navigator.language && navigator.language.toLowerCase().startsWith("zh") ? "zh" : "en");
       applyLanguage(preferredLanguage);
+      if (storyQuery.matches) enableStory();
+      storyQuery.addEventListener("change", () => {
+        if (storyQuery.matches) enableStory();
+        else disableStory();
+      });
       detectRecommendedDownload();
       if (showDownloadStats) {
         downloadStats.hidden = false;

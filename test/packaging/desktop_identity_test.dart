@@ -562,10 +562,14 @@ void main() {
     expect(website, contains('点击通知会直接进入 Agent 提醒'));
     expect(websiteStyles, contains('.device-showcase'));
     expect(websiteStyles, contains('.device-guardrails'));
-    expect(website, contains('快捷键，换成自己顺手的'));
+    expect(website, contains('所有快捷键，一页看完'));
     expect(website, contains('选择 DingDong 的提醒声'));
-    expect(website, contains('下面几个声音，先听听再选。'));
-    expect(website, contains('demo-enabled-card'));
+    // The sound cards already say Listen; the extra hint was removed.
+    expect(website, isNot(contains('下面几个声音，先听听再选。')));
+    // Like the app, the demo's Dynamic tab shows only metrics and recent
+    // Agent activity, without an enabled-resources list.
+    expect(website, isNot(contains('demo-enabled-card')));
+    expect(website, contains('demo-agent-window'));
     expect(website, contains('"Scoped"'));
     expect(website, contains('"有触发范围"'));
     expect(website, contains('./assets/symbols/library.png'));
@@ -577,7 +581,8 @@ void main() {
     expect(website, contains('{ id: "links", label: "Links" }'));
     expect(website, contains('{ id: "images", label: "Images" }'));
     expect(website, contains('{ id: "files", label: "Files" }'));
-    expect(website, contains('clipboardFilter: true'));
+    // The filters start collapsed, as in the app's Clipboard tab.
+    expect(website, contains('clipboardFilter: false'));
     expect(website, contains('./assets/dingdong-alert-icon-2.png'));
     expect(website, contains('./assets/dingdong-sleeping-icon-2.png'));
     expect(website, contains('./assets/dingdong-thinking-icon.png'));
@@ -899,7 +904,7 @@ void main() {
       pagesWorkflow,
       matches(
         RegExp(
-          r'sparse-checkout:\s*\|\s+/docs/index\.html\s+/docs/voices/\s+/docs/product/\s+/\.github/scripts/',
+          r'sparse-checkout:\s*\|\s+/docs/index\.html\s+/docs/styles\.css\s+/docs/voices/\s+/docs/product/\s+/\.github/scripts/',
         ),
       ),
     );

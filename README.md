@@ -9,8 +9,7 @@
 <h1 align="center">DingDong</h1>
 
 <p align="center">
-  <a href="https://github.com/JevonsCode/DingDongCodexPet">DingDong Codex Pet · mascot project</a><br>
-  <sub>The pet repository is currently private; repository access is required.</sub>
+  <a href="https://github.com/JevonsCode/DingDongCodexPet">DingDong Codex Pet · mascot project</a>
 </p>
 
 
@@ -23,6 +22,23 @@ Agents. Classify, search, preview, and reuse copied text, images, and files;
 maintain Prompts, Skills, and MCP connections in one place; and review events
 from connected Agents with the notification sound you choose. Selected content
 and important reminders can also reach a trusted phone through the mobile PWA.
+
+## Design principles
+
+- **Quiet until needed.** DingDong lives in the menu bar or tray, opens with a
+  shortcut, and rings only when an Agent finishes, gets stuck, or needs you.
+- **Local first.** Clipboard history, resources, and Token counts stay on this
+  computer. Agents can't read clipboard content until you allow it, and the
+  relay stores nothing.
+- **Show before writing.** Connecting, updating, or removing an Agent lists the
+  exact configuration changes first. Unrelated settings are left alone, and
+  plugins install only when you choose them.
+- **Keep it once, deliver it when needed.** Each Prompt, Skill, and MCP server
+  is kept once. Prompts arrive at task start, Skills load when they match, and
+  MCP tools run only when called.
+- **Honest numbers.** Unknown stays unknown, partial totals are marked `≥`, and
+  a `*` records that something was used, not that it succeeded.
+- **Keyboard first.** Every view, list, and filter works from the keyboard.
 
 **DingDong 1.11.0 (build 83)** detects local Agents for guided setup and cleanup,
 remembers opened notifications, and adds a wider Settings directory.
@@ -121,7 +137,7 @@ exact data boundaries.
 
 ## System screenshots and Windows selection tools
 
-The current development version maps a configurable shortcut to the system
+DingDong maps a configurable shortcut to the system
 screenshot tool under **Resource Manager → Plugins → Screenshot**. The default is
 **Ctrl+Alt+A** on Windows, mapped to **Win+Shift+S**, and **⌘⌥A** on macOS, opening
 Screenshot. You can record or reset the shortcut, enable it, or capture immediately.
@@ -139,31 +155,14 @@ reminder and reduced-motion settings remain respected.
 See the [screenshot and selection guide](docs/product/screenshot-plugin.md) for setup,
 privacy boundaries and remaining cross-application acceptance coverage.
 
-## Optional system selection tools on macOS
+## System selection tools on macOS
 
-DingDong 1.5.4 includes the native selection plugin developed in Fuli.
-Open **Resource Manager → Plugins → System selection tools**, enable it, and grant DingDong
-Accessibility permission if needed. Select text in an application that exposes
-its selection to macOS, then choose **Copy / Translate / Explain**; `⌥⌘C`
-copies without the floating toolbar.
-
-Copy stays local. Translation and explanation need a model service you configure
-under the same settings section. Local providers require a running loopback
-service and an installed model; cloud providers require your own API token,
-stored in macOS Keychain. Preset model names are editable defaults, not installed
-models or a promise of free service. No text is sent until you choose Translate
-or Explain. Turning the plugin off removes its observers and cancels model work.
-
-This is an optional native feature hosted by DingDong, not a second background
-app or an arbitrary JavaScript plugin loader. The Fuli example's Skill package
-helps Agents work on the plugin; loading that Skill does not enable system text
-selection. Do not run the standalone DingDong Selection helper at the same time,
-as both would listen for the same selections and shortcut.
-
-See [the plugin guide](docs/product/system-selection-plugin.md) for setup,
-troubleshooting, and the distinction between the example and the native host.
-Install version 1.5.4 or later to see this setting; older installed versions do
-not gain the feature until the application is updated.
+Open **Resource Manager → Plugins → System selection tools**, enable it, and
+grant Accessibility permission if asked. Select text in an app that exposes its
+selection to macOS, then choose **Copy / Translate / Explain**; `⌥⌘C` copies
+without the toolbar. Copying stays local. Translation and explanation use the
+model you configure (cloud tokens are stored in Keychain), and nothing is sent
+until you choose an action. See [the plugin guide](docs/product/system-selection-plugin.md).
 
 ## Unified Prompt, Skill, and MCP management
 
@@ -176,7 +175,7 @@ flowchart LR
   S["Skill<br/>workflow and package files"] --> D
   M["MCP<br/>tools and external systems"] --> D
   D --> B["Scope check<br/>global · project · Agent"]
-  B --> A["Codex · Claude Code · Cursor<br/>Gemini CLI · Kiro"]
+  B --> A["Codex · Claude Code · Cursor · Gemini CLI<br/>GitHub Copilot CLI · OpenCode · Kiro · …"]
   A --> R["Prompt: apply automatically<br/>Skill: discover then load<br/>MCP: call when needed"]
 ```
 
@@ -381,6 +380,11 @@ The global panel shortcut and all workspace shortcuts are configurable in
 | Use selected item | `Return` | `Enter` |
 | Close preview, then hide panel | `Esc` | `Esc` |
 
+In the clipboard, hold `⌘F` / `Ctrl+F` for two seconds to clear the search.
+`⌘R` / `Ctrl+R` opens the filters; press again to clear active filters, or to
+close them when none are set. Hold `⌘` / `Ctrl` to number the visible items,
+or `⌃` / `Alt` to number the tabs and groups.
+
 | Setting | Default | Options or limits |
 | --- | --- | --- |
 | Theme | Light | System / Light / Dark |
@@ -388,7 +392,7 @@ The global panel shortcut and all workspace shortcuts are configurable in
 | Default workspace | Dynamic | Dynamic / Library / Clipboard |
 | Clipboard monitoring | Off | On / off |
 | Clipboard retention | 5,000 items, 120 days | 20–5,000 items; 1–730 days |
-| Completion sound | DingDong Classic | Built-in, custom, system, or muted |
+| Reminder sounds and colors | DingDong Classic; orange for completion, amber for needs input | Per reminder: built-in, custom WAV, system, or muted; six colors |
 | Language | Follow system | English / Simplified Chinese / Spanish |
 | Agent reply footer symbols | ♥ / ♦ / ♠ | Customize Prompt, Skill, and MCP separately |
 | Conversation Token usage | On | Exact totals for supported Codex, Claude Code, and Pi sessions; unsupported evidence is omitted, never estimated |
