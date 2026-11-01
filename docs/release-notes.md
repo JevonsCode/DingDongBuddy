@@ -1,3 +1,23 @@
+# DingDong 1.11.1
+
+- Shows Library resources as separate cards, tinted by type, instead of one divided list.
+- Animates the Windows tray reminder popup and shows it only when there are two or more reminder groups.
+- Keeps device-link messages flowing when a phone leaves a stale relay connection behind.
+- Shares the device-link wire format with the upcoming Android companion app.
+- Refreshes the website with a scroll-through product tour, the real Connected devices screens, a full shortcut sheet, and current settings, tools, and Agent lists.
+
+---
+
+# DingDong 1.11.1
+
+- 资源库改为按类型着色的独立卡片，不再是一整块分隔列表。
+- Windows 托盘提醒浮层加入动画，且只在有两组及以上提醒时显示。
+- 手机留下旧的中继连接时，设备连接消息仍能正常送达。
+- 设备连接的通信格式与即将推出的 Android 伴侣应用共用。
+- 官网更新：滚动演示产品流程，使用真实的连接设备界面，新增完整快捷键一览，并更新设置、工具和 Agent 列表。
+
+---
+
 # DingDong 1.11.0
 
 - Detects local Agents and guides DingDong setup, updates, and per-Agent cleanup with a preview of the affected configuration.
