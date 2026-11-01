@@ -1,4 +1,4 @@
-# DingDong 1.11.1 Manual Regression Checklist
+# DingDong 1.11.2 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -13,7 +13,7 @@ encrypted local relay and direct data-channel routes. Content, clipboard and set
 stores use explicit test fixtures; this does not claim that user API credentials,
 third-party Agent accounts or remote model availability have been verified.
 
-## Library cards and Windows tray popup (1.11.1)
+## Library cards and Windows tray popup (1.11.2)
 
 - Open the quick panel Library with Prompts, Skills, and MCP servers. Each
   resource is its own rounded card tinted by type, with 8px between cards, in
@@ -72,8 +72,9 @@ third-party Agent accounts or remote model availability have been verified.
   On macOS, open a voice in DingDong and confirm that installing requires confirmation.
 - In Settings, filter community voices by installation status and look one up by its
   Issue link. Check that installing adds a sound without changing an active reminder.
-- Check that unread Agent cards use their reminder color on the border; after reading,
-  the border is neutral while the reminder icon retains its color.
+- Check that Agent cards newer than this visit's “Last seen here” boundary keep
+  their reminder-colored border throughout the visit, even after reading. Historical
+  cards use gray borders while the reminder icon retains its color.
 - Check that Claude Desktop and Claude Code activity identify the corresponding client.
 
 ## Temporary reminders and recent Agents (1.10.2)
@@ -940,3 +941,9 @@ third-party Agent accounts or remote model availability have been verified.
   both colors/styles; a later completion must not replace an unread attention
   marker. Acknowledge, restart and verify count/type restoration. Check reduced
   animation settings. Perform these checks separately on macOS and Windows.
+
+### Notification border visit boundary
+
+- Open a panel with both historical and new notifications. Only rows above “Last seen here” have colored borders; historical rows have gray borders.
+- Wait at least five seconds and open a conversation. New borders remain colored for the current visit, and the conversation-open icon changes independently.
+- Hide the panel, receive a new notification, and reopen it. Earlier rows become gray, the latest row is colored, and the divider separates them. Temporary reminders retain dashed outlines.

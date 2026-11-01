@@ -27,7 +27,8 @@ class RecentAgentFeed extends StatefulWidget {
     super.key,
   });
   final ActivityController controller;
-  final Widget Function(BuildContext, AgentActivity) rowBuilder;
+  final Widget Function(BuildContext, AgentActivity, bool isNewThisVisit)
+  rowBuilder;
   final Widget? header, empty;
   final bool compact;
   final int pageSize;
@@ -234,7 +235,12 @@ class _RecentAgentFeedState extends State<RecentAgentFeed> {
                       children: [
                         if (boundaryIndex > 0 && index == boundaryIndex)
                           const _LastSeenDivider(),
-                        widget.rowBuilder(context, activity),
+                        widget.rowBuilder(
+                          context,
+                          activity,
+                          _visitBoundary == null ||
+                              activity.sequence > _visitBoundary!,
+                        ),
                       ],
                     ),
                   );

@@ -180,7 +180,7 @@ void main() {
               child: RecentAgentFeed(
                 controller: c,
                 compact: true,
-                rowBuilder: (_, activity) =>
+                rowBuilder: (_, activity, _) =>
                     SizedBox(height: 65, child: Text(activity.message)),
               ),
             ),
@@ -229,7 +229,7 @@ Widget _view(
           compact: true,
           visible: visible,
           pageSize: pageSize,
-          rowBuilder: (_, activity) =>
+          rowBuilder: (_, activity, _) =>
               SizedBox(height: 34, child: Text(activity.message)),
         ),
       ),
