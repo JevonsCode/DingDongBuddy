@@ -86,7 +86,7 @@ class AgentActivityManagerScreen extends StatelessWidget {
                   controller: controller,
                   visible: visible,
                   onViewed: onActivityViewed,
-                  rowBuilder: (context, activity) => _ActivityHistoryRow(
+                  rowBuilder: (context, activity, _) => _ActivityHistoryRow(
                     activity: activity,
                     conversationLauncher: conversationLauncher,
                     showConversationTokenUsage: showConversationTokenUsage,

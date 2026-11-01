@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/app/dingdong_app.dart';
+import 'package:dingdong/core/theme/popup_style.dart';
+import 'package:dingdong/core/widgets/reminder_card_border.dart';
 import 'package:dingdong/features/activity/data/agent_activity_store.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
@@ -23,6 +25,81 @@ const _reminder = ReminderProfile(
 );
 
 void main() {
+  testWidgets(
+    'only notifications above the visit divider keep colored borders',
+    (tester) async {
+      var id = 0;
+      final c = ActivityController(idGenerator: () => 'visit-${++id}')..load();
+      final launcher = _Launcher();
+      final visible = ValueNotifier(true);
+      addTearDown(c.dispose);
+      addTearDown(launcher.dispose);
+      addTearDown(visible.dispose);
+      final old = c
+          .record(source: 'History', message: 'Earlier', reminder: _reminder)
+          .activity;
+      c.markFeedViewed(c.latestSequence);
+      final fresh = c
+          .record(
+            source: 'Codex',
+            message: 'This visit',
+            conversationTarget: _target,
+            reminder: _reminder,
+          )
+          .activity;
+      await tester.pumpWidget(
+        DingDongApp(
+          activityController: c,
+          agentConversationLauncher: launcher,
+          windowVisible: visible,
+        ),
+      );
+      await tester.pumpAndSettle();
+      Color outline(AgentActivity a) =>
+          ((tester
+                              .widget<Container>(
+                                find.byKey(Key('activity-${a.id}')),
+                              )
+                              .decoration!
+                          as ShapeDecoration)
+                      .shape
+                  as ReminderCardBorder)
+              .side
+              .color;
+      final gray = PopupStyle.of(
+        tester.element(find.byKey(Key('activity-${old.id}'))),
+      ).border;
+      final pink = Color(0xff000000 | _reminder.color.rgbValue);
+      expect(outline(old), gray);
+      expect(outline(fresh), pink);
+      expect(
+        find.byKey(const Key('activity-last-seen-divider')),
+        findsOneWidget,
+      );
+      c.markAllSeen();
+      c.markOpened(fresh);
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 5));
+      expect(outline(old), gray);
+      expect(outline(fresh), pink);
+      visible.value = false;
+      await tester.pumpAndSettle();
+      final newest = c
+          .record(source: 'Other', message: 'Next visit', reminder: _reminder)
+          .activity;
+      visible.value = true;
+      await tester.pumpAndSettle();
+      expect(outline(fresh), gray);
+      expect(outline(newest), pink);
+      expect(
+        find.byKey(const Key('activity-last-seen-divider')),
+        findsOneWidget,
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+      c.clear();
+    },
+  );
+
   testWidgets(
     'manager forwards acknowledgements to the host without losing newer notifications',
     (tester) async {
@@ -98,9 +175,23 @@ void main() {
       c.markAllSeen();
       await tester.pumpAndSettle();
       expect(c.activities.single.opened, isFalse);
+      if (!manager) {
+        // The reveal/seen transition must not leave only a momentary outline.
+        await tester.pump(const Duration(seconds: 5));
+        final card = tester.widget<Container>(_row(false));
+        final border =
+            (card.decoration! as ShapeDecoration).shape as ReminderCardBorder;
+        expect(border.side.color, Color(0xff000000 | _reminder.color.rgbValue));
+      }
       await tester.tap(_row(manager));
       await tester.pumpAndSettle();
       expect(c.activities.single.opened, isTrue);
+      if (!manager) {
+        final card = tester.widget<Container>(_row(false));
+        final border =
+            (card.decoration! as ShapeDecoration).shape as ReminderCardBorder;
+        expect(border.side.color, Color(0xff000000 | _reminder.color.rgbValue));
+      }
       expect(
         tester.widget<Icon>(icon).color,
         Color(0xff000000 | _reminder.color.rgbValue),

@@ -31,8 +31,7 @@ DingDong 是一个免费开源的桌面小伙伴，帮你整理内容、用好�
 - **数字老实。** 读不到就是未知，不完整的标 `≥`；`*` 只表示用过，不表示成功。
 - **键盘优先。** 每个页面、列表和筛选都能用键盘完成。
 
-**DingDong 1.11.1（构建 84）** 资源库改为独立卡片，Windows 托盘提醒浮层加入动画，
-并修复手机留下旧连接时设备消息可能送不到的问题。
+**DingDong 1.11.2（构建 85）** 修复通知边框：本次新增保持彩色，历史通知保持灰色。
 
 配置方式和数据边界见 [AI+ 使用说明](docs/product/ai-companion.md)，完整入口见[使用文档](docs/product/README.md)。
 
@@ -252,11 +251,11 @@ Android Chrome 链路已经完成包括后台通知在内的端到端实测。iP
 [INSTALL_WITH_AGENT.md](INSTALL_WITH_AGENT.md)。它安装官方 Release，不会克隆
 或编译仓库。
 
-已发布的稳定安装包 · 1.11.1：
+已发布的稳定安装包 · 1.11.2：
 
-- [macOS · Apple 芯片 · 1.11.1](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.1/DingDong-1.11.1-macos-arm64.dmg)
-- [macOS · Intel · 1.11.1](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.1/DingDong-1.11.1-macos-x64.dmg)
-- [Windows x64 · 1.11.1](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.1/DingDong-1.11.1-windows-x64-Setup.exe)
+- [macOS · Apple 芯片 · 1.11.2](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.2/DingDong-1.11.2-macos-arm64.dmg)
+- [macOS · Intel · 1.11.2](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.2/DingDong-1.11.2-macos-x64.dmg)
+- [Windows x64 · 1.11.2](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.2/DingDong-1.11.2-windows-x64-Setup.exe)
 
 macOS 需要 13 或更高版本。快速粘贴需要辅助功能权限；普通剪贴板历史不需要
 “完全磁盘访问”或“屏幕录制”权限。

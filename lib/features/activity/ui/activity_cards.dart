@@ -88,6 +88,7 @@ class _RecentAgentMoreButton extends StatelessWidget {
 class _AgentActivityCard extends StatefulWidget {
   const _AgentActivityCard({
     required this.activity,
+    required this.isNewThisVisit,
     required this.now,
     required this.animate,
     required this.isSubagent,
@@ -97,6 +98,7 @@ class _AgentActivityCard extends StatefulWidget {
   });
 
   final AgentActivity activity;
+  final bool isNewThisVisit;
   final DateTime now;
   final bool animate;
   final bool isSubagent;
@@ -201,7 +203,7 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
                     temporary: reminder?.temporary ?? false,
                     borderRadius: BorderRadius.circular(9),
                     side: BorderSide(
-                      color: widget.activity.unseen
+                      color: widget.isNewThisVisit
                           ? reminderColor ?? PopupStyle.of(context).accent
                           : PopupStyle.of(context).border,
                     ),

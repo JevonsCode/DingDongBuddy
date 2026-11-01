@@ -1,6 +1,6 @@
 # DingDong user guides · 使用文档
 
-These guides describe the DingDong 1.11.1 features. Start with
+These guides describe the DingDong 1.11.2 features. Start with
 [first-run onboarding](onboarding.md) or the [中文项目介绍](../../README.zh.md).
 
 | Feature / 功能 | Guide / 说明 |

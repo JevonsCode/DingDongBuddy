@@ -208,7 +208,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
               ),
             ],
           ),
-          rowBuilder: (context, activity) {
+          rowBuilder: (context, activity, isNewThisVisit) {
             final AgentConversationTarget? target = activity.conversationTarget;
             final bool isSubagent =
                 target != null &&
@@ -216,6 +216,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
             return _AgentActivityCard(
               key: ValueKey<String>(activity.id),
               activity: activity,
+              isNewThisVisit: isNewThisVisit,
               now: (widget.now ?? DateTime.now)(),
               isSubagent: isSubagent,
               showConversationTokenUsage:

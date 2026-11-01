@@ -3,7 +3,7 @@ import {
   isIos,
   isMobileBrowser,
   isStandalone,
-} from "./app-platform.js?shell=59";
+} from "./app-platform.js?shell=60";
 
 const browserModeParameter = "in-browser";
 
