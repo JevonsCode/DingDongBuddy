@@ -1,4 +1,4 @@
-# DingDong 1.11.0 Manual Regression Checklist
+# DingDong 1.11.1 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -12,6 +12,17 @@ port fallback, the native selection switch, and two native WebRTC peers using
 encrypted local relay and direct data-channel routes. Content, clipboard and settings
 stores use explicit test fixtures; this does not claim that user API credentials,
 third-party Agent accounts or remote model availability have been verified.
+
+## Library cards and Windows tray popup (1.11.1)
+
+- Open the quick panel Library with Prompts, Skills, and MCP servers. Each
+  resource is its own rounded card tinted by type, with 8px between cards, in
+  light and dark themes; enable, copy, edit, and delete still work.
+- On Windows, leave two or more reminder groups unread and hover the tray icon.
+  The capsule fades and rises in, count circles spring in one by one, and it
+  fades back out when the pointer leaves. With a single group, no capsule opens.
+- With a paired phone, close its browser or app without disconnecting, reopen
+  it, and confirm new clipboard items and Agent reminders still arrive.
 
 ## Local Agent installer and opened history
 
