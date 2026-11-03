@@ -1,15 +1,15 @@
-# DingDong 1.11.2
+# DingDong 1.11.3
 
-- Fixes notification card borders: new notifications keep their reminder color during the current visit, while notifications below “Last seen here” use gray borders.
-
----
-
-# DingDong 1.11.2
-
-- 修复通知卡片边框：本次新增通知在查看期间保持对应彩色，“上次看到这里”下方的历史通知保持灰色。
+- Fixes the macOS menu bar reminder capsule occasionally remaining expanded after the pointer leaves.
 
 ---
 
-# DingDong 1.11.2
+# DingDong 1.11.3
 
-- Corrige los bordes de las notificaciones: las nuevas conservan su color durante la visita actual y las anteriores, bajo “Última visita”, usan bordes grises.
+- 修复 macOS 菜单栏提醒胶囊在鼠标移开后偶尔无法收起的问题。
+
+---
+
+# DingDong 1.11.3
+
+- Corrige un problema por el que la cápsula de recordatorios de la barra de menús de macOS a veces permanecía expandida después de retirar el puntero.

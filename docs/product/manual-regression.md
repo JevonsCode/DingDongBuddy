@@ -1,4 +1,4 @@
-# DingDong 1.11.2 Manual Regression Checklist
+# DingDong 1.11.3 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -12,6 +12,16 @@ port fallback, the native selection switch, and two native WebRTC peers using
 encrypted local relay and direct data-channel routes. Content, clipboard and settings
 stores use explicit test fixtures; this does not claim that user API credentials,
 third-party Agent accounts or remote model availability have been verified.
+
+## macOS menu bar reminder capsule (1.11.3)
+
+- With multiple reminder types unread, hover the menu bar capsule and move the
+  pointer away, including during expansion and while the Mac is busy. The
+  capsule must collapse after the pointer leaves.
+- Move from the capsule into its overflow panel; it must remain open. Move away
+  and back quickly; it must not collapse while the pointer is over either target.
+- Repeat with reduced motion enabled and confirm that clearing reminders stops
+  the expanded state.
 
 ## Library cards and Windows tray popup (1.11.2)
 

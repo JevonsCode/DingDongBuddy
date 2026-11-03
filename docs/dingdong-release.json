@@ -1,40 +1,40 @@
 {
   "app": "DingDong",
-  "latestVersion": "1.11.2",
-  "latestBuild": "85",
+  "latestVersion": "1.11.3",
+  "latestBuild": "86",
   "prerelease": false,
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
-  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.11.2",
+  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.11.3",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.2/DingDong-1.11.2-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.3/DingDong-1.11.3-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.2/DingDong-1.11.2-macos-x64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.3/DingDong-1.11.3-macos-x64.dmg",
         "beta": false
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.2/DingDong-1.11.2-windows-x64-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.3/DingDong-1.11.3-windows-x64-Setup.exe",
         "beta": false
       }
     }
   },
   "notes": [
-    "Fixes notification card borders: new notifications keep their reminder color during the current visit, while notifications below “Last seen here” use gray borders."
+    "Fixes the macOS menu bar reminder capsule occasionally remaining expanded after the pointer leaves."
   ],
   "notesByLanguage": {
     "en": [
-      "Fixes notification card borders: new notifications keep their reminder color during the current visit, while notifications below “Last seen here” use gray borders."
+      "Fixes the macOS menu bar reminder capsule occasionally remaining expanded after the pointer leaves."
     ],
     "zh": [
-      "修复通知卡片边框：本次新增通知在查看期间保持对应彩色，“上次看到这里”下方的历史通知保持灰色。"
+      "修复 macOS 菜单栏提醒胶囊在鼠标移开后偶尔无法收起的问题。"
     ],
     "es": [
-      "Corrige los bordes de las notificaciones: las nuevas conservan su color durante la visita actual y las anteriores, bajo “Última visita”, usan bordes grises."
+      "Corrige un problema por el que la cápsula de recordatorios de la barra de menús de macOS a veces permanecía expandida después de retirar el puntero."
     ]
   }
 }
