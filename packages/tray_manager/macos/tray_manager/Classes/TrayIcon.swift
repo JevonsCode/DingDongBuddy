@@ -377,6 +377,7 @@ public class TrayIcon: NSView {
         overflowCloseWork?.cancel()
         removeOverflowMonitors()
         collapseWork?.cancel()
+        hoverWatch?.invalidate()
         overflowPanel?.orderOut(nil)
         notchCloseWork?.cancel()
         notchMenuTimeout?.cancel()
@@ -392,6 +393,7 @@ public class TrayIcon: NSView {
         if expanded == hoverExpanded && animated &&
             (expansionTimer != nil || abs(target - expansion) < 0.001) { return }
         hoverExpanded = expanded
+        watchHover(expanded)
         expansionTimer?.invalidate()
         expansionTimer = nil
         guard animated, !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion,
@@ -420,6 +422,39 @@ public class TrayIcon: NSView {
     }
     private var hoverTrackingArea: NSTrackingArea?
     private var collapseWork: DispatchWorkItem?
+    private var hoverWatch: Timer?
+    /// Replaceable so the native test can place the pointer deterministically.
+    var pointerLocation: () -> NSPoint = { NSEvent.mouseLocation }
+
+    private var pointerInsideHoverTarget: Bool {
+        guard let button = statusItem?.button, let window = button.window else { return false }
+        let screenRect = window.convertToScreen(button.convert(button.bounds, to: nil))
+        return screenRect.contains(pointerLocation()) || mouseInsideOverflowPanel
+    }
+
+    // Each width frame rebuilds the tracking area, and a busy main thread can
+    // drop the one exit event that matters. While expanded, poll the pointer
+    // so the capsule always settles once it leaves.
+    private func watchHover(_ active: Bool) {
+        guard active else {
+            hoverWatch?.invalidate()
+            hoverWatch = nil
+            return
+        }
+        guard hoverWatch == nil else { return }
+        let timer = Timer(timeInterval: 0.15, repeats: true) { [weak self] timer in
+            guard let self, self.hoverExpanded else {
+                timer.invalidate()
+                self?.hoverWatch = nil
+                return
+            }
+            if !self.pointerInsideHoverTarget && self.collapseWork?.isCancelled != false {
+                self.scheduleCollapse()
+            }
+        }
+        hoverWatch = timer
+        RunLoop.main.add(timer, forMode: .common)
+    }
 
     public override func updateTrackingAreas() {
         super.updateTrackingAreas()
@@ -453,10 +488,9 @@ public class TrayIcon: NSView {
         // Resizing a status item changes its screen position. Check the new
         // bounds before collapsing, avoiding enter/exit loops under the pointer.
         let work = DispatchWorkItem { [weak self] in
-            guard let self, let button = self.statusItem?.button,
-                  let window = button.window else { return }
-            let screenRect = window.convertToScreen(button.convert(button.bounds, to: nil))
-            guard !screenRect.contains(NSEvent.mouseLocation), !self.mouseInsideOverflowPanel else { return }
+            guard let self else { return }
+            self.collapseWork = nil
+            guard self.statusItem?.button?.window != nil, !self.pointerInsideHoverTarget else { return }
             self.closeOverflow(animated: true)
             self.setHoverExpanded(false)
         }

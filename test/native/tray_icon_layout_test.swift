@@ -7,6 +7,13 @@ enum TrayIconLayoutTest {
         let app = NSApplication.shared
         app.setActivationPolicy(.accessory)
         let icon = TrayIcon()
+        // Keep the pointer over the item so expansion holds unless a case moves it.
+        let pointerOverItem: () -> NSPoint = {
+            let button = icon.statusItem!.button!
+            let rect = button.window!.convertToScreen(button.convert(button.bounds, to: nil))
+            return NSPoint(x: rect.midX, y: rect.midY)
+        }
+        icon.pointerLocation = pointerOverItem
         precondition(icon.responds(to: NSSelectorFromString("previewNotchBubble:")),
             "Tray icon must expose the native notch bubble preview")
         let asset = NSImage(contentsOfFile: CommandLine.arguments[1])!
@@ -80,6 +87,13 @@ enum TrayIconLayoutTest {
         precondition(!icon.statusItem!.button!.isHighlighted && icon.statusItem!.button!.state == .off,
             "Collapsing clears retained native highlight/state")
         precondition(icon.frame.width < largeExpanded, "Reduced-motion path switches immediately")
+        icon.setHoverExpanded(true, animated: false)
+        let heldOpen = icon.frame.width
+        icon.pointerLocation = { NSPoint(x: -10_000, y: -10_000) }
+        RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.7))
+        precondition(icon.frame.width < heldOpen, "Leaving without an exit event still collapses")
+        icon.pointerLocation = pointerOverItem
+        print("PASS: a dropped exit event still collapses the capsule")
         icon.setHoverExpanded(true)
         icon.setTitle("", "", nil)
         RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.25))
