@@ -311,6 +311,8 @@ void main() {
       );
       expect((await active.loadSkillVersions('skill')).last.restoredFrom, 1);
     },
+    // Copying hundreds of files can take longer on shared Intel CI runners.
+    timeout: const Timeout(Duration(minutes: 2)),
   );
 
   test(
