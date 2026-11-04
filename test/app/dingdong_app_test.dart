@@ -857,7 +857,7 @@ void main() {
     activityController.dispose();
   });
 
-  testWidgets('recent Agent preview defaults to 21 and opens the full list', (
+  testWidgets('recent notifications scroll beyond 21 and open the full list', (
     WidgetTester tester,
   ) async {
     tester.view.devicePixelRatio = 1;
@@ -886,7 +886,6 @@ void main() {
     );
     await tester.pump();
 
-    expect(activityController.recentPageSize, 21);
     expect(find.byKey(const Key('activity-overflow-0')), findsOneWidget);
     expect(find.byKey(const Key('activity-overflow-25')), findsNothing);
     expect(find.byKey(const Key('recent-agent-more')), findsOneWidget);
@@ -895,6 +894,14 @@ void main() {
     await tester.pump();
 
     expect(launcher.lastDestination, ResourceManagerDestination.recentAgents);
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('activity-overflow-25')),
+      350,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('activity-overflow-25')), findsOneWidget);
+    expect(find.byKey(const Key('recent-agent-load-more')), findsNothing);
     await tester.pumpWidget(const SizedBox.shrink());
     activityController.dispose();
   });

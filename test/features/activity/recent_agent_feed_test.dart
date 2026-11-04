@@ -42,7 +42,7 @@ void main() {
   });
 
   testWidgets(
-    'ten new updates are separated from the eleventh historical row',
+    'compact feed ignores the seven-row page size across the last-seen divider',
     (tester) async {
       final c = _controller();
       addTearDown(c.dispose);
@@ -51,8 +51,9 @@ void main() {
       for (var i = 1; i <= 10; i++) {
         c.record(source: 'Codex', message: 'New $i');
       }
-      await tester.pumpWidget(_view(c));
+      await tester.pumpWidget(_view(c, pageSize: 7, compact: true));
       await tester.pumpAndSettle();
+      expect(find.byKey(const Key('recent-agent-load-more')), findsNothing);
       final divider = find.text('上次看到这里');
       expect(divider, findsOneWidget);
       expect(
@@ -215,6 +216,7 @@ Widget _view(
   ActivityController controller, {
   bool visible = true,
   int pageSize = 21,
+  bool compact = false,
 }) => MaterialApp(
   locale: const Locale('zh'),
   localizationsDelegates: DingDongLocalizations.localizationsDelegates,
@@ -226,7 +228,7 @@ Widget _view(
         height: 600,
         child: RecentAgentFeed(
           controller: controller,
-          compact: true,
+          compact: compact,
           visible: visible,
           pageSize: pageSize,
           rowBuilder: (_, activity, _) =>

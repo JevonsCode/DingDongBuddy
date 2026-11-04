@@ -318,7 +318,7 @@
   },
   "gettingStartedAgentActivityDescription": "接入本机 Agent 后，即可接收任务完成提醒，并从这里返回对应对话。",
   "@gettingStartedAgentActivityDescription": {
-    "description": "暂无 Agent 事件时的上手引导。"
+    "description": "暂无通知时的上手引导。"
   },
   "agentSetupGettingStarted": "把接入指令复制给本机 Agent，再完成一次任务，确认提醒是否出现在这里。",
   "@agentSetupGettingStarted": {
@@ -1879,7 +1879,7 @@
   "@keepEditing": {
     "description": "DingDong built-in interface copy."
   },
-  "keepTheSameConversationIDInOneItemShowNAndDoNotIncrease_925894bb": "相同会话 ID 合并为一个动态项，显示 ×N，且不增加最近 Agent 数量。",
+  "keepTheSameConversationIDInOneItemShowNAndDoNotIncrease_925894bb": "相同会话 ID 合并为一个动态项，显示 ×N，且不增加最近通知数量。",
   "@keepTheSameConversationIDInOneItemShowNAndDoNotIncrease_925894bb": {
     "description": "DingDong built-in interface copy."
   },
@@ -2319,7 +2319,7 @@
   "@noRealAgentCompletionHasBeenReceivedYet": {
     "description": "DingDong built-in interface copy."
   },
-  "noRecentAgentEvents": "暂无 Agent 事件",
+  "noRecentAgentEvents": "暂无通知",
   "@noRecentAgentEvents": {
     "description": "DingDong built-in interface copy."
   },
@@ -2773,7 +2773,7 @@
   "@readOnly": {
     "description": "DingDong built-in interface copy."
   },
-  "recentAgents": "最近 Agent",
+  "recentAgents": "最近通知",
   "@recentAgents": {
     "description": "DingDong built-in interface copy."
   },
@@ -3733,7 +3733,7 @@
   "@version": {
     "description": "DingDong built-in interface copy."
   },
-  "viewAllRecentAgents": "查看全部最近 Agent",
+  "viewAllRecentAgents": "查看全部最近通知",
   "@viewAllRecentAgents": {
     "description": "DingDong built-in interface copy."
   },
@@ -5856,14 +5856,6 @@
   "activityLoadMore": "加载更多",
   "activityNoMatches": "没有符合筛选条件的提醒",
   "devTemporaryNotification": "临时通知",
-  "quickPanelAgentCount": "快捷面板显示条数",
-  "@quickPanelAgentCount": {
-    "description": "Recent Agent quick panel count setting"
-  },
-  "quickPanelAgentCountDescription": "控制快捷唤起面板中最近 Agent 的显示数量，默认 21 条。",
-  "@quickPanelAgentCountDescription": {
-    "description": "Recent Agent quick panel count setting"
-  },
   "@devTemporaryNotification": {
     "description": "DEV test panel temporary reminder title"
   },

@@ -157,7 +157,7 @@ void main() {
     );
   }
 
-  testWidgets('quick panel count is configured in recent Agent settings', (
+  testWidgets('recent notification settings no longer expose a display count', (
     WidgetTester tester,
   ) async {
     final backend = MemoryPreferencesBackend();
@@ -173,16 +173,12 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('快捷面板显示条数'), findsOneWidget);
-    final input = find.descendant(
-      of: find.byKey(const Key('settings-agent-quick-panel-count')),
-      matching: find.byType(TextField),
+    expect(find.text('最近通知'), findsWidgets);
+    expect(find.text('快捷面板显示条数'), findsNothing);
+    expect(
+      find.byKey(const Key('settings-agent-quick-panel-count')),
+      findsNothing,
     );
-    await tester.ensureVisible(input);
-    await tester.enterText(input, '35');
-    await tester.pumpAndSettle();
-    expect(backend.values['dingdong.agentActivity.quickPanelCount'], 35);
-    expect((await SettingsRepository(backend).load()).quickPanelAgentCount, 35);
   });
 
   testWidgets('version destination scrolls directly to release settings', (

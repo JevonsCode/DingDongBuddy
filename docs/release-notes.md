@@ -1,15 +1,24 @@
-# DingDong 1.11.3
+# DingDong 1.11.4
 
-- Fixes the macOS menu bar reminder capsule occasionally remaining expanded after the pointer leaves.
-
----
-
-# DingDong 1.11.3
-
-- 修复 macOS 菜单栏提醒胶囊在鼠标移开后偶尔无法收起的问题。
+- Renames Recent agents to Recent notifications across the app.
+- Shows all saved notifications continuously in the quick panel, keeping the Last seen here divider.
+- Removes the quick panel display-count setting and its old configuration.
+- Fixes long translated notification headings crowding the More button.
 
 ---
 
-# DingDong 1.11.3
+# DingDong 1.11.4
 
-- Corrige un problema por el que la cápsula de recordatorios de la barra de menús de macOS a veces permanecía expandida después de retirar el puntero.
+- 将「最近 Agent」统一更名为「最近通知」。
+- 快捷面板连续显示全部已保存通知，保留「上次看到这里」分隔线。
+- 移除快捷面板显示条数设置及旧配置。
+- 修复较长翻译标题挤占「更多」按钮的问题。
+
+---
+
+# DingDong 1.11.4
+
+- Cambia el nombre de Agents recientes a Notificaciones recientes en la aplicación.
+- Muestra todas las notificaciones guardadas de forma continua en el panel rápido y conserva el separador de la última visita.
+- Elimina el ajuste de cantidad de notificaciones del panel rápido y su configuración anterior.
+- Corrige los títulos traducidos largos que desplazaban el botón Más.

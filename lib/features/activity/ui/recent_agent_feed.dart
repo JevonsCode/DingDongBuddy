@@ -11,8 +11,8 @@ import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:flutter/material.dart';
 
-/// Shared virtual viewport. Only requested pages are retained by the view;
-/// slivers construct rows on demand, including when the page size exceeds 21.
+/// Shared virtual viewport. Compact feeds include all retained notifications;
+/// the manager pages history. Slivers construct visible rows on demand.
 class RecentAgentFeed extends StatefulWidget {
   const RecentAgentFeed({
     required this.controller,
@@ -107,7 +107,9 @@ class _RecentAgentFeedState extends State<RecentAgentFeed> {
     // Keep the last page on screen until its replacement arrives.
     final page = await widget.controller.queryPage(
       offset: offset,
-      limit: reset && !resetPagination
+      limit: widget.compact
+          ? widget.controller.maxItems
+          : reset && !resetPagination
           ? max(widget.pageSize, _items.length)
           : widget.pageSize,
       sources: _sources,
