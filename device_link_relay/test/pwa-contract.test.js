@@ -1211,7 +1211,7 @@ test("the deployed PWA declares browser security and cache headers", () => {
   assert.match(assetHeadersSource, /X-Content-Type-Options: nosniff/);
   assert.match(assetHeadersSource, /Referrer-Policy: no-referrer/);
   assert.match(assetHeadersSource, /Strict-Transport-Security: max-age=31536000/);
-  assert.match(assetHeadersSource, /Cache-Control: no-cache/);
+  assert.match(assetHeadersSource, /\/app\/\*\n  Cache-Control: no-cache, no-transform/);
 });
 
 async function encryptedRelayDataFrame(message) {
