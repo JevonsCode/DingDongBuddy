@@ -39,12 +39,12 @@ for their border and icon, with a dashed border for temporary reminders. Resourc
 Manager uses the color for the leading icon and title. Older records without a
 saved definition keep the neutral styling.
 
-## Recent Agents
+## Recent notifications
 
-The quick panel shows 21 records by default. Change **Settings → Recent Agents →
-Quick panel Agent count** to choose its displayed quantity. This setting applies
-to the quick panel. Resource Manager browses recent Agent history separately,
-loading another local page near the end and building rows on demand.
+The quick panel continuously shows all retained notifications and builds rows on
+demand. The **Last seen here** divider separates new notifications from history.
+There is no display-count setting. Resource Manager browses notification history
+separately, loading another local page near the end and building rows on demand.
 
 In Resource Manager, sources are selected from those present in local history. Date filters are
 Yesterday, Last 3 days, This week, This month, Last month, Last 3 months, This

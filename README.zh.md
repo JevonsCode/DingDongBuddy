@@ -31,13 +31,12 @@ DingDong 是一个免费开源的桌面小伙伴，帮你整理内容、用好�
 - **数字老实。** 读不到就是未知，不完整的标 `≥`；`*` 只表示用过，不表示成功。
 - **键盘优先。** 每个页面、列表和筛选都能用键盘完成。
 
-**DingDong 1.11.3（构建 86）** 修复 macOS 菜单栏提醒胶囊在鼠标移开后偶尔无法收起的问题。
+**DingDong 1.11.4（构建 87）** 将「最近 Agent」更名为「最近通知」，快捷面板连续显示全部已保存通知，并移除显示条数设置。
 
 配置方式和数据边界见 [AI+ 使用说明](docs/product/ai-companion.md)，完整入口见[使用文档](docs/product/README.md)。
 
 快捷面板与资源管理中的剪贴板历史均每批加载 50 条，搜索和筛选覆盖完整历史。
-快捷面板默认显示最近 21 个 Agents，在“**设置 → 快捷面板显示条数**”
-修改。详见[剪贴板历史](docs/product/clipboard-history.md)和[提醒与最近 Agents](docs/product/reminders.md)。
+快捷面板连续显示全部已保存的最近通知，通过“**上次看到这里**”区分新通知与历史通知。详见[剪贴板历史](docs/product/clipboard-history.md)和[提醒与最近 Agents](docs/product/reminders.md)。
 
 支持的 Agent 每次完整回复后，DingDong 还会附上一行“资源小票”：本轮生效的
 Prompt、匹配到的 Skill 和可用 MCP 一眼可见；加载过的 Skill 或调用过的 MCP 带 `*`。
@@ -251,11 +250,11 @@ Android Chrome 链路已经完成包括后台通知在内的端到端实测。iP
 [INSTALL_WITH_AGENT.md](INSTALL_WITH_AGENT.md)。它安装官方 Release，不会克隆
 或编译仓库。
 
-已发布的稳定安装包 · 1.11.3：
+已发布的稳定安装包 · 1.11.4：
 
-- [macOS · Apple 芯片 · 1.11.3](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.3/DingDong-1.11.3-macos-arm64.dmg)
-- [macOS · Intel · 1.11.3](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.3/DingDong-1.11.3-macos-x64.dmg)
-- [Windows x64 · 1.11.3](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.3/DingDong-1.11.3-windows-x64-Setup.exe)
+- [macOS · Apple 芯片 · 1.11.4](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.4/DingDong-1.11.4-macos-arm64.dmg)
+- [macOS · Intel · 1.11.4](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.4/DingDong-1.11.4-macos-x64.dmg)
+- [Windows x64 · 1.11.4](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.4/DingDong-1.11.4-windows-x64-Setup.exe)
 
 macOS 需要 13 或更高版本。快速粘贴需要辅助功能权限；普通剪贴板历史不需要
 “完全磁盘访问”或“屏幕录制”权限。

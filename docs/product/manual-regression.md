@@ -1,4 +1,4 @@
-# DingDong 1.11.3 Manual Regression Checklist
+# DingDong 1.11.4 Manual Regression Checklist
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,
@@ -12,6 +12,13 @@ port fallback, the native selection switch, and two native WebRTC peers using
 encrypted local relay and direct data-channel routes. Content, clipboard and settings
 stores use explicit test fixtures; this does not claim that user API credentials,
 third-party Agent accounts or remote model availability have been verified.
+
+## Recent notifications (1.11.4)
+
+- Open the quick panel with more than 21 saved notifications and scroll to the oldest retained entry; no display-count limit or load-more action is required.
+- After a previous visit, receive more than seven new notifications. All new entries precede the single Last seen here divider, with history below it.
+- Check the quick panel, manager, and settings in Chinese, English, and Spanish for the Recent notifications title. At increased text size, the More button remains visible and clickable.
+- Verify settings no longer expose a quick-panel display-count field, including after upgrading with a previously saved value.
 
 ## macOS menu bar reminder capsule (1.11.3)
 
@@ -93,10 +100,10 @@ third-party Agent accounts or remote model availability have been verified.
   Confirm its white dashed marker, then send two concurrent matching reminders:
   only one may claim the temporary profile. Voice/subagent-filtered notifications
   must leave it pending. Confirm history and tray retain its captured definition.
-- Check Settings → Recent Agents: the quick-panel display quantity defaults to
-  21 and persists after editing. Check source multi-selection, all eight date
-  presets and typed custom dates in Resource Manager. Scroll through pages
-  without duplicates. Neither recent Agent view shows a pin button or color dot.
+- Check Settings → Recent notifications: no quick-panel display-count setting
+  remains. Check source multi-selection, all eight date presets and typed custom
+  dates in Resource Manager. Scroll through pages without duplicates. Neither
+  notification view shows a pin button or color dot.
 - Confirm the duplicate enabled-resource section and input badges are absent.
   Counts precede timestamps; hovering the leading icon reveals the saved
   definition, including temporary status. Quick-panel temporary cards have a
@@ -749,10 +756,10 @@ third-party Agent accounts or remote model availability have been verified.
 - Enabling or disabling an MCP updates supported Agent user configurations and preserves unrelated entries.
 - An online Skill installs its complete directory, including scripts, references, and assets.
 
-## Recent Agents
+## Recent notifications
 
-- Dynamic defaults to 21 recent Agent items; the quick-panel count setting
-  controls this quantity and leaves Resource Manager history browsing separate.
+- Dynamic shows all retained notifications without a display-count setting;
+  Resource Manager history browsing remains separate.
 - Repeated notifications with the same conversation ID are grouped into one
   item by default, play the notification sound, show a bottom-aligned `×N`
   watermark, and do not increase the recent-Agent count. A newly revealed
