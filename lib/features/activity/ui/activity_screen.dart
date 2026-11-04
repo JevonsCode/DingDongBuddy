@@ -83,7 +83,6 @@ class _ActivityScreenState extends State<ActivityScreen> {
           controller: widget.activityController,
           visible: _windowIsVisible,
           compact: true,
-          pageSize: widget.settingsViewModel.settings.quickPanelAgentCount,
           now: widget.now,
           header: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -145,26 +144,30 @@ class _ActivityScreenState extends State<ActivityScreen> {
               const SizedBox(height: 12),
               Row(
                 children: <Widget>[
-                  Text(
-                    context.l10n.recentAgents,
-                    style: TextStyle(
-                      color: PopupStyle.of(context).textSecondary,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
+                  Expanded(
+                    child: Wrap(
+                      spacing: 7,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text(
+                          context.l10n.recentAgents,
+                          style: TextStyle(
+                            color: PopupStyle.of(context).textSecondary,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        _RecentAgentCount(
+                          count: widget.activityController.recentCount,
+                          hours: widget.activityController.countWindowHours,
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 7),
-                  _RecentAgentCount(
-                    count: widget.activityController.recentCount,
-                    hours: widget.activityController.countWindowHours,
-                  ),
-                  if (widget.activityController.activities.length >
-                          widget
-                              .settingsViewModel
-                              .settings
-                              .quickPanelAgentCount &&
+                  if (widget.activityController.activities.isNotEmpty &&
                       widget.resourceManagerLauncher != null) ...<Widget>[
-                    const Spacer(),
+                    const SizedBox(width: 7),
                     _RecentAgentMoreButton(
                       onTap: () => unawaited(
                         widget.resourceManagerLauncher!.show(

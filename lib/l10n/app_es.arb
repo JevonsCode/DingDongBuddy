@@ -2319,7 +2319,7 @@
   "@noRealAgentCompletionHasBeenReceivedYet": {
     "description": "DingDong built-in interface copy."
   },
-  "noRecentAgentEvents": "No hay eventos agent recientes",
+  "noRecentAgentEvents": "No hay notificaciones recientes",
   "@noRecentAgentEvents": {
     "description": "DingDong built-in interface copy."
   },
@@ -2773,7 +2773,7 @@
   "@readOnly": {
     "description": "DingDong built-in interface copy."
   },
-  "recentAgents": "agents reciente",
+  "recentAgents": "Notificaciones recientes",
   "@recentAgents": {
     "description": "DingDong built-in interface copy."
   },
@@ -3733,7 +3733,7 @@
   "@version": {
     "description": "DingDong built-in interface copy."
   },
-  "viewAllRecentAgents": "Ver todos los agents recientes",
+  "viewAllRecentAgents": "Ver todas las notificaciones recientes",
   "@viewAllRecentAgents": {
     "description": "DingDong built-in interface copy."
   },
@@ -5856,14 +5856,6 @@
   "activityLoadMore": "Cargar más",
   "activityNoMatches": "Ningún recordatorio coincide con estos filtros",
   "devTemporaryNotification": "Notificación temporal",
-  "quickPanelAgentCount": "Agents en el panel rápido",
-  "@quickPanelAgentCount": {
-    "description": "Recent Agent quick panel count setting"
-  },
-  "quickPanelAgentCountDescription": "Número de avisos recientes de Agents mostrados en el panel rápido. Predeterminado: 21.",
-  "@quickPanelAgentCountDescription": {
-    "description": "Recent Agent quick panel count setting"
-  },
   "@devTemporaryNotification": {
     "description": "DEV test panel temporary reminder title"
   },

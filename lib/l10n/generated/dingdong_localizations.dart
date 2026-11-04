@@ -3193,7 +3193,7 @@ abstract class DingDongLocalizations {
   /// DingDong built-in interface copy.
   ///
   /// In en, this message translates to:
-  /// **'No recent agent events'**
+  /// **'No recent notifications'**
   String get noRecentAgentEvents;
 
   /// DingDong built-in interface copy.
@@ -3808,7 +3808,7 @@ abstract class DingDongLocalizations {
   /// DingDong built-in interface copy.
   ///
   /// In en, this message translates to:
-  /// **'Recent agents'**
+  /// **'Recent notifications'**
   String get recentAgents;
 
   /// DingDong built-in interface copy.
@@ -5068,7 +5068,7 @@ abstract class DingDongLocalizations {
   /// DingDong built-in interface copy.
   ///
   /// In en, this message translates to:
-  /// **'View all recent agents'**
+  /// **'View all recent notifications'**
   String get viewAllRecentAgents;
 
   /// DingDong built-in interface copy.
@@ -8107,18 +8107,6 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'Temporary notification'**
   String get devTemporaryNotification;
-
-  /// Recent Agent quick panel count setting
-  ///
-  /// In en, this message translates to:
-  /// **'Quick panel Agent count'**
-  String get quickPanelAgentCount;
-
-  /// Recent Agent quick panel count setting
-  ///
-  /// In en, this message translates to:
-  /// **'Number of recent Agent reminders shown in the quick panel. Default: 21.'**
-  String get quickPanelAgentCountDescription;
 
   /// Explains the one-use local DEV reminder fixture
   ///

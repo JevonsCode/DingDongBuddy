@@ -118,8 +118,6 @@ Map<String, List<String>> _settingsSearchTerms(BuildContext context) => {
     context.l10n.retentionDays,
   ],
   'recentAgents': [
-    context.l10n.quickPanelAgentCount,
-    context.l10n.quickPanelAgentCountDescription,
     context.l10n.recentAgents,
     context.l10n.completionDetailsStayOnThisDeviceCountingMetadata_9920ce29,
     context.l10n.groupRepeatedSessions,

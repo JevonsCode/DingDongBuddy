@@ -57,6 +57,6 @@ A custom range can be selected across the two calendar panels or entered as
 `yyyy-MM-dd`. Cancel leaves the applied range unchanged. Notification counts
 precede the timestamp; earlier local dates show `YYYYMMDD` above the time.
 
-快捷面板默认显示最近 21 条，在“设置 → 最近 Agent → 快捷面板显示条数”修改。
-资源管理中的来源和时间筛选独立使用；两处最近 Agent 均不显示置顶按钮或颜色圆点。
+快捷面板中的最近通知连续显示全部已保存记录，不再提供显示条数设置；“上次看到这里”区分本次新通知与历史通知。
+资源管理中的来源和时间筛选独立使用；两处最近通知均不显示置顶按钮或颜色圆点。
 悬停前面的图标可查看当时的提醒定义，临时提醒在快捷面板中使用同色虚线边框。

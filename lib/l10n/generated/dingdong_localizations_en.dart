@@ -1776,7 +1776,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
       'No real Agent completion has been received yet';
 
   @override
-  String get noRecentAgentEvents => 'No recent agent events';
+  String get noRecentAgentEvents => 'No recent notifications';
 
   @override
   String get noResourceImportsYet => 'No resource imports yet.';
@@ -2125,7 +2125,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   String get readOnly => 'Read-only';
 
   @override
-  String get recentAgents => 'Recent agents';
+  String get recentAgents => 'Recent notifications';
 
   @override
   String get recheckLocalService => 'Recheck local service';
@@ -2864,7 +2864,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   String get version => 'Version';
 
   @override
-  String get viewAllRecentAgents => 'View all recent agents';
+  String get viewAllRecentAgents => 'View all recent notifications';
 
   @override
   String get viewResource => 'View resource';
@@ -4631,13 +4631,6 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get devTemporaryNotification => 'Temporary notification';
-
-  @override
-  String get quickPanelAgentCount => 'Quick panel Agent count';
-
-  @override
-  String get quickPanelAgentCountDescription =>
-      'Number of recent Agent reminders shown in the quick panel. Default: 21.';
 
   @override
   String get devTemporaryNotificationDescription =>

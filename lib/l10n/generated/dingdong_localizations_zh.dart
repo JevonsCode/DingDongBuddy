@@ -1386,7 +1386,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
 
   @override
   String get keepTheSameConversationIDInOneItemShowNAndDoNotIncrease_925894bb =>
-      '相同会话 ID 合并为一个动态项，显示 ×N，且不增加最近 Agent 数量。';
+      '相同会话 ID 合并为一个动态项，显示 ×N，且不增加最近通知数量。';
 
   @override
   String get keepTheWorkspaceComfortableInYourCurrentDesktop_41d3bc46 =>
@@ -1704,7 +1704,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get noRealAgentCompletionHasBeenReceivedYet => '尚未收到真实 Agent 完成回执';
 
   @override
-  String get noRecentAgentEvents => '暂无 Agent 事件';
+  String get noRecentAgentEvents => '暂无通知';
 
   @override
   String get noResourceImportsYet => '还没有资源导入记录。';
@@ -2045,7 +2045,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get readOnly => '只读';
 
   @override
-  String get recentAgents => '最近 Agent';
+  String get recentAgents => '最近通知';
 
   @override
   String get recheckLocalService => '重新检查本机服务';
@@ -2765,7 +2765,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get version => '版本';
 
   @override
-  String get viewAllRecentAgents => '查看全部最近 Agent';
+  String get viewAllRecentAgents => '查看全部最近通知';
 
   @override
   String get viewResource => '查看资源';
@@ -4447,13 +4447,6 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
 
   @override
   String get devTemporaryNotification => '临时通知';
-
-  @override
-  String get quickPanelAgentCount => '快捷面板显示条数';
-
-  @override
-  String get quickPanelAgentCountDescription =>
-      '控制快捷唤起面板中最近 Agent 的显示数量，默认 21 条。';
 
   @override
   String get devTemporaryNotificationDescription =>
