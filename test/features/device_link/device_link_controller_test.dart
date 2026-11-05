@@ -249,13 +249,7 @@ void main() {
           'fingerprint': 'sample',
         }),
       );
-      for (
-        var i = 0;
-        i < 200 && harness.controller.fileTransfers.isEmpty;
-        i++
-      ) {
-        await Future<void>.delayed(const Duration(milliseconds: 5));
-      }
+      await _waitUntil(() => harness.controller.fileTransfers.isNotEmpty);
       expect(harness.controller.fileTransfers.single.status, 'transferring');
       await harness.controller.disconnect('phone-one');
       expect(harness.controller.fileTransfers.single.status, 'waiting');
