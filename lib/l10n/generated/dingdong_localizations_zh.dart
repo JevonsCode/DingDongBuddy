@@ -4664,4 +4664,13 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
 
   @override
   String get devAgentOnboardingOpened => '已打开：新用户接入引导';
+
+  @override
+  String get clipboardRenameGroup => '重命名分组';
+
+  @override
+  String get clipboardGroupName => '分组名称';
+
+  @override
+  String get clipboardGroupNameInvalid => '请输入未使用的名称，不能为空或使用系统保留名称。';
 }

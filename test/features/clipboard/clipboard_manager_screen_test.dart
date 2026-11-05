@@ -597,6 +597,42 @@ void main() {
     expect(find.byKey(const Key('desktop-context-menu')), findsNothing);
   });
 
+  testWidgets('manager group rename saves and retains its contents', (
+    tester,
+  ) async {
+    final store = InMemoryClipboardStore([
+      _record('grouped-item', DateTime.utc(2026), group: 'Project'),
+    ]);
+    final model = ClipboardViewModel(store)..load();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ClipboardManagerScreen(
+          viewModel: model,
+          contextMenuGateway: _FakeManagerContextMenuGateway(
+            groupAction: 'rename',
+          ),
+        ),
+      ),
+    );
+    await tester.tap(
+      find.byKey(const Key('clipboard-manager-group-Project')),
+      buttons: kSecondaryButton,
+    );
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('clipboard-group-rename-name')),
+      'Research',
+    );
+    await tester.tap(find.byKey(const Key('clipboard-group-rename-save')));
+    await tester.pumpAndSettle();
+    expect(model.groups, contains('Research'));
+    expect(model.groupItemCount('Research'), 1);
+    expect(
+      find.byKey(const Key('clipboard-manager-group-Research')),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('manager groups can be deleted from their context menu', (
     WidgetTester tester,
   ) async {
@@ -713,17 +749,6 @@ void main() {
       find.byKey(const Key('clipboard-category-name')),
       'DingDong project',
     );
-    expect(
-      find.byKey(const Key('clipboard-category-content-regex')),
-      findsNothing,
-    );
-    await tester.ensureVisible(
-      find.byKey(const Key('clipboard-category-advanced-toggle')),
-    );
-    await tester.tap(
-      find.byKey(const Key('clipboard-category-advanced-toggle')),
-    );
-    await tester.pump();
     await tester.enterText(
       find.byKey(const Key('clipboard-category-content-regex')),
       'dingdong',
@@ -802,7 +827,7 @@ final class _FakeManagerContextMenuGateway
     required List<DesktopContextMenuItem> items,
   }) async {
     lastIsDark = isDark;
-    if (items.length == 1 && items.single.label == 'Delete group') {
+    if (items.any((item) => item.id == 'rename')) {
       groupShowCount += 1;
       return groupAction;
     }

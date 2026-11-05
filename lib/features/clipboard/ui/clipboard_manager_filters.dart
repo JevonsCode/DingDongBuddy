@@ -617,9 +617,9 @@ class _CompactFilterButton extends StatelessWidget {
 
 String _categoryLabel(BuildContext context, ClipboardCategoryRule rule) =>
     switch (rule.id) {
-      'text' => context.l10n.text,
-      'links' => context.l10n.links,
-      'images' => context.l10n.images,
-      'files' => context.l10n.files,
+      'text' when rule.name == 'Text' => context.l10n.text,
+      'links' when rule.name == 'Links' => context.l10n.links,
+      'images' when rule.name == 'Images' => context.l10n.images,
+      'files' when rule.name == 'Files' => context.l10n.files,
       _ => rule.name,
     };

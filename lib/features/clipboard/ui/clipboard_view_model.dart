@@ -502,6 +502,51 @@ final class ClipboardViewModel extends ChangeNotifier {
         .length;
   }
 
+  /// Renames durable memberships without changing snapshot identity or content.
+  bool renameGroup(String group, String name) {
+    final String next = name.trim();
+    final String oldKey = _groupKey(group);
+    if (next.isEmpty ||
+        isAutomaticClipboardGroup(next) ||
+        !groups.any((value) => _groupKey(value) == oldKey) ||
+        groups.any(
+          (value) =>
+              _groupKey(value) != oldKey && _groupKey(value) == _groupKey(next),
+        )) {
+      return false;
+    }
+    final List<String> order = groups
+        .map((value) => _groupKey(value) == oldKey ? next : value)
+        .toList();
+    for (final entry in _archives) {
+      if (!entry.record.groupNames.any((value) => _groupKey(value) == oldKey)) {
+        continue;
+      }
+      _archiveStore.saveArchive(
+        ClipboardArchiveEntry(
+          record: entry.record.copyWith(
+            groups: entry.record.groupNames
+                .map((value) => _groupKey(value) == oldKey ? next : value)
+                .toList(),
+          ),
+          sourceClipboardId: entry.sourceClipboardId,
+          archivedAt: entry.archivedAt,
+        ),
+      );
+    }
+    _groupOrder
+      ..clear()
+      ..addAll(order);
+    _groupOrderStore.save(_groupOrder);
+    if (_selectedGroup != null && _groupKey(_selectedGroup!) == oldKey) {
+      _selectedGroup = next;
+    }
+    _archives = _archiveStore.listArchives();
+    _revisions?.changed(DataCollection.clipboard);
+    notifyListeners();
+    return true;
+  }
+
   void deleteGroup(String group) {
     final String normalized = _groupKey(group);
     if (normalized.isEmpty) return;

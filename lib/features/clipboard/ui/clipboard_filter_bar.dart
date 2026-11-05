@@ -286,7 +286,11 @@ class _ClipboardKindFilters extends StatelessWidget {
             key: const Key('clipboard-manage-categories'),
             tooltip: context.l10n.manageCategories,
             onPressed: resourceManagerLauncher == null
-                ? null
+                ? () => showDialog<void>(
+                    context: context,
+                    builder: (_) =>
+                        ClipboardCategoryRulesDialog(viewModel: viewModel),
+                  )
                 : () => unawaited(
                     showClipboardCategoryManager(resourceManagerLauncher!),
                   ),
@@ -300,10 +304,10 @@ class _ClipboardKindFilters extends StatelessWidget {
   Widget _categoryChip(BuildContext context, ClipboardCategoryRule? category) {
     final String label = switch (category?.id) {
       null => context.l10n.all,
-      'text' => context.l10n.text,
-      'links' => context.l10n.links,
-      'images' => context.l10n.images,
-      'files' => context.l10n.files,
+      'text' when category!.name == 'Text' => context.l10n.text,
+      'links' when category!.name == 'Links' => context.l10n.links,
+      'images' when category!.name == 'Images' => context.l10n.images,
+      'files' when category!.name == 'Files' => context.l10n.files,
       _ => category!.name,
     };
     final bool showShortcut = category == null && showResetShortcutHint;
@@ -315,46 +319,57 @@ class _ClipboardKindFilters extends StatelessWidget {
       textAlign: TextAlign.center,
       style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
     );
-    return DesktopChoiceChip(
-      key: Key('clipboard-category-${category?.id ?? 'all'}'),
-      label: category == null
-          ? SizedBox(
-              width: 24,
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 140),
-                switchInCurve: Curves.easeOutBack,
-                switchOutCurve: Curves.easeOut,
-                transitionBuilder:
-                    (Widget child, Animation<double> animation) =>
-                        FadeTransition(
-                          opacity: animation,
-                          child: ScaleTransition(
-                            scale: Tween<double>(
-                              begin: 0.88,
-                              end: 1,
-                            ).animate(animation),
-                            child: child,
-                          ),
-                        ),
-                child: labelWidget,
+    return GestureDetector(
+      onSecondaryTap: category == null
+          ? null
+          : () => showDialog<void>(
+              context: context,
+              builder: (_) => ClipboardCategoryRulesDialog(
+                viewModel: viewModel,
+                initialRule: category,
               ),
-            )
-          : labelWidget,
-      selected: category == null
-          ? !viewModel.hasActiveFilters
-          : viewModel.selectedCategoryId == category.id,
-      onSelected: (_) => category == null
-          ? viewModel.clearFilters()
-          : viewModel.setCategory(category.id),
-      height: 32,
-      foregroundColor: PopupStyle.of(context).textSecondary,
-      selectedForegroundColor: PopupStyle.of(context).accent,
-      backgroundColor: PopupStyle.of(context).surface,
-      selectedBackgroundColor: PopupStyle.of(context).accentSoft,
-      borderColor: PopupStyle.of(context).border,
-      selectedBorderColor: PopupStyle.of(
-        context,
-      ).accent.withValues(alpha: 0.28),
+            ),
+      child: DesktopChoiceChip(
+        key: Key('clipboard-category-${category?.id ?? 'all'}'),
+        label: category == null
+            ? SizedBox(
+                width: 24,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 140),
+                  switchInCurve: Curves.easeOutBack,
+                  switchOutCurve: Curves.easeOut,
+                  transitionBuilder:
+                      (Widget child, Animation<double> animation) =>
+                          FadeTransition(
+                            opacity: animation,
+                            child: ScaleTransition(
+                              scale: Tween<double>(
+                                begin: 0.88,
+                                end: 1,
+                              ).animate(animation),
+                              child: child,
+                            ),
+                          ),
+                  child: labelWidget,
+                ),
+              )
+            : labelWidget,
+        selected: category == null
+            ? !viewModel.hasActiveFilters
+            : viewModel.selectedCategoryId == category.id,
+        onSelected: (_) => category == null
+            ? viewModel.clearFilters()
+            : viewModel.setCategory(category.id),
+        height: 32,
+        foregroundColor: PopupStyle.of(context).textSecondary,
+        selectedForegroundColor: PopupStyle.of(context).accent,
+        backgroundColor: PopupStyle.of(context).surface,
+        selectedBackgroundColor: PopupStyle.of(context).accentSoft,
+        borderColor: PopupStyle.of(context).border,
+        selectedBorderColor: PopupStyle.of(
+          context,
+        ).accent.withValues(alpha: 0.28),
+      ),
     );
   }
 }

@@ -553,7 +553,7 @@ void main() {
     },
   );
 
-  testWidgets('popup category management is disabled without a launcher', (
+  testWidgets('popup category management opens locally without a launcher', (
     WidgetTester tester,
   ) async {
     tester.view.devicePixelRatio = 1;
@@ -573,10 +573,12 @@ void main() {
     final DesktopIconButton button = tester.widget<DesktopIconButton>(
       find.byKey(const Key('clipboard-manage-categories')),
     );
-    expect(button.onPressed, isNull);
+    expect(button.onPressed, isNotNull);
+    await tester.tap(find.byKey(const Key('clipboard-manage-categories')));
+    await tester.pumpAndSettle();
     expect(
       find.byKey(const Key('clipboard-category-rules-dialog')),
-      findsNothing,
+      findsOneWidget,
     );
   });
 

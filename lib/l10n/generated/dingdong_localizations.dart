@@ -8509,6 +8509,24 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'Opened: new user Agent setup'**
   String get devAgentOnboardingOpened;
+
+  /// Clipboard group editing.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename group'**
+  String get clipboardRenameGroup;
+
+  /// Clipboard group editing.
+  ///
+  /// In en, this message translates to:
+  /// **'Group name'**
+  String get clipboardGroupName;
+
+  /// Clipboard group editing.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a unique, non-empty name that is not reserved.'**
+  String get clipboardGroupNameInvalid;
 }
 
 class _DingDongLocalizationsDelegate

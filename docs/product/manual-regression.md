@@ -1,4 +1,11 @@
-# DingDong 1.11.4 Manual Regression Checklist
+# DingDong 1.11.5 Manual Regression Checklist
+
+## Clipboard group and rule editing (1.11.5)
+
+- Rename an archive group; verify membership, order and selected group after restart.
+- Rename a default category; verify both clipboard windows show the saved name.
+- Open category rules, inspect actual matching conditions, edit and save.
+- Reject blank, duplicate and reserved group names without changing content.
 
 Run this checklist on macOS and Windows before publishing. Automated tests
 cover models, repositories, HTTP/MCP contracts, long-list construction, widgets,

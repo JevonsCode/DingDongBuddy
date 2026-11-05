@@ -4864,4 +4864,14 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get devAgentOnboardingOpened => 'Opened: new user Agent setup';
+
+  @override
+  String get clipboardRenameGroup => 'Rename group';
+
+  @override
+  String get clipboardGroupName => 'Group name';
+
+  @override
+  String get clipboardGroupNameInvalid =>
+      'Choose a unique, non-empty name that is not reserved.';
 }

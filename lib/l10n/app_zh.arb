@@ -6168,5 +6168,11 @@
   "devAgentOnboardingPreviewDescription": "在唤出面板中打开首次接入引导，可重复预览。",
   "@devAgentOnboardingPreviewDescription": {"description": "devAgentOnboardingPreviewDescription"},
   "devAgentOnboardingOpened": "已打开：新用户接入引导",
-  "@devAgentOnboardingOpened": {"description": "devAgentOnboardingOpened"}
+  "@devAgentOnboardingOpened": {"description": "devAgentOnboardingOpened"},
+  "clipboardRenameGroup": "重命名分组",
+  "clipboardGroupName": "分组名称",
+  "clipboardGroupNameInvalid": "请输入未使用的名称，不能为空或使用系统保留名称。",
+  "@clipboardRenameGroup": {"description": "Clipboard group editing."},
+  "@clipboardGroupName": {"description": "Clipboard group editing."},
+  "@clipboardGroupNameInvalid": {"description": "Clipboard group editing."}
 }

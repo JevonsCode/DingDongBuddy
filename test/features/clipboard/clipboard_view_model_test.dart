@@ -12,6 +12,28 @@ import 'package:dingdong/features/clipboard/ui/clipboard_view_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('rename archive group preserves snapshots, selection and order', () {
+    final store = InMemoryClipboardStore([
+      _record(DateTime.utc(2026)).copyWith(groups: ['PageID', 'Other']),
+    ]);
+    final model = ClipboardViewModel(store)..load();
+    model.setGroup('PageID');
+    final before = store.listArchives().single;
+    expect(model.renameGroup('PageID', 'Pages'), isTrue);
+    expect(model.selectedGroup, 'Pages');
+    expect(model.groups, contains('Pages'));
+    expect(model.groups, isNot(contains('PageID')));
+    final after = store.listArchives().single;
+    expect(after.record.groupNames, ['Pages', 'Other']);
+    expect(after.record.content, before.record.content);
+    expect(after.record.id, before.record.id);
+    expect(after.archivedAt, before.archivedAt);
+    expect(model.renameGroup('Pages', 'Other'), isFalse);
+    expect(model.renameGroup('Pages', ' '), isFalse);
+    model.load();
+    expect(model.groups, contains('Pages'));
+  });
+
   test('loading clipboard history selects the first visible row', () {
     final DateTime now = DateTime.utc(2026, 7, 16);
     final ClipboardRecord first = _record(now);

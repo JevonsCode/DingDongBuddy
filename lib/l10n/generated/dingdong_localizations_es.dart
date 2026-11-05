@@ -4917,4 +4917,14 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get devAgentOnboardingOpened => 'Abierta: guía inicial de conexión';
+
+  @override
+  String get clipboardRenameGroup => 'Renombrar grupo';
+
+  @override
+  String get clipboardGroupName => 'Nombre del grupo';
+
+  @override
+  String get clipboardGroupNameInvalid =>
+      'Elige un nombre único, no vacío y que no esté reservado.';
 }

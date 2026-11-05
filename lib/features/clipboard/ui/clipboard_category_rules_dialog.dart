@@ -13,7 +13,13 @@ import 'package:flutter/material.dart';
 
 /// Manages ordered clipboard categories and their matching conditions.
 class ClipboardCategoryRulesDialog extends StatefulWidget {
-  const ClipboardCategoryRulesDialog({required this.viewModel, super.key});
+  const ClipboardCategoryRulesDialog({
+    required this.viewModel,
+    this.initialRule,
+    super.key,
+  });
+
+  final ClipboardCategoryRule? initialRule;
 
   final ClipboardViewModel viewModel;
 
@@ -24,7 +30,7 @@ class ClipboardCategoryRulesDialog extends StatefulWidget {
 
 class _ClipboardCategoryRulesDialogState
     extends State<ClipboardCategoryRulesDialog> {
-  ClipboardCategoryRule? _editing;
+  late ClipboardCategoryRule? _editing = widget.initialRule;
 
   @override
   Widget build(BuildContext context) {
@@ -447,16 +453,19 @@ class _RuleRow extends StatelessWidget {
                                 ),
                           ),
                           const SizedBox(height: 3),
-                          Text(
-                            _ruleSummary(context, rule),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(
-                                  color: colors.onSurfaceVariant,
-                                  fontSize: 10.25,
-                                  height: 1.05,
-                                ),
+                          Tooltip(
+                            message: _ruleSummary(context, rule),
+                            child: Text(
+                              _ruleSummary(context, rule),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: colors.onSurfaceVariant,
+                                    fontSize: 10.25,
+                                    height: 1.05,
+                                  ),
+                            ),
                           ),
                         ],
                       ),
@@ -543,10 +552,10 @@ Color _ruleAccent(ColorScheme colors, ClipboardCategoryRule rule) =>
 
 String _ruleName(BuildContext context, ClipboardCategoryRule rule) =>
     switch (rule.id) {
-      'links' => context.l10n.links,
-      'images' => context.l10n.images,
-      'files' => context.l10n.files,
-      'text' => context.l10n.text,
+      'links' when rule.name == 'Links' => context.l10n.links,
+      'images' when rule.name == 'Images' => context.l10n.images,
+      'files' when rule.name == 'Files' => context.l10n.files,
+      'text' when rule.name == 'Text' => context.l10n.text,
       _ => rule.name,
     };
 
@@ -569,7 +578,7 @@ class _RuleEditorState extends State<_RuleEditor> {
   late Set<ClipboardKind> _kinds;
   late bool _enabled;
   late bool _caseSensitive;
-  bool _showAdvanced = false;
+  bool _showAdvanced = true;
   String? _error;
 
   @override
@@ -631,15 +640,17 @@ class _RuleEditorState extends State<_RuleEditor> {
             runSpacing: 6,
             children: <Widget>[
               for (final ClipboardKind kind in ClipboardKind.values)
-                DesktopChoiceChip(
-                  leading: Icon(_kindIcon(kind), size: 14),
-                  label: Text(_kindLabel(context, kind)),
-                  selected: _kinds.contains(kind),
-                  onSelected: (bool selected) => setState(() {
-                    selected ? _kinds.add(kind) : _kinds.remove(kind);
-                  }),
-                  height: 30,
-                  borderRadius: 8,
+                IntrinsicWidth(
+                  child: DesktopChoiceChip(
+                    leading: Icon(_kindIcon(kind), size: 14),
+                    label: Text(_kindLabel(context, kind)),
+                    selected: _kinds.contains(kind),
+                    onSelected: (bool selected) => setState(() {
+                      selected ? _kinds.add(kind) : _kinds.remove(kind);
+                    }),
+                    height: 30,
+                    borderRadius: 8,
+                  ),
                 ),
             ],
           ),
@@ -912,10 +923,12 @@ String _ruleSummary(BuildContext context, ClipboardCategoryRule rule) {
       rule.kinds
           .map((ClipboardKind kind) => _kindLabel(context, kind))
           .join(' · '),
-    if (rule.contentPattern.isNotEmpty) context.l10n.contentRegex,
-    if (rule.sourcePattern.isNotEmpty) context.l10n.sourceRegex,
+    if (rule.contentPattern.isNotEmpty)
+      '${context.l10n.contentRegex}: ${rule.contentPattern}',
+    if (rule.sourcePattern.isNotEmpty)
+      '${context.l10n.sourceRegex}: ${rule.sourcePattern}',
     if (rule.minCharacters != null || rule.maxCharacters != null)
-      context.l10n.lengthRange,
+      '${context.l10n.lengthRange}: ${rule.minCharacters ?? 0}–${rule.maxCharacters ?? '∞'}',
   ];
   return parts.isEmpty ? context.l10n.matchesEverything : parts.join(' · ');
 }

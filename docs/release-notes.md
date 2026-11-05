@@ -1,24 +1,21 @@
-# DingDong 1.11.4
+# DingDong 1.11.5
 
-- Renames Recent agents to Recent notifications across the app.
-- Shows all saved notifications continuously in the quick panel, keeping the Last seen here divider.
-- Removes the quick panel display-count setting and its old configuration.
-- Fixes long translated notification headings crowding the More button.
-
----
-
-# DingDong 1.11.4
-
-- 将「最近 Agent」统一更名为「最近通知」。
-- 快捷面板连续显示全部已保存通知，保留「上次看到这里」分隔线。
-- 移除快捷面板显示条数设置及旧配置。
-- 修复较长翻译标题挤占「更多」按钮的问题。
+- Adds renaming for clipboard archive groups while preserving their contents and order.
+- Fixes custom names for default clipboard categories reverting to their original labels.
+- Shows matching patterns and length limits in category rules, with direct editing from the clipboard filters.
 
 ---
 
-# DingDong 1.11.4
+# DingDong 1.11.5
 
-- Cambia el nombre de Agents recientes a Notificaciones recientes en la aplicación.
-- Muestra todas las notificaciones guardadas de forma continua en el panel rápido y conserva el separador de la última visita.
-- Elimina el ajuste de cantidad de notificaciones del panel rápido y su configuración anterior.
-- Corrige los títulos traducidos largos que desplazaban el botón Más.
+- 支持重命名剪贴板归档分组，保留分组内容与顺序。
+- 修复默认分类改名后仍显示原名称的问题。
+- 分类规则展示具体匹配条件和长度范围，支持从剪贴板筛选栏直接编辑。
+
+---
+
+# DingDong 1.11.5
+
+- Permite renombrar grupos archivados del portapapeles conservando su contenido y orden.
+- Corrige los nombres personalizados de las categorías predeterminadas.
+- Muestra patrones y límites de longitud y permite editar reglas desde los filtros del portapapeles.

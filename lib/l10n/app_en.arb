@@ -6169,5 +6169,11 @@
   "devAgentOnboardingPreviewDescription": "Open the first-time Agent setup in the popup. Preview it as often as needed.",
   "@devAgentOnboardingPreviewDescription": {"description": "devAgentOnboardingPreviewDescription"},
   "devAgentOnboardingOpened": "Opened: new user Agent setup",
-  "@devAgentOnboardingOpened": {"description": "devAgentOnboardingOpened"}
+  "@devAgentOnboardingOpened": {"description": "devAgentOnboardingOpened"},
+  "clipboardRenameGroup": "Rename group",
+  "clipboardGroupName": "Group name",
+  "clipboardGroupNameInvalid": "Choose a unique, non-empty name that is not reserved.",
+  "@clipboardRenameGroup": {"description": "Clipboard group editing."},
+  "@clipboardGroupName": {"description": "Clipboard group editing."},
+  "@clipboardGroupNameInvalid": {"description": "Clipboard group editing."}
 }

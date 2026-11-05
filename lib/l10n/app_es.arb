@@ -6168,5 +6168,11 @@
   "devAgentOnboardingPreviewDescription": "Abre la guía inicial de conexión en el panel. Puedes verla varias veces.",
   "@devAgentOnboardingPreviewDescription": {"description": "devAgentOnboardingPreviewDescription"},
   "devAgentOnboardingOpened": "Abierta: guía inicial de conexión",
-  "@devAgentOnboardingOpened": {"description": "devAgentOnboardingOpened"}
+  "@devAgentOnboardingOpened": {"description": "devAgentOnboardingOpened"},
+  "clipboardRenameGroup": "Renombrar grupo",
+  "clipboardGroupName": "Nombre del grupo",
+  "clipboardGroupNameInvalid": "Elige un nombre único, no vacío y que no esté reservado.",
+  "@clipboardRenameGroup": {"description": "Clipboard group editing."},
+  "@clipboardGroupName": {"description": "Clipboard group editing."},
+  "@clipboardGroupNameInvalid": {"description": "Clipboard group editing."}
 }

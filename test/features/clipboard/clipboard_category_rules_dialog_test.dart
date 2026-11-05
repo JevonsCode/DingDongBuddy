@@ -8,6 +8,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('renamed default categories retain their name in the rule list', (
+    tester,
+  ) async {
+    final model = ClipboardViewModel(InMemoryClipboardStore())..load();
+    final rule = model.categoryRules.firstWhere((rule) => rule.id == 'links');
+    model.saveCategoryRule(
+      rule.copyWith(name: 'Bookmarks', contentPattern: 'example'),
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: DingDongLocalizations.localizationsDelegates,
+        supportedLocales: DingDongLocalizations.supportedLocales,
+        home: ClipboardCategoryRulesDialog(viewModel: model),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Bookmarks'), findsOneWidget);
+    expect(find.textContaining('example'), findsOneWidget);
+  });
+
   testWidgets('category rules remain complete in the management window', (
     WidgetTester tester,
   ) async {
