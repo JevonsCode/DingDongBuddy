@@ -3,8 +3,8 @@ import 'dart:math';
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/models/date_filter_range.dart';
 import 'package:dingdong/core/widgets/desktop_action_button.dart';
+import 'package:dingdong/core/widgets/desktop_back_to_top.dart';
 import 'package:dingdong/core/widgets/desktop_date_range_picker.dart';
-import 'package:dingdong/core/widgets/desktop_icon_button.dart';
 import 'package:dingdong/core/widgets/desktop_multi_select_field.dart';
 import 'package:dingdong/core/widgets/desktop_select_field.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
@@ -266,31 +266,9 @@ class _RecentAgentFeedState extends State<RecentAgentFeed> {
             ),
           ],
         ),
-        Positioned(
-          right: 12,
-          bottom: 12,
-          child: AnimatedBuilder(
-            animation: _scroll,
-            builder: (context, _) => _scroll.hasClients && _scroll.offset > 320
-                ? DesktopIconButton(
-                    key: const Key('recent-agent-back-to-top'),
-                    icon: const Icon(Icons.vertical_align_top),
-                    tooltip: context.l10n.activityBackToTop,
-                    backgroundColor: Theme.of(
-                      context,
-                    ).colorScheme.surfaceContainerHigh,
-                    onPressed: () => unawaited(
-                      _scroll.animateTo(
-                        0,
-                        duration: MediaQuery.disableAnimationsOf(context)
-                            ? Duration.zero
-                            : const Duration(milliseconds: 180),
-                        curve: Curves.easeOut,
-                      ),
-                    ),
-                  )
-                : const SizedBox.shrink(),
-          ),
+        DesktopBackToTop(
+          controller: _scroll,
+          buttonKey: const Key('recent-agent-back-to-top'),
         ),
       ],
     );

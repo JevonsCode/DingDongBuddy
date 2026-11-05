@@ -1,4 +1,10 @@
-# DingDong 1.11.5 Manual Regression Checklist
+# DingDong 1.11.6 Manual Regression Checklist
+
+## Shared list controls (1.11.6)
+
+- In Activity and Clipboard, scroll beyond one viewport and verify identical back-to-top button size, border, placement and hover/focus feedback in light and dark themes.
+- Activate back-to-top with pointer and keyboard; verify return to the start and that the button disappears. Enable reduced motion and verify immediate scrolling.
+- In resource and clipboard manager lists, verify matching selection buttons, selected-state tooltips and multi-selection behavior.
 
 ## Clipboard group and rule editing (1.11.5)
 

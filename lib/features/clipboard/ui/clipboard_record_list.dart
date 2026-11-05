@@ -33,7 +33,6 @@ class _ClipboardList extends StatefulWidget {
 
 class _ClipboardListState extends State<_ClipboardList> {
   final ScrollController _scrollController = ScrollController();
-  bool _showScrollToTop = false;
   int _shortcutStartIndex = 0;
 
   @override
@@ -68,12 +67,6 @@ class _ClipboardListState extends State<_ClipboardList> {
   void _handleScroll() {
     if (!_scrollController.hasClients) return;
     _updateShortcutStartIndex();
-    final bool show =
-        _scrollController.position.pixels >
-        _scrollController.position.viewportDimension;
-    if (show != _showScrollToTop && mounted) {
-      setState(() => _showScrollToTop = show);
-    }
   }
 
   void _updateShortcutStartIndex() {
@@ -88,15 +81,6 @@ class _ClipboardListState extends State<_ClipboardList> {
     if (next == _shortcutStartIndex) return;
     setState(() => _shortcutStartIndex = next);
     widget.onShortcutStartIndexChanged(next);
-  }
-
-  Future<void> _scrollToTop() async {
-    if (!_scrollController.hasClients) return;
-    await _scrollController.animateTo(
-      0,
-      duration: const Duration(milliseconds: 220),
-      curve: Curves.easeOutCubic,
-    );
   }
 
   Future<void> _openContent(ClipboardRecord record) async {
@@ -192,22 +176,10 @@ class _ClipboardListState extends State<_ClipboardList> {
             },
           ),
         ),
-        if (_showScrollToTop)
-          Positioned(
-            right: 12,
-            bottom: 12,
-            child: DesktopIconButton(
-              key: const Key('clipboard-scroll-to-top'),
-              tooltip: context.l10n.backToTop,
-              onPressed: _scrollToTop,
-              icon: const Icon(Icons.arrow_upward_rounded, size: 16),
-              size: 30,
-              iconSize: 16,
-              foregroundColor: PopupStyle.of(context).textSecondary,
-              backgroundColor: PopupStyle.of(context).background,
-              borderColor: PopupStyle.of(context).border,
-            ),
-          ),
+        DesktopBackToTop(
+          controller: _scrollController,
+          buttonKey: const Key('clipboard-scroll-to-top'),
+        ),
       ],
     );
   }

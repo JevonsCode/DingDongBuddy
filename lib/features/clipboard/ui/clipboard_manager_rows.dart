@@ -149,16 +149,12 @@ class _ManagerRowState extends State<_ManagerRow> {
                           selected: widget.selected,
                           button: true,
                           label: context.l10n.selectItem,
-                          child: DesktopIconButton(
+                          child: DesktopSelectionButton(
                             key: Key(
                               'clipboard-manager-select-${widget.record.id}',
                             ),
-                            tooltip: context.l10n.selectItem,
-                            semanticLabel: context.l10n.selectItem,
                             selected: widget.selected,
-                            size: 32,
                             onPressed: () => widget.onChanged(!widget.selected),
-                            icon: SelectionMark(selected: widget.selected),
                           ),
                         ),
                         const SizedBox(width: 4),

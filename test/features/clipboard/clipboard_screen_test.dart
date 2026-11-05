@@ -1,10 +1,10 @@
 import 'dart:io';
-
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
+import 'package:dingdong/core/widgets/desktop_back_to_top.dart';
 import 'package:dingdong/core/widgets/desktop_icon_button.dart';
 import 'package:dingdong/features/activity/ui/activity_repeat_count.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_history_page.dart';
@@ -254,6 +254,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('clipboard-scroll-to-top')), findsOneWidget);
+    expect(find.byType(DesktopBackToTop), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('clipboard-scroll-to-top')));
     await tester.pumpAndSettle();

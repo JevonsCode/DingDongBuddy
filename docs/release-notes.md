@@ -1,21 +1,21 @@
-# DingDong 1.11.5
+# DingDong 1.11.6
 
-- Adds renaming for clipboard archive groups while preserving their contents and order.
-- Fixes custom names for default clipboard categories reverting to their original labels.
-- Shows matching patterns and length limits in category rules, with direct editing from the clipboard filters.
-
----
-
-# DingDong 1.11.5
-
-- 支持重命名剪贴板归档分组，保留分组内容与顺序。
-- 修复默认分类改名后仍显示原名称的问题。
-- 分类规则展示具体匹配条件和长度范围，支持从剪贴板筛选栏直接编辑。
+- Unifies the appearance, position and scroll behavior of back-to-top buttons in Activity and Clipboard.
+- Respects reduced-motion settings when returning to the top of Clipboard.
+- Makes selection buttons and selected-state tooltips consistent across resource and clipboard lists.
 
 ---
 
-# DingDong 1.11.5
+# DingDong 1.11.6
 
-- Permite renombrar grupos archivados del portapapeles conservando su contenido y orden.
-- Corrige los nombres personalizados de las categorías predeterminadas.
-- Muestra patrones y límites de longitud y permite editar reglas desde los filtros del portapapeles.
+- 统一动态与剪贴板回到顶部按钮的外观、位置和滚动行为。
+- 剪贴板回到顶部遵循系统减少动态效果设置。
+- 统一资源与剪贴板列表的多选按钮及选中状态提示。
+
+---
+
+# DingDong 1.11.6
+
+- Unifica el aspecto, la posición y el desplazamiento de los botones para volver arriba en Actividad y Portapapeles.
+- Respeta la configuración de movimiento reducido al volver al inicio del Portapapeles.
+- Unifica los botones de selección y sus indicaciones en las listas de recursos y del portapapeles.

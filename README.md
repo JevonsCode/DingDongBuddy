@@ -40,7 +40,7 @@ and important reminders can also reach a trusted phone through the mobile PWA.
   a `*` records that something was used, not that it succeeded.
 - **Keyboard first.** Every view, list, and filter works from the keyboard.
 
-**DingDong 1.11.5 (build 88)** adds archive group renaming, fixes default category names, and makes matching rules easier to inspect and edit.
+**DingDong 1.11.6 (build 89)** unifies back-to-top controls in Activity and Clipboard and makes list selection controls consistent.
 
 > **AI+** selects Prompts, Skills and MCP resources for an Agent’s current task.
 > Configure a model once; resource selection runs only when an Agent requests it.
@@ -307,11 +307,11 @@ The executable, version-independent procedure lives in
 [INSTALL_WITH_AGENT.md](INSTALL_WITH_AGENT.md). It installs an official release;
 it does not clone or build the repository.
 
-Published stable downloads · 1.11.5:
+Published stable downloads · 1.11.6:
 
-- [macOS · Apple silicon · 1.11.5](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.5/DingDong-1.11.5-macos-arm64.dmg)
-- [macOS · Intel · 1.11.5](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.5/DingDong-1.11.5-macos-x64.dmg)
-- [Windows x64 · 1.11.5](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.5/DingDong-1.11.5-windows-x64-Setup.exe)
+- [macOS · Apple silicon · 1.11.6](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.6/DingDong-1.11.6-macos-arm64.dmg)
+- [macOS · Intel · 1.11.6](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.6/DingDong-1.11.6-macos-x64.dmg)
+- [Windows x64 · 1.11.6](https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.6/DingDong-1.11.6-windows-x64-Setup.exe)
 
 macOS requires version 13 or newer. Quick Paste needs Accessibility permission;
 ordinary clipboard history does not require Full Disk Access or Screen Recording.

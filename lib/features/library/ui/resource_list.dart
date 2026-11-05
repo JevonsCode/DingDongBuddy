@@ -3,9 +3,8 @@ import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
 import 'package:dingdong/core/widgets/compact_switch.dart';
 import 'package:dingdong/core/widgets/desktop_context_menu.dart';
-import 'package:dingdong/core/widgets/desktop_icon_button.dart';
+import 'package:dingdong/core/widgets/desktop_selection_button.dart';
 import 'package:dingdong/core/widgets/popup_symbol_icon.dart';
-import 'package:dingdong/core/widgets/selection_mark.dart';
 import 'package:dingdong/features/library/domain/resource_card_presentation.dart';
 import 'package:dingdong/features/library/ui/library_view_model.dart';
 import 'package:dingdong/features/library/ui/resource_empty_state.dart';
@@ -348,7 +347,7 @@ class _ResourceRowState extends State<_ResourceRow> {
               ),
               child: Row(
                 children: <Widget>[
-                  _SelectionButton(
+                  DesktopSelectionButton(
                     key: ValueKey<String>(
                       'resource-select-${widget.resource.id}',
                     ),
@@ -605,60 +604,6 @@ class _TriggerScopeBadge extends StatelessWidget {
 }
 
 enum _ResourceRowAction { delete }
-
-class _SelectionButton extends StatelessWidget {
-  const _SelectionButton({
-    required this.selected,
-    required this.onPressed,
-    super.key,
-  });
-
-  final bool selected;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final ColorScheme colors = Theme.of(context).colorScheme;
-    return Tooltip(
-      message: selected
-          ? context.l10n.removeFromSelection
-          : context.l10n.selectItem2,
-      child: SizedBox.square(
-        dimension: 28,
-        child: DesktopIconButton(
-          onPressed: onPressed,
-          padding: EdgeInsets.zero,
-          style: ButtonStyle(
-            minimumSize: const WidgetStatePropertyAll<Size>(Size.square(28)),
-            maximumSize: const WidgetStatePropertyAll<Size>(Size.square(28)),
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            shape: WidgetStatePropertyAll<OutlinedBorder>(
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-            ),
-            foregroundColor: WidgetStatePropertyAll<Color>(
-              selected ? colors.primary : colors.onSurfaceVariant,
-            ),
-            backgroundColor: WidgetStateProperty.resolveWith<Color?>((
-              Set<WidgetState> states,
-            ) {
-              if (states.contains(WidgetState.hovered)) {
-                return selected
-                    ? colors.primary.withValues(alpha: 0.12)
-                    : colors.surfaceContainerHigh;
-              }
-              return Colors.transparent;
-            }),
-            overlayColor: const WidgetStatePropertyAll<Color>(
-              Colors.transparent,
-            ),
-            splashFactory: NoSplash.splashFactory,
-          ),
-          icon: SelectionMark(selected: selected, size: 16),
-        ),
-      ),
-    );
-  }
-}
 
 String _symbolFor(ResourceType type) {
   return switch (type) {

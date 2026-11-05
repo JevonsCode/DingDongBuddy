@@ -1,10 +1,37 @@
 import 'package:dingdong/app/app_localizations.dart';
+import 'package:dingdong/core/widgets/desktop_back_to_top.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/activity/ui/recent_agent_feed.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('feed uses the shared scroll-to-top action', (tester) async {
+    final c = _controller();
+    addTearDown(c.dispose);
+    for (var i = 0; i < 60; i++) {
+      c.record(source: 'Codex', message: 'Shared control $i');
+    }
+    await tester.pumpWidget(_view(c, compact: true));
+    await tester.pumpAndSettle();
+    expect(find.byType(DesktopBackToTop), findsOneWidget);
+    await tester.drag(find.byType(CustomScrollView), const Offset(0, -900));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('recent-agent-back-to-top')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('recent-agent-back-to-top')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('recent-agent-back-to-top')), findsNothing);
+    expect(
+      tester
+          .state<ScrollableState>(find.byType(Scrollable).first)
+          .position
+          .pixels,
+      0,
+    );
+    await tester.pumpWidget(const SizedBox.shrink());
+    c.clear();
+  });
+
   testWidgets('opening a later page retains its rows and loaded range', (
     tester,
   ) async {

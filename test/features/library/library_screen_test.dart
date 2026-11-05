@@ -670,7 +670,7 @@ void main() {
     expect(titleField.controller?.text, 'Release note writer');
   });
 
-  testWidgets('resource selection uses a compact single-layer control', (
+  testWidgets('resource selection uses the shared 32px control', (
     WidgetTester tester,
   ) async {
     tester.view.devicePixelRatio = 1;
@@ -697,7 +697,7 @@ void main() {
       const ValueKey<String>('resource-select-export-resource'),
     );
     expect(control, findsOneWidget);
-    expect(tester.getSize(control), const Size.square(28));
+    expect(tester.getSize(control), const Size.square(32));
     expect(
       find.descendant(of: control, matching: find.byType(Checkbox)),
       findsNothing,

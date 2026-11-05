@@ -314,3 +314,9 @@ Clipboard category rules are a management-window job. The compact clipboard popu
 ### File Transfer Progress
 
 Desktop and mobile transfer progress follows the continuous-list rule: filename and percentage above a thin meter, byte counts and speed as supporting text, and pause/resume/cancel alongside the status. The mobile list uses the existing 14px filename/section type size; its 5px progress track has 4px corner rounding. These compact meter dimensions are deliberate and do not change general control radii. Pause and reconnect states keep the confirmed byte count visible. Buttons retain keyboard focus when their action changes between pause and resume.
+
+### Shared scroll-to-top control
+
+All list surfaces use `DesktopBackToTop` inside their viewport Stack. The component owns the 12px bottom/right inset, 32px rectangular button, 18px top-aligned arrow, theme-aware popup colors, common tooltip and keyboard focus behavior. It appears after one viewport of scrolling, returns in 180ms, and jumps immediately when Reduce Motion is enabled. Pages supply only their ScrollController and an optional test key; do not recreate icon, colors, visibility thresholds or animation locally.
+
+List row selection uses `DesktopSelectionButton` (32px target and shared `SelectionMark`) in both clipboard and resource lists. The selected state uses the shared icon-button focus/hover treatment and changes its tooltip to “Remove from selection”. Do not override the button style in a feature-local wrapper.
