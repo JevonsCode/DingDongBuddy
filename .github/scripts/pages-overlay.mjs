@@ -9,7 +9,7 @@ export function addCatalogLinks(html) {
   const section=/<section class="sound-section"[\s\S]*?<\/section>/;
   html=html.replace(section,block=>block.includes(catalogHref)?block:block.replace('</section>',`<p class="sound-catalog-link"><a ${catalogHref}>声音库 / Community voices →</a></p></section>`));
   const badgeLink='<a href="https://xn--8ovp9s.xn--m8txu.com/" data-ydys-badge>有点.意思.com</a>';
-  const badgeScript='<script src="https://xn--8ovp9s.xn--m8txu.com/ydys-badge.js?v=4" defer></script>';
+  const badgeScript='<script src="https://xn--8ovp9s.xn--m8txu.com/ydys-badge.js?v=5" defer></script>';
   html=html.replace(/<footer\b[^>]*>[\s\S]*?<\/footer>/,footer=>footer.includes('data-ydys-badge')?footer:footer.replace('</footer>',`  ${badgeLink}\n    </footer>`));
   if (!html.includes('ydys-badge.js')) html=html.replace(/<\/body>/,`    ${badgeScript}\n  </body>`);
   return html;
