@@ -1,4 +1,10 @@
-# DingDong 1.11.6 Manual Regression Checklist
+# DingDong 1.11.7 Manual Regression Checklist
+
+## Maintenance release (1.11.7)
+
+- Verify desktop version 1.11.7, build 90, and PWA shell 65 across application info, update metadata, and packaged MCP serverInfo.
+- In the quick panel, scroll past seven and 21 retained notifications without opening the manager; verify the visit divider separates new updates from history without truncating either section.
+- Upgrade from a saved seven-row setting and verify all retained notifications remain reachable.
 
 ## Shared list controls (1.11.6)
 

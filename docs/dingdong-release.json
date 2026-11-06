@@ -1,48 +1,40 @@
 {
   "app": "DingDong",
-  "latestVersion": "1.11.6",
-  "latestBuild": "89",
+  "latestVersion": "1.11.7",
+  "latestBuild": "90",
   "prerelease": false,
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
-  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.11.6",
+  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.11.7",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.6/DingDong-1.11.6-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.7/DingDong-1.11.7-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.6/DingDong-1.11.6-macos-x64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.7/DingDong-1.11.7-macos-x64.dmg",
         "beta": false
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.6/DingDong-1.11.6-windows-x64-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.7/DingDong-1.11.7-windows-x64-Setup.exe",
         "beta": false
       }
     }
   },
   "notes": [
-    "Unifies the appearance, position and scroll behavior of back-to-top buttons in Activity and Clipboard.",
-    "Respects reduced-motion settings when returning to the top of Clipboard.",
-    "Makes selection buttons and selected-state tooltips consistent across resource and clipboard lists."
+    "Maintenance release with refreshed desktop packages and update metadata."
   ],
   "notesByLanguage": {
     "en": [
-      "Unifies the appearance, position and scroll behavior of back-to-top buttons in Activity and Clipboard.",
-      "Respects reduced-motion settings when returning to the top of Clipboard.",
-      "Makes selection buttons and selected-state tooltips consistent across resource and clipboard lists."
+      "Maintenance release with refreshed desktop packages and update metadata."
     ],
     "zh": [
-      "统一动态与剪贴板回到顶部按钮的外观、位置和滚动行为。",
-      "剪贴板回到顶部遵循系统减少动态效果设置。",
-      "统一资源与剪贴板列表的多选按钮及选中状态提示。"
+      "维护发布，更新桌面安装包和版本信息。"
     ],
     "es": [
-      "Unifica el aspecto, la posición y el desplazamiento de los botones para volver arriba en Actividad y Portapapeles.",
-      "Respeta la configuración de movimiento reducido al volver al inicio del Portapapeles.",
-      "Unifica los botones de selección y sus indicaciones en las listas de recursos y del portapapeles."
+      "Versión de mantenimiento con paquetes de escritorio e información de actualización renovados."
     ]
   }
 }
