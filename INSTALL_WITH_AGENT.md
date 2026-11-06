@@ -162,7 +162,13 @@ perform this setup in the current local Agent or IDE:
    `claude mcp add --scope user dingdong -- "<DINGDONG_MCP_PATH>"`, then require
    `claude mcp list` to report `dingdong` as connected. Append the `Stop` Hook
    to any existing `Stop` entries in `~/.claude/settings.json` instead of
-   replacing them. The server becomes available in new Claude Code sessions.
+   replacing them. Also append any missing entries among
+   `mcp__dingdong__dingdong_bridge`, `mcp__dingdong__dingdong_load_skill`,
+   `mcp__dingdong__dingdong_read_skill_file`,
+   `mcp__dingdong__dingdong_confirm_mcp_use` and
+   `mcp__dingdong__dingdong_notify` to `permissions.allow` in the same file;
+   without them a headless (`claude -p`) session refuses the bridge call every
+   task. The server becomes available in new Claude Code sessions.
 
    For another client, verify its native local task-completion Hook first. If it
    has none, configure MCP only and report that automatic completion alerts are

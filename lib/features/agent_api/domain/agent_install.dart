@@ -49,6 +49,22 @@ Map<String, Object?> dingDongInstallManifest() => <String, Object?>{
       },
     },
   },
+  // The instructions tell every Agent to call these on its own, so a client
+  // that cannot ask (Claude Code run headless with `-p`) must not refuse
+  // them. Tools that change DingDong's settings keep asking. Only clients
+  // with a permissions file (Claude Code) take this; others ignore it.
+  'permissions': <String, Object?>{
+    'allow': <String>[
+      for (final String tool in <String>[
+        'dingdong_bridge',
+        'dingdong_load_skill',
+        'dingdong_read_skill_file',
+        'dingdong_confirm_mcp_use',
+        'dingdong_notify',
+      ])
+        'mcp__dingdong__$tool',
+    ],
+  },
   'clients': <String, Object?>{
     // Cursor's final-reply event carries the text DingDong shows as the
     // notification summary; its session start cannot tell resume apart.
