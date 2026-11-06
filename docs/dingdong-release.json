@@ -1,40 +1,40 @@
 {
   "app": "DingDong",
-  "latestVersion": "1.11.7",
-  "latestBuild": "90",
+  "latestVersion": "1.11.8",
+  "latestBuild": "91",
   "prerelease": false,
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
-  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.11.7",
+  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.11.8",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.7/DingDong-1.11.7-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.8/DingDong-1.11.8-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.7/DingDong-1.11.7-macos-x64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.8/DingDong-1.11.8-macos-x64.dmg",
         "beta": false
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.7/DingDong-1.11.7-windows-x64-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.8/DingDong-1.11.8-windows-x64-Setup.exe",
         "beta": false
       }
     }
   },
   "notes": [
-    "Maintenance release with refreshed desktop packages and update metadata."
+    "Fixes permission errors blocking DingDong task initialization, Skill loading, and notifications in non-interactive Claude Code sessions."
   ],
   "notesByLanguage": {
     "en": [
-      "Maintenance release with refreshed desktop packages and update metadata."
+      "Fixes permission errors blocking DingDong task initialization, Skill loading, and notifications in non-interactive Claude Code sessions."
     ],
     "zh": [
-      "维护发布，更新桌面安装包和版本信息。"
+      "修复 Claude Code 无交互任务中 DingDong 任务初始化、Skill 加载和通知被权限拦截的问题。"
     ],
     "es": [
-      "Versión de mantenimiento con paquetes de escritorio e información de actualización renovados."
+      "Corrige los errores de permisos que bloqueaban la inicialización de tareas, la carga de Skills y las notificaciones de DingDong en sesiones no interactivas de Claude Code."
     ]
   }
 }

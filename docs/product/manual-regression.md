@@ -1,4 +1,11 @@
-# DingDong 1.11.7 Manual Regression Checklist
+# DingDong 1.11.8 Manual Regression Checklist
+
+## Claude Code task-tool permissions (1.11.8)
+
+- In a test profile with an existing Claude Code connection, verify Agent connection center offers its configuration update and previews the five per-task DingDong allow rules.
+- Update the test connection and verify task initialization, Skill loading and notifications are allowed in non-interactive sessions. Check that existing allow rules are preserved and settings-changing tools keep their approval behavior.
+- Disconnect the test profile and verify only DingDong-owned allow entries are removed.
+- Verify desktop version 1.11.8, build 91, and PWA shell 66 across published packages and update metadata.
 
 ## Maintenance release (1.11.7)
 
