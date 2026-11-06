@@ -7,7 +7,12 @@ export function addCatalogLinks(html) {
   html=html.replaceAll(/href="(?:\.\/voices\/|voices\/|\/dingdongbuddy\/voices\/|\/DingDongBuddy\/voices\/)"/g,catalogHref);
   html=html.replace(/<nav\b[^>]*>[\s\S]*?<\/nav>/,nav=>nav.includes(catalogHref)?nav:nav.replace('</nav>',`<a ${catalogHref}>声音库 / Voices</a>\n      </nav>`));
   const section=/<section class="sound-section"[\s\S]*?<\/section>/;
-  return html.replace(section,block=>block.includes(catalogHref)?block:block.replace('</section>',`<p class="sound-catalog-link"><a ${catalogHref}>声音库 / Community voices →</a></p></section>`));
+  html=html.replace(section,block=>block.includes(catalogHref)?block:block.replace('</section>',`<p class="sound-catalog-link"><a ${catalogHref}>声音库 / Community voices →</a></p></section>`));
+  const badgeLink='<a href="https://xn--8ovp9s.xn--m8txu.com/" data-ydys-badge>有点.意思.com</a>';
+  const badgeScript='<script src="https://xn--8ovp9s.xn--m8txu.com/ydys-badge.js" defer></script>';
+  html=html.replace(/<footer\b[^>]*>[\s\S]*?<\/footer>/,footer=>footer.includes('data-ydys-badge')?footer:footer.replace('</footer>',`  ${badgeLink}\n    </footer>`));
+  if (!html.includes('ydys-badge.js')) html=html.replace(/<\/body>/,`    ${badgeScript}\n  </body>`);
+  return html;
 }
 
 export function pruneMissingProductDocs(released,current) {
