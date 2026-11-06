@@ -226,6 +226,48 @@ void main() {
       expect(read('.claude/settings.json'), isNull);
     });
 
+    // Headless Claude Code runs (`claude -p`) reject every tool that has no
+    // allow rule, so the per-task bridge call the instructions require was
+    // refused there.
+    test(
+      'lets Claude Code call the per-task DingDong tools unprompted',
+      () async {
+        write('.claude.json', '{"numStartups": 3}\n');
+        write(
+          '.claude/settings.json',
+          '{"permissions": {"allow": ["mcp__other__read"]}}\n',
+        );
+        Future<AgentInstallClient> claude() => _client(gateway, 'claude-code');
+
+        await gateway.apply(<String>['claude-code']);
+        List<Object?> allowed() {
+          final decoded =
+              jsonDecode(read('.claude/settings.json')!)
+                  as Map<String, Object?>;
+          return (decoded['permissions']! as Map<String, Object?>)['allow']!
+              as List<Object?>;
+        }
+
+        expect(allowed(), <String>[
+          'mcp__other__read',
+          'mcp__dingdong__dingdong_bridge',
+          'mcp__dingdong__dingdong_load_skill',
+          'mcp__dingdong__dingdong_read_skill_file',
+          'mcp__dingdong__dingdong_confirm_mcp_use',
+          'mcp__dingdong__dingdong_notify',
+        ]);
+        expect(
+          allowed(),
+          isNot(contains('mcp__dingdong__dingdong_set_reminder_sounds')),
+          reason: 'tools that change DingDong settings still ask',
+        );
+        expect((await claude()).state, AgentInstallState.connected);
+
+        await gateway.remove(<String>['claude-code']);
+        expect(allowed(), <String>['mcp__other__read']);
+      },
+    );
+
     test('takes over hooks that were added by hand in Codex', () async {
       final String toml =
           'model = "gpt-5"\n'
