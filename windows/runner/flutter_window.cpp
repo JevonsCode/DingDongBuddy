@@ -2,6 +2,10 @@
 
 #include <optional>
 #include <string>
+#include <vector>
+#include <random>
+#include <fstream>
+#include <cstdint>
 
 #include <mmsystem.h>
 
@@ -221,9 +225,152 @@ std::string ForegroundApplicationDescription() {
       !executable.empty() ? executable : window_title);
 }
 
+
+std::wstring SoundsDirectory() {
+  wchar_t executable[MAX_PATH] = {};
+  const DWORD length = ::GetModuleFileNameW(nullptr, executable, MAX_PATH);
+  if (length == 0 || length == MAX_PATH) {
+    return {};
+  }
+  std::wstring directory(executable, length);
+  const size_t separator = directory.find_last_of(L"\\/");
+  if (separator == std::wstring::npos) {
+    return {};
+  }
+  directory.resize(separator);
+  return directory + L"\\data\\flutter_assets\\Assets\\Sounds\\";
+}
+
+bool ReadWavPcm(const std::wstring& path, std::vector<char>* pcm, uint32_t* sample_rate) {
+  std::ifstream in(path, std::ios::binary);
+  if (!in) {
+    return false;
+  }
+  std::vector<char> data((std::istreambuf_iterator<char>(in)),
+                         std::istreambuf_iterator<char>());
+  if (data.size() < 44) {
+    return false;
+  }
+  if (std::string(data.data(), 4) != "RIFF" || std::string(data.data() + 8, 4) != "WAVE") {
+    return false;
+  }
+  *sample_rate = *reinterpret_cast<uint32_t*>(data.data() + 24);
+  size_t offset = 12;
+  size_t data_start = 44;
+  size_t data_size = data.size() - 44;
+  while (offset + 8 <= data.size()) {
+    const std::string id(data.data() + offset, 4);
+    const uint32_t size = *reinterpret_cast<uint32_t*>(data.data() + offset + 4);
+    if (id == "data") {
+      data_start = offset + 8;
+      data_size = size;
+      break;
+    }
+    offset += 8 + size + (size % 2);
+  }
+  if (data_start + data_size > data.size()) {
+    return false;
+  }
+  pcm->assign(data.begin() + static_cast<std::ptrdiff_t>(data_start),
+              data.begin() + static_cast<std::ptrdiff_t>(data_start + data_size));
+  return true;
+}
+
+std::optional<std::wstring> BuildQueueCallSoundPath() {
+  static thread_local std::mt19937 rng{std::random_device{}()};
+  std::uniform_int_distribution<int> dist(150, 999);
+  const int number = dist(rng);
+  std::vector<std::string> names{"ding", "qing"};
+  const int hundreds = number / 100;
+  const int rest = number % 100;
+  names.push_back(std::to_string(hundreds));
+  names.emplace_back("bai");
+  if (rest != 0) {
+    const int tens = rest / 10;
+    const int ones = rest % 10;
+    if (tens == 0) {
+      names.emplace_back("0");
+      names.push_back(std::to_string(ones));
+    } else {
+      names.push_back(std::to_string(tens));
+      names.emplace_back("shi");
+      if (ones != 0) {
+        names.push_back(std::to_string(ones));
+      }
+    }
+  }
+  names.emplace_back("hao");
+
+  const std::wstring base = SoundsDirectory() + L"queue-call\\";
+  std::vector<char> pcm;
+  uint32_t sample_rate = 22050;
+  const size_t gap_bytes = static_cast<size_t>(22050 * 0.02) * 2;
+  for (const auto& name : names) {
+    std::vector<char> part;
+    uint32_t rate = sample_rate;
+    std::wstring path = base + Utf8ToWide(name + ".wav");
+    if (!ReadWavPcm(path, &part, &rate)) {
+      return std::nullopt;
+    }
+    sample_rate = rate;
+    pcm.insert(pcm.end(), part.begin(), part.end());
+    pcm.insert(pcm.end(), gap_bytes, 0);
+  }
+
+  std::vector<char> wav;
+  auto append_u16 = [&](uint16_t v) {
+    wav.push_back(static_cast<char>(v & 0xff));
+    wav.push_back(static_cast<char>((v >> 8) & 0xff));
+  };
+  auto append_u32 = [&](uint32_t v) {
+    wav.push_back(static_cast<char>(v & 0xff));
+    wav.push_back(static_cast<char>((v >> 8) & 0xff));
+    wav.push_back(static_cast<char>((v >> 16) & 0xff));
+    wav.push_back(static_cast<char>((v >> 24) & 0xff));
+  };
+  wav.insert(wav.end(), {'R', 'I', 'F', 'F'});
+  append_u32(static_cast<uint32_t>(36 + pcm.size()));
+  wav.insert(wav.end(), {'W', 'A', 'V', 'E', 'f', 'm', 't', ' '});
+  append_u32(16);
+  append_u16(1);
+  append_u16(1);
+  append_u32(sample_rate);
+  append_u32(sample_rate * 2);
+  append_u16(2);
+  append_u16(16);
+  wav.insert(wav.end(), {'d', 'a', 't', 'a'});
+  append_u32(static_cast<uint32_t>(pcm.size()));
+  wav.insert(wav.end(), pcm.begin(), pcm.end());
+
+  wchar_t temp_path[MAX_PATH] = {};
+  if (::GetTempPathW(MAX_PATH, temp_path) == 0) {
+    return std::nullopt;
+  }
+  std::wstring out = std::wstring(temp_path) + L"dingdong-queue-call-" +
+                     std::to_wstring(number) + L".wav";
+  std::ofstream file(out, std::ios::binary);
+  if (!file) {
+    return std::nullopt;
+  }
+  file.write(wav.data(), static_cast<std::streamsize>(wav.size()));
+  return out;
+}
+
 std::optional<std::wstring> FlutterSoundAssetPath(const std::string& sound) {
   const wchar_t* file_name = nullptr;
-  if (sound == "default" || sound == "random") {
+  if (sound == "queueCall") {
+    return BuildQueueCallSoundPath();
+  }
+  if (sound == "random") {
+    static thread_local std::mt19937 rng{std::random_device{}()};
+    static const char* kRandomSounds[] = {
+        "default", "dingSoft", "dingBright", "dingCrisp", "dingWood",
+        "dingDeep", "queueCall"};
+    std::uniform_int_distribution<size_t> dist(
+        0, sizeof(kRandomSounds) / sizeof(kRandomSounds[0]) - 1);
+    return FlutterSoundAssetPath(kRandomSounds[dist(rng)]);
+  }
+  if (sound == "default") {
     file_name = L"ding-wood.wav";
   } else if (sound == "dingSoft") {
     file_name = L"ding-soft.wav";
@@ -260,6 +407,14 @@ void PlayNotificationSound(
     const std::string& sound) {
   if (sound == "muted") {
     return;
+  }
+  if (sound == "queueCall") {
+    if (const auto path = BuildQueueCallSoundPath()) {
+      if (::PlaySoundW(path->c_str(), nullptr,
+                       SND_FILENAME | SND_ASYNC | SND_NODEFAULT) != FALSE) {
+        return;
+      }
+    }
   }
   if (sound == "custom") {
     if (const auto* value = FindArgument(call, "customSoundPath")) {

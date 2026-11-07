@@ -318,6 +318,7 @@ List<_Sound> _sounds(BuildContext context, AppSettings settings) {
     context.l10n.dingdongBright,
     context.l10n.dingdongCrisp,
     context.l10n.dingdongDeep,
+    context.l10n.dingdongQueueCall,
     context.l10n.systemSound,
     context.l10n.muted,
   ];
@@ -327,6 +328,7 @@ List<_Sound> _sounds(BuildContext context, AppSettings settings) {
     'dingBright',
     'dingCrisp',
     'dingDeep',
+    'queueCall',
     'system',
     'muted',
   ];

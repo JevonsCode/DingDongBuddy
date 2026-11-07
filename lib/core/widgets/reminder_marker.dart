@@ -19,6 +19,7 @@ String reminderDescription(BuildContext context, ReminderProfile? p) {
     'dingBright' => strings.dingdongBright,
     'dingCrisp' => strings.dingdongCrisp,
     'dingDeep' => strings.dingdongDeep,
+    'queueCall' => strings.dingdongQueueCall,
     'system' => strings.systemSound,
     'muted' => strings.muted,
     'custom' => p?.customSoundPath?.split(RegExp(r'[/\\]')).last ?? 'custom',

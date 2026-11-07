@@ -10,6 +10,7 @@ const Set<String> notificationSoundValues = <String>{
   'dingBright',
   'dingCrisp',
   'dingDeep',
+  'queueCall',
   'custom',
   'system',
   'muted',
@@ -23,6 +24,7 @@ const List<String> agentSelectableSoundValues = <String>[
   'dingBright',
   'dingCrisp',
   'dingDeep',
+  'queueCall',
   'system',
   'muted',
 ];

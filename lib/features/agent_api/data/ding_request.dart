@@ -14,6 +14,7 @@ enum DingSound {
   dingCrisp('dingCrisp'),
   dingWood('dingWood'),
   dingDeep('dingDeep'),
+  queueCall('queueCall'),
   joy('joy'),
   levelUp('levelUp'),
   taDa('taDa'),
