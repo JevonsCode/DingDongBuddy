@@ -619,7 +619,9 @@ class AppDelegate: FlutterAppDelegate {
     guard requested != "muted" else { return }
 
     let sound: NSSound?
-    if requested == "custom",
+    if requested == "queueCall", let path = buildQueueCallSoundPath() {
+      sound = NSSound(contentsOfFile: path, byReference: true)
+    } else if requested == "custom",
        let path = arguments["customSoundPath"] as? String,
        !path.isEmpty
     {
@@ -636,11 +638,97 @@ class AppDelegate: FlutterAppDelegate {
     sound?.play()
   }
 
+  /// Restaurant/clinic PA style: ding + 「请N号」 with N random in 150...999.
+  private func buildQueueCallSoundPath() -> String? {
+    let number = Int.random(in: 150...999)
+    var names: [String] = ["ding", "qing"]
+    let hundreds = number / 100
+    let rest = number % 100
+    names.append(String(hundreds))
+    names.append("bai")
+    if rest != 0 {
+      let tens = rest / 10
+      let ones = rest % 10
+      if tens == 0 {
+        names.append("0")
+        names.append(String(ones))
+      } else {
+        names.append(String(tens))
+        names.append("shi")
+        if ones != 0 { names.append(String(ones)) }
+      }
+    }
+    names.append("hao")
+    guard let pcm = concatenateQueueCallFragments(names) else { return nil }
+    let url = FileManager.default.temporaryDirectory
+      .appendingPathComponent("dingdong-queue-call-\(number).wav")
+    do {
+      try pcm.write(to: url)
+      return url.path
+    } catch {
+      return nil
+    }
+  }
+
+  private func concatenateQueueCallFragments(_ names: [String]) -> Data? {
+    guard let frameworks = Bundle.main.privateFrameworksURL else { return nil }
+    let base = frameworks.appendingPathComponent(
+      "App.framework/Resources/flutter_assets/Assets/Sounds/queue-call"
+    )
+    var pcm = Data()
+    var sampleRate: UInt32 = 22050
+    let gap = Data(count: Int(22050 * 0.02) * 2)
+    for name in names {
+      let url = base.appendingPathComponent("\(name).wav")
+      guard let data = try? Data(contentsOf: url), data.count > 44 else { return nil }
+      // Minimal PCM WAV reader for our bundled mono 16-bit fragments.
+      let rate = data.withUnsafeBytes { ptr -> UInt32 in
+        ptr.loadUnaligned(fromByteOffset: 24, as: UInt32.self)
+      }
+      sampleRate = rate
+      var offset = 12
+      var dataStart = 44
+      var dataSize = data.count - 44
+      while offset + 8 <= data.count {
+        let id = String(data: data.subdata(in: offset..<offset+4), encoding: .ascii) ?? ""
+        let size = Int(data.withUnsafeBytes { $0.loadUnaligned(fromByteOffset: offset+4, as: UInt32.self) })
+        if id == "data" {
+          dataStart = offset + 8
+          dataSize = size
+          break
+        }
+        offset += 8 + size + (size % 2)
+      }
+      guard dataStart + dataSize <= data.count else { return nil }
+      pcm.append(data.subdata(in: dataStart..<dataStart+dataSize))
+      pcm.append(gap)
+    }
+    return makeMonoPcmWav(pcm: pcm, sampleRate: sampleRate)
+  }
+
+  private func makeMonoPcmWav(pcm: Data, sampleRate: UInt32) -> Data {
+    var out = Data()
+    func u16(_ v: UInt16) { withUnsafeBytes(of: v.littleEndian) { out.append(contentsOf: $0) } }
+    func u32(_ v: UInt32) { withUnsafeBytes(of: v.littleEndian) { out.append(contentsOf: $0) } }
+    out.append(contentsOf: Array("RIFF".utf8))
+    u32(UInt32(36 + pcm.count))
+    out.append(contentsOf: Array("WAVE".utf8))
+    out.append(contentsOf: Array("fmt ".utf8))
+    u32(16); u16(1); u16(1); u32(sampleRate); u32(sampleRate * 2); u16(2); u16(16)
+    out.append(contentsOf: Array("data".utf8))
+    u32(UInt32(pcm.count))
+    out.append(pcm)
+    return out
+  }
+
   private func bundledDingSoundPath(_ requested: String) -> String? {
     let resolved = requested == "random"
-      ? ["default", "dingSoft", "dingBright", "dingCrisp", "dingWood", "dingDeep"]
+      ? ["default", "dingSoft", "dingBright", "dingCrisp", "dingWood", "dingDeep", "queueCall"]
           .randomElement() ?? "default"
       : requested
+    if resolved == "queueCall" {
+      return buildQueueCallSoundPath()
+    }
     let fileName: String
     switch resolved {
     case "default": fileName = "ding-wood"

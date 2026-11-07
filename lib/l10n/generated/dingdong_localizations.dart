@@ -1969,6 +1969,12 @@ abstract class DingDongLocalizations {
   /// **'DingDong Deep'**
   String get dingdongDeep;
 
+  /// Restaurant/clinic queue-call sound that announces a random number from 150 to 999.
+  ///
+  /// In en, this message translates to:
+  /// **'Queue call'**
+  String get dingdongQueueCall;
+
   /// DingDong built-in interface copy.
   ///
   /// In en, this message translates to:

@@ -1391,6 +1391,10 @@
   "@dingdongDeep": {
     "description": "DingDong built-in interface copy."
   },
+  "dingdongQueueCall": "排队叫号",
+  "@dingdongQueueCall": {
+    "description": "餐厅/医院排队叫号音，每次随机播报 150–999 中的一个号码。"
+  },
   "dingdongDeviceConnectionManager": "DingDong 设备连接管理窗口",
   "@dingdongDeviceConnectionManager": {
     "description": "DingDong built-in interface copy."

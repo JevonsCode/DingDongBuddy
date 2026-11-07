@@ -11,6 +11,7 @@ const List<SoundChoice> soundChoices = <SoundChoice>[
   SoundChoice('dingBright'),
   SoundChoice('dingCrisp'),
   SoundChoice('dingDeep'),
+  SoundChoice('queueCall'),
   SoundChoice('custom'),
   SoundChoice('system'),
   SoundChoice('muted'),

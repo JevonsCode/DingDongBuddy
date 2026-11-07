@@ -1391,6 +1391,10 @@
   "@dingdongDeep": {
     "description": "DingDong built-in interface copy."
   },
+  "dingdongQueueCall": "Llamada de turno",
+  "@dingdongQueueCall": {
+    "description": "Sonido de turno de restaurante/clínica; anuncia un número aleatorio entre 150 y 999."
+  },
   "dingdongDeviceConnectionManager": "Administrador de conexión de dispositivos DingDong",
   "@dingdongDeviceConnectionManager": {
     "description": "DingDong built-in interface copy."

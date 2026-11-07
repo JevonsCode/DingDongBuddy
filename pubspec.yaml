@@ -59,6 +59,7 @@ flutter:
     - Assets/
     - Assets/DingDongIP/
     - Assets/Sounds/
+    - Assets/Sounds/queue-call/
     - Assets/Symbols/
     - Assets/Agent Adapters/
     - Assets/Agent Integrations/

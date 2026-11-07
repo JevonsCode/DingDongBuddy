@@ -1097,6 +1097,9 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   String get dingdongDeep => 'DingDong Profundo';
 
   @override
+  String get dingdongQueueCall => 'Llamada de turno';
+
+  @override
   String get dingdongDeviceConnectionManager =>
       'Administrador de conexión de dispositivos DingDong';
 
