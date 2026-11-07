@@ -1,8 +1,8 @@
-import { imageMimeType } from "./app-file-actions.js?shell=66";
+import { imageMimeType } from "./app-file-actions.js?shell=67";
 import {
   agentEventNeedsAttention,
   agentNotificationTitle,
-} from "./notification-policy.js?shell=66";
+} from "./notification-policy.js?shell=67";
 import {
   computerPlatformLabel,
   formatBytes,
@@ -12,7 +12,7 @@ import {
   iconForKind,
   kindLabel,
   validDate,
-} from "./app-formatters.js?shell=66";
+} from "./app-formatters.js?shell=67";
 
 // Feed rendering and direct UI interactions. Network and persistence stay injected.
 export function createAppRenderer({
@@ -37,15 +37,39 @@ export function createAppRenderer({
   sendMessage,
   currentSessionContext,
 }) {
+  // Automatic reconnects (and waiting for the computer to come online) only
+  // show as a small spinner beside the status: a banner that appears and
+  // disappears with every retry shifts the whole page. The banner is kept for
+  // states that need the user: a manual disconnect or a moved connection.
+  function sessionNeedsUserToReconnect(session) {
+    return (
+      !session.connected &&
+      (session.connectionSuperseded || session.pair.manualDisconnect)
+    );
+  }
+
+  function sessionIsReconnecting(session) {
+    return !session.connected && !sessionNeedsUserToReconnect(session);
+  }
+
+  function connectionLabel(session) {
+    const host = session.pair.hostName;
+    if (session.connectionSuperseded) return `${host} · 已在另一窗口打开`;
+    if (session.connected) return `${host} · 在线`;
+    if (session.pair.manualDisconnect) return `${host} · 已断开`;
+    if (
+      !session.connecting &&
+      session.socket?.readyState === WebSocket.OPEN &&
+      !session.relayHostPresent
+    ) {
+      return `${host} · 等待电脑上线`;
+    }
+    return `${host} · 连接中`;
+  }
+
   function renderConnectionState(session = activeSession()) {
     if (!session) return;
-    elements["connection-label"].textContent = session.connectionSuperseded
-      ? `${session.pair.hostName} · 已在另一窗口打开`
-      : session.connected
-        ? `${session.pair.hostName} · 在线`
-        : session.connecting
-          ? `${session.pair.hostName} · 连接中`
-          : `${session.pair.hostName} · 离线`;
+    elements["connection-label"].textContent = connectionLabel(session);
     elements["offline-title"].textContent = session.connectionSuperseded
       ? "连接已转移到另一个页面"
       : session.pair.manualDisconnect
@@ -63,14 +87,21 @@ export function createAppRenderer({
       ? "在此连接"
       : "重新连接";
     elements["offline-banner"].hidden =
-      session.connected || session.connecting || state.booting;
+      state.booting || !sessionNeedsUserToReconnect(session);
   }
 
   function renderConnectionSummary() {
     const onlineCount = Array.from(state.sessions.values()).filter(
       (session) => session.connected,
     ).length;
-    elements["online-dot"].dataset.online = String(onlineCount > 0);
+    const session = activeSession();
+    elements["online-dot"].dataset.online = session
+      ? session.connected
+        ? "true"
+        : sessionIsReconnecting(session)
+          ? "connecting"
+          : "false"
+      : String(onlineCount > 0);
     // With one computer the label already says online or offline; the count
     // only adds information when several computers are paired.
     elements["online-count"].textContent =
@@ -118,16 +149,20 @@ export function createAppRenderer({
     const status = document.createElement("span");
     status.className = "device-switcher-status";
     const dot = document.createElement("i");
-    dot.dataset.online = String(session.connected);
+    dot.dataset.online = session.connected
+      ? "true"
+      : sessionIsReconnecting(session)
+        ? "connecting"
+        : "false";
     const transport = session.connected
       ? session.channel?.readyState === "open"
         ? session.verifiedLan ? "在线 · 局域网直连" : "在线 · 设备直连"
         : "在线 · 端到端加密中继"
-      : session.connecting
-        ? "连接中"
-        : session.connectionSuperseded
-          ? "已在另一窗口打开"
-          : "离线";
+      : session.connectionSuperseded
+        ? "已在另一窗口打开"
+        : session.pair.manualDisconnect
+          ? "已断开"
+          : "连接中";
     status.append(dot, document.createTextNode(transport));
     copy.append(name, status);
     const current = document.createElement("span");

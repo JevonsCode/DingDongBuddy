@@ -12,7 +12,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="../assets/dingdong-pwa-192.png" type="image/png" />
     <link rel="apple-touch-icon" href="../assets/dingdong-pwa-512.png" />
-    <link rel="stylesheet" href="./styles.css?shell=66" />
+    <link rel="stylesheet" href="./styles.css?shell=67" />
   </head>
   <body>
     <div class="app-shell">
@@ -62,8 +62,8 @@
 
         <section id="pwa-launcher-view" class="pwa-launcher-view" hidden>
           <img src="../assets/dingdong-pwa-192.png" alt="DingDong" />
-          <h2>请在 DingDong App 里使用</h2>
-          <p>这台手机已安装 DingDong App。浏览器页面不接收通知，请在 App 里使用。</p>
+          <h2 id="pwa-launcher-title">请在 DingDong App 里使用</h2>
+          <p id="pwa-launcher-copy">这台手机已安装 DingDong App。浏览器页面不接收通知，请在 App 里使用。</p>
           <button id="open-pwa-app-button" class="primary-button" type="button">
             打开 DingDong App
           </button>
@@ -454,6 +454,6 @@
       </div>
     </dialog>
 
-    <script type="module" src="./app.js?shell=66"></script>
+    <script type="module" src="./app.js?shell=67"></script>
   </body>
 </html>

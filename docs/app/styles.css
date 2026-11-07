@@ -169,6 +169,33 @@ h2 {
   background: var(--success);
 }
 
+/* Reconnecting: the status dot becomes a small spinner in place, so retries
+   never change the layout. */
+.online-summary i[data-online="connecting"],
+.device-switcher-status i[data-online="connecting"] {
+  width: 9px;
+  height: 9px;
+  flex-basis: 9px;
+  box-sizing: border-box;
+  border: 1.5px solid rgb(43 88 119 / 22%);
+  border-top-color: var(--accent);
+  background: transparent;
+  animation: status-spin 0.8s linear infinite;
+}
+
+@keyframes status-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .online-summary i[data-online="connecting"],
+  .device-switcher-status i[data-online="connecting"] {
+    animation-duration: 2.4s;
+  }
+}
+
 .icon-button {
   display: grid;
   width: 44px;

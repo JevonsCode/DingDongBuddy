@@ -3,9 +3,33 @@ import {
   isIos,
   isMobileBrowser,
   isStandalone,
-} from "./app-platform.js?shell=66";
+} from "./app-platform.js?shell=67";
 
 const browserModeParameter = "in-browser";
+const appLaunchFailedParameter = "app-launch-failed";
+// Chosen with "继续在浏览器中使用": this tab stays a normal web page even
+// though an installed DingDong app exists. Per tab, so a fresh scan still
+// offers the app first.
+const browserModeKey = "dingdong.browser-mode.v1";
+// The native Android companion. An explicit package is the only intent form
+// Chrome hands to another app for a same-site https link; without it Chrome
+// keeps the navigation in the current tab.
+const androidCompanionPackage = "com.dingdongbuddy.companion";
+const androidLinkExtra = "dingdong.link";
+
+function browserModeChosen() {
+  try {
+    return sessionStorage.getItem(browserModeKey) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function chooseBrowserMode() {
+  try {
+    sessionStorage.setItem(browserModeKey, "1");
+  } catch {}
+}
 
 // PWA installation and shell-update lifecycle.
 export function createInstallationController({
@@ -24,7 +48,12 @@ export function createInstallationController({
   hasHigherPriorityPrompt = () => false,
 }) {
   function isBrowserPwaLauncher() {
-    return !isStandalone() && state.installStatus === "installed";
+    return (
+      !isStandalone() &&
+      !browserModeChosen() &&
+      (state.installStatus === "installed" ||
+        (isAndroid() && state.nativeAppInstalled === true))
+    );
   }
 
   function notificationsCanRunInCurrentSurface() {
@@ -48,8 +77,16 @@ export function createInstallationController({
   function initializeInstallState() {
     const launchUrl = new URL(window.location.href);
     if (launchUrl.searchParams.get(browserModeParameter) === "1") {
-      localStorage.removeItem(storageKeys.pwaInstalled);
+      chooseBrowserMode();
       launchUrl.searchParams.delete(browserModeParameter);
+      history.replaceState(null, "", launchUrl.href);
+    }
+    if (launchUrl.searchParams.get(appLaunchFailedParameter) === "1") {
+      // The native app was not found; say so on the launcher instead of
+      // silently showing the same two buttons again.
+      state.nativeAppInstalled = false;
+      state.appLaunchFailed = true;
+      launchUrl.searchParams.delete(appLaunchFailedParameter);
       history.replaceState(null, "", launchUrl.href);
     }
     if (isStandalone()) {
@@ -85,6 +122,7 @@ export function createInstallationController({
     const hidden =
       !isMobileBrowser() ||
       (!nativeOffer && (isStandalone() || isBrowserPwaLauncher())) ||
+      (!nativeOffer && browserModeChosen() && state.installStatus === "installed") ||
       (optionalSuggestion && hasHigherPriorityPrompt());
     elements["install-app-banner"].hidden = hidden;
     if (hidden) return;
@@ -215,36 +253,64 @@ export function createInstallationController({
     });
   }
 
+  function renderPwaLauncher() {
+    const canOpenNative = isAndroid() && state.nativeAppInstalled !== false;
+    elements["pwa-launcher-title"].textContent = state.appLaunchFailed
+      ? "没能自动打开 DingDong"
+      : "请在 DingDong App 里使用";
+    elements["pwa-launcher-copy"].textContent = state.appLaunchFailed
+      ? "没有找到 Android 版 DingDong。可以从桌面的 DingDong 图标打开，或继续在浏览器中使用。"
+      : canOpenNative
+        ? "这台手机已安装 DingDong App。在 App 里连接，通知更稳定。"
+        : "这台手机已安装 DingDong App。浏览器页面不接收通知，请从桌面的 DingDong 图标打开。";
+    elements["open-pwa-app-button"].hidden = !canOpenNative;
+  }
+
+  // The link handed to the app keeps the pairing fragment, so a scanned QR
+  // code still reaches the pairing screen once the app opens.
+  function appLaunchLink() {
+    const link = new URL(window.location.href);
+    link.searchParams.delete(browserModeParameter);
+    link.searchParams.delete(appLaunchFailedParameter);
+    return link.href;
+  }
+
   function openPwaApp() {
     const target = new URL("./", window.location.href);
-    target.search = window.location.search;
     if (isAndroid()) {
-      // Chrome keeps same-site links in a browser tab (leaving a new tab each
-      // time). An intent asks Android to open the installed DingDong app for
-      // this address instead; a pending pairing reaches the app through the
-      // storage it shares with Chrome, so the fragment is not needed. If the
-      // app is gone, Android falls back to this page in browser mode.
-      const fallback = new URL(target.href);
-      fallback.searchParams.set(browserModeParameter, "1");
+      // Chrome keeps a same-site https link in the current tab unless the
+      // intent names a package, so a package-less intent (or a plain link)
+      // just reloads this screen. The native app is named explicitly and the
+      // full link travels as an extra, because an intent URI cannot carry the
+      // #pair= fragment in its data. A missing app falls back here with an
+      // explanation instead of the same two buttons.
+      const fallback = new URL(window.location.href);
+      fallback.hash = "";
+      fallback.searchParams.set(appLaunchFailedParameter, "1");
       window.location.href =
-        `intent://${target.host}${target.pathname}${target.search}` +
+        `intent://${target.host}${target.pathname}` +
         `#Intent;scheme=${target.protocol.replace(":", "")};` +
         "action=android.intent.action.VIEW;" +
         "category=android.intent.category.BROWSABLE;" +
+        `package=${androidCompanionPackage};` +
+        `S.${androidLinkExtra}=${encodeURIComponent(appLaunchLink())};` +
         `S.browser_fallback_url=${encodeURIComponent(fallback.href)};end`;
       return;
     }
+    target.search = window.location.search;
     target.hash = window.location.hash;
     window.location.assign(target.href);
   }
 
-  // Lets someone whose app was uninstalled (or who prefers the browser) leave
-  // the "use the app" screen; it otherwise persists via the installed flag.
+  // Lets someone who prefers the browser (or whose app is gone) leave the
+  // "use the app" screen. Clearing the installed flag is not enough: the
+  // installed-app check finds the app again on reload, and replacing the URL
+  // with itself is only a fragment navigation when a #pair= link is open. The
+  // choice is kept for this tab and a real reload starts the web page,
+  // keeping a scanned pairing.
   function continueInBrowser() {
-    localStorage.removeItem(storageKeys.pwaInstalled);
-    const url = new URL(window.location.href);
-    url.searchParams.delete(browserModeParameter);
-    window.location.replace(url.href);
+    chooseBrowserMode();
+    window.location.reload();
   }
 
   function markInstallRequested() {
@@ -280,6 +346,10 @@ export function createInstallationController({
     if (typeof navigator.getInstalledRelatedApps === "function") {
       try {
         const applications = await navigator.getInstalledRelatedApps();
+        state.nativeAppInstalled = state.appLaunchFailed
+          ? false
+          : applications.some(isAndroidCompanion);
+        if (state.nativeAppInstalled) stopBrowserRuntimeForInstalledPwa();
         if (applications.some(isCurrentWebApp)) {
           markInstallVerified();
           return true;
@@ -308,6 +378,13 @@ export function createInstallationController({
       closeConnection(session);
     }
     document.querySelectorAll("dialog[open]").forEach((dialog) => dialog.close());
+  }
+
+  function isAndroidCompanion(application) {
+    return (
+      application?.platform === "play" &&
+      application.id === androidCompanionPackage
+    );
   }
 
   function isCurrentWebApp(application) {
@@ -471,6 +548,7 @@ export function createInstallationController({
       notificationsCanRunInCurrentSurface,
       openPwaApp,
       continueInBrowser,
+      renderPwaLauncher,
       refreshInstallState,
       registerServiceWorker,
       renderInstallPromotion,

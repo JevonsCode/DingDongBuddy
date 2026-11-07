@@ -94,8 +94,11 @@ class MainActivity : FlutterActivity() {
         }
     }
 
+    // The PWA's "打开 DingDong App" button names this package in an intent
+    // URI, which cannot carry the #pair= fragment in its data, so the full
+    // link arrives as an extra.
     private fun launchText(intent: Intent?): String? = when (intent?.action) {
-        Intent.ACTION_VIEW -> intent.dataString
+        Intent.ACTION_VIEW -> intent.getStringExtra(LINK_EXTRA) ?: intent.dataString
         Intent.ACTION_SEND -> intent.getStringExtra(Intent.EXTRA_TEXT)
         else -> null
     }?.takeIf { it.contains("#pair=") }
@@ -168,5 +171,9 @@ class MainActivity : FlutterActivity() {
         false
     } catch (_: SecurityException) {
         false
+    }
+
+    private companion object {
+        const val LINK_EXTRA = "dingdong.link"
     }
 }

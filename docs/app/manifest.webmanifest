@@ -31,6 +31,10 @@
       "platform": "webapp",
       "url": "./manifest.webmanifest",
       "id": "https://dingdong.xn--m8txu.com/app/"
+    },
+    {
+      "platform": "play",
+      "id": "com.dingdongbuddy.companion"
     }
   ],
   "prefer_related_applications": false
