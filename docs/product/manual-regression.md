@@ -1,4 +1,12 @@
-# DingDong 1.11.8 Manual Regression Checklist
+# DingDong 1.11.9 Manual Regression Checklist
+
+## Phone app launcher and reconnect status (1.11.9)
+
+- On Android with the DingDong PWA installed, open a desktop pairing QR link in Chrome. Verify "打开 DingDong App" opens the Android companion on its pairing screen, and that without the companion it explains the app was not found.
+- Tap "继续在浏览器中使用" on a pairing link and verify the browser page opens the pairing confirmation; a new scan in a new tab offers the app again.
+- Turn on airplane mode while connected in the PWA and the Android companion. Verify the status shows a small spinner ("连接中" / "等待电脑上线") without a banner or layout shift, and returns to online afterwards. A manual disconnect still shows the reconnect banner.
+- Verify desktop version 1.11.9, build 92, and PWA shell 67 across published packages and update metadata.
+
 
 ## Claude Code task-tool permissions (1.11.8)
 

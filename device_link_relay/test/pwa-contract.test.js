@@ -229,7 +229,7 @@ test("pairing never promises or displays unsent host history", () => {
 test("PWA settings can check and apply an update without replacing pairings", () => {
   assert.match(pageSource, /id="pwa-update-button"[\s\S]*检查更新/);
   assert.match(pageSource, /id="pwa-update-status"[\s\S]*aria-live="polite"/);
-  assert.match(appSource, /const currentPwaVersion = "1.11.8"/);
+  assert.match(appSource, /const currentPwaVersion = "1.11.9"/);
   // The running shell version comes from the module URL instead of a second,
   // hand-maintained constant that can drift from version.json.
   assert.match(
@@ -245,7 +245,7 @@ test("PWA settings can check and apply an update without replacing pairings", ()
   assert.match(appSource, /await persistPairingsForWorker\(\)/);
   assert.match(appSource, /location\.reload\(\)/);
   assert.match(serviceWorkerSource, /version\.json/);
-  assert.equal(pwaVersion.version, "1.11.8");
+  assert.equal(pwaVersion.version, "1.11.9");
 });
 
 test("every PWA shell reference and precache entry matches version.json", () => {
@@ -293,8 +293,15 @@ test("PWA hydration stays neutral until saved device state is restored", () => {
   );
   assert.match(
     appSource,
-    /elements\["offline-banner"\]\.hidden =\s*session\.connected \|\| session\.connecting \|\| state\.booting/,
+    /elements\["offline-banner"\]\.hidden =\s*state\.booting \|\| !sessionNeedsUserToReconnect\(session\)/,
   );
+  // Automatic retries show as a spinner in the status line, never as a
+  // banner that shifts the page each time a retry starts or fails.
+  assert.match(
+    appSource,
+    /session\.connected\s*\?\s*"true"\s*:\s*sessionIsReconnecting\(session\)\s*\?\s*"connecting"/,
+  );
+  assert.match(stylesSource, /i\[data-online="connecting"\][\s\S]*animation: status-spin/);
   assert.match(
     appSource,
     /state\.booting = false;\s*if \(state\.sessions\.size > 0\)/,
@@ -929,18 +936,21 @@ test("the mobile page exposes a real PWA install experience", () => {
       url: "./manifest.webmanifest",
       id: "https://dingdong.xn--m8txu.com/app/",
     },
+    // Lets the page tell that the native companion is installed.
+    { platform: "play", id: "com.dingdongbuddy.companion" },
   ]);
   assert.match(appSource, /const expectedId = new URL\("\.\/", manifestUrl\)\.href/);
-  // Chrome on Android opens same-site links in another tab; an intent hands
-  // the address to the installed app, with a browser-mode fallback.
+  // Chrome keeps a same-site link in the tab unless the intent names a
+  // package; pwa-app-launch.test.js covers the launcher behaviour.
   assert.match(appSource, /`intent:\/\/\$\{target\.host\}/);
+  assert.match(appSource, /package=\$\{androidCompanionPackage\}/);
   assert.match(appSource, /category=android\.intent\.category\.BROWSABLE/);
   assert.match(appSource, /S\.browser_fallback_url=/);
   assert.doesNotMatch(appSource, /window\.open\(target\.href/);
   // The "use the app" screen always has a way out.
   assert.match(pageSource, /id="continue-in-browser-button"/);
   assert.match(appSource, /function continueInBrowser\(\)/);
-  assert.match(appSource, /localStorage\.removeItem\(storageKeys\.pwaInstalled\)/);
+  assert.match(appSource, /sessionStorage\.setItem\(browserModeKey, "1"\)/);
   assert.deepEqual(iconSizes, new Set(["192x192", "512x512"]));
   assert.deepEqual(
     pngDimensions(

@@ -30,6 +30,14 @@ final class ComputerView {
   bool get connecting => state == 'connecting';
   bool get replaced => state == 'replaced';
   bool get manualDisconnect => json['manualDisconnect'] == true;
+
+  /// The relay is reachable but the computer is not (asleep, DingDong closed).
+  bool get waitingForComputer => state == 'waiting';
+
+  /// Only these offline states need the user; every other offline state is
+  /// an automatic retry and shows as a spinner, not a banner.
+  bool get needsUserToReconnect => !connected && (replaced || manualDisconnect);
+  bool get reconnecting => !connected && !needsUserToReconnect;
   bool get agentNotificationsEnabled =>
       json['agentNotificationsEnabled'] != false;
   bool get vibrationEnabled => json['vibrationEnabled'] != false;

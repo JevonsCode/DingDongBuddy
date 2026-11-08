@@ -231,25 +231,22 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Widget _content(BuildContext context, ComputerView computer) {
-    final bool offline = !computer.connected && !computer.connecting;
     return Column(
       children: <Widget>[
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
           child: Column(
             children: <Widget>[
-              if (offline)
+              // Automatic retries only show as the header spinner; a banner
+              // that comes and goes with every retry shifts the whole page.
+              if (computer.needsUserToReconnect)
                 DingBanner(
                   title: computer.replaced
                       ? '连接已转移到另一个设备'
-                      : computer.manualDisconnect
-                      ? '已断开“${computer.hostName}”'
-                      : '连不上“${computer.hostName}”',
+                      : '已断开“${computer.hostName}”',
                   body: computer.replaced
                       ? '同一次配对只能在一台手机或一个页面上使用。'
-                      : computer.manualDisconnect
-                      ? '需要时点“重新连接”。'
-                      : '请确认电脑已开机，DingDong 正在运行。',
+                      : '需要时点“重新连接”。',
                   action: DingButton(
                     label: computer.replaced ? '在此连接' : '重新连接',
                     style: DingButtonStyle.small,
@@ -432,9 +429,13 @@ class _Header extends StatelessWidget {
         ? '${computer.hostName} · 已在其他地方连接'
         : computer.connected
         ? '${computer.hostName} · 在线'
-        : computer.connecting
-        ? '${computer.hostName} · 连接中'
-        : '${computer.hostName} · 离线';
+        : computer.manualDisconnect
+        ? '${computer.hostName} · 已断开'
+        : computer.waitingForComputer
+        ? '${computer.hostName} · 等待电脑上线'
+        : '${computer.hostName} · 连接中';
+    final bool reconnecting =
+        !controller.booting && computer != null && computer.reconnecting;
     return Container(
       constraints: const BoxConstraints(minHeight: 76),
       padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 13),
@@ -503,13 +504,11 @@ class _Header extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 7),
-                          Container(
-                            width: 7,
-                            height: 7,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: online > 0 ? t.success : t.offlineDot,
-                            ),
+                          // A fixed 10×10 slot: the dot and the reconnect
+                          // spinner swap in place without moving anything.
+                          ConnectionIndicator(
+                            connected: computer?.connected == true,
+                            reconnecting: reconnecting,
                           ),
                           if (controller.computers.length > 1) ...<Widget>[
                             const SizedBox(width: 4),

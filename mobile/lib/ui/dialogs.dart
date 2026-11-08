@@ -173,11 +173,13 @@ class _SwitcherItem extends StatelessWidget {
     final DingTokens t = DingTokens.of(context);
     final String status = computer.connected
         ? '在线 · 端到端加密中继'
-        : computer.connecting
-        ? '连接中'
         : computer.replaced
         ? '已在其他地方连接'
-        : '离线';
+        : computer.manualDisconnect
+        ? '已断开'
+        : computer.waitingForComputer
+        ? '等待电脑上线'
+        : '连接中';
     return Material(
       color: active ? t.accentSoft : t.surfaceSoft,
       shape: RoundedRectangleBorder(
@@ -214,15 +216,9 @@ class _SwitcherItem extends StatelessWidget {
                     const SizedBox(height: 4),
                     Row(
                       children: <Widget>[
-                        Container(
-                          width: 7,
-                          height: 7,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: computer.connected
-                                ? t.success
-                                : t.offlineDot,
-                          ),
+                        ConnectionIndicator(
+                          connected: computer.connected,
+                          reconnecting: computer.reconnecting,
                         ),
                         const SizedBox(width: 5),
                         Text(

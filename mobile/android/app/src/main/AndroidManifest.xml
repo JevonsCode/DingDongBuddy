@@ -63,6 +63,11 @@
                 android:value="Keeps an end-to-end encrypted connection to the user's paired computer so coding-agent reminders arrive in real time." />
         </service>
 
+        <!-- Lets the PWA's getInstalledRelatedApps() see this app, so a
+             scanned link opened in Chrome offers "打开 DingDong App". -->
+        <meta-data
+            android:name="asset_statements"
+            android:resource="@string/asset_statements" />
         <meta-data
             android:name="com.dingdongbuddy.companion.SERVICE_ICON"
             android:resource="@drawable/ic_notification" />

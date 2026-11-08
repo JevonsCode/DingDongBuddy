@@ -625,3 +625,41 @@ class CenteredScroll extends StatelessWidget {
     );
   }
 }
+
+/// Status dot for a computer, or a small spinner while it reconnects on its
+/// own. Both sit in the same fixed square, so swapping never shifts layout.
+class ConnectionIndicator extends StatelessWidget {
+  const ConnectionIndicator({
+    super.key,
+    required this.connected,
+    required this.reconnecting,
+  });
+
+  final bool connected;
+  final bool reconnecting;
+
+  @override
+  Widget build(BuildContext context) {
+    final DingTokens t = DingTokens.of(context);
+    return SizedBox.square(
+      dimension: 10,
+      child: reconnecting && !connected
+          ? CircularProgressIndicator(
+              key: const ValueKey<String>('reconnect-spinner'),
+              strokeWidth: 1.6,
+              color: t.accent,
+              backgroundColor: t.accent.withValues(alpha: 0.18),
+            )
+          : Center(
+              child: Container(
+                width: 7,
+                height: 7,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: connected ? t.success : t.offlineDot,
+                ),
+              ),
+            ),
+    );
+  }
+}
