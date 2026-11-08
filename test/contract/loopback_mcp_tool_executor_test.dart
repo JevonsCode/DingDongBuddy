@@ -182,6 +182,26 @@ void main() {
     expect(transport.body?['notificationKind'], 'attention');
   });
 
+  test('notify keeps attention for a null or unknown kind', () async {
+    final _RecordingMcpHttpTransport transport = _RecordingMcpHttpTransport();
+    final LoopbackMcpToolExecutor executor = LoopbackMcpToolExecutor(transport);
+
+    for (final (Object? kind, String expected) in <(Object?, String)>[
+      (null, 'attention'),
+      ('needs_input', 'attention'),
+      ('Question', 'attention'),
+      ('not-a-kind', 'attention'),
+      (' Completion ', 'completion'),
+    ]) {
+      await executor.execute('dingdong_notify', <String, Object?>{
+        'message': 'Which option?',
+        'conversationId': 'current-thread',
+        'notificationKind': kind,
+      });
+      expect(transport.body?['notificationKind'], expected, reason: '$kind');
+    }
+  });
+
   test('notify adds Agent context used for subagent filtering', () async {
     final _RecordingMcpHttpTransport transport = _RecordingMcpHttpTransport();
     final LoopbackMcpToolExecutor executor = LoopbackMcpToolExecutor(

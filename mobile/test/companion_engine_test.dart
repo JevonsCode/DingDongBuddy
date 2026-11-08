@@ -85,6 +85,17 @@ Future<void> _settle() async {
   }
 }
 
+/// Waits for an expected outcome instead of a fixed delay, then settles once
+/// more so a late, unexpected extra event still fails the assertion. A fixed
+/// 250 ms was not always enough on the Windows CI runner.
+Future<void> _settleUntil(bool Function() done) async {
+  final Stopwatch clock = Stopwatch()..start();
+  while (!done() && clock.elapsed < const Duration(seconds: 5)) {
+    await Future<void>.delayed(const Duration(milliseconds: 25));
+  }
+  await _settle();
+}
+
 void main() {
   late Directory temp;
   late List<FakeSocket> sockets;
@@ -185,7 +196,7 @@ void main() {
     await remind('b', 'attention');
     await remind('c', 'completion', silent: true);
     await remind('a', 'completion');
-    await _settle();
+    await _settleUntil(() => notifier.shown.length >= 2);
     expect(
       notifier.shown.map((AgentEvent e) => e.kind.channelId).toList(),
       <String>['agent_completion_v2', 'agent_attention_v2'],
@@ -236,7 +247,7 @@ void main() {
       'type': 'agent.completed',
       ...activity,
     });
-    await _settle();
+    await _settleUntil(() => notifier.shown.isNotEmpty);
     expect(notifier.shown.single.id, 'activity-1');
     expect(notifier.shown.single.kind, AgentKind.attention);
   });
@@ -256,7 +267,7 @@ void main() {
     });
     await remind('a', 'attention');
     await remind('b', 'completion');
-    await _settle();
+    await _settleUntil(() => notifier.shown.isNotEmpty);
     expect(notifier.shown.map((AgentEvent e) => e.id), <String>['b']);
     expect(notifier.hostNames, <String>['工作电脑']);
 

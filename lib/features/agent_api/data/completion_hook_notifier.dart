@@ -35,7 +35,7 @@ final class CompletionHookNotifier {
       return const <String, Object?>{'status': 'ignored'};
     }
     final String? completionMessage = await _completionMessage(input);
-    final AgentNotificationKind notificationKind = _notificationKind(
+    final AgentNotificationKind notificationKind = await _notificationKind(
       input,
       completionMessage,
     );
@@ -82,81 +82,298 @@ final class CompletionHookNotifier {
   }
 }
 
-AgentNotificationKind _notificationKind(
+/// Decides which reminder a hook event plays, strongest evidence first: what
+/// the host says the event is, an explicit kind, the Agent's own
+/// dingdong_notify call in this turn, and only then the final reply's text.
+Future<AgentNotificationKind> _notificationKind(
   Map<String, Object?> input,
   String? message,
-) {
-  final Object? explicit =
-      input['notificationKind'] ?? input['notification_type'] ?? input['kind'];
-  if (explicit is String && explicit.trim().isNotEmpty) {
-    return AgentNotificationKind.parse(explicit);
-  }
+) async {
   final String eventName = (input['hook_event_name'] as String? ?? '')
       .trim()
       .toLowerCase();
   if (eventName == 'sessionend') {
     return AgentNotificationKind.completion;
   }
-  return _needsUserAttention(message)
+  // Claude Code raises Notification for permission prompts, questions and
+  // idle input, and PermissionRequest before a permission dialog. Both mean
+  // the Agent is waiting on the user, whatever the message says.
+  if (eventName == 'permissionrequest') {
+    return AgentNotificationKind.attention;
+  }
+  final Object? explicit =
+      input['notificationKind'] ?? input['notification_type'] ?? input['kind'];
+  final AgentNotificationKind? explicitKind = AgentNotificationKind.tryParse(
+    explicit,
+  );
+  if (explicitKind != null) {
+    return explicitKind;
+  }
+  if (eventName == 'notification') {
+    // auth_success and other informational notices are not a finished task
+    // either, but they never need the user: keep them on the quieter sound.
+    return explicit is String && explicit.trim().isNotEmpty
+        ? AgentNotificationKind.completion
+        : AgentNotificationKind.attention;
+  }
+  final String? transcriptPath = _firstText(input, const <String>[
+    'transcript_path',
+    'transcriptPath',
+  ]);
+  if (transcriptPath != null &&
+      await _turnRequestedAttention(File(transcriptPath))) {
+    return AgentNotificationKind.attention;
+  }
+  return replyNeedsUserAttention(message)
       ? AgentNotificationKind.attention
       : AgentNotificationKind.completion;
 }
 
-bool _needsUserAttention(String? message) {
+/// Whether an Agent's final reply asks the user to act or answer.
+///
+/// Quoted text, code, table rows and Agent receipts are ignored: a report
+/// quotes UI labels (「请选择」), commands and cells that are not addressed to
+/// the user. Reported states such as "not committed" are results, not
+/// requests. A reply whose last line is a question waits for an answer.
+bool replyNeedsUserAttention(String? message) {
   if (message == null || message.trim().isEmpty) {
     return false;
   }
-  final String normalized = message
-      .replaceAll(RegExp(r'\s+'), ' ')
-      .trim()
-      .toLowerCase();
-  const List<String> chineseMarkers = <String>[
-    '请确认',
-    '等待确认',
-    '等你确认',
-    '你确认后',
-    '请确定',
-    '需要先确定',
-    '请先选择',
-    '请选择',
-    '需要你',
-    '等你回复',
-    '等待你的回复',
-    '请回复',
-    '请接管',
-    '等待授权',
-    '未提交',
-    '未推送',
-    '尚未提交',
-    '尚未推送',
-    '还没有提交',
-    '还没有推送',
-  ];
-  if (chineseMarkers.any(normalized.contains)) {
+  final List<String> lines = <String>[];
+  bool inCode = false;
+  for (final String raw in message.replaceAll('\r', '').split('\n')) {
+    if (raw.trimLeft().startsWith('```')) {
+      inCode = !inCode;
+      continue;
+    }
+    if (inCode || raw.trimLeft().startsWith('|')) continue;
+    final String line = _cleanMarkdownLine(raw);
+    if (line.isEmpty ||
+        _genericHeading(line) ||
+        _isAgentBridgeMarkerLine(line) ||
+        _isReceiptLine(line)) {
+      continue;
+    }
+    final String normalized = line
+        .replaceAll(_quotedText, ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim()
+        .toLowerCase();
+    if (normalized.isNotEmpty) lines.add(normalized);
+  }
+  if (lines.isEmpty) {
+    return false;
+  }
+  if (RegExp(r'[?？]\s*$').hasMatch(lines.last)) {
     return true;
   }
-  const List<String> englishMarkers = <String>[
-    'please confirm',
-    'awaiting your confirmation',
-    'waiting for your confirmation',
-    'need your confirmation',
-    'need your approval',
-    'need your input',
-    'please choose',
-    'please select',
-    'please reply',
-    'please take over',
-    'not committed',
-    'not pushed',
-    'not published',
-    'still needs your',
-  ];
-  if (englishMarkers.any(normalized.contains)) {
+  String text = lines.join('\n');
+  for (final String negated in _negatedRequests) {
+    text = text.replaceAll(negated, ' ');
+  }
+  return _attentionMarkers.any(text.contains) ||
+      _chineseRequest.hasMatch(text) ||
+      RegExp(
+        r'(?:是否|要不要|do you want|would you like).{0,40}[?？]',
+      ).hasMatch(text);
+}
+
+/// 请 opening a clause addresses the reader (请点取消、请在手机打开); 请求,
+/// 申请 and 邀请 do not.
+final RegExp _chineseRequest = RegExp(
+  r'(?:^|[，。；！？、,.;!?:：\s🟥])请(?!求)',
+  multiLine: true,
+  unicode: true,
+);
+
+final RegExp _quotedText = RegExp(
+  r'「[^」\n]{0,80}」|『[^』\n]{0,80}』|“[^”\n]{0,80}”|"[^"\n]{0,80}"|《[^》\n]{0,80}》|‘[^’\n]{0,80}’',
+);
+
+/// "Nothing is needed from you" reports that the user can stay away.
+const List<String> _negatedRequests = <String>[
+  '不需要你',
+  '不需要您',
+  '无需你',
+  '无需您',
+  '不用你',
+  '不必你',
+  'nothing needed from you',
+  'nothing is needed from you',
+  'no action needed from you',
+  'no action is needed from you',
+  "don't need your",
+  "doesn't need your",
+  'do not need your',
+  'does not need your',
+  'no need for your',
+];
+
+// 待确认 alone is not here: reports use it as a noun ("100 条待确认").
+const List<String> _attentionMarkers = <String>[
+  '需确认',
+  '待裁决',
+  '等待负责人',
+  '等待人工',
+  '要求你',
+  '需要重新登录',
+  '请确认',
+  '等待确认',
+  '等你确认',
+  '你确认后',
+  '待你确认',
+  '请确定',
+  '需要先确定',
+  '请先选择',
+  '请选择',
+  '需要你',
+  '需要您',
+  '等你回复',
+  '等待你的回复',
+  '请回复',
+  '请接管',
+  '等待授权',
+  '请授权',
+  '请批准',
+  '请放行',
+  '请允许',
+  '请决定',
+  '请告诉我',
+  '请提供',
+  '请粘贴',
+  '待你决定',
+  '等你决定',
+  '由你决定',
+  'please confirm',
+  'please approve',
+  'please allow',
+  'please grant',
+  'please choose',
+  'please select',
+  'please decide',
+  'please reply',
+  'please answer',
+  'please provide',
+  'please paste',
+  'please send',
+  'please tell me',
+  'please let me know',
+  'please take over',
+  'please stop',
+  'please pause',
+  'please sign in',
+  'please log in',
+  'awaiting your',
+  'waiting for your',
+  'waiting for you to',
+  'waiting on you',
+  'need your',
+  'needs your',
+  'needed from you',
+  'need you to',
+  'needs you to',
+  'up to you',
+];
+
+/// Agent receipts and bridge footers close many replies; they are never the
+/// request itself.
+bool _isReceiptLine(String line) =>
+    line.contains('fuli://') ||
+    RegExp(r'^(?:FULI|DingDong)\b', caseSensitive: false).hasMatch(line);
+
+/// Whether the transcript's latest turn already asked for attention through
+/// dingdong_notify. The Stop hook that follows reports the same turn, so it
+/// must play the attention sound too instead of a completion right after.
+Future<bool> _turnRequestedAttention(File transcript) async {
+  final List<String>? lines = await _transcriptTailLines(transcript);
+  if (lines == null) return false;
+  for (final String line in lines.reversed) {
+    final Object? decoded;
+    try {
+      decoded = jsonDecode(line);
+    } on Object {
+      continue;
+    }
+    if (decoded is! Map<String, Object?>) continue;
+    if (_isUserPrompt(decoded)) return false;
+    for (final Map<String, Object?> input in _notifyCallInputs(decoded)) {
+      final Object? reminderId = input['reminderId'];
+      final AgentNotificationKind kind =
+          reminderId is String && reminderId.trim().isNotEmpty
+          ? AgentNotificationKind.tryParse(reminderId) ??
+                AgentNotificationKind.completion
+          : AgentNotificationKind.tryParse(input['notificationKind']) ??
+                AgentNotificationKind.attention;
+      if (kind == AgentNotificationKind.attention) return true;
+    }
+  }
+  return false;
+}
+
+/// A message the user typed, which starts a new turn. Tool results and
+/// injected context are recorded as user entries too and do not count.
+bool _isUserPrompt(Map<String, Object?> entry) {
+  final Object? payload = entry['payload'];
+  if (entry['type'] == 'event_msg' &&
+      payload is Map<String, Object?> &&
+      payload['type'] == 'user_message') {
     return true;
   }
-  return RegExp(
-    r'(?:是否|要不要|do you want|would you like).{0,40}[?？]',
-  ).hasMatch(normalized);
+  final Object? message = entry['message'];
+  if (entry['type'] != 'user' ||
+      entry['isMeta'] == true ||
+      message is! Map<String, Object?>) {
+    return false;
+  }
+  final Object? content = message['content'];
+  if (content is String) return content.trim().isNotEmpty;
+  return content is List<Object?> &&
+      content.whereType<Map<String, Object?>>().any(
+        (Map<String, Object?> item) => item['type'] == 'text',
+      );
+}
+
+/// Arguments of dingdong_notify calls in one Claude Code or Codex entry.
+Iterable<Map<String, Object?>> _notifyCallInputs(
+  Map<String, Object?> entry,
+) sync* {
+  final Object? payload = entry['payload'];
+  if (entry['type'] == 'response_item' &&
+      payload is Map<String, Object?> &&
+      payload['type'] == 'function_call' &&
+      _isNotifyTool(payload['name'], payload['namespace'])) {
+    final Object? arguments = payload['arguments'];
+    Object? decoded = arguments;
+    if (arguments is String) {
+      try {
+        decoded = jsonDecode(arguments);
+      } on Object {
+        decoded = null;
+      }
+    }
+    yield decoded is Map<String, Object?> ? decoded : <String, Object?>{};
+  }
+  final Object? message = entry['message'];
+  if (entry['type'] == 'assistant' && message is Map<String, Object?>) {
+    final Object? content = message['content'];
+    if (content is! List<Object?>) return;
+    for (final Map<String, Object?> item
+        in content.whereType<Map<String, Object?>>()) {
+      if (item['type'] == 'tool_use' && _isNotifyTool(item['name'], null)) {
+        final Object? input = item['input'];
+        yield input is Map<String, Object?> ? input : <String, Object?>{};
+      }
+    }
+  }
+}
+
+bool _isNotifyTool(Object? name, Object? namespace) {
+  if (name is! String) return false;
+  if (name == 'dingdong_notify') {
+    return namespace == null ||
+        (namespace is String && namespace.toLowerCase().contains('dingdong'));
+  }
+  return name.endsWith('__dingdong_notify');
 }
 
 Map<String, Object?> _decodeInput(String input) {
@@ -293,47 +510,58 @@ String? _antigravitySource(
   return null;
 }
 
-Future<String?> _lastAssistantMessage(File transcript) async {
-  if (!await transcript.exists()) {
-    return null;
-  }
-  final RandomAccessFile handle = await transcript.open();
+/// The last megabyte of a JSONL transcript, as whole lines.
+Future<List<String>?> _transcriptTailLines(File transcript) async {
   try {
-    final int length = await handle.length();
-    if (length == 0) {
+    if (!await transcript.exists()) {
       return null;
     }
-    const int maximumBytes = 1024 * 1024;
-    final int start = math.max(0, length - maximumBytes);
-    await handle.setPosition(start);
-    String text = utf8.decode(
-      await handle.read(length - start),
-      allowMalformed: true,
-    );
-    if (start > 0) {
-      final int firstNewline = text.indexOf('\n');
-      if (firstNewline < 0) {
+    final RandomAccessFile handle = await transcript.open();
+    try {
+      final int length = await handle.length();
+      if (length == 0) {
         return null;
       }
-      text = text.substring(firstNewline + 1);
-    }
-
-    String? latestAssistantMessage;
-    final List<String> lines = const LineSplitter().convert(text);
-    for (final String line in lines.reversed) {
-      final _TranscriptMessage? message = _decodeTranscriptMessage(line);
-      if (message == null) {
-        continue;
+      const int maximumBytes = 1024 * 1024;
+      final int start = math.max(0, length - maximumBytes);
+      await handle.setPosition(start);
+      String text = utf8.decode(
+        await handle.read(length - start),
+        allowMalformed: true,
+      );
+      if (start > 0) {
+        final int firstNewline = text.indexOf('\n');
+        if (firstNewline < 0) {
+          return null;
+        }
+        text = text.substring(firstNewline + 1);
       }
-      latestAssistantMessage ??= message.text;
-      if (message.finalAnswer) {
-        return message.text;
-      }
+      return const LineSplitter().convert(text);
+    } finally {
+      await handle.close();
     }
-    return latestAssistantMessage;
-  } finally {
-    await handle.close();
+  } on FileSystemException {
+    return null;
   }
+}
+
+Future<String?> _lastAssistantMessage(File transcript) async {
+  final List<String>? lines = await _transcriptTailLines(transcript);
+  if (lines == null) {
+    return null;
+  }
+  String? latestAssistantMessage;
+  for (final String line in lines.reversed) {
+    final _TranscriptMessage? message = _decodeTranscriptMessage(line);
+    if (message == null) {
+      continue;
+    }
+    latestAssistantMessage ??= message.text;
+    if (message.finalAnswer) {
+      return message.text;
+    }
+  }
+  return latestAssistantMessage;
 }
 
 _TranscriptMessage? _decodeTranscriptMessage(String line) {

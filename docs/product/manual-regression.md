@@ -1,4 +1,12 @@
-# DingDong 1.11.9 Manual Regression Checklist
+# DingDong 1.11.10 Manual Regression Checklist
+
+## Completion and attention reminder sounds (1.11.10)
+
+- In Claude Code and Codex, finish a task with a plain report (including quoted UI labels or "not committed"); verify the completion sound plays.
+- End a turn with a question, an approval request or a permission prompt; verify the attention sound plays and no completion sound follows for the same turn.
+- Call dingdong_notify with an attention kind during a turn; verify the turn's Stop does not add a second, completion sound.
+- Verify desktop version 1.11.10, build 93, and PWA shell 68 across published packages and update metadata.
+
 
 ## Phone app launcher and reconnect status (1.11.9)
 
