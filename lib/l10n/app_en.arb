@@ -1391,6 +1391,10 @@
   "@dingdongDeep": {
     "description": "DingDong built-in interface copy."
   },
+  "dingdongQueueCall": "Queue call",
+  "@dingdongQueueCall": {
+    "description": "Restaurant/clinic queue-call sound that announces a random number from 150 to 999."
+  },
   "dingdongDeviceConnectionManager": "DingDong device connection manager",
   "@dingdongDeviceConnectionManager": {
     "description": "DingDong built-in interface copy."

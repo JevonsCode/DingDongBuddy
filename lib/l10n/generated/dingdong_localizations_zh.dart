@@ -1028,6 +1028,9 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get dingdongDeep => 'DingDong 低沉';
 
   @override
+  String get dingdongQueueCall => '排队叫号';
+
+  @override
   String get dingdongDeviceConnectionManager => 'DingDong 设备连接管理窗口';
 
   @override

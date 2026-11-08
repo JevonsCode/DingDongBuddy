@@ -646,6 +646,17 @@
             <span data-i18n="sounds.deepBody">Low and easy to notice</span>
             <span class="sound-listen" data-i18n="sounds.listen">Listen</span>
           </button>
+          <button class="sound-card" type="button" data-audio="https://raw.githubusercontent.com/JevonsCode/dingdong-voices/c25a08f77595c62963fc13dd66a03ee7b89bafc5/audio/ai-callback-code.wav" aria-pressed="false">
+            <span class="sound-card-title"><img src="./assets/dingdong-icon.png" alt=""><strong data-i18n="sounds.aiCallback">AI callback</strong></span>
+            <span data-i18n="sounds.aiCallbackBody">AI calling you back to write code</span>
+            <span class="sound-listen" data-i18n="sounds.listen">Listen</span>
+          </button>
+          <button class="sound-card" type="button" data-queue-call="1" aria-pressed="false">
+            <span class="sound-card-title"><img src="./assets/dingdong-icon.png" alt=""><strong data-i18n="sounds.queueCall">Queue call</strong></span>
+            <span data-i18n="sounds.queueCallBody">Restaurant/clinic PA · random ticket 150–999 each play</span>
+            <span class="sound-listen" data-i18n="sounds.listen">Listen</span>
+          </button>
+
         </div>
 
         <div class="voice-library">
@@ -653,6 +664,8 @@
             <h3 data-i18n="sounds.libraryTitle">Community voice library</h3>
             <p data-i18n="sounds.libraryBody">Short clips shared by other DingDong users: funny sounds, classic game and movie lines, cartoon effects. Each is 3 seconds or less. Preview one, click Install, and it goes straight into DingDong.</p>
             <ul class="voice-library-samples">
+              <li>排队叫号（150–999 随机）</li>
+              <li>AI叫你写代码</li>
               <li>Get over here!</li>
               <li>Nani</li>
               <li>HOOYA</li>
@@ -1148,6 +1161,10 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "sounds.crispBody": "Short, dry, and direct",
           "sounds.deep": "Deep",
           "sounds.deepBody": "Low and easy to notice",
+          "sounds.aiCallback": "AI callback",
+          "sounds.aiCallbackBody": "Your AI is calling you back to write code",
+          "sounds.queueCall": "Queue call",
+          "sounds.queueCallBody": "Restaurant/clinic PA · random ticket 150–999 each play",
           "sounds.listen": "Listen",
           "sounds.customTitle": "Or use your own sound",
           "sounds.customBody": "Import a WAV clip of up to 15 seconds, or pick one from the community library.",
@@ -1480,6 +1497,10 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
           "sounds.crispBody": "短、干脆、不拖尾",
           "sounds.deep": "DingDong 低沉",
           "sounds.deepBody": "频率更低，辨识度高",
+          "sounds.aiCallback": "AI叫你写代码",
+          "sounds.aiCallbackBody": "你的 AI 叫你来写代码了",
+          "sounds.queueCall": "排队叫号",
+          "sounds.queueCallBody": "餐厅/医院叫号 · 每次随机 150–999",
           "sounds.listen": "试听",
           "sounds.customTitle": "也可以用你自己的声音",
           "sounds.customBody": "导入 15 秒以内的 WAV 音频，或去社区声音库挑一个。",
@@ -1647,7 +1668,7 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
       const agentPromptCopy = document.getElementById("agent-prompt-copy");
       const agentPromptCopyLabel = document.getElementById("agent-prompt-copy-label");
       const agentPromptCopyStatus = document.getElementById("agent-prompt-copy-status");
-      const soundCards = document.querySelectorAll("[data-audio]");
+      const soundCards = document.querySelectorAll("[data-audio], [data-queue-call]");
       const soundStatus = document.getElementById("sound-status");
       const downloadActions = document.querySelector(".download-actions");
       const downloadCards = {
@@ -2250,6 +2271,70 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         soundStatus.textContent = copy[demoState.language][statusKey];
       };
 
+      const queueCallFragmentNames = (number) => {
+        const hundreds = Math.floor(number / 100);
+        const rest = number % 100;
+        const names = ["ding", "qing", String(hundreds), "bai"];
+        if (rest !== 0) {
+          const tens = Math.floor(rest / 10);
+          const ones = rest % 10;
+          if (tens === 0) {
+            names.push("0", String(ones));
+          } else {
+            names.push(String(tens), "shi");
+            if (ones !== 0) names.push(String(ones));
+          }
+        }
+        names.push("hao");
+        return names;
+      };
+
+      const decodeWavMono = async (url, audioContext) => {
+        const response = await fetch(url);
+        const bytes = await response.arrayBuffer();
+        return audioContext.decodeAudioData(bytes.slice(0));
+      };
+
+      const playQueueCallPreview = async (card) => {
+        const number = 150 + Math.floor(Math.random() * (999 - 150 + 1));
+        const names = queueCallFragmentNames(number);
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const buffers = [];
+        for (const name of names) {
+          buffers.push(await decodeWavMono(`https://raw.githubusercontent.com/JevonsCode/dingdong-voices/d763413d793e9c485dd8da4a4fb74248f828a5b9/audio/queue-call-fragments/${name}.wav`, audioContext));
+        }
+        const gap = 0.02;
+        const total = buffers.reduce((sum, buffer) => sum + buffer.duration + gap, 0);
+        const offline = new OfflineAudioContext(1, Math.ceil(total * audioContext.sampleRate), audioContext.sampleRate);
+        let cursor = 0;
+        for (const buffer of buffers) {
+          const source = offline.createBufferSource();
+          source.buffer = buffer;
+          source.connect(offline.destination);
+          source.start(cursor);
+          cursor += buffer.duration + gap;
+        }
+        const rendered = await offline.startRendering();
+        const mixed = audioContext.createBufferSource();
+        mixed.buffer = rendered;
+        const gain = audioContext.createGain();
+        gain.gain.value = 0.82;
+        mixed.connect(gain);
+        gain.connect(audioContext.destination);
+        const name = card.querySelector("strong").textContent;
+        currentSoundAudio = { pause() { try { mixed.stop(); } catch {} try { audioContext.close(); } catch {} }, _ctx: audioContext };
+        currentSoundCard = card;
+        card.classList.add("is-playing");
+        card.setAttribute("aria-pressed", "true");
+        const label = demoState.language === "zh" ? `请${number}号` : `#${number}`;
+        soundStatus.textContent = `${copy[demoState.language]["sounds.playing"]}：${name} · ${label}`;
+        mixed.onended = () => {
+          try { audioContext.close(); } catch {}
+          resetSoundPreview();
+        };
+        mixed.start();
+      };
+
       const playSoundPreview = async (card) => {
         if (currentSoundAudio) {
           currentSoundAudio.pause();
@@ -2257,6 +2342,15 @@ command = "/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp"</cod
         if (currentSoundCard) {
           currentSoundCard.classList.remove("is-playing");
           currentSoundCard.setAttribute("aria-pressed", "false");
+        }
+
+        if (card.hasAttribute("data-queue-call")) {
+          try {
+            await playQueueCallPreview(card);
+          } catch {
+            resetSoundPreview("sounds.error");
+          }
+          return;
         }
 
         const audio = new Audio(card.dataset.audio);
