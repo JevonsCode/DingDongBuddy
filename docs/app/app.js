@@ -1,25 +1,25 @@
-import { computerDisplayName } from "./app-formatters.js?shell=67";
-import { renderTransferProgress } from './transfer-progress.js?shell=67';
-import { createFileActions, downloadHistoryKey } from "./app-file-actions.js?shell=67";
+import { computerDisplayName } from "./app-formatters.js?shell=68";
+import { renderTransferProgress } from './transfer-progress.js?shell=68';
+import { createFileActions, downloadHistoryKey } from "./app-file-actions.js?shell=68";
 import {
   defaultDeviceName,
   detectDeviceName,
   shouldUpgradeAutomaticDeviceName,
-} from "./device-name.js?shell=67";
+} from "./device-name.js?shell=68";
 import {
   applyAgentNotificationDefault,
   wantsAgentNotifications,
-} from "./notification-policy.js?shell=67";
+} from "./notification-policy.js?shell=68";
 import {
   extractPairingFragment,
   normalizePairingRegistry,
   pairingRegistryVersion,
   pairingsMatch,
-} from "./pairing-state.js?shell=67";
+} from "./pairing-state.js?shell=68";
 import {
   createPairingScanner,
   pairingScannerSupported,
-} from "./pairing-scanner.js?shell=67";
+} from "./pairing-scanner.js?shell=68";
 import {
   adjacentContentTab,
   contentScrollIsSnapped,
@@ -27,21 +27,21 @@ import {
   contentTabs,
   isContentTab,
   parseContentTabLaunch,
-} from "./content-navigation.js?shell=67";
-import { idbDelete, idbGet, idbSetMany } from "./app-storage.js?shell=67";
-import { createInstallationController } from "./app-installation.js?shell=67";
-import { createAgentNotificationController } from "./app-notifications.js?shell=67";
-import { createAppRenderer } from "./app-rendering.js?shell=67";
-import { createConnectionController } from "./app-connection.js?shell=67";
-import { createDeviceSettingsController } from "./app-settings.js?shell=67";
-import { createPairingController } from "./app-pairing.js?shell=67";
-import { createContentTransferController } from "./app-content-transfer.js?shell=67";
+} from "./content-navigation.js?shell=68";
+import { idbDelete, idbGet, idbSetMany } from "./app-storage.js?shell=68";
+import { createInstallationController } from "./app-installation.js?shell=68";
+import { createAgentNotificationController } from "./app-notifications.js?shell=68";
+import { createAppRenderer } from "./app-rendering.js?shell=68";
+import { createConnectionController } from "./app-connection.js?shell=68";
+import { createDeviceSettingsController } from "./app-settings.js?shell=68";
+import { createPairingController } from "./app-pairing.js?shell=68";
+import { createContentTransferController } from "./app-content-transfer.js?shell=68";
 import {
   isAndroid,
   isIos,
   isMobileBrowser,
   isStandalone,
-} from "./app-platform.js?shell=67";
+} from "./app-platform.js?shell=68";
 
 const storageKeys = {
   identity: "dingdong.identity.v1",
@@ -61,7 +61,7 @@ const initialReconnectDelayMs = 2400;
 const maximumReconnectDelayMs = 30_000;
 const installVerificationIntervalMs = 3000;
 const installVerificationTimeoutMs = 60 * 1000;
-const currentPwaVersion = "1.11.9";
+const currentPwaVersion = "1.11.10";
 // The shell version is the `?shell=` this module was loaded with, so it cannot
 // drift from index.html, the service worker cache, and version.json.
 const currentPwaShellVersion =

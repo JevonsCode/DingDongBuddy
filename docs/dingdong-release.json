@@ -1,40 +1,40 @@
 {
   "app": "DingDong",
-  "latestVersion": "1.11.9",
-  "latestBuild": "92",
+  "latestVersion": "1.11.10",
+  "latestBuild": "93",
   "prerelease": false,
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
-  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.11.9",
+  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.11.10",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.9/DingDong-1.11.9-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.10/DingDong-1.11.10-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.9/DingDong-1.11.9-macos-x64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.10/DingDong-1.11.10-macos-x64.dmg",
         "beta": false
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.9/DingDong-1.11.9-windows-x64-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.10/DingDong-1.11.10-windows-x64-Setup.exe",
         "beta": false
       }
     }
   },
   "notes": [
-    "Phone pairing links opened in the browser now really open the DingDong Android app or continue in the browser, and reconnecting shows a small spinner beside the status instead of a banner that shifted the page."
+    "Reminders now play the right sound: finished work uses the completion sound, while questions, approvals and permission prompts use the needs-you sound, without a second completion sound right after."
   ],
   "notesByLanguage": {
     "en": [
-      "Phone pairing links opened in the browser now really open the DingDong Android app or continue in the browser, and reconnecting shows a small spinner beside the status instead of a banner that shifted the page."
+      "Reminders now play the right sound: finished work uses the completion sound, while questions, approvals and permission prompts use the needs-you sound, without a second completion sound right after."
     ],
     "zh": [
-      "手机浏览器打开的连接链接现在能正常打开 DingDong Android App 或继续在浏览器中使用；重连时只在状态旁显示小转圈，不再出现顶动页面的横幅。"
+      "提醒声音更准确：任务完成播放完成提示音；提问、审批和权限请求播放需要你处理的提示音，之后不会再紧跟一声完成提示音。"
     ],
     "es": [
-      "Los enlaces de emparejamiento abiertos en el navegador del móvil ahora abren de verdad la app de DingDong para Android o continúan en el navegador, y la reconexión muestra un pequeño indicador junto al estado en lugar de un aviso que desplazaba la página."
+      "Los recordatorios suenan como corresponde: el trabajo terminado usa el sonido de finalización y las preguntas, aprobaciones y solicitudes de permiso usan el sonido de atención, sin otro sonido de finalización justo después."
     ]
   }
 }
