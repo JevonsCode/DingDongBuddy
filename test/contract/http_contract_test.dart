@@ -454,6 +454,85 @@ void main() {
     );
   }
 
+  test(
+    'an attention reminder absorbs its own turn\'s Stop written later',
+    () async {
+      final List<String> delivered = <String>[];
+      var suppressed = 0;
+      DateTime now = DateTime.utc(2026, 11, 8, 12);
+      final router = AgentRouter(
+        onDing: (DingRequest request) =>
+            delivered.add(request.notificationKind.apiValue),
+        onSuppressedDing: (_) => suppressed += 1,
+        now: () => now,
+      );
+      Future<String?> ding(Map<String, Object?> body) async =>
+          (await router.route(
+                HttpRequestData(
+                  method: 'POST',
+                  uri: '/ding',
+                  body: jsonEncode(<String, Object?>{
+                    'source': 'Claude Code',
+                    'conversationId': 'c1',
+                    ...body,
+                  }),
+                ),
+              )).json['status']
+              as String?;
+
+      await ding(<String, Object?>{
+        'message': 'Which branch?',
+        'notificationKind': 'attention',
+      });
+      now = now.add(const Duration(seconds: 90));
+      expect(
+        await ding(<String, Object?>{
+          'message': 'Which branch should I release from?',
+          'notificationKind': 'attention',
+          'fallback': true,
+        }),
+        'suppressed',
+      );
+      expect(delivered, <String>['attention']);
+      expect(suppressed, 1);
+    },
+  );
+
+  test('a finished turn clears a waiting attention reminder', () async {
+    final List<String> delivered = <String>[];
+    DateTime now = DateTime.utc(2026, 11, 8, 12);
+    final router = AgentRouter(
+      onDing: (DingRequest request) =>
+          delivered.add(request.notificationKind.apiValue),
+      now: () => now,
+    );
+    Future<void> ding(Map<String, Object?> body) => router.route(
+      HttpRequestData(
+        method: 'POST',
+        uri: '/ding',
+        body: jsonEncode(<String, Object?>{
+          'source': 'Codex',
+          'conversationId': 'thread-1',
+          ...body,
+        }),
+      ),
+    );
+
+    await ding(<String, Object?>{
+      'message': 'Needs input',
+      'notificationKind': 'attention',
+    });
+    now = now.add(const Duration(seconds: 30));
+    await ding(<String, Object?>{'message': 'Done', 'fallback': true});
+    now = now.add(const Duration(seconds: 60));
+    await ding(<String, Object?>{
+      'message': 'Which option?',
+      'notificationKind': 'attention',
+      'fallback': true,
+    });
+    expect(delivered, <String>['attention', 'completion', 'attention']);
+  });
+
   test('fallback-only notifications are never deduplicated', () async {
     int notificationCount = 0;
     DateTime now = DateTime.utc(2026, 7, 17, 12);

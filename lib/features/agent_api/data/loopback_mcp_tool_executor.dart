@@ -3,6 +3,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
 import 'package:dingdong/features/agent_api/data/agent_repository_context.dart';
 import 'package:dingdong/features/agent_api/data/agent_source_identity.dart';
 import 'package:dingdong/features/agent_api/data/mcp_server.dart';
@@ -364,7 +365,12 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
     }
     final Map<String, Object?> body = Map<String, Object?>.of(arguments);
     body['conversationId'] = conversationId.trim();
-    body.putIfAbsent('notificationKind', () => 'attention');
+    // This tool exists for attention. A missing, null or unknown kind must
+    // not fall through to DingRequest's completion default.
+    body['notificationKind'] =
+        (AgentNotificationKind.tryParse(body['notificationKind']) ??
+                AgentNotificationKind.attention)
+            .apiValue;
     final String? currentConversationId = _conversationIdResolver()?.trim();
     final String? source = resolveActivitySource(
       (body['source'] as String? ?? '').trim().isEmpty

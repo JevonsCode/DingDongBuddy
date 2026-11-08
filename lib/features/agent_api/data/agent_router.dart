@@ -212,6 +212,21 @@ final class AgentRouter {
     seconds: 5,
   );
 
+  /// An Agent that asks for attention with dingdong_notify usually ends its
+  /// turn with that question, and the Stop hook then reports the same turn.
+  /// Writing the last reply takes far longer than five seconds, so an
+  /// identified conversation's attention reminder absorbs the matching
+  /// attention fallback for longer.
+  static const Duration _attentionHookDeduplicationWindow = Duration(
+    minutes: 10,
+  );
+
+  static Duration _deduplicationWindow(_NotificationDeduplicationKey key) =>
+      key.notificationKind == AgentNotificationKind.attention &&
+          key.conversationId != null
+      ? _attentionHookDeduplicationWindow
+      : _completionHookDeduplicationWindow;
+
   Future<HttpResponseData> _reminderSounds(String body) async {
     final ReminderSoundUpdater? update = _updateReminderSounds;
     if (update == null) {
@@ -426,11 +441,11 @@ final class AgentRouter {
         final _NotificationDeduplicationKey notificationKey =
             _notificationDeduplicationKey(dingRequest);
         _recentPrimaryDings.removeWhere((
-          _NotificationDeduplicationKey _,
+          _NotificationDeduplicationKey key,
           DateTime recordedAt,
         ) {
           final Duration age = now.difference(recordedAt);
-          return age.isNegative || age >= _completionHookDeduplicationWindow;
+          return age.isNegative || age >= _deduplicationWindow(key);
         });
         if (dingRequest.fallback) {
           DateTime? primaryDingAt = _recentPrimaryDings.remove(notificationKey);
@@ -443,6 +458,15 @@ final class AgentRouter {
               conversationId: null,
               notificationKind: notificationKey.notificationKind,
             ));
+          }
+          if (notificationKey.conversationId != null) {
+            // The Stop hook ends this conversation's turn. A longer-lived
+            // attention entry must not swallow a later turn's reminder.
+            _recentPrimaryDings.removeWhere(
+              (_NotificationDeduplicationKey key, DateTime _) =>
+                  key.source == notificationKey.source &&
+                  key.conversationId == notificationKey.conversationId,
+            );
           }
           if (primaryDingAt != null) {
             _onSuppressedDing(dingRequest);
