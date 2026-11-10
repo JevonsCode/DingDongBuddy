@@ -174,6 +174,14 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
         final reminderColor = reminder == null
             ? null
             : Color(0xff000000 | reminder.color.rgbValue);
+        final List<Color> reminderColors = activityReminderColors(
+          widget.activity,
+        );
+        final int recentCount = widget.activity.recentReminderCount;
+        final bool showRecentCount =
+            widget.isNewThisVisit &&
+            widget.activity.repeatCount > 1 &&
+            recentCount > 0;
         final openedColor = reminderColor ?? PopupStyle.of(context).accent;
         final openedForeground = Theme.of(context).brightness == Brightness.dark
             ? Color.lerp(openedColor, Colors.white, 0.16)!
@@ -201,6 +209,9 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
                   ),
                   shape: ReminderCardBorder(
                     temporary: reminder?.temporary ?? false,
+                    gradient: widget.isNewThisVisit
+                        ? activityReminderGradient(reminderColors)
+                        : null,
                     borderRadius: BorderRadius.circular(9),
                     side: BorderSide(
                       color: widget.isNewThisVisit
@@ -223,10 +234,13 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
                   children: <Widget>[
                     Tooltip(
                       message: reminderDescription(context, reminder),
-                      child: PopupSymbolIcon(
-                        'today',
-                        size: 18,
-                        color: reminderColor ?? PopupStyle.of(context).accent,
+                      child: ActivityReminderTint(
+                        colors: reminderColors,
+                        child: PopupSymbolIcon(
+                          'today',
+                          size: 18,
+                          color: reminderColor ?? PopupStyle.of(context).accent,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 9),
@@ -264,7 +278,7 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
                         ],
                       ),
                     ),
-                    if (widget.activity.repeatCount > 1) ...<Widget>[
+                    if (showRecentCount) ...<Widget>[
                       const SizedBox(width: 5),
                       SizedBox(
                         height: 32,
@@ -287,14 +301,11 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
                               key: Key(
                                 'activity-repeat-count-${widget.activity.id}',
                               ),
-                              count: widget.activity.repeatCount,
-                              foregroundColor: widget.activity.unseen
-                                  ? PopupStyle.of(
-                                      context,
-                                    ).activityUnread.withValues(alpha: 0.58)
-                                  : PopupStyle.of(
-                                      context,
-                                    ).textPrimary.withValues(alpha: 0.13),
+                              count: recentCount,
+                              label: recentCount > 99 ? '99+' : '+$recentCount',
+                              foregroundColor: PopupStyle.of(
+                                context,
+                              ).activityUnread.withValues(alpha: 0.58),
                               verticalOffset: 0.5,
                             ),
                           ),

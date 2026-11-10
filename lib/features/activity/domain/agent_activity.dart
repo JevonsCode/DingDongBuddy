@@ -2,6 +2,7 @@ import 'package:dingdong/features/activity/domain/agent_conversation_target.dart
 import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
 import 'package:dingdong/features/agent_api/domain/conversation_token_usage.dart';
 import 'package:dingdong/features/settings/domain/reminder_profile.dart';
+import 'package:dingdong/features/settings/domain/tray_reminder_style.dart';
 
 /// One locally observed Agent update shown in the Dynamic workspace.
 final class AgentActivity {
@@ -16,6 +17,8 @@ final class AgentActivity {
     this.startedAt,
     this.repeatCount = 1,
     int? unseenReminderCount,
+    int? recentReminderCount,
+    this._reminderColors,
     this.notificationKind = AgentNotificationKind.completion,
     this.conversationTarget,
     this.tokenUsage,
@@ -23,7 +26,9 @@ final class AgentActivity {
     this.pinned = false,
     this.sequence = 0,
     this.opened = false,
-  }) : unseenReminderCount = unseenReminderCount ?? (unseen ? 1 : 0);
+  }) : unseenReminderCount = unseenReminderCount ?? (unseen ? 1 : 0),
+       recentReminderCount =
+           recentReminderCount ?? unseenReminderCount ?? (unseen ? 1 : 0);
 
   factory AgentActivity.fromJson(Map<String, Object?> json) {
     return AgentActivity(
@@ -40,6 +45,8 @@ final class AgentActivity {
         json['unseenReminderCount'],
         unseen: json['unseen'] == true,
       ),
+      recentReminderCount: _optionalCount(json['recentReminderCount']),
+      reminderColors: _parseReminderColors(json['reminderColors']),
       notificationKind: AgentNotificationKind.parse(json['notificationKind']),
       conversationTarget: json['conversationTarget'] is Map
           ? AgentConversationTarget.fromJson(
@@ -70,6 +77,16 @@ final class AgentActivity {
   final DateTime? startedAt;
   final int repeatCount;
   final int unseenReminderCount;
+
+  /// Reminders in the latest batch. Unlike [unseenReminderCount] this survives
+  /// the seen acknowledgement, so the visit that shows the batch can count it.
+  final int recentReminderCount;
+
+  final List<TrayNotificationColor>? _reminderColors;
+
+  /// Distinct reminder colors in the order they first arrived.
+  List<TrayNotificationColor> get reminderColors =>
+      _reminderColors ?? <TrayNotificationColor>[?reminder?.color];
   final AgentNotificationKind notificationKind;
   final AgentConversationTarget? conversationTarget;
   final ConversationTokenUsage? tokenUsage;
@@ -100,6 +117,8 @@ final class AgentActivity {
     startedAt: startedAt,
     repeatCount: repeatCount,
     unseenReminderCount: 0,
+    recentReminderCount: recentReminderCount,
+    reminderColors: _reminderColors,
     notificationKind: notificationKind,
     conversationTarget: conversationTarget,
     tokenUsage: tokenUsage,
@@ -143,6 +162,14 @@ final class AgentActivity {
       unseenReminderCount: countAsReminder
           ? unseenReminderCount + 1
           : unseenReminderCount,
+      // A reminder after the previous batch was seen starts a new batch.
+      recentReminderCount: countAsReminder
+          ? (unseen ? recentReminderCount + 1 : 1)
+          : recentReminderCount,
+      reminderColors:
+          reminder == null || reminderColors.contains(reminder.color)
+          ? _reminderColors
+          : <TrayNotificationColor>[...reminderColors, reminder.color],
       notificationKind: notificationKind ?? this.notificationKind,
       conversationTarget: mergedTarget,
       tokenUsage: tokenUsage ?? this.tokenUsage,
@@ -167,6 +194,11 @@ final class AgentActivity {
     if (startedAt != null) 'startedAt': startedAt!.toUtc().toIso8601String(),
     'repeatCount': repeatCount,
     if (unseenReminderCount > 0) 'unseenReminderCount': unseenReminderCount,
+    if (recentReminderCount > 0) 'recentReminderCount': recentReminderCount,
+    if (reminderColors.isNotEmpty)
+      'reminderColors': <String>[
+        for (final TrayNotificationColor color in reminderColors) color.name,
+      ],
     if (notificationKind != AgentNotificationKind.completion)
       'notificationKind': notificationKind.apiValue,
     if (conversationTarget != null)
@@ -202,4 +234,19 @@ int _unseenReminderCount(Object? value, {required bool unseen}) {
     return value;
   }
   return 1;
+}
+
+int? _optionalCount(Object? value) => value is int && value >= 0 ? value : null;
+
+List<TrayNotificationColor>? _parseReminderColors(Object? value) {
+  if (value is! List) {
+    return null;
+  }
+  final Set<TrayNotificationColor> colors = <TrayNotificationColor>{};
+  for (final Object? name in value) {
+    for (final TrayNotificationColor color in TrayNotificationColor.values) {
+      if (color.name == name) colors.add(color);
+    }
+  }
+  return colors.toList(growable: false);
 }

@@ -8,6 +8,7 @@ const double activityRepeatCountFontSize = 28;
 class ActivityRepeatCount extends StatelessWidget {
   const ActivityRepeatCount({
     required this.count,
+    this.label,
     this.foregroundColor,
     this.fontSize = activityRepeatCountFontSize,
     this.verticalOffset = 0,
@@ -15,6 +16,9 @@ class ActivityRepeatCount extends StatelessWidget {
   });
 
   final int count;
+
+  /// Replaces the default `×N` text, for example with a `+N` batch count.
+  final String? label;
   final Color? foregroundColor;
   final double fontSize;
   final double verticalOffset;
@@ -25,7 +29,7 @@ class ActivityRepeatCount extends StatelessWidget {
     return Transform.translate(
       offset: Offset(0, verticalOffset),
       child: Text(
-        count > 99 ? '99+' : '×$count',
+        label ?? (count > 99 ? '99+' : '×$count'),
         style: TextStyle(
           color: foregroundColor ?? colors.onSurface.withValues(alpha: 0.13),
           fontSize: fontSize,

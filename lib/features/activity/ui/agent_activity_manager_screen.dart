@@ -7,6 +7,7 @@ import 'package:dingdong/core/widgets/reminder_marker.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
+import 'package:dingdong/features/activity/ui/activity_reminder_colors.dart';
 import 'package:dingdong/features/activity/ui/activity_repeat_count.dart';
 import 'package:dingdong/features/activity/ui/agent_subagent_badge.dart';
 import 'package:dingdong/features/activity/ui/conversation_usage_tooltip.dart';
@@ -204,10 +205,13 @@ class _ActivityHistoryRow extends StatelessWidget {
                   width: 30,
                   height: 30,
                   alignment: Alignment.center,
-                  child: PopupSymbolIcon(
-                    'today',
-                    size: 18,
-                    color: reminderColor,
+                  child: ActivityReminderTint(
+                    colors: activityReminderColors(activity),
+                    child: PopupSymbolIcon(
+                      'today',
+                      size: 18,
+                      color: reminderColor,
+                    ),
                   ),
                 ),
               ),
