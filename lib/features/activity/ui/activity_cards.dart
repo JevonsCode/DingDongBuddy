@@ -209,9 +209,13 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
                   ),
                   shape: ReminderCardBorder(
                     temporary: reminder?.temporary ?? false,
-                    gradient: widget.isNewThisVisit
-                        ? activityReminderGradient(reminderColors)
-                        : null,
+                    // Read cards keep a lighter blend so new ones still stand out.
+                    gradient: activityReminderGradient(<Color>[
+                      for (final Color color in reminderColors)
+                        widget.isNewThisVisit
+                            ? color
+                            : color.withValues(alpha: 0.42),
+                    ]),
                     borderRadius: BorderRadius.circular(9),
                     side: BorderSide(
                       color: widget.isNewThisVisit

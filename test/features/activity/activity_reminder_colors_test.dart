@@ -129,4 +129,37 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     controller.dispose();
   });
+
+  testWidgets('a card from an earlier visit keeps a lighter gradient border', (
+    WidgetTester tester,
+  ) async {
+    final ActivityController controller = ActivityController(
+      idGenerator: () => 'gradient-card',
+      now: () => DateTime.utc(2026, 11, 11, 10),
+    );
+    _remind(controller, _blue);
+    _remind(controller, _purple);
+    controller
+      ..markAllSeen()
+      ..markFeedViewed(controller.latestSequence);
+
+    await tester.pumpWidget(DingDongApp(activityController: controller));
+    await tester.pump();
+
+    final Finder card = find.byKey(const Key('activity-gradient-card'));
+    expect(find.descendant(of: card, matching: find.text('+2')), findsNothing);
+    final ShapeDecoration decoration =
+        tester.widget<Container>(card).decoration! as ShapeDecoration;
+    final ReminderCardBorder border = decoration.shape as ReminderCardBorder;
+    final List<Color> colors = (border.gradient! as LinearGradient).colors;
+    expect(colors, hasLength(2));
+    expect(colors.first.a, closeTo(0.42, 0.01));
+    expect(
+      colors.last.withValues(alpha: 1),
+      Color(0xff000000 | TrayNotificationColor.purple.rgbValue),
+    );
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    controller.dispose();
+  });
 }
