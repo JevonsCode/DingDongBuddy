@@ -388,18 +388,18 @@ void main() {
     expect(find.byKey(const Key('recent-agent-count')), findsOneWidget);
     expect(find.text('24 h · 1'), findsOneWidget);
     expect(activityController.unseenCount, 0);
-    Text repeatText = tester.widget<Text>(find.text('×2'));
+    Text repeatText = tester.widget<Text>(find.text('+2'));
     expect(
       repeatText.style?.color,
-      PopupStyle.textPrimary.withValues(alpha: 0.13),
+      PopupStyle.activityUnread.withValues(alpha: 0.58),
     );
 
     await tester.pump(const Duration(milliseconds: 50));
     expect(activityController.unseenCount, 0);
-    repeatText = tester.widget<Text>(find.text('×2'));
+    repeatText = tester.widget<Text>(find.text('+2'));
     expect(
       repeatText.style?.color,
-      PopupStyle.textPrimary.withValues(alpha: 0.13),
+      PopupStyle.activityUnread.withValues(alpha: 0.58),
     );
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
@@ -438,19 +438,19 @@ void main() {
     await tester.pump();
 
     expect(activityController.unseenCount, 0);
-    Text repeatText = tester.widget<Text>(find.text('×2'));
+    Text repeatText = tester.widget<Text>(find.text('+2'));
     expect(
       repeatText.style?.color,
-      PopupStyle.textPrimary.withValues(alpha: 0.13),
+      PopupStyle.activityUnread.withValues(alpha: 0.58),
     );
 
     await tester.pump(const Duration(milliseconds: 50));
 
     expect(activityController.unseenCount, 0);
-    repeatText = tester.widget<Text>(find.text('×2'));
+    repeatText = tester.widget<Text>(find.text('+2'));
     expect(
       repeatText.style?.color,
-      PopupStyle.textPrimary.withValues(alpha: 0.13),
+      PopupStyle.activityUnread.withValues(alpha: 0.58),
     );
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
@@ -763,7 +763,7 @@ void main() {
       find.byKey(const Key('activity-repeat-count-repeated-long-agent')),
       findsOneWidget,
     );
-    expect(find.text('×2'), findsOneWidget);
+    expect(find.text('+2'), findsOneWidget);
     final Tooltip repeatTooltip = tester.widget<Tooltip>(
       find.ancestor(
         of: find.byKey(const Key('activity-repeat-count-repeated-long-agent')),
@@ -777,7 +777,7 @@ void main() {
     final Rect cardRect = tester.getRect(
       find.byKey(const Key('activity-repeated-long-agent')),
     );
-    final Rect repeatRect = tester.getRect(find.text('×2'));
+    final Rect repeatRect = tester.getRect(find.text('+2'));
     final Rect messageRect = tester.getRect(
       find.byKey(const Key('activity-message-repeated-long-agent')),
     );
@@ -807,6 +807,7 @@ void main() {
               completedAt: DateTime.utc(2026, 7, 22, 10),
               unseen: false,
               repeatCount: 2,
+              recentReminderCount: 2,
             ),
             AgentActivity(
               id: 'repeat-with-open',
@@ -815,6 +816,7 @@ void main() {
               completedAt: DateTime.utc(2026, 7, 22, 9),
               unseen: false,
               repeatCount: 2,
+              recentReminderCount: 2,
               conversationTarget: const AgentConversationTarget(
                 client: AgentClient.codex,
                 conversationId: '01a18c7d-9422-7482-adc4-c23b2f12d472',

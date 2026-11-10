@@ -1,4 +1,11 @@
-# DingDong 1.11.10 Manual Regression Checklist
+# DingDong 1.11.11 Manual Regression Checklist
+
+## Recent notification colors and batch count (1.11.11)
+
+- Send one conversation a completion reminder and then an attention reminder; verify its recent card icon and border blend both colors in that order.
+- Send a conversation several more reminders after reading it; verify the card shows +N for the new ones only, and hides it the next time the popup opens.
+- Reopen the popup after reading a multi-color card; verify its border keeps a lighter blend while new cards stay stronger.
+- Verify desktop version 1.11.11, build 94, and PWA shell 69 across published packages and update metadata.
 
 ## Completion and attention reminder sounds (1.11.10)
 
