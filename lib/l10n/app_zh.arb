@@ -3415,7 +3415,7 @@
   "@theHealthEndpointRespondedSuccessfully": {
     "description": "DingDong built-in interface copy."
   },
-  "theHelperOpensAccessibilityAndPlacesADraggableDingDong_11660c82": "助手会打开“辅助功能”，并在旁边显示可拖拽的 DingDong。“−”可用时先删除旧条目再拖入；若“−”置灰，先拖一次让它可用，删除旧条目后再拖一次并打开开关。",
+  "theHelperOpensAccessibilityAndPlacesADraggableDingDong_11660c82": "将 DingDong 拖入系统的「辅助功能」列表，再打开开关。",
   "@theHelperOpensAccessibilityAndPlacesADraggableDingDong_11660c82": {
     "description": "DingDong built-in interface copy."
   },

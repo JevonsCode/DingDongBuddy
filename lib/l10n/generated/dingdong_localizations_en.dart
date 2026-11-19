@@ -2615,7 +2615,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get theHelperOpensAccessibilityAndPlacesADraggableDingDong_11660c82 =>
-      'The helper opens Accessibility and places a draggable DingDong beside it. If “−” works, remove the old entry before dragging. If “−” is disabled, drag once to make it available, remove the entry, then drag again and turn DingDong on.';
+      'Drag DingDong into the Accessibility list, then turn on its switch.';
 
   @override
   String get theInstalledPackageIsReadOnlyReviewTheSourceBefore_d3e0119e =>

@@ -3415,7 +3415,7 @@
   "@theHealthEndpointRespondedSuccessfully": {
     "description": "DingDong built-in interface copy."
   },
-  "theHelperOpensAccessibilityAndPlacesADraggableDingDong_11660c82": "The helper opens Accessibility and places a draggable DingDong beside it. If “−” works, remove the old entry before dragging. If “−” is disabled, drag once to make it available, remove the entry, then drag again and turn DingDong on.",
+  "theHelperOpensAccessibilityAndPlacesADraggableDingDong_11660c82": "Drag DingDong into the Accessibility list, then turn on its switch.",
   "@theHelperOpensAccessibilityAndPlacesADraggableDingDong_11660c82": {
     "description": "DingDong built-in interface copy."
   },

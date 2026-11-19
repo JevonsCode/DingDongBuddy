@@ -22,13 +22,62 @@ final class AccessibilityPermissionAssistant: NSObject {
   private var hasLocatedSettingsWindow = false
   private var missingSettingsPollCount = 0
   private var permissionWasGranted = false
+  private var isPreparingPermission = false
 
   func show() {
-    close()
-    permissionWasGranted = AXIsProcessTrusted()
+    guard !isPreparingPermission else { return }
+    if panel != nil {
+      openAccessibilitySettings()
+      return
+    }
+    guard !AXIsProcessTrusted() else {
+      onPermissionGranted?()
+      openAccessibilitySettings()
+      return
+    }
+    guard let bundleIdentifier = Bundle.main.bundleIdentifier, !bundleIdentifier.isEmpty else {
+      presentPanel(showManualSteps: true)
+      return
+    }
 
+    // The user opened the permission helper. Clear only this untrusted app's
+    // old Accessibility entry before Settings loads the list.
+    isPreparingPermission = true
+    DispatchQueue.global(qos: .userInitiated).async {
+      let didReset = Self.resetAccessibilityPermission(for: bundleIdentifier)
+      DispatchQueue.main.async { [weak self] in
+        guard let self else { return }
+        self.isPreparingPermission = false
+        if AXIsProcessTrusted() {
+          self.onPermissionGranted?()
+          return
+        }
+        self.presentPanel(showManualSteps: !didReset)
+      }
+    }
+  }
+
+  private static func resetAccessibilityPermission(for bundleIdentifier: String) -> Bool {
+    guard !AXIsProcessTrusted() else { return true }
+    let process = Process()
+    process.executableURL = URL(fileURLWithPath: "/usr/bin/tccutil")
+    process.arguments = ["reset", "Accessibility", bundleIdentifier]
+    process.standardOutput = FileHandle.nullDevice
+    process.standardError = FileHandle.nullDevice
+    do {
+      try process.run()
+      process.waitUntilExit()
+      return process.terminationReason == .exit && process.terminationStatus == 0
+    } catch {
+      return false
+    }
+  }
+
+  private func presentPanel(showManualSteps: Bool) {
+    permissionWasGranted = false
     let panel = AccessibilityPermissionPanel(
-      appURL: Bundle.main.bundleURL
+      appURL: Bundle.main.bundleURL,
+      showManualSteps: showManualSteps
     )
     panel.onClose = { [weak self] in
       self?.close()
@@ -196,9 +245,10 @@ final class AccessibilityPermissionAssistant: NSObject {
 private final class AccessibilityPermissionPanel: NSPanel {
   var onClose: (() -> Void)?
 
-  private let panelSize = NSSize(width: 368, height: 212)
+  private let panelSize: NSSize
 
-  init(appURL: URL) {
+  init(appURL: URL, showManualSteps: Bool) {
+    panelSize = NSSize(width: 368, height: showManualSteps ? 212 : 150)
     super.init(
       contentRect: NSRect(origin: .zero, size: panelSize),
       styleMask: [.borderless, .nonactivatingPanel],
@@ -230,27 +280,7 @@ private final class AccessibilityPermissionPanel: NSPanel {
       self?.ignoresMouseEvents = isDragging
     }
 
-    let staleEntryGuide = makeGuideRow(
-      symbolName: "minus.circle",
-      text: ddAccessibilityString("stale_entry_guide")
-    )
-    let disabledRemoveGuide = makeGuideRow(
-      symbolName: "arrow.clockwise.circle",
-      text: ddAccessibilityString("disabled_remove_guide")
-    )
-    let guideStack = NSStackView(views: [
-      staleEntryGuide,
-      disabledRemoveGuide,
-    ])
-    guideStack.orientation = .vertical
-    guideStack.alignment = .leading
-    guideStack.spacing = 5
-
-    let stack = NSStackView(views: [
-      header,
-      dragSource,
-      guideStack,
-    ])
+    let stack = NSStackView(views: [header, dragSource])
     stack.orientation = .vertical
     stack.alignment = .leading
     stack.spacing = 12
@@ -265,8 +295,25 @@ private final class AccessibilityPermissionPanel: NSPanel {
       header.widthAnchor.constraint(equalTo: stack.widthAnchor),
       dragSource.widthAnchor.constraint(equalTo: stack.widthAnchor),
       dragSource.heightAnchor.constraint(equalToConstant: 68),
-      guideStack.widthAnchor.constraint(equalTo: stack.widthAnchor),
     ])
+
+    if showManualSteps {
+      let guideStack = NSStackView(views: [
+        makeGuideRow(
+          symbolName: "minus.circle",
+          text: ddAccessibilityString("stale_entry_guide")
+        ),
+        makeGuideRow(
+          symbolName: "arrow.clockwise.circle",
+          text: ddAccessibilityString("disabled_remove_guide")
+        ),
+      ])
+      guideStack.orientation = .vertical
+      guideStack.alignment = .leading
+      guideStack.spacing = 5
+      stack.addArrangedSubview(guideStack)
+      guideStack.widthAnchor.constraint(equalTo: stack.widthAnchor).isActive = true
+    }
   }
 
   override var canBecomeKey: Bool { false }

@@ -3415,7 +3415,7 @@
   "@theHealthEndpointRespondedSuccessfully": {
     "description": "DingDong built-in interface copy."
   },
-  "theHelperOpensAccessibilityAndPlacesADraggableDingDong_11660c82": "El asistente abre Accesibilidad y coloca un DingDong arrastrable al lado. Si \"-\" funciona, elimine la entrada anterior antes de arrastrarla. Si “-” está deshabilitado, arrastre una vez para que esté disponible, elimine la entrada, luego arrastre nuevamente y active DingDong.",
+  "theHelperOpensAccessibilityAndPlacesADraggableDingDong_11660c82": "Arrastra DingDong a la lista de Accesibilidad y activa su interruptor.",
   "@theHelperOpensAccessibilityAndPlacesADraggableDingDong_11660c82": {
     "description": "DingDong built-in interface copy."
   },
