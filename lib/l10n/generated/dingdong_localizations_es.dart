@@ -2654,7 +2654,7 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get theHelperOpensAccessibilityAndPlacesADraggableDingDong_11660c82 =>
-      'El asistente abre Accesibilidad y coloca un DingDong arrastrable al lado. Si \"-\" funciona, elimine la entrada anterior antes de arrastrarla. Si “-” está deshabilitado, arrastre una vez para que esté disponible, elimine la entrada, luego arrastre nuevamente y active DingDong.';
+      'Arrastra DingDong a la lista de Accesibilidad y activa su interruptor.';
 
   @override
   String get theInstalledPackageIsReadOnlyReviewTheSourceBefore_d3e0119e =>

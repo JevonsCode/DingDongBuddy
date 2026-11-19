@@ -29,7 +29,9 @@ void main() {
       findsOneWidget,
     );
     expect(
-      find.textContaining('drag once to make it available'),
+      find.text(
+        'Drag DingDong into the Accessibility list, then turn on its switch.',
+      ),
       findsOneWidget,
     );
     final Container statusSurface = tester.widget<Container>(

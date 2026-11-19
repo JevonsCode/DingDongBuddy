@@ -4676,7 +4676,7 @@ abstract class DingDongLocalizations {
   /// DingDong built-in interface copy.
   ///
   /// In en, this message translates to:
-  /// **'The helper opens Accessibility and places a draggable DingDong beside it. If “−” works, remove the old entry before dragging. If “−” is disabled, drag once to make it available, remove the entry, then drag again and turn DingDong on.'**
+  /// **'Drag DingDong into the Accessibility list, then turn on its switch.'**
   String get theHelperOpensAccessibilityAndPlacesADraggableDingDong_11660c82;
 
   /// DingDong built-in interface copy.

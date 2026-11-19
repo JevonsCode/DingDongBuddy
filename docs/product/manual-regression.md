@@ -1,4 +1,15 @@
-# DingDong 1.11.13 Manual Regression Checklist
+# DingDong 1.11.14 Manual Regression Checklist
+
+## Accessibility permission after a macOS update (1.11.14)
+
+- Upgrade an ad hoc signed test app with an existing Accessibility entry to a
+  build with a different signature. Open the DingDong permission helper and
+  confirm the old entry disappears. Drag DingDong into System Settings once,
+  turn on its switch, and confirm the helper closes when trust is granted.
+- Repeat from Quick Paste and System Selection. Check that opening Settings
+  with permission already granted retains the existing authorization.
+- Verify desktop version 1.11.14, build 97, and PWA shell 72 across published
+  packages and update metadata.
 
 ## Nearby computers on a direct link (1.11.13)
 

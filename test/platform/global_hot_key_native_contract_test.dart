@@ -63,4 +63,22 @@ void main() {
     expect(assistant, contains('RoundedVisualEffectContainer'));
     expect(assistant, contains('effectView.layer?.mask = effectMask'));
   });
+
+  test('macOS permission helper clears this app before a single drag', () {
+    final String assistant = File(
+      'macos/Runner/AccessibilityPermissionAssistant.swift',
+    ).readAsStringSync();
+    final int reset = assistant.indexOf('Self.resetAccessibilityPermission(');
+    final int ready = assistant.indexOf(
+      'presentPanel(showManualSteps: !didReset)',
+    );
+
+    expect(assistant, contains('guard !AXIsProcessTrusted()'));
+    expect(assistant, contains('Bundle.main.bundleIdentifier'));
+    expect(assistant, contains('/usr/bin/tccutil'));
+    expect(assistant, contains('["reset", "Accessibility", bundleIdentifier]'));
+    expect(assistant, contains('if showManualSteps {'));
+    expect(reset, greaterThanOrEqualTo(0));
+    expect(ready, greaterThan(reset));
+  });
 }

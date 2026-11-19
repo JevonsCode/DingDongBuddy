@@ -2525,7 +2525,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
 
   @override
   String get theHelperOpensAccessibilityAndPlacesADraggableDingDong_11660c82 =>
-      '助手会打开“辅助功能”，并在旁边显示可拖拽的 DingDong。“−”可用时先删除旧条目再拖入；若“−”置灰，先拖一次让它可用，删除旧条目后再拖一次并打开开关。';
+      '将 DingDong 拖入系统的「辅助功能」列表，再打开开关。';
 
   @override
   String get theInstalledPackageIsReadOnlyReviewTheSourceBefore_d3e0119e =>
