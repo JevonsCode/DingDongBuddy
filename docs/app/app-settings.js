@@ -1,4 +1,4 @@
-import { wantsAgentNotifications } from "./notification-policy.js?shell=70";
+import { wantsAgentNotifications } from "./notification-policy.js?shell=71";
 
 // Connected-device settings, capability diagnostics, and destructive actions.
 export function createDeviceSettingsController({

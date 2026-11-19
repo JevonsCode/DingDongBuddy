@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dingdong/features/device_link/data/device_link_session.dart';
+import 'package:dingdong/features/device_link/data/lan_link_local_discovery.dart';
 import 'package:dingdong/features/device_link/data/lan_network_policy.dart';
 import 'package:dingdong/features/device_link/data/lan_pairing_crypto.dart';
 import 'package:dingdong/features/device_link/data/lan_wire.dart';
@@ -19,6 +20,7 @@ final class LanComputerLink extends ChangeNotifier {
   LanComputerLink({this.discoveryPort = 45893})
     : _unicastDiscoveryPort = discoveryPort,
       _routedDiscoveryPort = discoveryPort,
+      _linkLocalBroadcastTestPort = null,
       _now = DateTime.now,
       _readSubnets = readLanSubnets;
   @visibleForTesting
@@ -26,6 +28,7 @@ final class LanComputerLink extends ChangeNotifier {
     DateTime Function()? now,
     int unicastDiscoveryPort = 45893,
     int routedDiscoveryPort = 45893,
+    int? linkLocalBroadcastTestPort,
     Future<List<LanSubnet>> Function()? subnetReader,
   }) : discoveryPort = 0,
        // Test-only named parameter; keep runtime port state private.
@@ -33,6 +36,8 @@ final class LanComputerLink extends ChangeNotifier {
        _unicastDiscoveryPort = unicastDiscoveryPort,
        // ignore: prefer_initializing_formals
        _routedDiscoveryPort = routedDiscoveryPort,
+       // ignore: prefer_initializing_formals
+       _linkLocalBroadcastTestPort = linkLocalBroadcastTestPort,
        _now = now ?? DateTime.now,
        _readSubnets =
            subnetReader ??
@@ -40,6 +45,12 @@ final class LanComputerLink extends ChangeNotifier {
   final int discoveryPort;
   final int _unicastDiscoveryPort;
   final int _routedDiscoveryPort;
+  final int? _linkLocalBroadcastTestPort;
+  late final _linkLocalDiscovery = LanLinkLocalDiscovery(
+    discoveryPort,
+    _receiveDiscovery,
+    loopbackTestPort: _linkLocalBroadcastTestPort,
+  );
   @visibleForTesting
   int? get discoveryListenPort => _udp?.port;
   @visibleForTesting
@@ -182,6 +193,7 @@ final class LanComputerLink extends ChangeNotifier {
         ),
       );
       await _refreshInterfaces();
+      if (_closed) return;
       _udp!.listen(
         (event) {
           if (event != RawSocketEvent.read) return;
@@ -211,6 +223,7 @@ final class LanComputerLink extends ChangeNotifier {
       error = null;
       _announce();
     } catch (failure) {
+      _linkLocalDiscovery.reset();
       _udp?.close();
       _udp = null;
       await _server?.close();
@@ -251,8 +264,10 @@ final class LanComputerLink extends ChangeNotifier {
     } on Object {
       _subnets = [];
       _interfaces = [];
+      _linkLocalDiscovery.reset();
       rethrow;
     }
+    if (_closed) return;
     final next = interfaces
         .where(
           (i) =>
@@ -281,6 +296,7 @@ final class LanComputerLink extends ChangeNotifier {
       }
     }
     _interfaces = next;
+    await _linkLocalDiscovery.refresh(next, _subnets);
     error = null;
   }
 
@@ -318,6 +334,7 @@ final class LanComputerLink extends ChangeNotifier {
       return;
     }
     final bytes = utf8.encode(jsonEncode(advertisement));
+    _linkLocalDiscovery.announce(bytes);
     for (final iface in _interfaces.where((_) => discoveryPort != 0)) {
       for (final address in iface.addresses.where(
         (a) => _subnets.any((s) => s.address.address == a.address),
@@ -767,6 +784,7 @@ final class LanComputerLink extends ChangeNotifier {
     if (_closed) return;
     _closed = true;
     _timer?.cancel();
+    _linkLocalDiscovery.reset();
     _udp?.close();
     _udp = null;
     await _server?.close();
