@@ -5138,7 +5138,7 @@
   "@lanCodeExpiry": {
     "description": "LAN-only computer discovery and six-digit pairing."
   },
-  "lanComputerOnly": "Solo red local · Reconexión automática",
+  "lanComputerOnly": "Red privada · Reconexión automática",
   "@lanComputerOnly": {
     "description": "LAN-only computer discovery and six-digit pairing."
   },
@@ -5166,9 +5166,13 @@
   "@lanNewCode": {
     "description": "LAN-only computer discovery and six-digit pairing."
   },
-  "lanNoComputers": "Abre Conectar ordenador en ambos equipos, usa la misma red local y permite DingDong en el cortafuegos privado. El Wi-Fi de invitados puede impedir la detección.",
+  "lanNoComputers": "La lista busca equipos en la misma subred. Si están en subredes distintas, genera un código en el otro equipo y búscalo por su IP privada.",
   "@lanNoComputers": {
     "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "lanLookupUnavailable": "El otro equipo no respondió. Comprueba que ambos estén actualizados, que puedan comunicarse y que el otro equipo tenga un código activo.",
+  "@lanLookupUnavailable": {
+    "description": "A manually addressed computer did not respond to a pairing lookup."
   },
   "lanPairingFailed": "No se pudo vincular. Comprueba el código y la red local. Genera otro código si caducó o alcanzó 5 intentos.",
   "@lanPairingFailed": {
@@ -5799,7 +5803,7 @@
       }
     }
   },
-  "devicePeerLanAddress": "IP local del otro equipo",
+  "devicePeerLanAddress": "IP privada del otro equipo",
   "@devicePeerLanAddress": {
     "description": "Computer LAN pairing: distinguish this device address from the peer input."
   },
@@ -5823,7 +5827,7 @@
   "@deviceAddressHint": {
     "description": "Device connection address and route controls."
   },
-  "deviceAddressInvalid": "Introduce una dirección IPv4 de la misma red local que este equipo.",
+  "deviceAddressInvalid": "Introduce una dirección IPv4 privada válida para esta conexión.",
   "@deviceAddressInvalid": {
     "description": "Device connection address and route controls."
   },
@@ -5875,7 +5879,7 @@
   "reminderDefinitionUnavailable": "Este registro antiguo no tiene una definición guardada",
   "reminderTemporaryHelp": "Se usa para el próximo recordatorio y se elimina automáticamente.",
   "lanFindByIp": "Buscar equipo por IP",
-  "lanFindByIpHelp": "Si no aparece el otro equipo, introduce su IP local. No hace falta el puerto; usa su código para la primera conexión.",
+  "lanFindByIpHelp": "Introduce la IPv4 privada del otro equipo y pulsa Buscar. Ambos equipos deben poder comunicarse.",
   "lanPortBusy": "Otra instancia de DingDong usa el puerto de descubrimiento local. Cierra las instancias duplicadas y actualiza.",
   "activityBackToTop": "Volver arriba",
   "@dateFilterYesterday": {

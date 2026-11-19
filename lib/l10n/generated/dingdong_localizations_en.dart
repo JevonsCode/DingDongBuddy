@@ -4027,7 +4027,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get lanComputerOnly =>
-      'LAN only · Reconnects automatically after pairing';
+      'Private network · Reconnects automatically after pairing';
 
   @override
   String get lanEnterOtherCode => 'Enter this computer’s pairing code below';
@@ -4051,7 +4051,11 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get lanNoComputers =>
-      'Open Connect computer in DingDong on both computers. Use the same LAN and allow DingDong through the private-network firewall. Guest Wi-Fi may block discovery.';
+      'Nearby computers must be on the same subnet. For a different subnet, generate a code on the other computer and find it by its private IP.';
+
+  @override
+  String get lanLookupUnavailable =>
+      'The other computer did not respond. Check that both computers are up to date, can reach each other, and the other computer has an active pairing code.';
 
   @override
   String get lanPairingFailed =>
@@ -4539,7 +4543,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   }
 
   @override
-  String get devicePeerLanAddress => 'Other computer’s LAN IP';
+  String get devicePeerLanAddress => 'Other computer’s private IP';
 
   @override
   String get deviceLocalAddressLoading => 'Getting this computer’s IP…';
@@ -4560,7 +4564,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get deviceAddressInvalid =>
-      'Enter an IPv4 address on the same LAN as this computer.';
+      'Enter a private IPv4 address that can be used for this connection.';
 
   @override
   String get deviceAddressSaveFailed => 'Could not save the IP. Try again.';
@@ -4659,7 +4663,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get lanFindByIpHelp =>
-      'If discovery finds nothing, enter the other computer’s LAN IP. No port is needed; use its pairing code for the first connection.';
+      'Enter the other computer’s private IPv4 address and select Search. The computers must be able to reach each other.';
 
   @override
   String get lanPortBusy =>

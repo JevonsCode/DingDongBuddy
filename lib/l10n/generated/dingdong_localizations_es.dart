@@ -4074,7 +4074,7 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   String get lanCodeExpiry => 'Válido 5 minutos · Un uso · Máximo 5 intentos';
 
   @override
-  String get lanComputerOnly => 'Solo red local · Reconexión automática';
+  String get lanComputerOnly => 'Red privada · Reconexión automática';
 
   @override
   String get lanEnterOtherCode => 'Introduce el código de este ordenador';
@@ -4098,7 +4098,11 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get lanNoComputers =>
-      'Abre Conectar ordenador en ambos equipos, usa la misma red local y permite DingDong en el cortafuegos privado. El Wi-Fi de invitados puede impedir la detección.';
+      'La lista busca equipos en la misma subred. Si están en subredes distintas, genera un código en el otro equipo y búscalo por su IP privada.';
+
+  @override
+  String get lanLookupUnavailable =>
+      'El otro equipo no respondió. Comprueba que ambos estén actualizados, que puedan comunicarse y que el otro equipo tenga un código activo.';
 
   @override
   String get lanPairingFailed =>
@@ -4592,7 +4596,7 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   }
 
   @override
-  String get devicePeerLanAddress => 'IP local del otro equipo';
+  String get devicePeerLanAddress => 'IP privada del otro equipo';
 
   @override
   String get deviceLocalAddressLoading => 'Obteniendo la IP de este equipo…';
@@ -4613,7 +4617,7 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get deviceAddressInvalid =>
-      'Introduce una dirección IPv4 de la misma red local que este equipo.';
+      'Introduce una dirección IPv4 privada válida para esta conexión.';
 
   @override
   String get deviceAddressSaveFailed =>
@@ -4713,7 +4717,7 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get lanFindByIpHelp =>
-      'Si no aparece el otro equipo, introduce su IP local. No hace falta el puerto; usa su código para la primera conexión.';
+      'Introduce la IPv4 privada del otro equipo y pulsa Buscar. Ambos equipos deben poder comunicarse.';
 
   @override
   String get lanPortBusy =>

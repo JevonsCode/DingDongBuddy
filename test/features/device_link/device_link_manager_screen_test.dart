@@ -37,7 +37,7 @@ void main() {
       expect(find.text('本机 IP · 192.168.31.180 · 10.0.0.20'), findsWidgets);
       final field = tester.widget<TextField>(input);
       expect(field.controller!.text, isEmpty);
-      expect(field.decoration!.labelText, '另一台电脑的局域网 IP');
+      expect(field.decoration!.labelText, '另一台电脑的内网 IP');
       expect(
         tester.getRect(local).bottom,
         lessThanOrEqualTo(tester.getRect(input).top),
@@ -121,7 +121,7 @@ void main() {
     await tester.tap(find.byKey(const Key('device-address-save')));
     await tester.pumpAndSettle();
     expect(controller.editedAddress, isNull);
-    expect(find.text('请输入与这台电脑同一局域网的 IPv4 地址。'), findsOneWidget);
+    expect(find.text('请输入可用于此连接的内网 IPv4 地址。'), findsOneWidget);
     await tester.enterText(field, '192.168.31.222');
     await tester.tap(find.byKey(const Key('device-address-save')));
     await tester.pumpAndSettle();
@@ -531,7 +531,7 @@ void main() {
       findsOneWidget,
     );
     expect(
-      find.text('LAN only · Reconnects automatically after pairing'),
+      find.text('Private network · Reconnects automatically after pairing'),
       findsOneWidget,
     );
     expect(find.text('Automatic (recommended)'), findsNothing);

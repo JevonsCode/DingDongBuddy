@@ -116,6 +116,94 @@ void main() {
       expect(paired?.id, 'manual-host');
     },
   );
+  test('manual discovery can pair from outside the physical subnet', () async {
+    final host = _service('routed-host');
+    addTearDown(host.close);
+    LinkedDevice? hostDevice;
+    host.onPaired = (device) async {
+      hostDevice = device;
+    };
+    await host.beginPairing();
+    final peer = _routedPeer(host.routedListenPort!);
+    addTearDown(peer.close);
+    LinkedDevice? peerDevice;
+    peer.onPaired = (device) async {
+      peerDevice = device;
+    };
+
+    await peer.discoverAddress('127.0.0.1');
+    expect(peer.nearby.single.id, 'routed-host');
+    expect(host.nearby, isEmpty);
+    final code = host.pairingCode!;
+    await expectLater(
+      peer.join('routed-host', code == '123456' ? '654321' : '123456'),
+      throwsA(isA<Exception>()),
+    );
+    expect(hostDevice, isNull);
+    await peer.join('routed-host', code);
+
+    expect(peerDevice?.id, 'routed-host');
+    expect(hostDevice?.id, 'routed-peer');
+    expect(host.pairingCode, isNull);
+    expect(peerDevice?.lanAddress, '127.0.0.1');
+    expect(hostDevice?.lanAddress, '127.0.0.1');
+
+    final savedHost = LinkedDevice.fromJson(hostDevice!.toJson());
+    final savedPeer = LinkedDevice.fromJson(peerDevice!.toJson());
+    expect(savedHost.lanRouted && savedPeer.lanRouted, isTrue);
+    await host.close();
+    await peer.close();
+
+    final restartedHost = _service('routed-host');
+    addTearDown(restartedHost.close);
+    await restartedHost.start();
+    final restartedPeer = _routedPeer(restartedHost.routedListenPort!);
+    addTearDown(restartedPeer.close);
+    final hostSession = restartedHost.session(savedHost);
+    final peerSession = restartedPeer.session(savedPeer);
+    await peerSession.connect();
+    await _until(() => hostSession.connected && peerSession.connected);
+    expect(restartedPeer.nearby, isEmpty);
+    expect(await peerSession.verifyLocalNetwork(), isFalse);
+    expect(await hostSession.verifyLocalNetwork(), isFalse);
+    final received = hostSession.events.firstWhere(
+      (event) => event is DeviceLinkMessageEvent,
+    );
+    await peerSession.send({'value': 'authenticated after restart'});
+    expect(
+      (await received as DeviceLinkMessageEvent).message['value'],
+      'authenticated after restart',
+    );
+  });
+  test(
+    'routed lookup requires an active code and an eligible private IP',
+    () async {
+      final host = _service('routed-host');
+      addTearDown(host.close);
+      await host.start();
+      final peer = _routedPeer(host.routedListenPort!);
+      addTearDown(peer.close);
+
+      await expectLater(
+        peer.discoverAddress('127.0.0.1'),
+        throwsA(isA<SocketException>()),
+      );
+      expect(peer.nearby, isEmpty);
+      for (final address in ['8.8.8.8', '100.64.0.1', '169.254.1.5', '::1']) {
+        await expectLater(peer.discoverAddress(address), throwsFormatException);
+      }
+
+      await host.beginPairing();
+      await peer.discoverAddress('127.0.0.1');
+      expect(peer.nearby.single.id, 'routed-host');
+      host.cancelPairing();
+      await expectLater(
+        peer.discoverAddress('127.0.0.1'),
+        throwsA(isA<SocketException>()),
+      );
+      expect(peer.nearby, isEmpty);
+    },
+  );
   test(
     'saved IP bootstraps authenticated LAN sessions without multicast',
     () async {
@@ -727,6 +815,18 @@ void main() {
 LanComputerLink _service(String id) => LanComputerLink.loopbackTest()
   ..identity = LocalDeviceIdentity(id: id, name: id, platform: 'test')
   ..onPaired = (_) async {};
+
+LanComputerLink _routedPeer(int port) =>
+    LanComputerLink.loopbackTest(
+        subnetReader: () async => [LanSubnet(InternetAddress('10.20.0.1'), 24)],
+        routedDiscoveryPort: port,
+      )
+      ..identity = const LocalDeviceIdentity(
+        id: 'routed-peer',
+        name: 'Routed peer',
+        platform: 'test',
+      )
+      ..onPaired = (_) async {};
 
 final class _Pair {
   _Pair(this.host, this.peer);

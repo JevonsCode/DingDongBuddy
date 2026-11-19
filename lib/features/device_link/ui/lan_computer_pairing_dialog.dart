@@ -64,6 +64,8 @@ class _LanComputerPairingDialogState extends State<LanComputerPairingDialog> {
           } else {
             _generalError = finish
                 ? context.l10n.lanPairingFailed
+                : address
+                ? context.l10n.lanLookupUnavailable
                 : context.l10n.lanNetworkHelp;
           }
         });

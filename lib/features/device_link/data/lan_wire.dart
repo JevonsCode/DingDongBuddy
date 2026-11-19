@@ -4,20 +4,22 @@ import 'dart:io';
 
 /// Bounded newline frames. One iterator survives the authentication handoff.
 final class LanWire {
-  LanWire(this.socket) {
+  LanWire(this.socket, {this.routed = false}) {
     socket.setOption(SocketOption.tcpNoDelay, true);
-    // IP_TTL: one hop for authenticated traffic as well as discovery. Linux
-    // defines this option as 2; Winsock and Darwin define it as 4.
-    socket.setRawOption(
-      RawSocketOption.fromInt(
-        RawSocketOption.levelIPv4,
-        Platform.isLinux ? 2 : 4,
-        1,
-      ),
-    );
+    if (!routed) {
+      // Keep traffic from automatic LAN discovery on the physical link.
+      socket.setRawOption(
+        RawSocketOption.fromInt(
+          RawSocketOption.levelIPv4,
+          Platform.isLinux ? 2 : 4,
+          1,
+        ),
+      );
+    }
     frames = StreamIterator(_frames());
   }
   final Socket socket;
+  final bool routed;
   late final StreamIterator<Map<String, Object?>> frames;
   static const maximumFrameBytes = 256 * 1024;
 
@@ -40,8 +42,10 @@ final class LanWire {
     }
   }
 
-  Future<Map<String, Object?>> read() async {
-    if (!await frames.moveNext().timeout(const Duration(seconds: 12))) {
+  Future<Map<String, Object?>> read({
+    Duration timeout = const Duration(seconds: 12),
+  }) async {
+    if (!await frames.moveNext().timeout(timeout)) {
       throw const SocketException('LAN connection closed');
     }
     return frames.current;

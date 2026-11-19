@@ -1,9 +1,9 @@
-# LAN-only computer pairing
+# Private-network computer pairing
 
-Approved behavior: one computer generates a six-digit code; the other selects it
-from nearby computers and enters that code. Pair once, then reconnect automatically
-on the same LAN. No computer pairing URLs or public relay fallback remain. Phone
-QR pairing retains its existing protocol.
+One computer generates a six-digit code. The other selects it from nearby
+computers and enters that code. As of 1.11.12, the second computer can also enter
+a private IPv4 address to find a peer on a reachable routed subnet. Paired
+computers reconnect automatically. Phone QR pairing retains its own protocol.
 
 ## Implementation
 
@@ -13,10 +13,17 @@ QR pairing retains its existing protocol.
 - Discovery uses IPv4 multicast `239.255.68.68:45893`, TTL 1. Announcements contain
   protocol version, device ID/name, TCP port and pairing availability. They never
   contain the code, pair key, or room credentials.
-- Only on-link prefixes of physical Windows adapters or macOS Ethernet/Wi-Fi
-  interfaces are accepted. Public, carrier NAT, loopback, VPN and routed private
-  networks are excluded. TCP data also uses TTL 1 and an explicit local source
-  address. IPv6-only LANs and other desktop platforms are currently unsupported.
+- Automatic discovery and its TCP sessions use on-link prefixes of physical
+  Windows adapters or macOS Ethernet/Wi-Fi interfaces. They use TTL 1 and an
+  explicit local source address. IPv6-only LANs and other desktop platforms are
+  currently unsupported.
+- An explicitly entered RFC 1918 address outside the physical subnet is queried
+  through TCP on port 45893. The receiving computer answers lookup only while
+  its pairing code is active. After SRP authentication, each computer saves the
+  authenticated peer IP for reconnect. Previous pairings keep their existing
+  scope. Routed sessions use the operating system route and retain the size
+  limit for transfers outside a verified physical LAN. There is no public relay
+  for computer-to-computer sessions.
 - Discovery keeps multiple addresses per identity. Active connections retain their
   address; reconnect tries alternatives when one adapter cannot accept TCP.
 - Pairing uses SRP-6a, the fixed RFC 5054 2048-bit group, SHA-256, random 256-bit

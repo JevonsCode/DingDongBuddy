@@ -1,11 +1,24 @@
-# DingDong 1.11.11 Manual Regression Checklist
+# DingDong 1.11.12 Manual Regression Checklist
+
+## Computer pairing by IP across private subnets (1.11.12)
+
+- Put two updated computers on different, mutually reachable private IPv4
+  subnets. Generate a code on one and search for its IP on the other. Select
+  the result and pair with the correct six-digit code.
+- Cancel or expire the code and confirm a fresh lookup cannot discover the
+  computer. Check a wrong code, a public address and a blocked route.
+- Restart both computers and reconnect using their saved addresses. Check
+  clipboard sharing in both directions and the 25 MiB limit on routed file
+  transfers. Check that a previously paired same-subnet device still discovers
+  and reconnects without relying on the routed lookup.
+- Verify desktop version 1.11.12, build 95, and PWA shell 70 across published
+  packages and update metadata.
 
 ## Recent notification colors and batch count (1.11.11)
 
 - Send one conversation a completion reminder and then an attention reminder; verify its recent card icon and border blend both colors in that order.
 - Send a conversation several more reminders after reading it; verify the card shows +N for the new ones only, and hides it the next time the popup opens.
 - Reopen the popup after reading a multi-color card; verify its border keeps a lighter blend while new cards stay stronger.
-- Verify desktop version 1.11.11, build 94, and PWA shell 69 across published packages and update metadata.
 
 ## Completion and attention reminder sounds (1.11.10)
 
@@ -170,10 +183,11 @@ third-party Agent accounts or remote model availability have been verified.
 - Check the local IP above the peer IP input, including when another instance
   occupies the discovery port. The peer input stays empty and requests the other
   computer's IP without a port; cancel/connect remain visible in a short window.
-- With multicast unavailable, find an unpaired computer by its LAN IPv4 and pair
-  with its six-digit code. Wrong codes and off-subnet IPs must still fail.
-- Edit the IP of an already paired computer, save and reconnect without replacing
-  the device identity or key. Reject invalid, public and off-subnet addresses.
+- With multicast unavailable, find an unpaired computer on the same subnet by
+  its LAN IPv4 and pair with its six-digit code. Wrong codes must fail.
+- Edit the IP of an already paired computer, save and reconnect with the same
+  device identity and key. Reject invalid and public addresses. A pairing made
+  on the same physical subnet requires a new code to authorize a routed link.
   Reassign DHCP on real devices and check automatic discovery learns the new IP.
 - Configure, reset and disable the screenshot shortcut on macOS/Windows. Both the
   shortcut and Capture now must open the system tool, without a DingDong capture
