@@ -1,4 +1,14 @@
-# DingDong 1.11.12 Manual Regression Checklist
+# DingDong 1.11.13 Manual Regression Checklist
+
+## Nearby computers on a direct link (1.11.13)
+
+- Connect two Macs directly. Verify both show a `169.254.x.x` address on
+  the wired interface. Open computer pairing on both and confirm the peer
+  appears in Nearby computers without entering an IP.
+- Generate a code on the peer, pair from the list, and verify the connection
+  uses its wired address. Repeat discovery with a 1.11.12 peer.
+- Verify desktop version 1.11.13, build 96, and PWA shell 71 across published
+  packages and update metadata.
 
 ## Computer pairing by IP across private subnets (1.11.12)
 

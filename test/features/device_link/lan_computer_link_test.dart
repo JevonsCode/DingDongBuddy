@@ -297,6 +297,39 @@ void main() {
     },
   );
 
+  test(
+    'link-local fallback discovers and pairs without multicast or an IP hint',
+    () async {
+      final host = _service('cable-host');
+      addTearDown(host.close);
+      await host.beginPairing();
+
+      LinkedDevice? paired;
+      final peer =
+          LanComputerLink.loopbackTest(
+              linkLocalBroadcastTestPort: host.discoveryListenPort!,
+            )
+            ..identity = const LocalDeviceIdentity(
+              id: 'cable-peer',
+              name: 'Cable peer',
+              platform: 'test',
+            )
+            ..onPaired = (device) async {
+              paired = device;
+            };
+      addTearDown(peer.close);
+      await peer.refresh();
+
+      await _until(
+        () => peer.nearby.any((computer) => computer.id == 'cable-host'),
+      );
+      expect(peer.nearby.single.pairing, isTrue);
+      expect(host.nearby.single.id, 'cable-peer');
+      await peer.join('cable-host', host.pairingCode!);
+      expect(paired?.id, 'cable-host');
+    },
+  );
+
   test('discovery replies and stays alive without outbound multicast', () async {
     // Real UDP loopback fixtures: no physical multicast interface is selected.
     final remote = await RawDatagramSocket.bind(
