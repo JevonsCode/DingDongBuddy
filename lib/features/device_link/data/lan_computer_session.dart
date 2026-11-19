@@ -24,13 +24,19 @@ final class LanComputerSession
   int _sent = 0;
   int _received = 0;
   Future<void> _sendTail = Future.value();
-  _Endpoint? get _endpoint =>
-      owner._findEndpoint(device.id, _wire?.socket.remoteAddress.address);
-  bool get _hasLocalPeer =>
-      _endpoint?.fresh == true &&
-      owner._allowed(_endpoint!.address) &&
-      (_wire == null ||
-          _wire!.socket.remoteAddress.address == _endpoint!.address.address);
+  bool _permitsRoutedAddress(InternetAddress address) =>
+      device.lanRouted &&
+      address.address == _addressHint &&
+      owner._isRoutedAddress(address);
+
+  bool _canUseWire(LanWire wire) {
+    final address = wire.socket.remoteAddress;
+    return wire.routed
+        ? _permitsRoutedAddress(address)
+        : owner._findEndpoint(device.id, address.address) != null;
+  }
+
+  bool get _hasUsableWire => _wire != null && _canUseWire(_wire!);
   @override
   Stream<DeviceLinkSessionEvent> get events => _events.stream;
   @override
@@ -47,7 +53,8 @@ final class LanComputerSession
   @override
   void updateTransportPreference(DeviceLinkTransportPreference value) {}
   @override
-  Future<bool> verifyLocalNetwork() async => connected && _hasLocalPeer;
+  Future<bool> verifyLocalNetwork() async =>
+      connected && !_wire!.routed && _hasUsableWire;
 
   @override
   Future<void> connect() => _connect();
@@ -58,15 +65,24 @@ final class LanComputerSession
     LanWire? wire;
     try {
       await owner.start();
-      if (_closed ||
-          device.connectionSide == DeviceLinkConnectionSide.host ||
-          !_hasLocalPeer) {
+      if (_closed || device.connectionSide == DeviceLinkConnectionSide.host) {
         return;
       }
+      final local = owner._findEndpoint(device.id) != null;
+      final hint = InternetAddress.tryParse(_addressHint ?? '');
+      final routed = hint != null && _permitsRoutedAddress(hint) ? hint : null;
+      if (!local && routed == null) return;
       if (!background) {
         _emit(const DeviceLinkStatusEvent(DeviceConnectionStatus.connecting));
       }
-      wire = await owner._dialPeer(device.id);
+      if (local) {
+        try {
+          wire = await owner._dialPeer(device.id);
+        } on SocketException {
+          if (routed == null) rethrow;
+        }
+      }
+      wire ??= await owner._dialRouted(routed!);
       final clientNonce = LanPairingCrypto.token();
       await wire.write({
         'type': 'connect',
@@ -95,7 +111,7 @@ final class LanComputerSession
       if (ack['type'] != 'ready' || ack['nonce'] != nonce) {
         throw const FormatException('ack');
       }
-      if (_closed || !_hasLocalPeer) return;
+      if (_closed || !_canUseWire(wire)) return;
       _attach(wire, nonce);
       wire = null;
     } on Object catch (error) {
@@ -134,7 +150,7 @@ final class LanComputerSession
         proof['clientNonce'] != clientNonce ||
         proof['id'] != device.id ||
         _closed ||
-        !_hasLocalPeer) {
+        !_canUseWire(wire)) {
       throw const FormatException('peer proof');
     }
     await wire.write({
@@ -160,7 +176,7 @@ final class LanComputerSession
   Future<void> _receive(LanWire wire, String nonce) async {
     try {
       while (await wire.frames.moveNext()) {
-        if (_closed || !identical(wire, _wire) || !_hasLocalPeer) break;
+        if (_closed || !identical(wire, _wire) || !_canUseWire(wire)) break;
         final frame = await _codec.open(wire.frames.current['data'] as String);
         if (!identical(wire, _wire)) return;
         if (frame['nonce'] != nonce ||
@@ -189,7 +205,7 @@ final class LanComputerSession
       if (_closed ||
           wire == null ||
           !identical(wire, _wire) ||
-          !_hasLocalPeer) {
+          !_canUseWire(wire)) {
         throw StateError('Waiting for local network');
       }
       try {
@@ -199,7 +215,7 @@ final class LanComputerSession
           'from': owner.identity.id,
           'message': message,
         });
-        if (!identical(wire, _wire) || !_hasLocalPeer) {
+        if (!identical(wire, _wire) || !_canUseWire(wire)) {
           throw StateError('LAN changed');
         }
         await wire.write({'data': data});

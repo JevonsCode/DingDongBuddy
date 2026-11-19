@@ -3871,7 +3871,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get lanCodeExpiry => '5 分钟内有效 · 仅用一次 · 最多尝试 5 次';
 
   @override
-  String get lanComputerOnly => '仅限局域网 · 配对后自动重连';
+  String get lanComputerOnly => '内网连接 · 配对后自动重连';
 
   @override
   String get lanEnterOtherCode => '在下方输入这台电脑的配对码';
@@ -3892,8 +3892,10 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get lanNewCode => '换一个配对码';
 
   @override
-  String get lanNoComputers =>
-      '请在两台电脑上打开 DingDong 的「连接电脑」，连接同一局域网，并允许 DingDong 通过专用网络防火墙。访客 Wi-Fi 可能阻止设备发现。';
+  String get lanNoComputers => '附近列表自动查找同一子网内的电脑。跨子网时，先在另一台电脑生成配对码，再按内网 IP 搜索。';
+
+  @override
+  String get lanLookupUnavailable => '另一台电脑未响应。请确认两台电脑均已更新、能在内网互访，且对方已生成有效配对码。';
 
   @override
   String get lanPairingFailed => '配对未完成，请检查配对码和局域网连接。配对码过期或已尝试 5 次时，请重新生成。';
@@ -4359,7 +4361,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   }
 
   @override
-  String get devicePeerLanAddress => '另一台电脑的局域网 IP';
+  String get devicePeerLanAddress => '另一台电脑的内网 IP';
 
   @override
   String get deviceLocalAddressLoading => '正在获取本机 IP…';
@@ -4377,7 +4379,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get deviceAddressHint => '输入对方当前的局域网 IPv4 地址，自动发现仍会继续更新地址。';
 
   @override
-  String get deviceAddressInvalid => '请输入与这台电脑同一局域网的 IPv4 地址。';
+  String get deviceAddressInvalid => '请输入可用于此连接的内网 IPv4 地址。';
 
   @override
   String get deviceAddressSaveFailed => 'IP 保存失败，请重试。';
@@ -4471,7 +4473,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get lanFindByIp => '按 IP 查找电脑';
 
   @override
-  String get lanFindByIpHelp => '自动发现找不到时，输入另一台电脑的局域网 IP，无需填写端口；首次连接使用配对码。';
+  String get lanFindByIpHelp => '输入另一台电脑的内网 IPv4 地址并点搜索。跨子网时，两台电脑需要能互访。';
 
   @override
   String get lanPortBusy => '局域网发现端口正被另一个 DingDong 实例占用，请退出重复打开的 DingDong 后刷新。';

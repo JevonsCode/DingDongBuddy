@@ -7007,7 +7007,7 @@ abstract class DingDongLocalizations {
   /// LAN-only computer discovery and six-digit pairing.
   ///
   /// In en, this message translates to:
-  /// **'LAN only · Reconnects automatically after pairing'**
+  /// **'Private network · Reconnects automatically after pairing'**
   String get lanComputerOnly;
 
   /// LAN-only computer discovery and six-digit pairing.
@@ -7049,8 +7049,14 @@ abstract class DingDongLocalizations {
   /// LAN-only computer discovery and six-digit pairing.
   ///
   /// In en, this message translates to:
-  /// **'Open Connect computer in DingDong on both computers. Use the same LAN and allow DingDong through the private-network firewall. Guest Wi-Fi may block discovery.'**
+  /// **'Nearby computers must be on the same subnet. For a different subnet, generate a code on the other computer and find it by its private IP.'**
   String get lanNoComputers;
+
+  /// A manually addressed computer did not respond to a pairing lookup.
+  ///
+  /// In en, this message translates to:
+  /// **'The other computer did not respond. Check that both computers are up to date, can reach each other, and the other computer has an active pairing code.'**
+  String get lanLookupUnavailable;
 
   /// LAN-only computer discovery and six-digit pairing.
   ///
@@ -7931,7 +7937,7 @@ abstract class DingDongLocalizations {
   /// Computer LAN pairing: distinguish this device address from the peer input.
   ///
   /// In en, this message translates to:
-  /// **'Other computer’s LAN IP'**
+  /// **'Other computer’s private IP'**
   String get devicePeerLanAddress;
 
   /// Computer LAN pairing: distinguish this device address from the peer input.
@@ -7967,7 +7973,7 @@ abstract class DingDongLocalizations {
   /// Device connection address and route controls.
   ///
   /// In en, this message translates to:
-  /// **'Enter an IPv4 address on the same LAN as this computer.'**
+  /// **'Enter a private IPv4 address that can be used for this connection.'**
   String get deviceAddressInvalid;
 
   /// Device connection address and route controls.
@@ -8153,7 +8159,7 @@ abstract class DingDongLocalizations {
   /// Manual LAN discovery and actionable connection errors.
   ///
   /// In en, this message translates to:
-  /// **'If discovery finds nothing, enter the other computer’s LAN IP. No port is needed; use its pairing code for the first connection.'**
+  /// **'Enter the other computer’s private IPv4 address and select Search. The computers must be able to reach each other.'**
   String get lanFindByIpHelp;
 
   /// Manual LAN discovery and actionable connection errors.

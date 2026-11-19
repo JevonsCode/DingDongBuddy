@@ -310,10 +310,14 @@ final class DeviceLinkController extends ChangeNotifier
 
   @override
   Future<void> setComputerAddress(String deviceId, String value) async {
-    if (_device(deviceId).kind != LinkedDeviceKind.computer) {
+    final paired = _device(deviceId);
+    if (paired.kind != LinkedDeviceKind.computer) {
       throw const FormatException('Computer address required');
     }
-    final address = await _computerLink.validateLocalAddress(value);
+    final address = await _computerLink.validateLocalAddress(
+      value,
+      allowRouted: paired.lanRouted,
+    );
     await _updateDevice(
       deviceId,
       (device) =>

@@ -5138,7 +5138,7 @@
   "@lanCodeExpiry": {
     "description": "LAN-only computer discovery and six-digit pairing."
   },
-  "lanComputerOnly": "仅限局域网 · 配对后自动重连",
+  "lanComputerOnly": "内网连接 · 配对后自动重连",
   "@lanComputerOnly": {
     "description": "LAN-only computer discovery and six-digit pairing."
   },
@@ -5166,9 +5166,13 @@
   "@lanNewCode": {
     "description": "LAN-only computer discovery and six-digit pairing."
   },
-  "lanNoComputers": "请在两台电脑上打开 DingDong 的「连接电脑」，连接同一局域网，并允许 DingDong 通过专用网络防火墙。访客 Wi-Fi 可能阻止设备发现。",
+  "lanNoComputers": "附近列表自动查找同一子网内的电脑。跨子网时，先在另一台电脑生成配对码，再按内网 IP 搜索。",
   "@lanNoComputers": {
     "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "lanLookupUnavailable": "另一台电脑未响应。请确认两台电脑均已更新、能在内网互访，且对方已生成有效配对码。",
+  "@lanLookupUnavailable": {
+    "description": "A manually addressed computer did not respond to a pairing lookup."
   },
   "lanPairingFailed": "配对未完成，请检查配对码和局域网连接。配对码过期或已尝试 5 次时，请重新生成。",
   "@lanPairingFailed": {
@@ -5799,7 +5803,7 @@
       }
     }
   },
-  "devicePeerLanAddress": "另一台电脑的局域网 IP",
+  "devicePeerLanAddress": "另一台电脑的内网 IP",
   "@devicePeerLanAddress": {
     "description": "Computer LAN pairing: distinguish this device address from the peer input."
   },
@@ -5823,7 +5827,7 @@
   "@deviceAddressHint": {
     "description": "Device connection address and route controls."
   },
-  "deviceAddressInvalid": "请输入与这台电脑同一局域网的 IPv4 地址。",
+  "deviceAddressInvalid": "请输入可用于此连接的内网 IPv4 地址。",
   "@deviceAddressInvalid": {
     "description": "Device connection address and route controls."
   },
@@ -5875,7 +5879,7 @@
   "reminderDefinitionUnavailable": "此历史记录未保存提醒定义",
   "reminderTemporaryHelp": "仅用于下一次提醒，使用后自动移除。",
   "lanFindByIp": "按 IP 查找电脑",
-  "lanFindByIpHelp": "自动发现找不到时，输入另一台电脑的局域网 IP，无需填写端口；首次连接使用配对码。",
+  "lanFindByIpHelp": "输入另一台电脑的内网 IPv4 地址并点搜索。跨子网时，两台电脑需要能互访。",
   "lanPortBusy": "局域网发现端口正被另一个 DingDong 实例占用，请退出重复打开的 DingDong 后刷新。",
   "activityBackToTop": "回到顶部",
   "@dateFilterYesterday": {

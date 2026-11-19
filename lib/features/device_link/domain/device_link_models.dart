@@ -92,6 +92,7 @@ final class LinkedDevice {
     required this.secret,
     this.relayUrl,
     this.lanAddress,
+    this.lanRouted = false,
     this.connectionSide = DeviceLinkConnectionSide.host,
     this.transportPreference = DeviceLinkTransportPreference.automatic,
     required this.autoSendClipboard,
@@ -111,6 +112,7 @@ final class LinkedDevice {
       kind: kind,
       platform: json['platform'] as String? ?? '',
       lanAddress: json['lanAddress'] as String?,
+      lanRouted: kind == LinkedDeviceKind.computer && json['lanRouted'] == true,
       room: json['room']! as String,
       secret: json['secret']! as String,
       relayUrl: json['relayUrl'] is String
@@ -154,6 +156,9 @@ final class LinkedDevice {
 
   /// Last authenticated or user-entered LAN routing hint; never device identity.
   final String? lanAddress;
+
+  /// The two computers completed pairing on an explicitly addressed route.
+  final bool lanRouted;
   final DeviceLinkConnectionSide connectionSide;
   final DeviceLinkTransportPreference transportPreference;
   final bool autoSendClipboard;
@@ -194,6 +199,7 @@ final class LinkedDevice {
       secret: secret ?? this.secret,
       relayUrl: relayUrl ?? this.relayUrl,
       lanAddress: lanAddress ?? this.lanAddress,
+      lanRouted: lanRouted,
       connectionSide: connectionSide ?? this.connectionSide,
       transportPreference: transportPreference ?? this.transportPreference,
       autoSendClipboard: autoSendClipboard ?? this.autoSendClipboard,
@@ -217,6 +223,7 @@ final class LinkedDevice {
     'secret': secret,
     if (relayUrl != null) 'relayUrl': relayUrl.toString(),
     if (lanAddress != null) 'lanAddress': lanAddress,
+    if (lanRouted) 'lanRouted': true,
     'connectionSide': connectionSide.name,
     'transportPreference': transportPreference.name,
     'autoSendClipboard': autoSendClipboard,

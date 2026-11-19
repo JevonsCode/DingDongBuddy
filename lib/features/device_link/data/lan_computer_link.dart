@@ -18,35 +18,45 @@ part 'lan_computer_session.dart';
 final class LanComputerLink extends ChangeNotifier {
   LanComputerLink({this.discoveryPort = 45893})
     : _unicastDiscoveryPort = discoveryPort,
+      _routedDiscoveryPort = discoveryPort,
       _now = DateTime.now,
       _readSubnets = readLanSubnets;
   @visibleForTesting
   LanComputerLink.loopbackTest({
     DateTime Function()? now,
     int unicastDiscoveryPort = 45893,
+    int routedDiscoveryPort = 45893,
     Future<List<LanSubnet>> Function()? subnetReader,
   }) : discoveryPort = 0,
        // Test-only named parameter; keep runtime port state private.
        // ignore: prefer_initializing_formals
        _unicastDiscoveryPort = unicastDiscoveryPort,
+       // ignore: prefer_initializing_formals
+       _routedDiscoveryPort = routedDiscoveryPort,
        _now = now ?? DateTime.now,
        _readSubnets =
            subnetReader ??
            (() async => [LanSubnet(InternetAddress.loopbackIPv4, 8)]);
   final int discoveryPort;
   final int _unicastDiscoveryPort;
+  final int _routedDiscoveryPort;
   @visibleForTesting
   int? get discoveryListenPort => _udp?.port;
+  @visibleForTesting
+  int? get routedListenPort => _routedServer?.port;
   final DateTime Function() _now;
   final Future<List<LanSubnet>> Function() _readSubnets;
   static final _group = InternetAddress('239.255.68.68');
   static const _lifetime = Duration(minutes: 5);
+  static const _routedProtocol = 'dingdong-lan-directed-v1';
+  static const _routedTimeout = Duration(seconds: 3);
   final Map<String, _Endpoint> _endpoints = {};
   final Set<String> _manualDiscoveryAddresses = {};
   final Map<String, LanComputerSession> _sessions = {};
   final Set<LanWire> _handshakes = {};
   RawDatagramSocket? _udp;
   ServerSocket? _server;
+  ServerSocket? _routedServer;
   List<NetworkInterface> _interfaces = [];
   List<LanSubnet> _subnets = [];
   Timer? _timer;
@@ -88,7 +98,10 @@ final class LanComputerLink extends ChangeNotifier {
     return null;
   }
 
-  Future<String> validateLocalAddress(String value) async {
+  Future<String> validateLocalAddress(
+    String value, {
+    bool allowRouted = false,
+  }) async {
     final text = value.trim();
     if (!RegExp(r'^\d{1,3}(?:\.\d{1,3}){3}$').hasMatch(text)) {
       throw const FormatException('LAN IPv4 required');
@@ -99,9 +112,14 @@ final class LanComputerLink extends ChangeNotifier {
     }
     await start();
     await _refreshInterfaces();
-    if (!_allowedHint(address) ||
-        (discoveryPort != 0 &&
-            _subnets.any((s) => s.address.address == address.address))) {
+    final isOwnAddress =
+        discoveryPort != 0 &&
+        _subnets.any((s) => s.address.address == address.address);
+    final permittedRoute =
+        allowRouted &&
+        _isRoutedAddress(address) &&
+        !_subnets.any((subnet) => subnet.contains(address));
+    if (isOwnAddress || (!_allowedHint(address) && !permittedRoute)) {
       throw const FormatException('Peer must be on a local physical subnet');
     }
     return address.address;
@@ -138,12 +156,10 @@ final class LanComputerLink extends ChangeNotifier {
 
   Future<void> _start() async {
     try {
-      _server = await ServerSocket.bind(
-        discoveryPort == 0
-            ? InternetAddress.loopbackIPv4
-            : InternetAddress.anyIPv4,
-        0,
-      );
+      final listenAddress = discoveryPort == 0
+          ? InternetAddress.loopbackIPv4
+          : InternetAddress.anyIPv4;
+      _server = await ServerSocket.bind(listenAddress, 0);
       _udp = await RawDatagramSocket.bind(
         InternetAddress.anyIPv4,
         discoveryPort,
@@ -190,6 +206,8 @@ final class LanComputerLink extends ChangeNotifier {
         const Duration(seconds: 2),
         (_) => unawaited(_tick()),
       );
+      await _startRoutedListener(listenAddress);
+      if (_closed) return;
       error = null;
       _announce();
     } catch (failure) {
@@ -197,9 +215,30 @@ final class LanComputerLink extends ChangeNotifier {
       _udp = null;
       await _server?.close();
       _server = null;
+      await _routedServer?.close();
+      _routedServer = null;
       error = lanDiscoveryFailureCode(failure);
       notifyListeners();
       rethrow;
+    }
+  }
+
+  Future<void> _startRoutedListener(InternetAddress listenAddress) async {
+    // TCP on the discovery port is used only for explicitly addressed peers.
+    // A TCP bind conflict must leave existing multicast and UDP lookup usable.
+    try {
+      final server = await ServerSocket.bind(listenAddress, discoveryPort);
+      if (_closed) {
+        await server.close();
+        return;
+      }
+      _routedServer = server;
+      server.listen(
+        (socket) => unawaited(_accept(socket, routed: true)),
+        onError: (Object failure) => debugPrint('DingDong IP lookup: $failure'),
+      );
+    } on SocketException catch (failure) {
+      debugPrint('DingDong IP lookup: $failure');
     }
   }
 
@@ -254,7 +293,7 @@ final class LanComputerLink extends ChangeNotifier {
       _endpoints.removeWhere((_, e) => !e.fresh);
       _announce();
       for (final session in _sessions.values.toList()) {
-        if (session.connected && !session._hasLocalPeer) session._drop();
+        if (session.connected && !session._hasUsableWire) session._drop();
         if (!session.connected) unawaited(session._connect(background: true));
       }
       notifyListeners();
@@ -303,6 +342,7 @@ final class LanComputerLink extends ChangeNotifier {
     final sent = <(String, int)>{};
     for (final endpoint in _endpoints.values) {
       if (!endpoint.fresh ||
+          endpoint.routed ||
           !_allowed(endpoint.address) ||
           endpoint.discoveryPort <= 0 ||
           !sent.add((endpoint.address.address, endpoint.discoveryPort))) {
@@ -381,16 +421,59 @@ final class LanComputerLink extends ChangeNotifier {
     }
   }
 
-  /// Initial pairing fallback for networks that block multicast discovery.
-  /// This only exchanges public discovery metadata; pairing still requires SRP.
+  /// A typed address can be searched locally or on a reachable private route.
   Future<void> discoverAddress(String value) async {
-    final address = await validateLocalAddress(value);
+    final address = InternetAddress(
+      await validateLocalAddress(value, allowRouted: true),
+    );
+    if (!_allowedHint(address)) {
+      await _discoverRouted(address);
+      return;
+    }
     if (_manualDiscoveryAddresses.length >= 16) {
       _manualDiscoveryAddresses.remove(_manualDiscoveryAddresses.first);
     }
-    _manualDiscoveryAddresses.add(address);
+    _manualDiscoveryAddresses.add(address.address);
     _announce();
     notifyListeners();
+  }
+
+  Future<void> _discoverRouted(InternetAddress address) async {
+    _endpoints.removeWhere(
+      (_, endpoint) => endpoint.routed && endpoint.address == address,
+    );
+    notifyListeners();
+    final wire = await _dialRouted(address);
+    try {
+      await wire.write({'type': 'lookup', 'protocol': _routedProtocol});
+      final result = await wire.read(timeout: _routedTimeout);
+      final id = result['id'];
+      final name = result['name'];
+      if (result['protocol'] != _routedProtocol ||
+          id is! String ||
+          id.isEmpty ||
+          id.length > 160 ||
+          id == identity.id ||
+          name is! String ||
+          name.length > 160) {
+        throw const SocketException('Computer is unavailable for IP pairing');
+      }
+      if (_closed) return;
+      _endpoints['$id@${address.address}/routed'] = _Endpoint(
+        id,
+        name,
+        address,
+        _routedDiscoveryPort,
+        true,
+        0,
+        routed: true,
+      );
+      notifyListeners();
+    } on FormatException {
+      throw const SocketException('Computer is unavailable for IP pairing');
+    } finally {
+      wire.close();
+    }
   }
 
   Future<void> refresh() async {
@@ -453,15 +536,33 @@ final class LanComputerLink extends ChangeNotifier {
     );
   }
 
+  Future<LanWire> _dialRouted(InternetAddress address) async {
+    if (!_isRoutedAddress(address)) {
+      throw const SocketException('Private IPv4 address required');
+    }
+    return LanWire(
+      await Socket.connect(
+        address,
+        _routedDiscoveryPort,
+        timeout: _routedTimeout,
+      ),
+      routed: true,
+    );
+  }
+
   Future<LanWire> _dialPeer(String id, {bool pairing = false}) async {
     Object? lastError;
     for (final endpoint
         in _endpoints.values
-            .where((e) => e.id == id && e.fresh && (!pairing || e.pairing))
+            .where(
+              (e) => e.id == id && e.fresh && (pairing ? e.pairing : !e.routed),
+            )
             .take(8)
             .toList()) {
       try {
-        return await _dial(endpoint);
+        return endpoint.routed
+            ? await _dialRouted(endpoint.address)
+            : await _dial(endpoint);
       } on Object catch (error) {
         lastError = error;
       }
@@ -472,10 +573,6 @@ final class LanComputerLink extends ChangeNotifier {
   Future<void> join(String id, String code) async {
     if (!RegExp(r'^\d{6}$').hasMatch(code)) throw const FormatException('code');
     await start();
-    final endpoint = _findEndpoint(id);
-    if (endpoint == null || !endpoint.pairing || !endpoint.fresh) {
-      throw StateError('not_found');
-    }
     final wire = await _dialPeer(id, pairing: true);
     try {
       final a = LanPairingCrypto.privateValue();
@@ -515,39 +612,62 @@ final class LanComputerLink extends ChangeNotifier {
         throw const FormatException('credentials');
       }
       await onPaired(
-        _device(host, room, secret, DeviceLinkConnectionSide.peer),
+        _device(host, room, secret, DeviceLinkConnectionSide.peer, wire),
       );
+      if (wire.routed) {
+        _endpoints.remove('$id@${wire.socket.remoteAddress.address}/routed');
+      }
     } finally {
       wire.close();
     }
   }
 
-  Future<void> _accept(Socket socket) async {
-    // Only peers seen on link-scoped discovery can open a local session.
+  Future<void> _accept(Socket socket, {bool routed = false}) async {
+    final address = socket.remoteAddress;
+    final permitted = routed
+        ? _isRoutedAddress(address) &&
+              (pairingCode != null ||
+                  _sessions.values.any(
+                    (session) =>
+                        session.device.connectionSide ==
+                            DeviceLinkConnectionSide.host &&
+                        session._permitsRoutedAddress(address),
+                  ))
+        : _allowed(address) &&
+              _endpoints.values.any(
+                (e) => !e.routed && e.fresh && e.address == address,
+              );
     if (_closed ||
-        !_allowed(socket.remoteAddress) ||
+        !permitted ||
         _handshakes.length >= 8 ||
-        !_endpoints.values.any(
-          (e) => e.fresh && e.address.address == socket.remoteAddress.address,
-        )) {
+        (routed && _handshakes.where((wire) => wire.routed).length >= 2)) {
       socket.destroy();
       return;
     }
-    final wire = LanWire(socket);
+    final wire = LanWire(socket, routed: routed);
     _handshakes.add(wire);
     var transferred = false;
     try {
-      final request = await wire.read();
+      final request = routed
+          ? await wire.read(timeout: _routedTimeout)
+          : await wire.read();
       if (request['type'] == 'pair') {
         await _pair(wire, request);
+      } else if (routed &&
+          request['type'] == 'lookup' &&
+          request['protocol'] == _routedProtocol &&
+          pairingCode != null) {
+        await wire.write({
+          'protocol': _routedProtocol,
+          'id': identity.id,
+          'name': identity.name,
+        });
       } else if (request['type'] == 'connect') {
         final session = _sessions[request['room']];
         if (session != null &&
             session.device.connectionSide == DeviceLinkConnectionSide.host &&
             session.device.id == request['id'] &&
-            session._hasLocalPeer &&
-            _findEndpoint(session.device.id, socket.remoteAddress.address) !=
-                null) {
+            session._canUseWire(wire)) {
           await session._accept(wire);
           transferred = true;
         }
@@ -599,16 +719,16 @@ final class LanComputerLink extends ChangeNotifier {
         peer.name.length > 160) {
       return;
     }
-    final endpoint = _findEndpoint(peer.id, wire.socket.remoteAddress.address);
-    if (endpoint == null ||
-        !endpoint.fresh ||
-        endpoint.address.address != wire.socket.remoteAddress.address) {
+    if (!wire.routed &&
+        _findEndpoint(peer.id, wire.socket.remoteAddress.address) == null) {
       return;
     }
     cancelPairing(); // Consume atomically before persistence or concurrent proofs.
     final room = LanPairingCrypto.token(18);
     final secret = LanPairingCrypto.token();
-    await onPaired(_device(peer, room, secret, DeviceLinkConnectionSide.host));
+    await onPaired(
+      _device(peer, room, secret, DeviceLinkConnectionSide.host, wire),
+    );
     await wire.write({
       'proof': await codec.seal({
         'type': 'pair-host',
@@ -624,6 +744,7 @@ final class LanComputerLink extends ChangeNotifier {
     String room,
     String secret,
     DeviceLinkConnectionSide side,
+    LanWire wire,
   ) => LinkedDevice(
     id: peer.id,
     name: peer.name,
@@ -631,6 +752,8 @@ final class LanComputerLink extends ChangeNotifier {
     platform: peer.platform,
     room: room,
     secret: secret,
+    lanRouted: wire.routed,
+    lanAddress: wire.routed ? wire.socket.remoteAddress.address : null,
     connectionSide: side,
     transportPreference: DeviceLinkTransportPreference.localNetwork,
     autoSendClipboard: false,
@@ -648,6 +771,8 @@ final class LanComputerLink extends ChangeNotifier {
     _udp = null;
     await _server?.close();
     _server = null;
+    await _routedServer?.close();
+    _routedServer = null;
     for (final wire in _handshakes.toList()) {
       wire.close();
     }
@@ -671,10 +796,18 @@ final class LanComputerLink extends ChangeNotifier {
       (isLanAddress(address) && _subnets.any((s) => s.contains(address))) ||
       (discoveryPort == 0 && address.isLoopback);
 
+  bool _isRoutedAddress(InternetAddress address) =>
+      (isLanAddress(address) && !address.isLinkLocal) ||
+      (discoveryPort == 0 &&
+          address.type == InternetAddressType.IPv4 &&
+          address.isLoopback);
+
   _Endpoint? _findEndpoint(String id, [String? address]) {
     for (final endpoint in _endpoints.values) {
       if (endpoint.id == id &&
+          !endpoint.routed &&
           endpoint.fresh &&
+          _allowed(endpoint.address) &&
           (address == null || endpoint.address.address == address)) {
         return endpoint;
       }
@@ -696,15 +829,18 @@ final class _Endpoint {
     this.address,
     this.port,
     this.pairing,
-    this.discoveryPort,
-  );
+    this.discoveryPort, {
+    this.routed = false,
+  });
   final String id;
   final String name;
   final InternetAddress address;
   final int port;
   final bool pairing;
   final int discoveryPort;
+  final bool routed;
   final DateTime seen = DateTime.now();
   bool get fresh =>
-      DateTime.now().difference(seen) < const Duration(seconds: 8);
+      DateTime.now().difference(seen) <
+      (routed ? LanComputerLink._lifetime : const Duration(seconds: 8));
 }

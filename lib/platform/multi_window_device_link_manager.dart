@@ -299,14 +299,17 @@ final class RemoteDeviceLinkManagement extends ChangeNotifier
 
   @override
   Future<void> discoverComputerAddress(String address) async {
-    final result = await _parentController.invokeMethod<Object?>(
-      'device_link_lan_discover_address',
-      address,
-    );
-    if (result is Map && result['error'] == 'invalid_lan_address') {
-      throw const FormatException('Invalid LAN address');
+    try {
+      final result = await _parentController.invokeMethod<Object?>(
+        'device_link_lan_discover_address',
+        address,
+      );
+      if (result is Map && result['error'] == 'invalid_lan_address') {
+        throw const FormatException('Invalid LAN address');
+      }
+    } finally {
+      await reload();
     }
-    await reload();
   }
 
   @override
