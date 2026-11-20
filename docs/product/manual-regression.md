@@ -1,4 +1,14 @@
-# DingDong 1.11.15 Manual Regression Checklist
+# DingDong 1.11.16 Manual Regression Checklist
+
+## Computer discovery names and local remarks (1.11.16)
+
+- Edit the local computer name in Connect devices. Verify the new name
+  appears on another computer during automatic discovery and IP lookup.
+  Clear the name and check that discovery uses the default again.
+- Edit a paired computer’s remark. Restart the app and reconnect to the
+  peer. Verify the remark stays on this computer and can be cleared.
+- Verify desktop version 1.11.16, build 99, and PWA shell 74 in
+  published packages and update metadata.
 
 ## Nearby computer discovery with an offline saved device (1.11.15)
 

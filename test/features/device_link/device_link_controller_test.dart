@@ -82,8 +82,14 @@ void main() {
         _record('local', 'LAN clipboard'),
       ]);
       final peerClipboard = InMemoryClipboardStore();
+      final hostStore = FileDeviceLinkStore(
+        File('${directory.path}/host.json'),
+      );
+      final peerStore = FileDeviceLinkStore(
+        File('${directory.path}/peer.json'),
+      );
       final host = DeviceLinkController(
-        store: _MemoryDeviceLinkStore(),
+        store: hostStore,
         clipboardStore: hostClipboard,
         transferDirectory: Directory('${directory.path}/host'),
         pwaBaseUrl: null,
@@ -93,7 +99,7 @@ void main() {
             throw StateError('Public relay forbidden'),
       );
       final peer = DeviceLinkController(
-        store: _MemoryDeviceLinkStore(),
+        store: peerStore,
         clipboardStore: peerClipboard,
         transferDirectory: Directory('${directory.path}/peer'),
         pwaBaseUrl: null,
@@ -114,6 +120,12 @@ void main() {
       await peer.start();
       await host.beginComputerPairing();
       await peer.refreshComputers();
+      final defaultComputerName = host.localDevice.name;
+      expect(host.localComputerName, defaultComputerName);
+      await host.setLocalComputerName('  书房 Mac  ');
+      expect(host.localComputerName, '书房 Mac');
+      expect(host.localDevice.name, defaultComputerName);
+      expect((await hostStore.load())!.computerName, '书房 Mac');
       hostLan.receiveAdvertisement(
         utf8.encode(jsonEncode(peerLan.advertisement)),
         InternetAddress.loopbackIPv4,
@@ -122,6 +134,7 @@ void main() {
         utf8.encode(jsonEncode(hostLan.advertisement)),
         InternetAddress.loopbackIPv4,
       );
+      expect(peer.nearbyComputers.single.name, '书房 Mac');
       await peer.joinNearbyComputer(
         host.localDevice.id,
         host.computerPairingCode!,
@@ -138,6 +151,11 @@ void main() {
       );
       expect(host.computerAddressOf(peer.localDevice.id), '127.0.0.1');
       expect(peer.devices.single.lanAddress, '127.0.0.1');
+      expect(peer.devices.single.name, '书房 Mac');
+      await peer.setComputerRemark(host.localDevice.id, '  家里常用  ');
+      expect(peer.devices.single.remark, '家里常用');
+      expect(host.devices.single.remark, isEmpty);
+      expect((await peerStore.load())!.devices.single.remark, '家里常用');
       final originalTrust = peer.devices.single;
       await expectLater(
         peer.setComputerAddress(host.localDevice.id, '8.8.8.8'),
@@ -151,6 +169,7 @@ void main() {
       expect(updated.id, originalTrust.id);
       expect(updated.room, originalTrust.room);
       expect(updated.secret, originalTrust.secret);
+      expect(updated.remark, '家里常用');
       expect(updated.lanAddress, '127.0.0.1');
       expect(updated.manuallyDisconnected, isFalse);
       expect(host.devices.single.relayUrl, isNull);
@@ -185,6 +204,11 @@ void main() {
       await waitFor(
         () => host.connectedDeviceCount == 1 && peer.connectedDeviceCount == 1,
       );
+      await peer.setComputerRemark(host.localDevice.id, '');
+      expect((await peerStore.load())!.devices.single.remark, isEmpty);
+      await host.setLocalComputerName('  ');
+      expect(hostLan.advertisement['name'], defaultComputerName);
+      expect((await hostStore.load())!.computerName, isEmpty);
     },
   );
   test('LAN capability is resent after a direct route reconnects', () async {

@@ -160,7 +160,7 @@ extension _DeviceLinkSessionProtocol on DeviceLinkController {
         'type': 'hello',
         'fileTransferVersion': 2,
         'device': <String, Object?>{
-          ..._localDevice.toJson(),
+          ..._computerLink.identity.toJson(),
           'kind': 'computer',
         },
         'vibrationEnabled': false,
@@ -411,7 +411,13 @@ extension _DeviceLinkSessionProtocol on DeviceLinkController {
     await managed.handle.send(<String, Object?>{
       'type': 'welcome',
       'fileTransferVersion': 2,
-      'host': <String, Object?>{..._localDevice.toJson(), 'kind': 'computer'},
+      'host': <String, Object?>{
+        ...(remoteKind == LinkedDeviceKind.computer
+                ? _computerLink.identity
+                : _localDevice)
+            .toJson(),
+        'kind': 'computer',
+      },
       'permissions': <String, Object?>{
         'autoSendClipboard': device.autoSendClipboard,
         'receiveAgentNotifications': device.receiveAgentNotifications,

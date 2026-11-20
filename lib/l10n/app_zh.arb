@@ -5832,6 +5832,38 @@
     "description": "Device connection address and route controls."
   },
   "deviceAddressSaveFailed": "IP 保存失败，请重试。",
+  "deviceEditDiscoveryName": "编辑本机发现名称",
+  "@deviceEditDiscoveryName": {
+    "description": "Action to edit the local computer name used for LAN discovery."
+  },
+  "deviceDiscoveryName": "发现名称",
+  "@deviceDiscoveryName": {
+    "description": "Label of the local computer name input."
+  },
+  "deviceDiscoveryNameHint": "留空使用默认名称。",
+  "@deviceDiscoveryNameHint": {
+    "description": "Help text for resetting the custom discovery name."
+  },
+  "deviceEditRemark": "编辑备注",
+  "@deviceEditRemark": {
+    "description": "Action to edit the local remark for a paired computer."
+  },
+  "deviceRemark": "备注",
+  "@deviceRemark": {
+    "description": "Label of the remark input for a paired computer."
+  },
+  "deviceRemarkHint": "备注仅在本机显示。",
+  "@deviceRemarkHint": {
+    "description": "Explains where the remark will be visible."
+  },
+  "deviceLabelInvalid": "请输入不超过 160 字的单行文字。",
+  "@deviceLabelInvalid": {
+    "description": "Validation feedback for a computer discovery name or remark."
+  },
+  "deviceLabelSaveFailed": "保存失败，请重试。",
+  "@deviceLabelSaveFailed": {
+    "description": "Storage error for a computer discovery name or remark."
+  },
   "@deviceAddressSaveFailed": {
     "description": "Device connection address and route controls."
   },

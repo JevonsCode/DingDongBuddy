@@ -62,6 +62,15 @@ LocalDeviceIdentity _newLocalIdentity(DingDongLocalizations strings) {
   );
 }
 
+String _validateComputerLabel(String value) {
+  final label = value.trim();
+  if (label.length > deviceLinkComputerLabelLimit ||
+      RegExp(r'[\x00-\x1f\x7f\u2028\u2029]').hasMatch(label)) {
+    throw const FormatException('Invalid computer name or remark.');
+  }
+  return label;
+}
+
 String _randomToken(int bytes) {
   final Random random = Random.secure();
   return base64Url

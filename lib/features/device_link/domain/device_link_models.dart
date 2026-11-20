@@ -54,6 +54,7 @@ enum DeviceLinkActiveTransport {
 }
 
 const int deviceLinkClipboardHistoryLimit = 50;
+const int deviceLinkComputerLabelLimit = 160;
 
 final class LocalDeviceIdentity {
   const LocalDeviceIdentity({
@@ -86,6 +87,7 @@ final class LinkedDevice {
   const LinkedDevice({
     required this.id,
     required this.name,
+    this.remark = '',
     required this.kind,
     required this.platform,
     required this.room,
@@ -109,6 +111,7 @@ final class LinkedDevice {
     return LinkedDevice(
       id: json['id']! as String,
       name: json['name']! as String,
+      remark: json['remark'] is String ? json['remark']! as String : '',
       kind: kind,
       platform: json['platform'] as String? ?? '',
       lanAddress: json['lanAddress'] as String?,
@@ -141,6 +144,7 @@ final class LinkedDevice {
 
   final String id;
   final String name;
+  final String remark;
   final LinkedDeviceKind kind;
   final String platform;
 
@@ -174,6 +178,7 @@ final class LinkedDevice {
 
   LinkedDevice copyWith({
     String? name,
+    String? remark,
     LinkedDeviceKind? kind,
     String? platform,
     String? room,
@@ -193,6 +198,7 @@ final class LinkedDevice {
     return LinkedDevice(
       id: id,
       name: name ?? this.name,
+      remark: remark ?? this.remark,
       kind: kind ?? this.kind,
       platform: platform ?? this.platform,
       room: room ?? this.room,
@@ -217,6 +223,7 @@ final class LinkedDevice {
   Map<String, Object?> toJson() => <String, Object?>{
     'id': id,
     'name': name,
+    if (remark.isNotEmpty) 'remark': remark,
     'kind': kind.name,
     'platform': platform,
     'room': room,
@@ -251,7 +258,11 @@ List<String> _boundedStringList(Object? value, {required int limit}) {
 }
 
 final class DeviceLinkDocument {
-  const DeviceLinkDocument({required this.localDevice, required this.devices});
+  const DeviceLinkDocument({
+    required this.localDevice,
+    required this.devices,
+    this.computerName = '',
+  });
 
   factory DeviceLinkDocument.fromJson(Map<String, Object?> json) {
     final Object? rawDevices = json['devices'];
@@ -259,6 +270,9 @@ final class DeviceLinkDocument {
       localDevice: LocalDeviceIdentity.fromJson(
         Map<String, Object?>.from(json['localDevice']! as Map),
       ),
+      computerName: json['computerName'] is String
+          ? json['computerName']! as String
+          : '',
       devices: rawDevices is List<Object?>
           ? rawDevices
                 .whereType<Map>()
@@ -273,10 +287,12 @@ final class DeviceLinkDocument {
 
   final LocalDeviceIdentity localDevice;
   final List<LinkedDevice> devices;
+  final String computerName;
 
   Map<String, Object?> toJson() => <String, Object?>{
     'version': 1,
     'localDevice': localDevice.toJson(),
+    if (computerName.isNotEmpty) 'computerName': computerName,
     'devices': devices.map((LinkedDevice value) => value.toJson()).toList(),
   };
 }

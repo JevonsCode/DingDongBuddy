@@ -4624,6 +4624,34 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
       'No se pudo guardar la IP. Inténtalo de nuevo.';
 
   @override
+  String get deviceEditDiscoveryName =>
+      'Editar el nombre visible de este ordenador';
+
+  @override
+  String get deviceDiscoveryName => 'Nombre visible';
+
+  @override
+  String get deviceDiscoveryNameHint =>
+      'Déjalo en blanco para usar el nombre predeterminado.';
+
+  @override
+  String get deviceEditRemark => 'Editar nota';
+
+  @override
+  String get deviceRemark => 'Nota';
+
+  @override
+  String get deviceRemarkHint => 'La nota solo aparece en este ordenador.';
+
+  @override
+  String get deviceLabelInvalid =>
+      'Escribe una sola línea de hasta 160 caracteres.';
+
+  @override
+  String get deviceLabelSaveFailed =>
+      'No se pudo guardar el cambio. Inténtalo de nuevo.';
+
+  @override
   String get deviceSaveAndReconnect => 'Guardar y reconectar';
 
   @override

@@ -170,6 +170,7 @@ final class DeviceLinkController extends ChangeNotifier
       <String, _IncomingFileUpload>{};
 
   late LocalDeviceIdentity _localDevice;
+  String _computerName = '';
   List<LinkedDevice> _devices = const <LinkedDevice>[];
   PendingDevicePairing? _pendingPairing;
   DeviceConnectionStatus _pairingStatus = DeviceConnectionStatus.disconnected;
@@ -265,6 +266,7 @@ final class DeviceLinkController extends ChangeNotifier
     _started = true;
     final DeviceLinkDocument? document = await _store.load();
     _localDevice = document?.localDevice ?? _newLocalIdentity(_localizations());
+    _computerName = document?.computerName ?? '';
     _devices = List<LinkedDevice>.unmodifiable(
       (document?.devices ?? const <LinkedDevice>[]).map(
         (device) => device.kind == LinkedDeviceKind.computer
@@ -275,7 +277,7 @@ final class DeviceLinkController extends ChangeNotifier
       ),
     );
     await _fileHistory.load();
-    _computerLink.identity = _localDevice;
+    _computerLink.identity = _computerIdentity;
     _computerLink.onPaired = _saveComputerPair;
     _computerLink.addListener(_notifyIfActive);
     if (document == null) await _persist();
@@ -299,6 +301,48 @@ final class DeviceLinkController extends ChangeNotifier
       }
     }
     notifyListeners();
+  }
+
+  @override
+  String get localComputerName =>
+      _computerName.isEmpty ? _localDevice.name : _computerName;
+
+  LocalDeviceIdentity get _computerIdentity => LocalDeviceIdentity(
+    id: _localDevice.id,
+    name: localComputerName,
+    platform: _localDevice.platform,
+  );
+
+  @override
+  Future<void> setLocalComputerName(String value) async {
+    final name = _validateComputerLabel(value);
+    await _serializeDeviceMutation(() async {
+      if (_computerName == name) return;
+      await _persist(computerName: name);
+      _computerName = name;
+      _computerLink.identity = _computerIdentity;
+      _notifyIfActive();
+    });
+  }
+
+  @override
+  Future<void> setComputerRemark(String deviceId, String value) async {
+    final remark = _validateComputerLabel(value);
+    await _serializeDeviceMutation(() async {
+      final device = _device(deviceId);
+      if (device.kind != LinkedDeviceKind.computer) {
+        throw const FormatException('A computer is required.');
+      }
+      if (device.remark == remark) return;
+      final devices = List<LinkedDevice>.unmodifiable(
+        _devices.map(
+          (item) => item.id == deviceId ? item.copyWith(remark: remark) : item,
+        ),
+      );
+      await _persist(devices: devices);
+      _devices = devices;
+      _notifyIfActive();
+    });
   }
 
   @override
@@ -359,6 +403,7 @@ final class DeviceLinkController extends ChangeNotifier
     await _upsertDevice(
       device.id,
       (current) => device.copyWith(
+        remark: current?.remark,
         autoSendClipboard: current?.autoSendClipboard ?? false,
         sharedClipboardItemIds: current?.sharedClipboardItemIds ?? const [],
       ),

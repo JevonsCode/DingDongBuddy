@@ -457,6 +457,13 @@ final class _GoldenDeviceManagement extends ChangeNotifier
   _GoldenDeviceManagement({this.includeComputer = false});
 
   @override
+  String get localComputerName =>
+      includeComputer ? 'Studio desktop' : localDevice.name;
+  @override
+  Future<void> setLocalComputerName(String name) async {}
+  @override
+  Future<void> setComputerRemark(String deviceId, String remark) async {}
+  @override
   List<NearbyComputer> get nearbyComputers => const [];
   @override
   String? get computerPairingCode => null;
@@ -489,6 +496,7 @@ final class _GoldenDeviceManagement extends ChangeNotifier
           LinkedDevice(
             id: 'studio-macbook',
             name: 'Studio MacBook',
+            remark: 'Upstairs office',
             kind: LinkedDeviceKind.computer,
             platform: 'macos',
             room: 'computer-room-abcdefghijkl',

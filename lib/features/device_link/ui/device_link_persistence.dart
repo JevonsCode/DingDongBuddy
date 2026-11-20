@@ -154,7 +154,12 @@ extension _DeviceLinkPersistence on DeviceLinkController {
     }
   }
 
-  Future<void> _persist() => _store.save(
-    DeviceLinkDocument(localDevice: _localDevice, devices: _devices),
-  );
+  Future<void> _persist({String? computerName, List<LinkedDevice>? devices}) =>
+      _store.save(
+        DeviceLinkDocument(
+          localDevice: _localDevice,
+          devices: devices ?? _devices,
+          computerName: computerName ?? _computerName,
+        ),
+      );
 }

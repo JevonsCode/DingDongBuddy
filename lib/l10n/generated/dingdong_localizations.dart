@@ -7982,6 +7982,54 @@ abstract class DingDongLocalizations {
   /// **'Could not save the IP. Try again.'**
   String get deviceAddressSaveFailed;
 
+  /// Action to edit the local computer name used for LAN discovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit this computer’s discovery name'**
+  String get deviceEditDiscoveryName;
+
+  /// Label of the local computer name input.
+  ///
+  /// In en, this message translates to:
+  /// **'Discovery name'**
+  String get deviceDiscoveryName;
+
+  /// Help text for resetting the custom discovery name.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave blank to use the default name.'**
+  String get deviceDiscoveryNameHint;
+
+  /// Action to edit the local remark for a paired computer.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit remark'**
+  String get deviceEditRemark;
+
+  /// Label of the remark input for a paired computer.
+  ///
+  /// In en, this message translates to:
+  /// **'Remark'**
+  String get deviceRemark;
+
+  /// Explains where the remark will be visible.
+  ///
+  /// In en, this message translates to:
+  /// **'Only this computer can see the remark.'**
+  String get deviceRemarkHint;
+
+  /// Validation feedback for a computer discovery name or remark.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a single line up to 160 characters.'**
+  String get deviceLabelInvalid;
+
+  /// Storage error for a computer discovery name or remark.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save this change. Try again.'**
+  String get deviceLabelSaveFailed;
+
   /// Device connection address and route controls.
   ///
   /// In en, this message translates to:

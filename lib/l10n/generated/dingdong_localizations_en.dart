@@ -4570,6 +4570,30 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   String get deviceAddressSaveFailed => 'Could not save the IP. Try again.';
 
   @override
+  String get deviceEditDiscoveryName => 'Edit this computer’s discovery name';
+
+  @override
+  String get deviceDiscoveryName => 'Discovery name';
+
+  @override
+  String get deviceDiscoveryNameHint => 'Leave blank to use the default name.';
+
+  @override
+  String get deviceEditRemark => 'Edit remark';
+
+  @override
+  String get deviceRemark => 'Remark';
+
+  @override
+  String get deviceRemarkHint => 'Only this computer can see the remark.';
+
+  @override
+  String get deviceLabelInvalid => 'Enter a single line up to 160 characters.';
+
+  @override
+  String get deviceLabelSaveFailed => 'Could not save this change. Try again.';
+
+  @override
   String get deviceSaveAndReconnect => 'Save and reconnect';
 
   @override
