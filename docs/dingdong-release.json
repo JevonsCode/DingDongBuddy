@@ -1,40 +1,40 @@
 {
   "app": "DingDong",
-  "latestVersion": "1.11.14",
-  "latestBuild": "97",
+  "latestVersion": "1.11.15",
+  "latestBuild": "98",
   "prerelease": false,
   "website": "https://xn--8ovp9s.xn--m8txu.com/DingDongBuddy/",
-  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.11.14",
+  "releasePage": "https://github.com/JevonsCode/DingDongBuddy/releases/tag/v1.11.15",
   "downloads": {
     "macOS": {
       "arm64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.14/DingDong-1.11.14-macos-arm64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.15/DingDong-1.11.15-macos-arm64.dmg",
         "beta": false
       },
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.14/DingDong-1.11.14-macos-x64.dmg",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.15/DingDong-1.11.15-macos-x64.dmg",
         "beta": false
       }
     },
     "windows": {
       "x86_64": {
-        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.14/DingDong-1.11.14-windows-x64-Setup.exe",
+        "url": "https://github.com/JevonsCode/DingDongBuddy/releases/download/v1.11.15/DingDong-1.11.15-windows-x64-Setup.exe",
         "beta": false
       }
     }
   },
   "notes": [
-    "On macOS, the Accessibility permission helper clears the old DingDong entry after an update. Drag DingDong into System Settings once and turn on its switch."
+    "Fixed nearby computer discovery stopping when a saved computer is unreachable. Discovery now restarts automatically after an interruption."
   ],
   "notesByLanguage": {
     "en": [
-      "On macOS, the Accessibility permission helper clears the old DingDong entry after an update. Drag DingDong into System Settings once and turn on its switch."
+      "Fixed nearby computer discovery stopping when a saved computer is unreachable. Discovery now restarts automatically after an interruption."
     ],
     "zh": [
-      "macOS 更新后打开辅助功能权限助手，会自动清理 DingDong 的旧条目。拖入一次，再打开系统开关即可重新授权。"
+      "修复已保存的离线电脑可能导致「附近的电脑」停止搜索的问题。发现服务中断后会自动恢复。"
     ],
     "es": [
-      "En macOS, el asistente de permisos de accesibilidad elimina la entrada anterior de DingDong tras una actualización. Arrastra DingDong una vez a Ajustes del Sistema y activa su interruptor."
+      "Se corrigió un problema por el que la búsqueda de equipos cercanos se detenía cuando no se podía contactar con un equipo guardado. La búsqueda se reanuda automáticamente tras una interrupción."
     ]
   }
 }

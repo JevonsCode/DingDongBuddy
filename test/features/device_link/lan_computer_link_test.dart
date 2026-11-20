@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -5,12 +6,45 @@ import 'package:dingdong/features/device_link/data/device_link_session.dart';
 import 'package:dingdong/features/device_link/data/lan_computer_link.dart';
 import 'package:dingdong/features/device_link/data/lan_network_policy.dart';
 import 'package:dingdong/features/device_link/data/lan_pairing_crypto.dart';
+import 'package:dingdong/features/device_link/data/lan_unicast_discovery.dart';
 import 'package:dingdong/features/device_link/data/lan_wire.dart';
 import 'package:dingdong/features/device_link/data/secure_message_codec.dart';
 import 'package:dingdong/features/device_link/domain/device_link_models.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('a failed discovery send does not close other target sockets', () async {
+    final receiver = await RawDatagramSocket.bind(
+      InternetAddress.loopbackIPv4,
+      0,
+    );
+    addTearDown(receiver.close);
+    receiver.writeEventsEnabled = false;
+    receiver.listen((event) {
+      if (event != RawSocketEvent.read) return;
+      final request = receiver.receive();
+      if (request != null) {
+        receiver.send(request.data, request.address, request.port);
+      }
+    });
+    final delivered = Completer<Datagram>();
+    final discovery = LanUnicastDiscovery(delivered.complete);
+    addTearDown(discovery.reset);
+
+    discovery.announce(
+      [1, 2, 3],
+      {
+        // Without SO_BROADCAST this send fails at the OS before transmission.
+        InternetAddress('255.255.255.255'): {receiver.port},
+        InternetAddress.loopbackIPv4: {receiver.port},
+      },
+    );
+
+    final reply = await delivered.future.timeout(const Duration(seconds: 3));
+    expect(reply.address, InternetAddress.loopbackIPv4);
+    expect(reply.data, [1, 2, 3]);
+  });
+
   test(
     'socket bind errors keep permission and address conflicts actionable',
     () {
@@ -86,6 +120,50 @@ void main() {
       expect(link.localAddresses, ['192.168.31.180']);
       expect(link.error, 'access_denied');
       expect(link.pairingCode, isNull);
+    },
+  );
+  test(
+    'a closed discovery socket is replaced without restarting TCP or pairing',
+    () async {
+      final host = _service('recovered-host');
+      addTearDown(host.close);
+      await host.beginPairing();
+      final previous = host.discoverySocketForTest!;
+      final tcpPort = host.advertisement['port'];
+      final routedPort = host.routedListenPort;
+      final code = host.pairingCode!;
+
+      previous.close();
+      await _until(
+        () =>
+            host.discoverySocketForTest != null &&
+            !identical(host.discoverySocketForTest, previous),
+      );
+      expect(host.advertisement['port'], tcpPort);
+      expect(host.routedListenPort, routedPort);
+      expect(host.pairingCode, code);
+      expect(host.error, isNull);
+
+      LinkedDevice? paired;
+      final peer =
+          LanComputerLink.loopbackTest(
+              unicastDiscoveryPort: host.discoveryListenPort!,
+            )
+            ..identity = const LocalDeviceIdentity(
+              id: 'recovered-peer',
+              name: 'Recovered peer',
+              platform: 'test',
+            )
+            ..onPaired = (device) async {
+              paired = device;
+            };
+      addTearDown(peer.close);
+      await peer.discoverAddress('127.0.0.1');
+      await _until(
+        () => peer.nearby.any((entry) => entry.id == 'recovered-host'),
+      );
+      await peer.join('recovered-host', code);
+      expect(paired?.id, 'recovered-host');
     },
   );
   test(
@@ -398,18 +476,32 @@ void main() {
       pair.peerDevice!.copyWith(secret: LanPairingCrypto.token()),
     );
     final statuses = <DeviceConnectionStatus>[];
+    final retried = Completer<(List<DeviceConnectionStatus>, Future<void>)>();
+    var failedAttempts = 0;
     final subscription = session.events.listen((event) {
-      if (event is DeviceLinkStatusEvent) statuses.add(event.status);
+      if (event is! DeviceLinkStatusEvent) return;
+      statuses.add(event.status);
+      if (event.status == DeviceConnectionStatus.disconnected &&
+          ++failedAttempts == 2) {
+        // Retry at the end of the observed background attempt. The periodic
+        // retry and the session's retry timer can otherwise claim the next
+        // connection while a timing-based fixture is waiting.
+        retried.complete((List.of(statuses), session.connect()));
+      }
     });
     addTearDown(subscription.cancel);
     await session.connect();
-    await Future<void>.delayed(const Duration(milliseconds: 2300));
+    final (beforeExplicitRetry, explicitRetry) = await retried.future.timeout(
+      const Duration(seconds: 8),
+    );
     expect(
-      statuses.where((status) => status == DeviceConnectionStatus.connecting),
+      beforeExplicitRetry.where(
+        (status) => status == DeviceConnectionStatus.connecting,
+      ),
       hasLength(1),
     );
-    expect(statuses.last, DeviceConnectionStatus.disconnected);
-    await session.connect();
+    expect(beforeExplicitRetry.last, DeviceConnectionStatus.disconnected);
+    await explicitRetry;
     await Future<void>.delayed(Duration.zero);
     expect(
       statuses.where((status) => status == DeviceConnectionStatus.connecting),

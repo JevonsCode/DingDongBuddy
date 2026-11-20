@@ -13,6 +13,9 @@ computers reconnect automatically. Phone QR pairing retains its own protocol.
 - Discovery uses IPv4 multicast `239.255.68.68:45893`, TTL 1. Announcements contain
   protocol version, device ID/name, TCP port and pairing availability. They never
   contain the code, pair key, or room credentials.
+- Directed UDP discovery uses a separate socket for each destination IP. Send
+  failures affect only that address. The service recreates a stopped discovery
+  listener and rejoins multicast while retaining TCP sessions and pairing state.
 - On macOS a physical adapter with a self-assigned `169.254/16` address also
   announces to `169.254.255.255:45893` from a socket bound to that interface.
   Peers reply to the sender's UDP port with the existing discovery protocol.

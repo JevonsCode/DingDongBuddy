@@ -6,6 +6,7 @@ import 'package:dingdong/features/device_link/data/device_link_session.dart';
 import 'package:dingdong/features/device_link/data/lan_link_local_discovery.dart';
 import 'package:dingdong/features/device_link/data/lan_network_policy.dart';
 import 'package:dingdong/features/device_link/data/lan_pairing_crypto.dart';
+import 'package:dingdong/features/device_link/data/lan_unicast_discovery.dart';
 import 'package:dingdong/features/device_link/data/lan_wire.dart';
 import 'package:dingdong/features/device_link/data/secure_message_codec.dart';
 import 'package:dingdong/features/device_link/domain/device_link_models.dart';
@@ -51,8 +52,11 @@ final class LanComputerLink extends ChangeNotifier {
     _receiveDiscovery,
     loopbackTestPort: _linkLocalBroadcastTestPort,
   );
+  late final _unicastDiscovery = LanUnicastDiscovery(_receiveDiscovery);
   @visibleForTesting
   int? get discoveryListenPort => _udp?.port;
+  @visibleForTesting
+  RawDatagramSocket? get discoverySocketForTest => _udp;
   @visibleForTesting
   int? get routedListenPort => _routedServer?.port;
   final DateTime Function() _now;
@@ -157,9 +161,15 @@ final class LanComputerLink extends ChangeNotifier {
     if (_closed) throw StateError('LAN service closed');
     if (_starting != null) return _starting;
     if (_server != null && _udp != null) return;
-    _starting = _start();
+    _starting = _server == null ? _start() : _openDiscoverySocket();
     try {
       await _starting;
+    } catch (failure) {
+      if (!_closed) {
+        error = lanDiscoveryFailureCode(failure);
+        notifyListeners();
+      }
+      rethrow;
     } finally {
       _starting = null;
     }
@@ -170,44 +180,15 @@ final class LanComputerLink extends ChangeNotifier {
       final listenAddress = discoveryPort == 0
           ? InternetAddress.loopbackIPv4
           : InternetAddress.anyIPv4;
-      _server = await ServerSocket.bind(listenAddress, 0);
-      _udp = await RawDatagramSocket.bind(
-        InternetAddress.anyIPv4,
-        discoveryPort,
-        reuseAddress: true,
-      );
+      final server = await ServerSocket.bind(listenAddress, 0);
       if (_closed) {
-        _udp?.close();
-        await _server?.close();
+        await server.close();
         return;
       }
-      _udp!
-        ..writeEventsEnabled = false
-        ..multicastHops = 1
-        ..multicastLoopback = false;
-      _udp!.setRawOption(
-        RawSocketOption.fromInt(
-          RawSocketOption.levelIPv4,
-          Platform.isLinux ? 2 : 4, // IP_TTL for directed discovery as well.
-          1,
-        ),
-      );
-      await _refreshInterfaces();
+      _server = server;
+      await _openDiscoverySocket();
       if (_closed) return;
-      _udp!.listen(
-        (event) {
-          if (event != RawSocketEvent.read) return;
-          Datagram? packet;
-          while ((packet = _udp?.receive()) != null) {
-            _receiveDiscovery(packet!);
-          }
-        },
-        onError: (Object _) {
-          error = 'network';
-          notifyListeners();
-        },
-      );
-      _server!.listen(
+      server.listen(
         (socket) => unawaited(_accept(socket)),
         onError: (Object _) {
           error = 'network';
@@ -222,18 +203,62 @@ final class LanComputerLink extends ChangeNotifier {
       if (_closed) return;
       error = null;
       _announce();
-    } catch (failure) {
+    } catch (_) {
       _linkLocalDiscovery.reset();
+      _unicastDiscovery.reset();
       _udp?.close();
       _udp = null;
       await _server?.close();
       _server = null;
       await _routedServer?.close();
       _routedServer = null;
-      error = lanDiscoveryFailureCode(failure);
-      notifyListeners();
       rethrow;
     }
+  }
+
+  Future<void> _openDiscoverySocket() async {
+    final socket = await RawDatagramSocket.bind(
+      InternetAddress.anyIPv4,
+      discoveryPort,
+      reuseAddress: true,
+    );
+    if (_closed) {
+      socket.close();
+      return;
+    }
+    _udp = socket;
+    _interfaces = []; // Multicast membership belongs to the socket.
+    try {
+      socket
+        ..writeEventsEnabled = false
+        ..multicastHops = 1
+        ..multicastLoopback = false;
+      await _refreshInterfaces();
+      if (_closed) return;
+      socket.listen(
+        (event) {
+          if (event != RawSocketEvent.read) return;
+          Datagram? packet;
+          while ((packet = socket.receive()) != null) {
+            _receiveDiscovery(packet!);
+          }
+        },
+        onError: (Object failure) => _discoveryStopped(socket, failure),
+        onDone: () => _discoveryStopped(socket),
+      );
+    } on Object {
+      _udp = null;
+      socket.close();
+      rethrow;
+    }
+  }
+
+  void _discoveryStopped(RawDatagramSocket socket, [Object? failure]) {
+    if (_closed || !identical(_udp, socket)) return;
+    _udp = null;
+    error = failure == null ? 'network' : lanDiscoveryFailureCode(failure);
+    if (failure != null) debugPrint('DingDong LAN discovery: $failure');
+    notifyListeners();
   }
 
   Future<void> _startRoutedListener(InternetAddress listenAddress) async {
@@ -265,6 +290,7 @@ final class LanComputerLink extends ChangeNotifier {
       _subnets = [];
       _interfaces = [];
       _linkLocalDiscovery.reset();
+      _unicastDiscovery.reset();
       rethrow;
     }
     if (_closed) return;
@@ -297,14 +323,18 @@ final class LanComputerLink extends ChangeNotifier {
     }
     _interfaces = next;
     await _linkLocalDiscovery.refresh(next, _subnets);
-    error = null;
+    if (_udp != null) error = null;
   }
 
   Future<void> _tick() async {
     if (_closed || _ticking) return;
     _ticking = true;
     try {
-      if (++_ticks % 15 == 0) await _refreshInterfaces();
+      if (_udp == null) {
+        await start();
+      } else if (++_ticks % 15 == 0) {
+        await _refreshInterfaces();
+      }
       if (_code != null && pairingCode == null) cancelPairing();
       _endpoints.removeWhere((_, e) => !e.fresh);
       _announce();
@@ -313,8 +343,8 @@ final class LanComputerLink extends ChangeNotifier {
         if (!session.connected) unawaited(session._connect(background: true));
       }
       notifyListeners();
-    } on Object {
-      error = 'network';
+    } on Object catch (failure) {
+      error = lanDiscoveryFailureCode(failure);
     } finally {
       _ticking = false;
     }
@@ -330,73 +360,59 @@ final class LanComputerLink extends ChangeNotifier {
 
   void _announce() {
     final socket = _udp;
-    if (socket == null || _server == null || _closed) {
-      return;
-    }
+    if (_server == null || _closed) return;
     final bytes = utf8.encode(jsonEncode(advertisement));
     _linkLocalDiscovery.announce(bytes);
-    for (final iface in _interfaces.where((_) => discoveryPort != 0)) {
-      for (final address in iface.addresses.where(
-        (a) => _subnets.any((s) => s.address.address == a.address),
-      )) {
-        try {
-          socket.setRawOption(
-            RawSocketOption(
-              RawSocketOption.levelIPv4,
-              RawSocketOption.IPv4MulticastInterface,
-              address.rawAddress,
-            ),
-          );
-          socket.send(bytes, _group, discoveryPort);
-        } on SocketException {
-          /* An adapter may disappear during enumeration. */
+    if (socket != null && discoveryPort != 0) {
+      for (final iface in _interfaces) {
+        for (final address in iface.addresses.where(
+          (a) => _subnets.any((s) => s.address.address == a.address),
+        )) {
+          try {
+            socket.setRawOption(
+              RawSocketOption(
+                RawSocketOption.levelIPv4,
+                RawSocketOption.IPv4MulticastInterface,
+                address.rawAddress,
+              ),
+            );
+            socket.send(bytes, _group, discoveryPort);
+          } on SocketException {
+            /* An adapter may disappear during enumeration. */
+          }
         }
       }
     }
     // A router or adapter can pass multicast in only one direction. Reply to
     // actual discovery senders and keep their view of us fresh across retries.
     // Destinations stay transient, bounded and subject to the same LAN policy.
-    final sent = <(String, int)>{};
+    final targets = <InternetAddress, Set<int>>{};
+    void addTarget(InternetAddress address, int port) {
+      (targets[address] ??= {}).add(port);
+    }
+
     for (final endpoint in _endpoints.values) {
       if (!endpoint.fresh ||
           endpoint.routed ||
           !_allowed(endpoint.address) ||
-          endpoint.discoveryPort <= 0 ||
-          !sent.add((endpoint.address.address, endpoint.discoveryPort))) {
+          endpoint.discoveryPort <= 0) {
         continue;
       }
-      try {
-        socket.send(bytes, endpoint.address, endpoint.discoveryPort);
-      } on SocketException {
-        // The next discovery tick will retry while the endpoint stays fresh.
-      }
+      addTarget(endpoint.address, endpoint.discoveryPort);
     }
     for (final text in _manualDiscoveryAddresses) {
       final address = InternetAddress(text);
-      if (!_allowedHint(address) || !sent.add((text, _unicastDiscoveryPort))) {
-        continue;
-      }
-      try {
-        socket.send(bytes, address, _unicastDiscoveryPort);
-      } on SocketException {
-        /* Retry on the next tick. */
-      }
+      if (_allowedHint(address)) addTarget(address, _unicastDiscoveryPort);
     }
     // Bootstrap discovery from a saved IP even when multicast is unavailable.
     // The peer still supplies its current TCP port and proves the original key.
     for (final session in _sessions.values) {
       final hint = InternetAddress.tryParse(session._addressHint ?? '');
-      if (hint == null ||
-          !_allowedHint(hint) ||
-          !sent.add((hint.address, _unicastDiscoveryPort))) {
-        continue;
-      }
-      try {
-        socket.send(bytes, hint, _unicastDiscoveryPort);
-      } on SocketException {
-        // Keep automatic discovery and retry on the next tick.
+      if (hint != null && _allowedHint(hint)) {
+        addTarget(hint, _unicastDiscoveryPort);
       }
     }
+    _unicastDiscovery.announce(bytes, targets);
   }
 
   void _receiveDiscovery(Datagram packet) {
@@ -494,7 +510,7 @@ final class LanComputerLink extends ChangeNotifier {
   }
 
   Future<void> refresh() async {
-    final wasRunning = _server != null && _starting == null;
+    final wasRunning = _udp != null && _starting == null;
     try {
       await start();
       if (wasRunning) await _refreshInterfaces();
@@ -785,6 +801,7 @@ final class LanComputerLink extends ChangeNotifier {
     _closed = true;
     _timer?.cancel();
     _linkLocalDiscovery.reset();
+    _unicastDiscovery.reset();
     _udp?.close();
     _udp = null;
     await _server?.close();
