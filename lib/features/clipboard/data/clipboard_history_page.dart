@@ -1,4 +1,5 @@
 import 'package:dingdong/core/models/clipboard_record.dart';
+import 'package:dingdong/features/clipboard/domain/clipboard_device_source.dart';
 
 /// The last ordering key, independent of a changing row offset.
 final class ClipboardHistoryCursor {
@@ -24,6 +25,7 @@ abstract interface class PagedClipboardStore {
   });
 
   List<String> historySources();
+  List<ClipboardDeviceOrigin> historyDeviceOrigins();
   ClipboardRecord? historyRecord(String id);
   bool hasHistoryImageReference(String content);
 }

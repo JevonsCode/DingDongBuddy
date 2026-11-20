@@ -88,6 +88,13 @@ class _CompactClipboardToolbar extends StatelessWidget {
               showResetShortcutHint: showResetShortcutHint,
               resourceManagerLauncher: resourceManagerLauncher,
             ),
+            if (viewModel.computerSourceOptions.isNotEmpty) ...<Widget>[
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: ClipboardComputerFilter(viewModel: viewModel),
+              ),
+            ],
             if (viewModel.groups.isNotEmpty) ...<Widget>[
               const SizedBox(height: 8),
               _ClipboardGroupFilters(

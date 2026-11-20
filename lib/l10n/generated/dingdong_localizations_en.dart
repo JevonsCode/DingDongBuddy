@@ -452,6 +452,9 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   String get allProjectsNoRestriction => 'All projects · no restriction';
 
   @override
+  String get clipboardSourceComputer => 'Source computer';
+
+  @override
   String get allSources => 'All sources';
 
   @override

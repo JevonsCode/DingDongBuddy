@@ -871,6 +871,12 @@ abstract class DingDongLocalizations {
   /// **'All projects · no restriction'**
   String get allProjectsNoRestriction;
 
+  /// Label of the clipboard filter for the computer that sent an item.
+  ///
+  /// In en, this message translates to:
+  /// **'Source computer'**
+  String get clipboardSourceComputer;
+
   /// DingDong built-in interface copy.
   ///
   /// In en, this message translates to:

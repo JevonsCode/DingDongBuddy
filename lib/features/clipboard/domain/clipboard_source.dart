@@ -1,12 +1,11 @@
-/// One source application represented by the metadata already stored on
-/// clipboard history records.
+/// A filter option for the source of a clipboard history record.
 final class ClipboardSourceOption {
   const ClipboardSourceOption({required this.id, required this.label});
 
-  /// Stable filter identity derived from a bundle identifier or executable.
+  /// Stable identifier used to match records.
   final String id;
 
-  /// User-facing application name taken from the stored source metadata.
+  /// User-facing source name.
   final String label;
 }
 

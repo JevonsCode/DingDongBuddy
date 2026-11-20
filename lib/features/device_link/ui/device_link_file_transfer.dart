@@ -185,7 +185,10 @@ extension _DeviceLinkFileTransfer on DeviceLinkController {
           ? (message['title']! as String).trim()
           : classification.title,
       content: content,
-      tags: <String>[...classification.tags, 'device-origin:${device.id}'],
+      tags: <String>[
+        ...classification.tags,
+        ...clipboardDeviceOriginTags(device),
+      ],
       source: _localizations().fromDevice(device.name),
       pinned: false,
       enabled: true,
@@ -331,7 +334,7 @@ extension _DeviceLinkFileTransfer on DeviceLinkController {
         'clipboard',
         'file',
         'file-url',
-        'device-origin:${device.id}',
+        ...clipboardDeviceOriginTags(device),
       ],
       source: _localizations().fromDevice(device.name),
       pinned: false,

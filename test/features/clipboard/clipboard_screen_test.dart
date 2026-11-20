@@ -11,6 +11,7 @@ import 'package:dingdong/features/clipboard/data/clipboard_history_page.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_context_menu.dart';
+import 'package:dingdong/features/clipboard/domain/clipboard_device_source.dart';
 import 'package:dingdong/features/clipboard/domain/quick_paste_gateway.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_list_tile.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_screen.dart';
@@ -1911,6 +1912,12 @@ final class _MemoryClipboardStore implements ClipboardStore {
   @override
   List<String> historySources() =>
       records.expand((r) => r.sources).toSet().toList();
+
+  @override
+  List<ClipboardDeviceOrigin> historyDeviceOrigins() => records
+      .map((record) => clipboardDeviceOrigin(record.tags, record.sources))
+      .nonNulls
+      .toList();
 
   @override
   bool hasHistoryImageReference(String content) => records.any(

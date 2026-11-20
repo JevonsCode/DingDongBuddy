@@ -418,6 +418,9 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get allProjectsNoRestriction => '所有项目 · 不限制';
 
   @override
+  String get clipboardSourceComputer => '来源电脑';
+
+  @override
   String get allSources => '全部来源';
 
   @override

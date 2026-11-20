@@ -19,6 +19,7 @@ import 'package:dingdong/features/clipboard/data/clipboard_group_order_store.dar
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_content_launcher.dart';
+import 'package:dingdong/features/clipboard/domain/clipboard_device_source.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_monitor_service.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_preview_launcher.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_share_gateway.dart';
@@ -194,6 +195,8 @@ class _DingDongAppState extends State<DingDongApp> {
       categoryRuleStore: widget.clipboardCategoryRuleStore,
       groupOrderStore: widget.clipboardGroupOrderStore,
       managedImageDirectory: widget.clipboardImageStoreDirectory,
+      loadDeviceProfiles: () =>
+          clipboardDeviceProfiles(widget.deviceLinkController?.devices ?? []),
     );
     _libraryViewModel = createDesktopLibraryViewModel(
       widget.resourceStore ?? InMemoryResourceStore(),

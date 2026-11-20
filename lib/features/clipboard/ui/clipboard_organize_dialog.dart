@@ -3,6 +3,7 @@ import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/core/widgets/desktop_action_button.dart';
 import 'package:dingdong/core/widgets/desktop_dialog.dart';
 import 'package:dingdong/core/widgets/desktop_input_field.dart';
+import 'package:dingdong/features/clipboard/domain/clipboard_device_source.dart';
 import 'package:flutter/material.dart';
 
 /// Editable clipboard fields returned by the organization dialog.
@@ -44,7 +45,15 @@ final class _ClipboardOrganizeDialogState
     _title = TextEditingController(text: widget.record.title);
     _content = TextEditingController(text: widget.record.content);
     _group = TextEditingController(text: widget.record.group);
-    _tags = TextEditingController(text: widget.record.tags.join(', '));
+    _tags = TextEditingController(
+      text: widget.record.tags
+          .where(
+            (tag) =>
+                tag != clipboardComputerOriginTag &&
+                !tag.startsWith(clipboardDeviceOriginPrefix),
+          )
+          .join(', '),
+    );
   }
 
   @override

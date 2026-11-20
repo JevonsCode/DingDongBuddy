@@ -36,6 +36,7 @@ import 'package:dingdong/features/clipboard/data/clipboard_category_rule_store.d
 import 'package:dingdong/features/clipboard/data/clipboard_group_order_store.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_classifier.dart';
+import 'package:dingdong/features/clipboard/domain/clipboard_device_source.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_share_gateway.dart';
 import 'package:dingdong/features/clipboard/domain/managed_clipboard_images.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_preview_app.dart';
@@ -114,6 +115,8 @@ part 'main_development_window.dart';
 part 'main_resource_window.dart';
 part 'main_settings_windows.dart';
 part 'main_system_maintenance.dart';
+
+const String _clipboardDeviceProfilesMethod = 'clipboard_device_profiles';
 
 Future<void> main(List<String> arguments) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -404,8 +407,14 @@ Future<void> main(List<String> arguments) async {
     unawaited(deviceLinkController.syncAgentState());
     unawaited(resourceManagerLauncher.refreshActivity());
   });
+  var clipboardProfiles = clipboardDeviceProfiles(deviceLinkController.devices);
   deviceLinkController.addListener(() {
     unawaited(deviceLinkManagerLauncher.refresh());
+    final profiles = clipboardDeviceProfiles(deviceLinkController.devices);
+    if (mapEquals(clipboardProfiles, profiles)) return;
+    clipboardProfiles = profiles;
+    shellController.requestClipboardRefresh();
+    unawaited(resourceManagerLauncher.refreshClipboard());
   });
   final LifecycleTelemetryController lifecycleTelemetryController =
       LifecycleTelemetryController(
@@ -578,6 +587,14 @@ Future<void> main(List<String> arguments) async {
       return handleDeviceLinkManagerHostCall(deviceLinkController, call);
     }
     switch (call.method) {
+      case _clipboardDeviceProfilesMethod:
+        return {
+          for (final entry in clipboardProfiles.entries)
+            entry.key: {
+              'label': entry.value.label,
+              'isComputer': entry.value.isComputer,
+            },
+        };
       case 'selection_ready':
       case 'selection_action':
         return windowsSelectionGateway?.handleWindowCall(call);

@@ -15,6 +15,7 @@ import 'package:dingdong/features/clipboard/domain/clipboard_category_rule.dart'
 import 'package:dingdong/features/clipboard/domain/clipboard_context_menu.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_source.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_category_rules_dialog.dart';
+import 'package:dingdong/features/clipboard/ui/clipboard_computer_filter.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_copy_count.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_group_context_menu.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_group_dialog.dart';
