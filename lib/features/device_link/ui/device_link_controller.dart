@@ -13,6 +13,7 @@ import 'package:dingdong/features/activity/domain/agent_task_run.dart';
 import 'package:dingdong/features/agent_api/data/ding_request.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_classifier.dart';
+import 'package:dingdong/features/clipboard/domain/clipboard_device_source.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_share_gateway.dart';
 import 'package:dingdong/features/device_link/data/device_link_session.dart';
 import 'package:dingdong/features/device_link/data/device_link_store.dart';
@@ -475,7 +476,7 @@ final class DeviceLinkController extends ChangeNotifier
 
   Future<void> handleLocalClipboard(ClipboardRecord record) async {
     if (record.sensitive ||
-        record.tags.any((String tag) => tag.startsWith('device-origin:'))) {
+        record.tags.any((tag) => tag.startsWith(clipboardDeviceOriginPrefix))) {
       return;
     }
     final List<Future<void>> sends = <Future<void>>[];

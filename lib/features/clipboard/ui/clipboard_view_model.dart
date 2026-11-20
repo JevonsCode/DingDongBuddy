@@ -13,6 +13,7 @@ import 'package:dingdong/features/clipboard/data/clipboard_history_page.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_capture_service.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_category_rule.dart';
+import 'package:dingdong/features/clipboard/domain/clipboard_device_source.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_source.dart';
 import 'package:dingdong/features/clipboard/domain/managed_clipboard_images.dart';
 import 'package:dingdong/features/clipboard/domain/quick_paste_gateway.dart';
@@ -37,6 +38,8 @@ final class ClipboardViewModel extends ChangeNotifier {
     ClipboardCategoryRuleStore? categoryRuleStore,
     ClipboardGroupOrderStore? groupOrderStore,
     Directory? managedImageDirectory,
+    FutureOr<Map<String, ClipboardDeviceProfile>> Function()?
+    loadDeviceProfiles,
   }) : _store = store,
        _archiveStore =
            archiveStore ??
@@ -50,6 +53,7 @@ final class ClipboardViewModel extends ChangeNotifier {
        _quickPasteGateway = quickPasteGateway,
        _revisions = revisions,
        _managedImageDirectory = managedImageDirectory,
+       _loadDeviceProfiles = loadDeviceProfiles,
        _categoryRuleStore =
            categoryRuleStore ?? InMemoryClipboardCategoryRuleStore(),
        _groupOrderStore = groupOrderStore ?? InMemoryClipboardGroupOrderStore();
@@ -65,10 +69,15 @@ final class ClipboardViewModel extends ChangeNotifier {
   final Directory? _managedImageDirectory;
   final ClipboardCategoryRuleStore _categoryRuleStore;
   final ClipboardGroupOrderStore _groupOrderStore;
+  final FutureOr<Map<String, ClipboardDeviceProfile>> Function()?
+  _loadDeviceProfiles;
   List<ClipboardRecord> _records = const <ClipboardRecord>[];
   static const int historyPageSize = 50;
   ClipboardHistoryCursor? _historyCursor;
   List<String> _historySources = const [];
+  List<ClipboardDeviceOrigin> _historyDeviceOrigins = const [];
+  Map<String, ClipboardDeviceProfile> _deviceProfiles = const {};
+  int _deviceProfilesRead = 0;
   bool _loadingPage = false;
   int _paginationRevision = 0;
 
@@ -98,6 +107,7 @@ final class ClipboardViewModel extends ChangeNotifier {
   String _query = '';
   String? _selectedCategoryId;
   String? _selectedGroup;
+  String? _selectedComputerId;
   final Set<String> _selectedSourceIds = <String>{};
   ClipboardSortMode _sortMode = ClipboardSortMode.defaultOrder;
   ClipboardRecord? _selectedRecord;
@@ -117,7 +127,49 @@ final class ClipboardViewModel extends ChangeNotifier {
   bool get hasActiveFilters =>
       _selectedCategoryId != null ||
       _selectedGroup != null ||
+      _selectedComputerId != null ||
       _selectedSourceIds.isNotEmpty;
+
+  String? get selectedComputerId => _selectedComputerId;
+
+  List<ClipboardSourceOption> get computerSourceOptions {
+    final group = _selectedGroup;
+    final Iterable<ClipboardDeviceOrigin> origins = group == null
+        ? _historyDeviceOrigins
+        : _archives
+              .map((entry) => entry.record)
+              .where(
+                (record) => record.groupNames.any(
+                  (name) => _groupKey(name) == _groupKey(group),
+                ),
+              )
+              .map(
+                (record) => clipboardDeviceOrigin(record.tags, record.sources),
+              )
+              .nonNulls;
+    final options = <String, ClipboardSourceOption>{};
+    for (final origin in origins) {
+      final profile = _deviceProfiles[origin.id];
+      // Older desktop identities have a canonical prefix. Newly received
+      // records also identify the computer kind after its pairing is removed.
+      if (!origin.isComputer &&
+          !(profile?.isComputer ?? origin.id.startsWith('desktop-'))) {
+        continue;
+      }
+      final name = profile?.label.trim() ?? '';
+      final label = name.isNotEmpty ? name : origin.label;
+      if (label.isNotEmpty) {
+        options.putIfAbsent(
+          origin.id,
+          () => ClipboardSourceOption(id: origin.id, label: label),
+        );
+      }
+    }
+    return options.values.toList()..sort(
+      (left, right) =>
+          left.label.toLowerCase().compareTo(right.label.toLowerCase()),
+    );
+  }
 
   Set<String> get selectedSourceIds =>
       Set<String>.unmodifiable(_selectedSourceIds);
@@ -228,6 +280,7 @@ final class ClipboardViewModel extends ChangeNotifier {
       showingArchivedRecords &&
       _query.trim().isEmpty &&
       _selectedCategoryId == null &&
+      _selectedComputerId == null &&
       _selectedSourceIds.isEmpty &&
       _sortMode == ClipboardSortMode.defaultOrder;
 
@@ -250,6 +303,11 @@ final class ClipboardViewModel extends ChangeNotifier {
         !record.groupNames.any(
           (String group) => _groupKey(group) == _groupKey(_selectedGroup!),
         )) {
+      return false;
+    }
+    final computerId = _selectedComputerId;
+    if (computerId != null &&
+        !record.tags.contains('$clipboardDeviceOriginPrefix$computerId')) {
       return false;
     }
     final Set<String> sourceIds = record.sources
@@ -294,6 +352,7 @@ final class ClipboardViewModel extends ChangeNotifier {
     _pruneSelectedSources();
     _ensureSelectionVisible();
     notifyListeners();
+    unawaited(_refreshDeviceProfiles());
   }
 
   void setQuery(String value) {
@@ -426,6 +485,7 @@ final class ClipboardViewModel extends ChangeNotifier {
 
   void setGroup(String? value) {
     _selectedGroup = value;
+    _clearMissingComputerSource();
     _resetHistoryPage();
     _ensureSelectionVisible();
     notifyListeners();
@@ -478,12 +538,25 @@ final class ClipboardViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setComputerSource(String? id) {
+    if (id == _selectedComputerId ||
+        (id != null &&
+            !computerSourceOptions.any((option) => option.id == id))) {
+      return;
+    }
+    _selectedComputerId = id;
+    _resetHistoryPage();
+    _ensureSelectionVisible();
+    notifyListeners();
+  }
+
   void clearFilters() {
     if (!hasActiveFilters) {
       return;
     }
     _selectedCategoryId = null;
     _selectedGroup = null;
+    _selectedComputerId = null;
     _selectedSourceIds.clear();
     _resetHistoryPage();
     _ensureSelectionVisible();
@@ -984,6 +1057,8 @@ final class ClipboardViewModel extends ChangeNotifier {
         : _records.length.clamp(historyPageSize, 5000);
     _archives = _archiveStore.listArchives();
     _historySources = _store.historySources();
+    _historyDeviceOrigins = _store.historyDeviceOrigins();
+    _clearMissingComputerSource();
     _replaceHistoryPage(limit);
   }
 
@@ -1010,6 +1085,7 @@ final class ClipboardViewModel extends ChangeNotifier {
     final hasPredicate =
         _query.trim().isNotEmpty ||
         _selectedCategoryId != null ||
+        _selectedComputerId != null ||
         _selectedSourceIds.isNotEmpty;
     return _store.readHistoryPage(
       limit: limit,
@@ -1078,6 +1154,45 @@ final class ClipboardViewModel extends ChangeNotifier {
       (String id) => !availableSourceIds.contains(id),
     );
     if (_selectedSourceIds.length != oldCount) _resetHistoryPage();
+  }
+
+  bool _clearMissingComputerSource() {
+    if (_selectedComputerId == null ||
+        computerSourceOptions.any(
+          (option) => option.id == _selectedComputerId,
+        )) {
+      return false;
+    }
+    _selectedComputerId = null;
+    return true;
+  }
+
+  Future<void> _refreshDeviceProfiles() async {
+    final load = _loadDeviceProfiles;
+    if (load == null) return;
+    final read = ++_deviceProfilesRead;
+    final Map<String, ClipboardDeviceProfile> profiles;
+    try {
+      profiles = await load();
+    } on Object {
+      // The owner window may close during a history refresh.
+      return;
+    }
+    if (read != _deviceProfilesRead || mapEquals(profiles, _deviceProfiles)) {
+      return;
+    }
+    _deviceProfiles = Map.unmodifiable(profiles);
+    if (_clearMissingComputerSource()) {
+      _resetHistoryPage();
+      _ensureSelectionVisible();
+    }
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _deviceProfilesRead++;
+    super.dispose();
   }
 }
 

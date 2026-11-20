@@ -47,7 +47,12 @@ extension _DeviceLinkResumableTransfer on DeviceLinkController {
       group: '',
       title: sanitizeDeviceLinkFileName(transfer.name),
       content: file.path,
-      tags: ['clipboard', 'file', 'file-url', 'device-origin:${device.id}'],
+      tags: [
+        'clipboard',
+        'file',
+        'file-url',
+        ...clipboardDeviceOriginTags(device),
+      ],
       source: _localizations().fromDevice(device.name),
       pinned: false,
       enabled: true,

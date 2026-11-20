@@ -11,6 +11,7 @@ import 'package:dingdong/features/activity/domain/agent_task_run.dart';
 import 'package:dingdong/features/activity/ui/activity_controller.dart';
 import 'package:dingdong/features/agent_api/data/ding_request.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
+import 'package:dingdong/features/clipboard/domain/clipboard_device_source.dart';
 import 'package:dingdong/features/device_link/data/device_link_session.dart';
 import 'package:dingdong/features/device_link/data/device_link_store.dart';
 import 'package:dingdong/features/device_link/data/lan_computer_link.dart';
@@ -152,8 +153,16 @@ void main() {
       expect(host.computerAddressOf(peer.localDevice.id), '127.0.0.1');
       expect(peer.devices.single.lanAddress, '127.0.0.1');
       expect(peer.devices.single.name, '书房 Mac');
+      expect(
+        clipboardDeviceProfiles(peer.devices)[host.localDevice.id]?.label,
+        '书房 Mac',
+      );
       await peer.setComputerRemark(host.localDevice.id, '  家里常用  ');
       expect(peer.devices.single.remark, '家里常用');
+      expect(
+        clipboardDeviceProfiles(peer.devices)[host.localDevice.id]?.label,
+        '家里常用',
+      );
       expect(host.devices.single.remark, isEmpty);
       expect((await peerStore.load())!.devices.single.remark, '家里常用');
       final originalTrust = peer.devices.single;
@@ -186,6 +195,12 @@ void main() {
             .list(limit: 10)
             .any((r) => r.content == 'LAN clipboard'),
       );
+      final received = peerClipboard
+          .list(limit: 10)
+          .singleWhere((record) => record.content == 'LAN clipboard');
+      final origin = clipboardDeviceOrigin(received.tags, received.sources);
+      expect(origin?.id, host.localDevice.id);
+      expect(origin?.isComputer, isTrue);
       await peer.shareRecord(
         peerClipboard.list(limit: 1).single,
         host.localDevice.id,

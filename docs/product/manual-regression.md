@@ -1,4 +1,16 @@
-# DingDong 1.11.16 Manual Regression Checklist
+# DingDong 1.11.17 Manual Regression Checklist
+
+## Clipboard history by source computer (1.11.17)
+
+- Receive a clipboard item from a paired computer. In the clipboard popup and
+  Resource Manager, select that computer and verify only its records appear.
+- Add and clear the peer’s remark. Verify the option uses the remark when set
+  and otherwise uses the peer’s computer name. Check that older records from
+  the same device still match after either label changes.
+- Open a list with no records from another computer and verify the filter
+  is hidden.
+- Verify desktop version 1.11.17, build 100, and PWA shell 75 in
+  published packages and update metadata.
 
 ## Computer discovery names and local remarks (1.11.16)
 

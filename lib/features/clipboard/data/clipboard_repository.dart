@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_history_page.dart';
+import 'package:dingdong/features/clipboard/domain/clipboard_device_source.dart';
 import 'package:sqlite3/sqlite3.dart';
 
 /// SQLite-backed source of truth compatible with the native Core Data table.
@@ -120,6 +121,12 @@ final class InMemoryClipboardStore
   @override
   List<String> historySources() =>
       _records.expand((record) => record.sources).toSet().toList();
+
+  @override
+  List<ClipboardDeviceOrigin> historyDeviceOrigins() => _records
+      .map((record) => clipboardDeviceOrigin(record.tags, record.sources))
+      .nonNulls
+      .toList();
 
   @override
   bool hasHistoryImageReference(String content) => _records.any(
@@ -346,6 +353,26 @@ final class ClipboardRepository
       .select('SELECT DISTINCT ZSOURCE FROM ZCLIPBOARDRECORD')
       .expand((row) => _decodeSources(row['ZSOURCE']))
       .toSet()
+      .toList();
+
+  @override
+  List<ClipboardDeviceOrigin> historyDeviceOrigins() => _database
+      .select(
+        '''
+        SELECT ZTAGSDATA, ZSOURCE FROM ZCLIPBOARDRECORD
+        WHERE instr(ZTAGSDATA, CAST(? AS BLOB)) > 0
+        GROUP BY ZTAGSDATA, ZSOURCE
+        ORDER BY MAX(ZUPDATEDAT) DESC
+        ''',
+        [clipboardDeviceOriginPrefix],
+      )
+      .map(
+        (row) => clipboardDeviceOrigin(
+          _decodeTags(row['ZTAGSDATA']),
+          _decodeSources(row['ZSOURCE']),
+        ),
+      )
+      .nonNulls
       .toList();
 
   @override

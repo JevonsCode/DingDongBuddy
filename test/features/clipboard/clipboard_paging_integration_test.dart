@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dingdong/core/models/clipboard_record.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_history_page.dart';
 import 'package:dingdong/features/clipboard/data/clipboard_repository.dart';
+import 'package:dingdong/features/clipboard/domain/clipboard_device_source.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_list_tile.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_manager_screen.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_screen.dart';
@@ -192,6 +193,86 @@ void main() {
       );
 
       test(
+        'computer sources cover unloaded rows and survive label changes',
+        () async {
+          store.save(
+            record(120).copyWith(
+              tags: ['text', 'device-origin:desk-a'],
+              sources: ['From Old A'],
+            ),
+          );
+          store.save(
+            record(121).copyWith(
+              tags: ['text', 'device-origin:desk-b'],
+              sources: ['From Old B'],
+            ),
+          );
+          store.save(
+            record(122).copyWith(
+              tags: ['text', 'device-origin:phone'],
+              sources: ['From Phone'],
+            ),
+          );
+          store.save(
+            record(123).copyWith(
+              tags: ['text', 'device-origin:removed', 'device-origin-computer'],
+              sources: ['From Removed Mac'],
+            ),
+          );
+          final profiles = {
+            'desk-a': (isComputer: true, label: '书房 Mac'),
+            'desk-b': (isComputer: true, label: 'Bookcase Mac'),
+            'phone': (isComputer: false, label: 'Phone'),
+          };
+          final model = ClipboardViewModel(
+            store,
+            loadDeviceProfiles: () => profiles,
+          )..load();
+          addTearDown(model.dispose);
+          await Future<void>.delayed(Duration.zero);
+          expect(
+            model.visibleRecords.any((item) => item.id == record(120).id),
+            isFalse,
+          );
+          expect(
+            {
+              for (final option in model.computerSourceOptions)
+                option.id: option.label,
+            },
+            {
+              'desk-a': '书房 Mac',
+              'desk-b': 'Bookcase Mac',
+              'removed': 'From Removed Mac',
+            },
+          );
+          model.setComputerSource('desk-a');
+          expect(model.visibleRecords.single.id, record(120).id);
+          profiles['desk-a'] = (isComputer: true, label: '桌边 Mac');
+          model.load();
+          await Future<void>.delayed(Duration.zero);
+          expect(model.selectedComputerId, 'desk-a');
+          expect(model.visibleRecords.single.id, record(120).id);
+          expect(
+            model.computerSourceOptions
+                .firstWhere((option) => option.id == 'desk-a')
+                .label,
+            '桌边 Mac',
+          );
+          model.setQuery('unmatched');
+          expect(model.visibleRecords, isEmpty);
+          expect(model.computerSourceOptions, hasLength(3));
+          model.setQuery('');
+          for (final index in [120, 121, 123]) {
+            store.delete(record(index).id);
+          }
+          model.load();
+          expect(model.computerSourceOptions, isEmpty);
+          expect(model.selectedComputerId, isNull);
+          expect(model.visibleRecords, hasLength(50));
+        },
+      );
+
+      test(
         'deletion backfills the loaded window and refresh and keyboard preserve paging',
         () {
           final model = ClipboardViewModel(store)..load();
@@ -219,6 +300,50 @@ void main() {
   }
 
   for (final manager in [false, true]) {
+    testWidgets(
+      '${manager ? 'manager' : 'quick panel'} shows computer filter only for received computer items',
+      (tester) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = Size(manager ? 900 : 390, 760);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        addTearDown(tester.view.resetPhysicalSize);
+        final store = InMemoryClipboardStore([record(0)]);
+        final model = ClipboardViewModel(
+          store,
+          loadDeviceProfiles: () => {
+            'desktop-work': (isComputer: true, label: 'Office Mac'),
+          },
+        )..load();
+        addTearDown(model.dispose);
+        await tester.pumpWidget(
+          MaterialApp(
+            home: manager
+                ? ClipboardManagerScreen(viewModel: model)
+                : ClipboardScreen(viewModel: model, filtersExpanded: true),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final filter = find.byKey(const Key('clipboard-computer-filter'));
+        expect(filter, findsNothing);
+        store.save(
+          record(1).copyWith(
+            tags: ['text', 'device-origin:desktop-work'],
+            sources: ['From Work Mac'],
+          ),
+        );
+        model.load();
+        await tester.pumpAndSettle();
+        expect(filter, findsOneWidget);
+        await tester.tap(filter);
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Office Mac'));
+        await tester.pumpAndSettle();
+        expect(model.visibleRecords.single.id, record(1).id);
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
+
     testWidgets(
       '${manager ? 'manager' : 'quick panel'} lazy paging and full-history search',
       (tester) async {
@@ -309,6 +434,9 @@ final class _PagedOnlyStore implements ClipboardStore {
   }) => throw StateError('UI must use pages, never the full history API');
   @override
   List<String> historySources() => delegate.historySources();
+  @override
+  List<ClipboardDeviceOrigin> historyDeviceOrigins() =>
+      delegate.historyDeviceOrigins();
   @override
   bool hasHistoryImageReference(String content) =>
       delegate.hasHistoryImageReference(content);

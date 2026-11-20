@@ -72,7 +72,8 @@ Future<void> _runResourceManagerWindow(
             paths.development &&
             (Platform.isWindows ||
                 const bool.fromEnvironment('DINGDONG_PREVIEW_SANDBOX')),
-        loadAdapters: () => loadInstallerResourceAdapters(agentAdapterRepository),
+        loadAdapters: () =>
+            loadInstallerResourceAdapters(agentAdapterRepository),
         triggerGroupStore: baseTriggerGroupStore,
       );
   issueCenterController.setInspector(
@@ -149,6 +150,21 @@ Future<void> _runResourceManagerWindow(
     gateway: DesktopClipboardGateway(),
     revisions: dataRevisions,
     managedImageDirectory: paths.clipboardImagesDirectory,
+    loadDeviceProfiles: () async {
+      final response = await parent?.invokeMethod<Object?>(
+        _clipboardDeviceProfilesMethod,
+      );
+      if (response is! Map) return const {};
+      return {
+        for (final entry in response.entries)
+          if (entry.key is String)
+            if (entry.value case {
+              'label': final String label,
+              'isComputer': final bool isComputer,
+            })
+              entry.key as String: (label: label, isComputer: isComputer),
+      };
+    },
     categoryRuleStore: FileClipboardCategoryRuleStore(
       paths.clipboardCategoryRulesFile,
     ),

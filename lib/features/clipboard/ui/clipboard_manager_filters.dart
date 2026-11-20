@@ -510,6 +510,11 @@ class _ManagerFilters extends StatelessWidget {
                   },
                 ),
               ),
+              if (viewModel.computerSourceOptions.isNotEmpty) ...<Widget>[
+                const SizedBox(width: 8),
+                ClipboardComputerFilter(viewModel: viewModel),
+                const SizedBox(width: 8),
+              ],
               DesktopIconButton(
                 key: const Key('clipboard-manager-categories'),
                 tooltip: context.l10n.manageCategories,

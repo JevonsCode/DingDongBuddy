@@ -19,6 +19,7 @@ import 'package:dingdong/features/clipboard/domain/clipboard_context_menu.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_settings_controller.dart';
 import 'package:dingdong/features/clipboard/domain/clipboard_shortcuts.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_category_rules_dialog.dart';
+import 'package:dingdong/features/clipboard/ui/clipboard_computer_filter.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_group_context_menu.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_group_dialog.dart';
 import 'package:dingdong/features/clipboard/ui/clipboard_history_pagination.dart';

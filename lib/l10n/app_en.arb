@@ -538,6 +538,10 @@
   "@allProjectsNoRestriction": {
     "description": "DingDong built-in interface copy."
   },
+  "clipboardSourceComputer": "Source computer",
+  "@clipboardSourceComputer": {
+    "description": "Label of the clipboard filter for the computer that sent an item."
+  },
   "allSources": "All sources",
   "@allSources": {
     "description": "DingDong built-in interface copy."

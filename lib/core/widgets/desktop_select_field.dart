@@ -22,6 +22,7 @@ class DesktopSelectField<T> extends StatelessWidget {
     required this.onChanged,
     this.enabled = true,
     this.semanticLabel,
+    this.displayLabel,
     super.key,
   });
 
@@ -30,6 +31,7 @@ class DesktopSelectField<T> extends StatelessWidget {
   final ValueChanged<T> onChanged;
   final bool enabled;
   final String? semanticLabel;
+  final String? displayLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -107,7 +109,7 @@ class DesktopSelectField<T> extends StatelessWidget {
                         ],
                         Expanded(
                           child: Text(
-                            selected.label,
+                            displayLabel ?? selected.label,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.bodyMedium?.copyWith(
