@@ -1,4 +1,15 @@
-# DingDong 1.11.14 Manual Regression Checklist
+# DingDong 1.11.15 Manual Regression Checklist
+
+## Nearby computer discovery with an offline saved device (1.11.15)
+
+- Keep a saved computer offline with automatic reconnect active. Look for a
+  second, reachable computer through Nearby computers and its private IP.
+  Refresh a few times. Confirm the reachable computer remains discoverable and
+  can be paired while the offline computer is still saved.
+- Stop the discovery UDP socket during a test. Confirm it comes back without
+  changing the TCP listener, active pairing code, or saved pairings.
+- Verify desktop version 1.11.15, build 98, and PWA shell 73 in published
+  packages and update metadata.
 
 ## Accessibility permission after a macOS update (1.11.14)
 

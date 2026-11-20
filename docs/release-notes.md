@@ -1,15 +1,15 @@
-# DingDong 1.11.14
+# DingDong 1.11.15
 
-- On macOS, the Accessibility permission helper clears the old DingDong entry after an update. Drag DingDong into System Settings once and turn on its switch.
-
----
-
-# DingDong 1.11.14
-
-- macOS 更新后打开辅助功能权限助手，会自动清理 DingDong 的旧条目。拖入一次，再打开系统开关即可重新授权。
+- Fixed nearby computer discovery stopping when a saved computer is unreachable. Discovery now restarts automatically after an interruption.
 
 ---
 
-# DingDong 1.11.14
+# DingDong 1.11.15
 
-- En macOS, el asistente de permisos de accesibilidad elimina la entrada anterior de DingDong tras una actualización. Arrastra DingDong una vez a Ajustes del Sistema y activa su interruptor.
+- 修复已保存的离线电脑可能导致「附近的电脑」停止搜索的问题。发现服务中断后会自动恢复。
+
+---
+
+# DingDong 1.11.15
+
+- Se corrigió un problema por el que la búsqueda de equipos cercanos se detenía cuando no se podía contactar con un equipo guardado. La búsqueda se reanuda automáticamente tras una interrupción.
