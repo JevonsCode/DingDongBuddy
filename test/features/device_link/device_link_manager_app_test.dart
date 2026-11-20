@@ -12,6 +12,75 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  test('child window round-trips discovery names and local remarks', () async {
+    const channels = MethodChannel('mixin.one/desktop_multi_window/channels');
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    String? discoveryName;
+    var remark = '';
+    messenger.setMockMethodCallHandler(channels, (call) async {
+      final arguments = call.arguments as Map;
+      switch (arguments['method']) {
+        case 'device_link_lan_name_set':
+          expect(
+            isDeviceLinkManagerHostMethod(arguments['method'] as String),
+            isTrue,
+          );
+          final name = arguments['arguments'] as String;
+          if (name.contains('\n')) return {'error': 'invalid_computer_label'};
+          discoveryName = name;
+          return null;
+        case 'device_link_lan_remark_set':
+          expect(
+            isDeviceLinkManagerHostMethod(arguments['method'] as String),
+            isTrue,
+          );
+          final fields = arguments['arguments'] as Map;
+          expect(fields['id'], 'fixture-peer');
+          remark = fields['remark'] as String;
+          return null;
+        case deviceLinkManagerSnapshotMethod:
+          return {
+            'localDevice': {
+              'id': 'fixture-local',
+              'name': 'System name',
+              'platform': 'macos',
+            },
+            'localComputerName': discoveryName,
+            'devices': [
+              {
+                'id': 'fixture-peer',
+                'name': 'Peer name',
+                'kind': 'computer',
+                'room': 'test-room',
+                'secret': 'test-secret',
+                'pairedAt': '2026-11-20T00:00:00Z',
+                'remark': remark,
+              },
+            ],
+          };
+      }
+      return null;
+    });
+    addTearDown(() => messenger.setMockMethodCallHandler(channels, null));
+    final controller = RemoteDeviceLinkManagement(
+      parentController: WindowController.fromWindowId('fixture-main'),
+    );
+    addTearDown(controller.dispose);
+    await controller.reload();
+    expect(controller.localComputerName, 'System name');
+    await controller.setLocalComputerName('Bookcase Mac');
+    await controller.setComputerRemark('fixture-peer', 'Home desk');
+    expect(controller.localComputerName, 'Bookcase Mac');
+    expect(controller.devices.single.name, 'Peer name');
+    expect(controller.devices.single.remark, 'Home desk');
+    await expectLater(
+      controller.setLocalComputerName('One\nTwo'),
+      throwsFormatException,
+    );
+    expect(controller.localComputerName, 'Bookcase Mac');
+  });
+
   test(
     'child window reads addresses and forwards IP correction to its owner',
     () async {

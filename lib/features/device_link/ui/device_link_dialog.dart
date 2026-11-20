@@ -13,6 +13,7 @@ import 'package:dingdong/features/device_link/domain/lan_computer_management.dar
 import 'package:dingdong/features/device_link/ui/device_link_controller.dart';
 import 'package:dingdong/features/device_link/ui/file_transfer_list.dart';
 import 'package:dingdong/features/device_link/ui/lan_computer_address_dialog.dart';
+import 'package:dingdong/features/device_link/ui/lan_computer_label_dialog.dart';
 import 'package:dingdong/features/device_link/ui/lan_computer_pairing_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -75,6 +76,9 @@ class _WorkspaceHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
+    final lan = controller is LanComputerManagement
+        ? controller as LanComputerManagement
+        : null;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -108,23 +112,45 @@ class _WorkspaceHeader extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 4),
-              Text(
-                controller.localDevice.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+              Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      lan?.localComputerName ?? controller.localDevice.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colors.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                  if (lan != null)
+                    DesktopIconButton(
+                      key: const Key('device-discovery-name-edit'),
+                      tooltip: context.l10n.deviceEditDiscoveryName,
+                      size: 24,
+                      iconSize: 14,
+                      icon: const Icon(Icons.edit_outlined),
+                      onPressed: () => unawaited(
+                        showDialog<void>(
+                          context: context,
+                          builder: (_) => LanComputerLabelDialog(
+                            title: context.l10n.deviceEditDiscoveryName,
+                            label: context.l10n.deviceDiscoveryName,
+                            hint: context.l10n.deviceDiscoveryNameHint,
+                            value: lan.localComputerName,
+                            save: lan.setLocalComputerName,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
-              if (controller is LanComputerManagement &&
-                  (controller as LanComputerManagement)
-                      .localComputerAddresses
-                      .isNotEmpty) ...[
+              if (lan != null && lan.localComputerAddresses.isNotEmpty) ...[
                 const SizedBox(height: 4),
                 SelectableText(
                   context.l10n.deviceLocalAddresses(
-                    (controller as LanComputerManagement).localComputerAddresses
-                        .join(' · '),
+                    lan.localComputerAddresses.join(' · '),
                   ),
                   key: const Key('device-local-addresses'),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -380,7 +406,9 @@ class _LocalDeviceCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  controller.localDevice.name,
+                  controller is LanComputerManagement
+                      ? (controller as LanComputerManagement).localComputerName
+                      : controller.localDevice.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontWeight: FontWeight.w700),
@@ -427,6 +455,11 @@ class _DeviceCardState extends State<_DeviceCard> {
     final bool active = connected || connecting;
     final bool expanded = _expanded ?? connected;
     final _StatusPalette statusPalette = _statusPalette(colors, status);
+    final lan =
+        device.kind == LinkedDeviceKind.computer &&
+            controller is LanComputerManagement
+        ? controller as LanComputerManagement
+        : null;
     return Semantics(
       container: true,
       explicitChildNodes: true,
@@ -460,26 +493,66 @@ class _DeviceCardState extends State<_DeviceCard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text.rich(
-                        TextSpan(
-                          text: device.name,
-                          style: const TextStyle(fontWeight: FontWeight.w700),
-                          children: <InlineSpan>[
-                            if (device.platformLabel.isNotEmpty)
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text.rich(
                               TextSpan(
-                                text: '  ${device.platformLabel}',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 12,
-                                  color: colors.onSurfaceVariant,
+                                text: device.name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                children: <InlineSpan>[
+                                  if (device.platformLabel.isNotEmpty)
+                                    TextSpan(
+                                      text: '  ${device.platformLabel}',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 12,
+                                        color: colors.onSurfaceVariant,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              key: Key('device-name-${device.id}'),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (lan != null)
+                            DesktopIconButton(
+                              key: Key('device-remark-edit-${device.id}'),
+                              tooltip: context.l10n.deviceEditRemark,
+                              size: 24,
+                              iconSize: 14,
+                              icon: const Icon(Icons.edit_outlined),
+                              onPressed: () => unawaited(
+                                showDialog<void>(
+                                  context: context,
+                                  builder: (_) => LanComputerLabelDialog(
+                                    title: context.l10n.deviceEditRemark,
+                                    subtitle: device.name,
+                                    label: context.l10n.deviceRemark,
+                                    hint: context.l10n.deviceRemarkHint,
+                                    value: device.remark,
+                                    save: (remark) => lan.setComputerRemark(
+                                      device.id,
+                                      remark,
+                                    ),
+                                  ),
                                 ),
                               ),
-                          ],
-                        ),
-                        key: Key('device-name-${device.id}'),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                            ),
+                        ],
                       ),
+                      if (device.remark.isNotEmpty)
+                        Text(
+                          device.remark,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: colors.onSurfaceVariant),
+                        ),
                       if (_connectionDescription(context, connected)
                           case final String description) ...[
                         const SizedBox(height: 3),

@@ -19,6 +19,9 @@ final class NearbyComputer {
 
 /// Optional capability shared by the main engine and its connection window.
 abstract interface class LanComputerManagement implements Listenable {
+  String get localComputerName;
+  Future<void> setLocalComputerName(String name);
+  Future<void> setComputerRemark(String deviceId, String remark);
   List<NearbyComputer> get nearbyComputers;
   List<String> get localComputerAddresses;
   String? computerAddressOf(String deviceId);

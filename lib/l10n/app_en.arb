@@ -5836,6 +5836,38 @@
   "@deviceAddressSaveFailed": {
     "description": "Device connection address and route controls."
   },
+  "deviceEditDiscoveryName": "Edit this computer’s discovery name",
+  "@deviceEditDiscoveryName": {
+    "description": "Action to edit the local computer name used for LAN discovery."
+  },
+  "deviceDiscoveryName": "Discovery name",
+  "@deviceDiscoveryName": {
+    "description": "Label of the local computer name input."
+  },
+  "deviceDiscoveryNameHint": "Leave blank to use the default name.",
+  "@deviceDiscoveryNameHint": {
+    "description": "Help text for resetting the custom discovery name."
+  },
+  "deviceEditRemark": "Edit remark",
+  "@deviceEditRemark": {
+    "description": "Action to edit the local remark for a paired computer."
+  },
+  "deviceRemark": "Remark",
+  "@deviceRemark": {
+    "description": "Label of the remark input for a paired computer."
+  },
+  "deviceRemarkHint": "Only this computer can see the remark.",
+  "@deviceRemarkHint": {
+    "description": "Explains where the remark will be visible."
+  },
+  "deviceLabelInvalid": "Enter a single line up to 160 characters.",
+  "@deviceLabelInvalid": {
+    "description": "Validation feedback for a computer discovery name or remark."
+  },
+  "deviceLabelSaveFailed": "Could not save this change. Try again.",
+  "@deviceLabelSaveFailed": {
+    "description": "Storage error for a computer discovery name or remark."
+  },
   "deviceSaveAndReconnect": "Save and reconnect",
   "@deviceSaveAndReconnect": {
     "description": "Device connection address and route controls."

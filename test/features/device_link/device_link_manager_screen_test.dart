@@ -14,6 +14,38 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('edits the discovery name and a saved computer remark', (
+    tester,
+  ) async {
+    final controller = _FakeManagement(deviceKind: LinkedDeviceKind.computer);
+    await _pumpManager(
+      tester,
+      controller: controller,
+      size: const Size(620, 700),
+      locale: const Locale('zh'),
+    );
+    final editName = find.byKey(const Key('device-discovery-name-edit'));
+    final editRemark = find.byKey(const Key('device-remark-edit-computer-one'));
+    final input = find.byKey(const Key('device-label-input'));
+    final save = find.byKey(const Key('device-label-save'));
+
+    await tester.tap(editName);
+    await tester.pumpAndSettle();
+    await tester.enterText(input, '书房 Mac');
+    await tester.tap(save);
+    await tester.pumpAndSettle();
+    expect(find.text('书房 Mac'), findsOneWidget);
+
+    await tester.tap(editRemark);
+    await tester.pumpAndSettle();
+    await tester.enterText(input, '家里常用');
+    await tester.tap(save);
+    await tester.pumpAndSettle();
+    expect(find.text('家里常用'), findsOneWidget);
+    expect(find.textContaining('工作电脑', findRichText: true), findsWidgets);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets(
     'LAN address input keeps this computer IP visible and distinct from peer input',
     (tester) async {
@@ -695,6 +727,23 @@ final class _FakeManagement extends ChangeNotifier
   String address = '192.168.31.153';
   String? editedAddress;
   List<String> localAddresses = const ['192.168.31.180'];
+  String? _computerName;
+  String _computerRemark = '';
+  @override
+  String get localComputerName => _computerName ?? localDevice.name;
+  @override
+  Future<void> setLocalComputerName(String name) async {
+    _computerName = name;
+    notifyListeners();
+  }
+
+  @override
+  Future<void> setComputerRemark(String deviceId, String remark) async {
+    expect(deviceId, device.id);
+    _computerRemark = remark;
+    notifyListeners();
+  }
+
   @override
   List<String> get localComputerAddresses => localAddresses;
   @override
@@ -736,7 +785,10 @@ final class _FakeManagement extends ChangeNotifier
 
   @override
   List<LinkedDevice> get devices => includeDevice
-      ? <LinkedDevice>[device, ...additionalDevices]
+      ? <LinkedDevice>[
+          device.copyWith(remark: _computerRemark),
+          ...additionalDevices,
+        ]
       : additionalDevices;
 
   @override

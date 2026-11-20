@@ -70,6 +70,9 @@ final class MultiWindowDeviceLinkManagerLauncher
   }
 }
 
+const _setComputerNameMethod = 'device_link_lan_name_set';
+const _setComputerRemarkMethod = 'device_link_lan_remark_set';
+
 /// Serializes presentation state for the trusted local child-window channel.
 Map<String, Object?> encodeDeviceLinkManagerSnapshot(
   DeviceLinkManagement controller,
@@ -91,6 +94,8 @@ Map<String, Object?> encodeDeviceLinkManagerSnapshot(
     'pairingStatus': controller.pairingStatus.name,
     'canPair': controller.canPair,
     if (controller is LanComputerManagement) ...{
+      'localComputerName':
+          (controller as LanComputerManagement).localComputerName,
       'localComputerAddresses':
           (controller as LanComputerManagement).localComputerAddresses,
       'computerAddresses': {
@@ -121,6 +126,23 @@ Future<Object?> handleDeviceLinkManagerHostCall(
   MethodCall call,
 ) async {
   switch (call.method) {
+    case _setComputerNameMethod:
+    case _setComputerRemarkMethod:
+      final lan = controller as LanComputerManagement;
+      try {
+        if (call.method == _setComputerNameMethod) {
+          await lan.setLocalComputerName(call.arguments! as String);
+        } else {
+          final values = call.arguments! as Map;
+          await lan.setComputerRemark(
+            values['id'] as String,
+            values['remark'] as String,
+          );
+        }
+      } on FormatException {
+        return {'error': 'invalid_computer_label'};
+      }
+      return null;
     case 'device_link_lan_address_set':
       final values = call.arguments! as Map;
       try {
@@ -219,6 +241,8 @@ Future<Object?> handleDeviceLinkManagerHostCall(
 }
 
 bool isDeviceLinkManagerHostMethod(String method) => const <String>{
+  _setComputerNameMethod,
+  _setComputerRemarkMethod,
   'device_link_lan_address_set',
   'device_link_lan_discover_address',
   'device_link_lan_refresh',
@@ -265,6 +289,32 @@ final class RemoteDeviceLinkManagement extends ChangeNotifier
   DeviceConnectionStatus _pairingStatus = DeviceConnectionStatus.disconnected;
   bool _canPair = false;
   bool _disposed = false;
+  String? _localComputerName;
+  @override
+  String get localComputerName => _localComputerName ?? _localDevice.name;
+
+  @override
+  Future<void> setLocalComputerName(String name) =>
+      _saveComputerLabel(_setComputerNameMethod, name);
+
+  @override
+  Future<void> setComputerRemark(String deviceId, String remark) =>
+      _saveComputerLabel(_setComputerRemarkMethod, {
+        'id': deviceId,
+        'remark': remark,
+      });
+
+  Future<void> _saveComputerLabel(String method, Object arguments) async {
+    final response = await _parentController.invokeMethod<Object?>(
+      method,
+      arguments,
+    );
+    if (response is Map && response['error'] == 'invalid_computer_label') {
+      throw const FormatException('Invalid computer name or remark.');
+    }
+    await reload();
+  }
+
   @override
   List<String> localComputerAddresses = const [];
   Map<String, String?> _computerAddresses = const {};
@@ -369,6 +419,7 @@ final class RemoteDeviceLinkManagement extends ChangeNotifier
     );
     if (response is! Map) return;
     final Map<String, Object?> json = Map<String, Object?>.from(response);
+    _localComputerName = json['localComputerName'] as String?;
     nearbyComputers = (json['nearbyComputers'] as List? ?? [])
         .whereType<Map>()
         .map(NearbyComputer.fromJson)

@@ -4385,6 +4385,30 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get deviceAddressSaveFailed => 'IP 保存失败，请重试。';
 
   @override
+  String get deviceEditDiscoveryName => '编辑本机发现名称';
+
+  @override
+  String get deviceDiscoveryName => '发现名称';
+
+  @override
+  String get deviceDiscoveryNameHint => '留空使用默认名称。';
+
+  @override
+  String get deviceEditRemark => '编辑备注';
+
+  @override
+  String get deviceRemark => '备注';
+
+  @override
+  String get deviceRemarkHint => '备注仅在本机显示。';
+
+  @override
+  String get deviceLabelInvalid => '请输入不超过 160 字的单行文字。';
+
+  @override
+  String get deviceLabelSaveFailed => '保存失败，请重试。';
+
+  @override
   String get deviceSaveAndReconnect => '保存并重连';
 
   @override
