@@ -137,7 +137,8 @@ void main() {
       await _until(
         () =>
             host.discoverySocketForTest != null &&
-            !identical(host.discoverySocketForTest, previous),
+            !identical(host.discoverySocketForTest, previous) &&
+            host.error == null,
       );
       expect(host.advertisement['port'], tcpPort);
       expect(host.routedListenPort, routedPort);

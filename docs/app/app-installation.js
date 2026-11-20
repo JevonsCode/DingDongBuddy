@@ -3,7 +3,7 @@ import {
   isIos,
   isMobileBrowser,
   isStandalone,
-} from "./app-platform.js?shell=73";
+} from "./app-platform.js?shell=74";
 
 const browserModeParameter = "in-browser";
 const appLaunchFailedParameter = "app-launch-failed";

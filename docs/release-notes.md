@@ -1,15 +1,18 @@
-# DingDong 1.11.15
+# DingDong 1.11.16
 
-- Fixed nearby computer discovery stopping when a saved computer is unreachable. Discovery now restarts automatically after an interruption.
-
----
-
-# DingDong 1.11.15
-
-- 修复已保存的离线电脑可能导致「附近的电脑」停止搜索的问题。发现服务中断后会自动恢复。
+- Set the name other computers see when they search for this computer.
+- Add a remark to a paired computer. Remarks are visible only on this computer.
 
 ---
 
-# DingDong 1.11.15
+# DingDong 1.11.16
 
-- Se corrigió un problema por el que la búsqueda de equipos cercanos se detenía cuando no se podía contactar con un equipo guardado. La búsqueda se reanuda automáticamente tras una interrupción.
+- 可自定义其他电脑在「附近的电脑」里看到的本机名称。
+- 可为已配对电脑添加仅在本机显示的备注。
+
+---
+
+# DingDong 1.11.16
+
+- Personaliza el nombre que otros ordenadores ven al buscar este equipo.
+- Añade notas a los ordenadores vinculados. Las notas solo aparecen en este equipo.
