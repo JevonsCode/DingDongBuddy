@@ -5,6 +5,24 @@ import 'package:dingdong/core/files/safe_managed_file.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('a failed lock open does not prevent retry after repair', () async {
+    final directory = await Directory.systemTemp.createTemp('dingdong-lock-');
+    addTearDown(() => directory.delete(recursive: true));
+    final target = File('${directory.path}/resources.json');
+    final lock = Directory('${target.path}.lock');
+    await lock.create();
+    final managed = SafeManagedFile(target);
+
+    await expectLater(managed.snapshot(), throwsA(isA<FileSystemException>()));
+    await lock.delete();
+    await target.writeAsString('ready');
+
+    expect(
+      (await managed.snapshot().timeout(const Duration(seconds: 1))).contents,
+      'ready',
+    );
+  });
+
   test('concurrent managed updates preserve both changes', () async {
     final Directory directory = await Directory.systemTemp.createTemp(
       'dingdong-safe-file-',

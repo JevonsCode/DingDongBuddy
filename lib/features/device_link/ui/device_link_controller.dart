@@ -25,6 +25,7 @@ import 'package:dingdong/features/device_link/domain/device_link_management.dart
 import 'package:dingdong/features/device_link/domain/device_link_models.dart';
 import 'package:dingdong/features/device_link/domain/file_transfer.dart';
 import 'package:dingdong/features/device_link/domain/lan_computer_management.dart';
+import 'package:dingdong/features/library/domain/library_share_gateway.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart' show Locale;
 import 'package:path/path.dart' as path;
@@ -107,6 +108,8 @@ final class DeviceLinkController extends ChangeNotifier
     DeviceLinkSessionHandle Function(LinkedDevice)? computerSessionFactory,
     ClipboardGateway? systemClipboard,
     VoidCallback? onClipboardReceived,
+    Future<void> Function(String id, String sender, File file)?
+    onLibraryBundleReceived,
     AgentStateProvider? agentStateProvider,
     AgentSeenCallback? onAgentSeen,
     DingDongLocalizations Function()? localizations,
@@ -122,6 +125,7 @@ final class DeviceLinkController extends ChangeNotifier
     computerSessionFactory: computerSessionFactory,
     systemClipboard: systemClipboard,
     onClipboardReceived: onClipboardReceived,
+    onLibraryBundleReceived: onLibraryBundleReceived,
     agentStateProvider: agentStateProvider,
     onAgentSeen: onAgentSeen,
     localizations: localizations,
@@ -139,6 +143,7 @@ final class DeviceLinkController extends ChangeNotifier
     this._computerSessionFactory,
     this._systemClipboard,
     this.onClipboardReceived,
+    this.onLibraryBundleReceived,
     this._agentStateProvider,
     this._onAgentSeen,
     DingDongLocalizations Function()? localizations,
@@ -158,6 +163,8 @@ final class DeviceLinkController extends ChangeNotifier
   final DeviceLinkSessionHandle Function(LinkedDevice)? _computerSessionFactory;
   final ClipboardGateway? _systemClipboard;
   final VoidCallback? onClipboardReceived;
+  final Future<void> Function(String id, String sender, File file)?
+  onLibraryBundleReceived;
   final AgentStateProvider? _agentStateProvider;
   final AgentSeenCallback? _onAgentSeen;
   final DingDongLocalizations Function() _localizations;
@@ -261,6 +268,61 @@ final class DeviceLinkController extends ChangeNotifier
   @override
   bool isConnected(String deviceId) =>
       statusOf(deviceId) == DeviceConnectionStatus.connected;
+
+  List<LibraryShareTarget> get libraryShareTargets => [
+    for (final device in _devices)
+      if (_canShareLibraryWith(device))
+        (
+          id: device.id,
+          name: device.remark.isEmpty ? device.name : device.remark,
+        ),
+  ];
+
+  bool _canShareLibraryWith(LinkedDevice device) {
+    final session = _sessionsByRoom[device.room];
+    return device.kind == LinkedDeviceKind.computer &&
+        isConnected(device.id) &&
+        session != null &&
+        session.fileProtocol >= 2 &&
+        session.libraryBundleSupport;
+  }
+
+  Future<String> sendLibraryBundle(String deviceId, String contents) async {
+    if (!_canShareLibraryWith(_device(deviceId))) {
+      throw StateError('Resource sharing requires a compatible computer.');
+    }
+    final bytes = utf8.encode(contents);
+    if (bytes.length > relayFileLimit) return 'bundle_too_large';
+
+    final staging = await Directory.systemTemp.createTemp(
+      'dingdong-resources-',
+    );
+    Future<void> removeStaging() async {
+      try {
+        await staging.delete(recursive: true);
+      } on FileSystemException catch (error) {
+        debugPrint(
+          'DingDong could not remove temporary resource bundle: $error',
+        );
+      }
+    }
+
+    try {
+      final file = File(path.join(staging.path, libraryBundleTransferName));
+      await file.writeAsBytes(bytes, flush: true);
+      final transfer = await _resumableFiles.sendFile(
+        deviceId,
+        file,
+        name: libraryBundleTransferName,
+        itemId: libraryBundleTransferItemId,
+        onFinished: removeStaging,
+      );
+      return transfer.status;
+    } on Object {
+      await removeStaging();
+      rethrow;
+    }
+  }
 
   Future<void> start() async {
     if (_started) return;

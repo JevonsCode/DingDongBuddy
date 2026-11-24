@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
-/// The two user-facing ways a library bundle can enter DingDong.
-enum LibraryImportSourceKind { file, link }
+/// The user-facing sources of a library bundle.
+enum LibraryImportSourceKind { file, link, device }
 
 /// One durable record of a resource-library import attempt.
 final class LibraryImportHistoryEntry {

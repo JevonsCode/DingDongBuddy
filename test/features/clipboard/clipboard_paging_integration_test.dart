@@ -336,7 +336,16 @@ void main() {
         expect(filter, findsOneWidget);
         await tester.tap(filter);
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Office Mac'));
+        final office = find.text('Office Mac');
+        final menuItem = find.ancestor(
+          of: office,
+          matching: find.byType(MenuItemButton),
+        );
+        expect(
+          tester.getSize(menuItem).width,
+          tester.getSize(filter).width - 8,
+        );
+        await tester.tap(office);
         await tester.pumpAndSettle();
         expect(model.visibleRecords.single.id, record(1).id);
         expect(tester.takeException(), isNull);

@@ -102,6 +102,10 @@ final class AppDataPaths {
     '${applicationSupportDirectory.path}${_separator}Device Transfers',
   );
 
+  Directory get libraryInboxDirectory => Directory(
+    '${applicationSupportDirectory.path}${_separator}Resource Inbox',
+  );
+
   Directory get skillPackagesDirectory => Directory(
     '${applicationSupportDirectory.path}${_separator}Skill Packages',
   );

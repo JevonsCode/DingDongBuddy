@@ -51,7 +51,6 @@ final class _HistoryRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
-    final bool isLink = entry.kind == LibraryImportSourceKind.link;
     final String status = context.l10n.importedImportedCountSkippedSkippedCount(
       entry.importedCount,
       entry.skippedCount,
@@ -65,7 +64,11 @@ final class _HistoryRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Icon(
-            isLink ? Icons.link_rounded : Icons.description_outlined,
+            switch (entry.kind) {
+              LibraryImportSourceKind.link => Icons.link_rounded,
+              LibraryImportSourceKind.file => Icons.description_outlined,
+              LibraryImportSourceKind.device => Icons.computer_outlined,
+            },
             size: 18,
             color: colors.primary,
           ),

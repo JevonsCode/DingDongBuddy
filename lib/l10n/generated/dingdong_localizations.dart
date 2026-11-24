@@ -8593,6 +8593,132 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'Choose a unique, non-empty name that is not reserved.'**
   String get clipboardGroupNameInvalid;
+
+  /// Resource Manager window and bundle sharing controls
+  ///
+  /// In en, this message translates to:
+  /// **'Opening Resource Manager…'**
+  String get resourceManagerStarting;
+
+  /// Resource Manager window and bundle sharing controls
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open Resource Manager'**
+  String get resourceManagerStartupFailed;
+
+  /// Resource Manager window and bundle sharing controls
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get resourceManagerRetry;
+
+  /// Resource Manager window and bundle sharing controls
+  ///
+  /// In en, this message translates to:
+  /// **'Export selected'**
+  String get libraryExportSelection;
+
+  /// Resource Manager window and bundle sharing controls
+  ///
+  /// In en, this message translates to:
+  /// **'Send to computer'**
+  String get librarySendSelection;
+
+  /// Resource Manager window and bundle sharing controls
+  ///
+  /// In en, this message translates to:
+  /// **'Send selected resources'**
+  String get librarySendBundle;
+
+  /// Resource Manager window and bundle sharing controls
+  ///
+  /// In en, this message translates to:
+  /// **'Connect a paired computer with resource sharing support.'**
+  String get libraryNoShareTargets;
+
+  /// Resource Manager window and bundle sharing controls
+  ///
+  /// In en, this message translates to:
+  /// **'Resources sent.'**
+  String get libraryShareSent;
+
+  /// Resource Manager window and bundle sharing controls
+  ///
+  /// In en, this message translates to:
+  /// **'Check Connected Devices for transfer progress.'**
+  String get libraryShareInProgress;
+
+  /// Resource Manager window and bundle sharing controls
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send resources. Check the computer connection and try again.'**
+  String get libraryShareFailed;
+
+  /// Resource Manager window and bundle sharing controls
+  ///
+  /// In en, this message translates to:
+  /// **'The resource bundle exceeds 25 MiB. Select fewer resources.'**
+  String get libraryShareTooLarge;
+
+  /// Resource Manager window and bundle sharing controls
+  ///
+  /// In en, this message translates to:
+  /// **'Received resources'**
+  String get libraryReceivedBundles;
+
+  /// Button for the received resources inbox with its bundle count
+  ///
+  /// In en, this message translates to:
+  /// **'Received resources ({count})'**
+  String libraryReceivedBundlesCount(int count);
+
+  /// Resource Manager window and bundle sharing controls
+  ///
+  /// In en, this message translates to:
+  /// **'Resource bundles sent from paired computers appear here.'**
+  String get libraryNoReceivedBundles;
+
+  /// Resource Manager window and bundle sharing controls
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open received resources. Try again.'**
+  String get libraryInboxFailed;
+
+  /// Resource Manager window and bundle sharing controls
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from inbox'**
+  String get libraryInboxRemove;
+
+  /// Resource Manager window and bundle sharing controls
+  ///
+  /// In en, this message translates to:
+  /// **'Choose resources to install'**
+  String get librarySelectImport;
+
+  /// Installs the specified count of checked resources
+  ///
+  /// In en, this message translates to:
+  /// **'Install selected ({count})'**
+  String libraryInstallSelection(int count);
+
+  /// Resource Manager window and bundle sharing controls
+  ///
+  /// In en, this message translates to:
+  /// **'View resources'**
+  String get libraryViewBundle;
+
+  /// Resource Manager window and bundle sharing controls
+  ///
+  /// In en, this message translates to:
+  /// **'This bundle has no resources to install.'**
+  String get libraryEmptyBundle;
+
+  /// Resource Manager window and bundle sharing controls
+  ///
+  /// In en, this message translates to:
+  /// **'Selected online resources are downloaded from the sources shown.'**
+  String get libraryInstallOnlineSources;
 }
 
 class _DingDongLocalizationsDelegate

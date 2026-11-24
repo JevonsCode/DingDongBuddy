@@ -86,6 +86,9 @@ extension _DeviceLinkSessionProtocol on DeviceLinkController {
   ) async {
     if (!_sessionIsCurrent(managed)) return;
     if (event is DeviceLinkStatusEvent) {
+      if (event.status != DeviceConnectionStatus.connected) {
+        managed.libraryBundleSupport = false;
+      }
       final String? deviceId = managed.deviceId;
       if (deviceId == null) {
         _pairingStatus = event.status;
@@ -159,6 +162,7 @@ extension _DeviceLinkSessionProtocol on DeviceLinkController {
       await managed.handle.send(<String, Object?>{
         'type': 'hello',
         'fileTransferVersion': 2,
+        if (onLibraryBundleReceived != null) 'libraryBundleVersion': 1,
         'device': <String, Object?>{
           ..._computerLink.identity.toJson(),
           'kind': 'computer',
@@ -279,11 +283,11 @@ extension _DeviceLinkSessionProtocol on DeviceLinkController {
     if (rawHost is! Map) return;
     final Map<String, Object?> host = Map<String, Object?>.from(rawHost);
     final String hostId = (host['id'] as String? ?? '').trim();
-    managed.fileProtocol = message['fileTransferVersion'] == 2 ? 2 : 1;
     final String? deviceId = managed.deviceId;
     if (deviceId == null || hostId != deviceId) {
       throw const FormatException('The paired computer identity changed.');
     }
+    managed.fileProtocol = message['fileTransferVersion'] == 2 ? 2 : 1;
     final DeviceLinkTransportPreference authoritativeTransport =
         DeviceLinkTransportPreference.localNetwork;
     await _updateDevice(
@@ -298,6 +302,7 @@ extension _DeviceLinkSessionProtocol on DeviceLinkController {
       ),
     );
     if (!_sessionIsCurrent(managed)) return;
+    managed.libraryBundleSupport = message['libraryBundleVersion'] == 1;
     if (managed.handle is ConfigurableDeviceLinkSessionHandle) {
       (managed.handle as ConfigurableDeviceLinkSessionHandle)
           .updateTransportPreference(authoritativeTransport);
@@ -309,7 +314,6 @@ extension _DeviceLinkSessionProtocol on DeviceLinkController {
     Map<String, Object?> message,
   ) async {
     if (!_sessionIsCurrent(managed)) return;
-    managed.fileProtocol = message['fileTransferVersion'] == 2 ? 2 : 1;
     final Map<String, Object?> remote = Map<String, Object?>.from(
       message['device']! as Map,
     );
@@ -326,6 +330,7 @@ extension _DeviceLinkSessionProtocol on DeviceLinkController {
         _device(managed.deviceId!).kind != remoteKind) {
       return;
     }
+    managed.fileProtocol = message['fileTransferVersion'] == 2 ? 2 : 1;
     LinkedDevice? device = _devices.cast<LinkedDevice?>().firstWhere(
       (LinkedDevice? value) => value?.id == remoteId,
       orElse: () => null,
@@ -411,6 +416,7 @@ extension _DeviceLinkSessionProtocol on DeviceLinkController {
     await managed.handle.send(<String, Object?>{
       'type': 'welcome',
       'fileTransferVersion': 2,
+      if (onLibraryBundleReceived != null) 'libraryBundleVersion': 1,
       'host': <String, Object?>{
         ...(remoteKind == LinkedDeviceKind.computer
                 ? _computerLink.identity
@@ -425,6 +431,9 @@ extension _DeviceLinkSessionProtocol on DeviceLinkController {
       },
     });
     if (!_sessionIsCurrent(managed)) return;
+    // The receiving engine enables file transfer when it processes welcome.
+    // Keep new bundle offers behind welcome on the ordered connection.
+    managed.libraryBundleSupport = message['libraryBundleVersion'] == 1;
     try {
       await _sendSnapshot(managed);
       managed.snapshotPending = false;

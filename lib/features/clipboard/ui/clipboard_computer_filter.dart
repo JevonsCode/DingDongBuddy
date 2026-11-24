@@ -13,19 +13,22 @@ class ClipboardComputerFilter extends StatelessWidget {
     final label = context.l10n.clipboardSourceComputer;
     final selected = viewModel.selectedComputerId;
     const computer = Icon(Icons.computer_rounded, size: 16);
+    const width = 196.0;
     return SizedBox(
-      width: 196,
+      width: width,
       height: 32,
       child: DesktopSelectField<String?>(
         key: const Key('clipboard-computer-filter'),
         value: selected,
         semanticLabel: label,
+        menuWidth: width,
+        highlighted: selected != null,
         displayLabel: selected == null ? label : null,
         items: [
           DesktopSelectItem(
             value: null,
             label: context.l10n.allSources,
-            icon: computer,
+            icon: const Icon(Icons.devices_outlined, size: 16),
           ),
           for (final option in viewModel.computerSourceOptions)
             DesktopSelectItem(

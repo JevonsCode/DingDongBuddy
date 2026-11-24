@@ -90,6 +90,45 @@ void main() {
     expect(result.imported.map((Resource item) => item.id), <String>['two']);
   });
 
+  test(
+    'preview and install honor both bundle and recipient selections',
+    () async {
+      final DateTime now = DateTime.utc(2026, 7, 13);
+      Resource resource(String id) => Resource(
+        id: id,
+        type: ResourceType.skill,
+        title: id,
+        content: 'local $id',
+        updateUrl: 'https://example.test/$id',
+        createdAt: now,
+        updatedAt: now,
+      );
+      final payload = LibraryBundle.payload([
+        resource('chosen'),
+        resource('unchecked'),
+        resource('excluded-by-sender'),
+      ], generatedAt: now)..['selectedIds'] = ['chosen', 'unchecked'];
+      final contents = jsonEncode(payload);
+
+      final preview = LibraryBundle.preview(contents);
+      expect(preview.map((item) => item.id), ['chosen', 'unchecked']);
+      expect(preview.first.updateUrl, 'https://example.test/chosen');
+
+      final selected = LibraryBundle.select(contents, {
+        'chosen',
+        'excluded-by-sender',
+      });
+      expect(LibraryBundle.preview(selected).map((item) => item.id), [
+        'chosen',
+      ]);
+      final selectedJson = jsonDecode(selected) as Map<String, Object?>;
+      final items = (selectedJson['items'] as List<Object?>)
+          .cast<Map<String, Object?>>();
+      expect(items, hasLength(1));
+      expect(items.single['contentURL'], 'https://example.test/chosen');
+    },
+  );
+
   test('rejects bundles from removed schema and service versions', () {
     expect(
       () => LibraryBundle.importPayload(<String, Object?>{

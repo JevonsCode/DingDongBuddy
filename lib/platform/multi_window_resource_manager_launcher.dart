@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:dingdong/features/activity/domain/agent_activity_window_protocol.dart';
 import 'package:dingdong/features/library/domain/resource_manager_launcher.dart';
+import 'package:dingdong/platform/multi_window_library_share_gateway.dart';
 
 const String resourceManagerWindowKind = 'resource-manager';
 
@@ -15,6 +16,8 @@ final class MultiWindowResourceManagerLauncher
 
   /// Reloads clipboard history in an already-open resource manager.
   Future<void> refreshClipboard() => _refresh('clipboard_changed');
+
+  Future<void> refreshLibraryInbox() => _refresh(libraryInboxChangedMethod);
 
   Future<void> refreshActivity() => _refresh(agentActivityChangedMethod);
 
@@ -29,7 +32,7 @@ final class MultiWindowResourceManagerLauncher
         }
       }
     } on Object {
-      // The resource manager may be closing while a clipboard capture lands.
+      // Updates may arrive while the resource manager is closing.
     }
   }
 

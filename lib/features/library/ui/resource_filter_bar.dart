@@ -15,6 +15,8 @@ class ResourceFilterBar extends StatelessWidget {
     this.onImportJson,
     this.onImportLink,
     this.onImportHistory,
+    this.onInbox,
+    this.receivedCount = 0,
     this.onExport,
     this.onShowAgentPlugins,
     this.searchController,
@@ -25,6 +27,8 @@ class ResourceFilterBar extends StatelessWidget {
   final VoidCallback? onImportJson;
   final VoidCallback? onImportLink;
   final VoidCallback? onImportHistory;
+  final VoidCallback? onInbox;
+  final int receivedCount;
   final VoidCallback? onExport;
   final VoidCallback? onShowAgentPlugins;
   final TextEditingController? searchController;
@@ -38,6 +42,31 @@ class ResourceFilterBar extends StatelessWidget {
         children: <Widget>[
           LayoutBuilder(
             builder: (BuildContext context, BoxConstraints constraints) {
+              final inboxLabel = receivedCount == 0
+                  ? context.l10n.libraryReceivedBundles
+                  : context.l10n.libraryReceivedBundlesCount(receivedCount);
+              final Widget? inbox = onInbox == null
+                  ? null
+                  : constraints.maxWidth >= 620
+                  ? DesktopActionButton(
+                      key: const Key('library-inbox'),
+                      label: inboxLabel,
+                      icon: Icons.inbox_outlined,
+                      onPressed: onInbox,
+                      tone: receivedCount > 0
+                          ? DesktopActionTone.soft
+                          : DesktopActionTone.neutral,
+                      compact: true,
+                      height: 32,
+                    )
+                  : DesktopIconButton(
+                      key: const Key('library-inbox'),
+                      size: 32,
+                      tooltip: inboxLabel,
+                      icon: const Icon(Icons.inbox_outlined, size: 18),
+                      onPressed: onInbox,
+                      selected: receivedCount > 0,
+                    );
               if (constraints.maxWidth < 1000) {
                 return Row(
                   children: <Widget>[
@@ -50,6 +79,7 @@ class ResourceFilterBar extends StatelessWidget {
                         ),
                       ),
                     ),
+                    if (inbox != null) ...[inbox, const SizedBox(width: 8)],
                     if (onShowAgentPlugins != null &&
                         constraints.maxWidth >= 480)
                       DesktopActionButton(
@@ -149,6 +179,7 @@ class ResourceFilterBar extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
+                  if (inbox != null) ...[inbox, const SizedBox(width: 8)],
                   if (onShowAgentPlugins != null) ...[
                     DesktopActionButton(
                       key: const Key('library-agent-plugins-open'),

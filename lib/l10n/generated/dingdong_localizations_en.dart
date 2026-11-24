@@ -4908,4 +4908,78 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   @override
   String get clipboardGroupNameInvalid =>
       'Choose a unique, non-empty name that is not reserved.';
+
+  @override
+  String get resourceManagerStarting => 'Opening Resource Manager…';
+
+  @override
+  String get resourceManagerStartupFailed => 'Could not open Resource Manager';
+
+  @override
+  String get resourceManagerRetry => 'Retry';
+
+  @override
+  String get libraryExportSelection => 'Export selected';
+
+  @override
+  String get librarySendSelection => 'Send to computer';
+
+  @override
+  String get librarySendBundle => 'Send selected resources';
+
+  @override
+  String get libraryNoShareTargets =>
+      'Connect a paired computer with resource sharing support.';
+
+  @override
+  String get libraryShareSent => 'Resources sent.';
+
+  @override
+  String get libraryShareInProgress =>
+      'Check Connected Devices for transfer progress.';
+
+  @override
+  String get libraryShareFailed =>
+      'Could not send resources. Check the computer connection and try again.';
+
+  @override
+  String get libraryShareTooLarge =>
+      'The resource bundle exceeds 25 MiB. Select fewer resources.';
+
+  @override
+  String get libraryReceivedBundles => 'Received resources';
+
+  @override
+  String libraryReceivedBundlesCount(int count) {
+    return 'Received resources ($count)';
+  }
+
+  @override
+  String get libraryNoReceivedBundles =>
+      'Resource bundles sent from paired computers appear here.';
+
+  @override
+  String get libraryInboxFailed =>
+      'Could not open received resources. Try again.';
+
+  @override
+  String get libraryInboxRemove => 'Remove from inbox';
+
+  @override
+  String get librarySelectImport => 'Choose resources to install';
+
+  @override
+  String libraryInstallSelection(int count) {
+    return 'Install selected ($count)';
+  }
+
+  @override
+  String get libraryViewBundle => 'View resources';
+
+  @override
+  String get libraryEmptyBundle => 'This bundle has no resources to install.';
+
+  @override
+  String get libraryInstallOnlineSources =>
+      'Selected online resources are downloaded from the sources shown.';
 }

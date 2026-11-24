@@ -53,27 +53,30 @@ final class SafeManagedFile {
     final Completer<void> gate = Completer<void>();
     _barriers[key] = gate.future;
     await previous;
-    await file.parent.create(recursive: true);
-    final RandomAccessFile lock = await File(
-      '${file.path}.lock',
-    ).open(mode: FileMode.append);
     try {
-      await lock.lock(FileLock.exclusive);
-      return await runZoned(
-        action,
-        zoneValues: <Object, Object>{
-          _lockZoneKey: <String>{...held, key},
-        },
-      );
-    } finally {
+      await file.parent.create(recursive: true);
+      final RandomAccessFile lock = await File(
+        '${file.path}.lock',
+      ).open(mode: FileMode.append);
       try {
-        await lock.unlock();
+        await lock.lock(FileLock.exclusive);
+        try {
+          return await runZoned(
+            action,
+            zoneValues: <Object, Object>{
+              _lockZoneKey: <String>{...held, key},
+            },
+          );
+        } finally {
+          await lock.unlock();
+        }
       } finally {
         await lock.close();
-        gate.complete();
-        if (identical(_barriers[key], gate.future)) {
-          await _barriers.remove(key);
-        }
+      }
+    } finally {
+      gate.complete();
+      if (identical(_barriers[key], gate.future)) {
+        await _barriers.remove(key);
       }
     }
   }

@@ -4965,4 +4965,80 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   @override
   String get clipboardGroupNameInvalid =>
       'Elige un nombre único, no vacío y que no esté reservado.';
+
+  @override
+  String get resourceManagerStarting => 'Abriendo el gestor de recursos…';
+
+  @override
+  String get resourceManagerStartupFailed =>
+      'No se pudo abrir el gestor de recursos';
+
+  @override
+  String get resourceManagerRetry => 'Reintentar';
+
+  @override
+  String get libraryExportSelection => 'Exportar selección';
+
+  @override
+  String get librarySendSelection => 'Enviar a un equipo';
+
+  @override
+  String get librarySendBundle => 'Enviar recursos seleccionados';
+
+  @override
+  String get libraryNoShareTargets =>
+      'Conecta un equipo vinculado compatible con el intercambio de recursos.';
+
+  @override
+  String get libraryShareSent => 'Recursos enviados.';
+
+  @override
+  String get libraryShareInProgress =>
+      'Consulta el progreso en Dispositivos conectados.';
+
+  @override
+  String get libraryShareFailed =>
+      'No se pudieron enviar los recursos. Comprueba la conexión del equipo y vuelve a intentarlo.';
+
+  @override
+  String get libraryShareTooLarge =>
+      'El paquete supera los 25 MiB. Selecciona menos recursos.';
+
+  @override
+  String get libraryReceivedBundles => 'Recursos recibidos';
+
+  @override
+  String libraryReceivedBundlesCount(int count) {
+    return 'Recursos recibidos ($count)';
+  }
+
+  @override
+  String get libraryNoReceivedBundles =>
+      'Aquí aparecen los paquetes enviados desde equipos vinculados.';
+
+  @override
+  String get libraryInboxFailed =>
+      'No se pudieron abrir los recursos recibidos. Vuelve a intentarlo.';
+
+  @override
+  String get libraryInboxRemove => 'Quitar de recibidos';
+
+  @override
+  String get librarySelectImport => 'Elige los recursos que quieres instalar';
+
+  @override
+  String libraryInstallSelection(int count) {
+    return 'Instalar selección ($count)';
+  }
+
+  @override
+  String get libraryViewBundle => 'Ver recursos';
+
+  @override
+  String get libraryEmptyBundle =>
+      'Este paquete no contiene recursos para instalar.';
+
+  @override
+  String get libraryInstallOnlineSources =>
+      'Los recursos en línea seleccionados se descargan de las fuentes indicadas.';
 }

@@ -41,6 +41,27 @@ extension _DeviceLinkResumableTransfer on DeviceLinkController {
     FileTransfer transfer,
   ) async {
     final device = _device(peer);
+    if (transfer.itemId == libraryBundleTransferItemId) {
+      final receive = onLibraryBundleReceived;
+      if (device.kind != LinkedDeviceKind.computer ||
+          receive == null ||
+          transfer.size > relayFileLimit) {
+        throw const FormatException('Resource bundle transfer is unavailable.');
+      }
+      await receive(
+        transfer.id,
+        device.remark.isEmpty ? device.name : device.remark,
+        file,
+      );
+      try {
+        await file.delete();
+      } on FileSystemException catch (error) {
+        debugPrint(
+          'DingDong could not remove a received bundle temporary file: $error',
+        );
+      }
+      return;
+    }
     final now = DateTime.now().toUtc();
     final record = ClipboardRecord(
       id: 'DEVICE-FILE-${device.id}-${transfer.id}',

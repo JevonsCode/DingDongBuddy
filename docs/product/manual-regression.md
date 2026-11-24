@@ -1,4 +1,18 @@
-# DingDong 1.11.17 Manual Regression Checklist
+# DingDong 1.11.18 Manual Regression Checklist
+
+## Resource Manager and library bundles (1.11.18)
+
+- Open Resource Manager from a fresh desktop profile. Verify the library loads,
+  or the window shows a retry action if its data cannot be read.
+- Open the Source Computer menu in light and dark themes. Verify it matches
+  its button width and marks the current selection.
+- Select some resources and export JSON. Import that file and install a subset.
+  Verify the unselected entries do not enter the library.
+- Send selected resources to a paired computer. Open Received resources on
+  the destination and install a subset. Verify unselected online URLs are not
+  fetched and existing resources are preserved.
+- Verify desktop version 1.11.18, build 101, and PWA shell 76 in published
+  packages and update metadata.
 
 ## Clipboard history by source computer (1.11.17)
 

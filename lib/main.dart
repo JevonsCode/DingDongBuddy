@@ -48,6 +48,7 @@ import 'package:dingdong/features/issue_center/data/duplicate_resource_cleanup.d
 import 'package:dingdong/features/issue_center/domain/app_issue.dart';
 import 'package:dingdong/features/issue_center/ui/issue_center_controller.dart';
 import 'package:dingdong/features/library/data/agent_resource_synchronizer.dart';
+import 'package:dingdong/features/library/data/file_library_inbox.dart';
 import 'package:dingdong/features/library/data/installer_resource_adapters.dart';
 import 'package:dingdong/features/library/data/resource_file_service.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
@@ -57,6 +58,7 @@ import 'package:dingdong/features/library/domain/resource_manager_launcher.dart'
 import 'package:dingdong/features/library/ui/library_view_model.dart';
 import 'package:dingdong/features/library/ui/library_view_model_factory.dart';
 import 'package:dingdong/features/library/ui/resource_manager_app.dart';
+import 'package:dingdong/features/library/ui/resource_manager_startup.dart';
 import 'package:dingdong/features/screenshot/data/screenshot_plugin_service.dart';
 import 'package:dingdong/features/selection/domain/selection_plugin_gateway.dart';
 import 'package:dingdong/features/selection/ui/selection_overlay_app.dart';
@@ -84,6 +86,7 @@ import 'package:dingdong/platform/file_selector_sound_gateway.dart';
 import 'package:dingdong/platform/multi_window_clipboard_preview_launcher.dart';
 import 'package:dingdong/platform/multi_window_development_test_panel_launcher.dart';
 import 'package:dingdong/platform/multi_window_device_link_manager.dart';
+import 'package:dingdong/platform/multi_window_library_share_gateway.dart';
 import 'package:dingdong/platform/multi_window_resource_manager_launcher.dart';
 import 'package:dingdong/platform/multi_window_settings_host_bridge.dart';
 import 'package:dingdong/platform/multi_window_settings_launcher.dart';
@@ -371,6 +374,7 @@ Future<void> main(List<String> arguments) async {
   );
   final AppSettings startupSettings = dependencies.initialSettings;
   startupLanguage = startupSettings.language;
+  final libraryInbox = FileLibraryInbox(appDataPaths.libraryInboxDirectory);
   deviceLinkController = DeviceLinkController(
     store: FileDeviceLinkStore(appDataPaths.deviceLinksFile),
     clipboardStore: dependencies.clipboardStore,
@@ -396,6 +400,10 @@ Future<void> main(List<String> arguments) async {
     onAgentSeen: (List<String> activityIds) {
       final int acknowledged = activityController.markSeen(activityIds);
       unawaited(shellGateway.acknowledgeUnreadCount(acknowledged));
+    },
+    onLibraryBundleReceived: (id, sender, file) async {
+      await libraryInbox.receive(id, sender, file);
+      unawaited(resourceManagerLauncher.refreshLibraryInbox());
     },
     onClipboardReceived: () {
       shellController.requestClipboardRefresh();
@@ -587,6 +595,20 @@ Future<void> main(List<String> arguments) async {
       return handleDeviceLinkManagerHostCall(deviceLinkController, call);
     }
     switch (call.method) {
+      case libraryShareTargetsMethod:
+        return [
+          for (final target in deviceLinkController.libraryShareTargets)
+            {'id': target.id, 'name': target.name},
+        ];
+      case librarySendBundleMethod:
+        final arguments = call.arguments;
+        if (arguments case {
+          'id': final String id,
+          'contents': final String contents,
+        }) {
+          return deviceLinkController.sendLibraryBundle(id, contents);
+        }
+        throw ArgumentError('Invalid resource bundle request.');
       case _clipboardDeviceProfilesMethod:
         return {
           for (final entry in clipboardProfiles.entries)
