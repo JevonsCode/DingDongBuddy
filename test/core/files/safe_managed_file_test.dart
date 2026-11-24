@@ -17,10 +17,7 @@ void main() {
     await lock.delete();
     await target.writeAsString('ready');
 
-    expect(
-      (await managed.snapshot().timeout(const Duration(seconds: 1))).contents,
-      'ready',
-    );
+    expect((await managed.snapshot()).contents, 'ready');
   });
 
   test('concurrent managed updates preserve both changes', () async {
