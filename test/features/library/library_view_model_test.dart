@@ -235,6 +235,37 @@ void main() {
     },
   );
 
+  test('commit rechecks conflicts after preparing a bundle', () async {
+    final now = DateTime.utc(2026);
+    Resource prompt(String id, String content) => Resource(
+      id: id,
+      type: ResourceType.prompt,
+      title: id,
+      content: content,
+      createdAt: now,
+      updatedAt: now,
+    );
+    final store = InMemoryResourceStore();
+    final model = LibraryViewModel(store);
+    await model.load();
+    final prepared = await model.prepareBundleJson(
+      LibraryBundle.encode([
+        prompt('shared', 'from another computer'),
+      ], generatedAt: now),
+    );
+    final local = prompt('shared', 'added locally while reviewing');
+    await store.save([local]);
+
+    await model.commitBundleImport(
+      prepared,
+      source: 'Computer',
+      kind: LibraryImportSourceKind.device,
+    );
+
+    expect(await store.load(), [local]);
+    expect(model.importHistory.single.conflictIds, ['shared']);
+  });
+
   test('exports only selected resources and skips them on re-import', () async {
     final DateTime now = DateTime.utc(2026, 7, 13);
     Resource resource(String id) => Resource(

@@ -44,6 +44,33 @@ final class LibraryBundle {
     return _portableJson(resource);
   }
 
+  /// Lists the sender's selected items without resolving online content.
+  static List<Resource> preview(String contents) {
+    return _previewItems(_decodePayload(contents))
+        .map(
+          (item) => Resource.fromJson({
+            ...item,
+            if (!item.containsKey('content') && _onlineContentUrl(item) != null)
+              'content': '',
+            'updateURL': _onlineContentUrl(item),
+          }),
+        )
+        .toList(growable: false);
+  }
+
+  /// Narrows a bundle without rewriting online links or resource metadata.
+  static String select(String contents, Set<String> ids) {
+    final payload = _decodePayload(contents);
+    final items = _previewItems(
+      payload,
+    ).where((item) => ids.contains(item['id'])).toList(growable: false);
+    return jsonEncode({
+      ...payload,
+      'items': items,
+      'selectedIds': items.map((item) => item['id']).toList(growable: false),
+    });
+  }
+
   static LibraryBundleImportResult decode(
     String contents, {
     required List<Resource> existing,
@@ -120,27 +147,28 @@ final class LibraryBundle {
     Map<String, Object?> payload, {
     required List<Resource> existing,
   }) {
-    final Object? schemaVersion = payload['schemaVersion'];
-    if (schemaVersion != 2) {
-      throw FormatException(
-        'Unsupported library bundle schema: $schemaVersion.',
-      );
-    }
-    final Object? service = payload['service'];
-    if (service != null &&
-        service != 'DingDongBuddy' &&
-        service != 'DingDong') {
-      throw const FormatException('Library bundle is for another service.');
-    }
-    final Object? rawItems = payload['items'];
-    if (rawItems is! List<Object?>) {
-      throw const FormatException('Library bundle items must be a list.');
-    }
+    final List<Object?> rawItems = _validatedItems(payload);
     final Set<String>? selectedIds = switch (payload['selectedIds']) {
       final List<Object?> values =>
         values.map((Object? value) => value as String).toSet(),
       _ => null,
     };
+    final candidates = <Resource>[];
+    for (final Object? rawItem in rawItems) {
+      if (rawItem is! Map<String, Object?>) {
+        throw const FormatException('Library bundle item must be an object.');
+      }
+      if (selectedIds != null && !selectedIds.contains(rawItem['id'])) continue;
+      final Resource candidate = Resource.fromJson(rawItem);
+      if (candidate.type.isLibraryResource) candidates.add(candidate);
+    }
+    return mergeResources(candidates, existing: existing);
+  }
+
+  static LibraryBundleImportResult mergeResources(
+    Iterable<Resource> candidates, {
+    required List<Resource> existing,
+  }) {
     final Map<String, Resource> existingById = <String, Resource>{
       for (final Resource resource in existing) resource.id: resource,
     };
@@ -149,15 +177,7 @@ final class LibraryBundle {
     final List<String> duplicateIds = <String>[];
     final List<String> conflictIds = <String>[];
 
-    for (final Object? rawItem in rawItems) {
-      if (rawItem is! Map<String, Object?>) {
-        throw const FormatException('Library bundle item must be an object.');
-      }
-      final Resource candidate = Resource.fromJson(rawItem);
-      if (!candidate.type.isLibraryResource ||
-          (selectedIds != null && !selectedIds.contains(candidate.id))) {
-        continue;
-      }
+    for (final Resource candidate in candidates) {
       final Resource? sameId = existingById[candidate.id];
       if (sameId != null) {
         if (_contentKey(sameId) == _contentKey(candidate)) {
@@ -346,6 +366,40 @@ Map<String, Object?> _decodePayload(String contents) {
     throw const FormatException('Library bundle must be a JSON object.');
   }
   return decoded;
+}
+
+List<Object?> _validatedItems(Map<String, Object?> payload) {
+  final Object? schemaVersion = payload['schemaVersion'];
+  if (schemaVersion != 2) {
+    throw FormatException('Unsupported library bundle schema: $schemaVersion.');
+  }
+  final Object? service = payload['service'];
+  if (service != null && service != 'DingDongBuddy' && service != 'DingDong') {
+    throw const FormatException('Library bundle is for another service.');
+  }
+  final Object? rawItems = payload['items'];
+  if (rawItems is! List<Object?>) {
+    throw const FormatException('Library bundle items must be a list.');
+  }
+  return rawItems;
+}
+
+Iterable<Map<String, Object?>> _previewItems(
+  Map<String, Object?> payload,
+) sync* {
+  final items = _validatedItems(payload);
+  final selected = switch (payload['selectedIds']) {
+    final List<Object?> values => values.whereType<String>().toSet(),
+    _ => null,
+  };
+  for (final item in items) {
+    if (item is! Map<String, Object?>) {
+      throw const FormatException('Library bundle item must be an object.');
+    }
+    final id = item['id'];
+    if (id is! String || (selected != null && !selected.contains(id))) continue;
+    if (ResourceType.parse(item['type']).isLibraryResource) yield item;
+  }
 }
 
 String? _onlineContentUrl(Map<String, Object?> item) {

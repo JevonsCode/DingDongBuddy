@@ -28,6 +28,7 @@ final class _ManagedDeviceSession {
   bool snapshotPending = false;
   bool active = true;
   int fileProtocol = 1;
+  bool libraryBundleSupport = false;
   bool? announcedLan;
   bool announcingFiles = false;
   StreamSubscription<void>? subscription;

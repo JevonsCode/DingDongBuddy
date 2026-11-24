@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dingdong/core/models/clipboard_record.dart';
+import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/clipboard_gateway.dart';
 import 'package:dingdong/features/activity/domain/agent_activity.dart';
 import 'package:dingdong/features/activity/domain/agent_conversation_target.dart';
@@ -18,6 +19,8 @@ import 'package:dingdong/features/device_link/data/lan_computer_link.dart';
 import 'package:dingdong/features/device_link/data/secure_message_codec.dart';
 import 'package:dingdong/features/device_link/domain/device_link_models.dart';
 import 'package:dingdong/features/device_link/ui/device_link_controller.dart';
+import 'package:dingdong/features/library/data/file_library_inbox.dart';
+import 'package:dingdong/features/library/domain/library_bundle.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -72,7 +75,58 @@ void main() {
   );
 
   test(
-    'two controllers pair and share clipboard over LAN with no relay configured',
+    'resource sharing waits for the welcome before listing a computer',
+    () async {
+      final harness = await _connectedHarness(
+        autoSend: false,
+        deviceKind: LinkedDeviceKind.computer,
+      );
+      addTearDown(harness.dispose);
+      final offeredBeforeWelcome = Completer<bool>();
+      harness.session.onSend = (message) {
+        if (message['type'] == 'welcome') {
+          offeredBeforeWelcome.complete(
+            harness.controller.libraryShareTargets.isNotEmpty,
+          );
+        }
+      };
+      harness.session.emit(
+        const DeviceLinkMessageEvent({
+          'type': 'hello',
+          'fileTransferVersion': 2,
+          'libraryBundleVersion': 1,
+          'device': {
+            'id': 'phone-one',
+            'name': 'Office Mac',
+            'kind': 'computer',
+          },
+        }),
+      );
+
+      expect(
+        await offeredBeforeWelcome.future.timeout(const Duration(seconds: 5)),
+        isFalse,
+      );
+      await _waitUntil(
+        () => harness.controller.libraryShareTargets.length == 1,
+      );
+
+      harness.session.connectedValue = false;
+      harness.session.emit(
+        const DeviceLinkStatusEvent(DeviceConnectionStatus.disconnected),
+      );
+      await _waitUntil(() => !harness.controller.isConnected('phone-one'));
+      harness.session.connectedValue = true;
+      harness.session.emit(
+        const DeviceLinkStatusEvent(DeviceConnectionStatus.connected),
+      );
+      await _waitUntil(() => harness.controller.isConnected('phone-one'));
+      expect(harness.controller.libraryShareTargets, isEmpty);
+    },
+  );
+
+  test(
+    'two controllers pair and share clipboard and resources over LAN without a relay',
     () async {
       final directory = await Directory.systemTemp.createTemp(
         'dingdong-lan-controllers-',
@@ -83,6 +137,8 @@ void main() {
         _record('local', 'LAN clipboard'),
       ]);
       final peerClipboard = InMemoryClipboardStore();
+      final inboxDirectory = Directory('${directory.path}/inbox');
+      final peerInbox = FileLibraryInbox(inboxDirectory);
       final hostStore = FileDeviceLinkStore(
         File('${directory.path}/host.json'),
       );
@@ -106,6 +162,7 @@ void main() {
         pwaBaseUrl: null,
         relayBaseUrl: null,
         computerLink: peerLan,
+        onLibraryBundleReceived: peerInbox.receive,
         peerSessionFactory:
             ({required relayUrl, required room, required secret}) =>
                 throw StateError('Public relay forbidden'),
@@ -195,6 +252,43 @@ void main() {
             .list(limit: 10)
             .any((r) => r.content == 'LAN clipboard'),
       );
+      await waitFor(() => host.libraryShareTargets.length == 1);
+      expect(host.libraryShareTargets.single.id, peer.localDevice.id);
+      expect(
+        peer.libraryShareTargets,
+        isEmpty,
+      ); // The other side did not advertise inbox support.
+      final now = DateTime.utc(2026);
+      final bundle = LibraryBundle.encode([
+        Resource(
+          id: 'shared-prompt',
+          type: ResourceType.prompt,
+          title: 'Shared prompt',
+          content: 'Review the release checklist.',
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ], generatedAt: now);
+      expect(
+        await host.sendLibraryBundle(peer.localDevice.id, bundle),
+        'completed',
+      );
+      final reopenedInbox = FileLibraryInbox(inboxDirectory);
+      final receivedBundle = (await reopenedInbox.list()).single;
+      expect(receivedBundle.sender, '家里常用');
+      expect(await reopenedInbox.read(receivedBundle.id), bundle);
+      expect(peerClipboard.list(limit: 10).map((r) => r.content), [
+        'LAN clipboard',
+      ]);
+      expect(
+        host.fileTransfers
+            .singleWhere(
+              (transfer) => transfer.name == 'dingdong-resources.json',
+            )
+            .status,
+        'completed',
+      );
+
       final received = peerClipboard
           .list(limit: 10)
           .singleWhere((record) => record.content == 'LAN clipboard');

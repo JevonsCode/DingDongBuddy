@@ -23,6 +23,8 @@ class DesktopSelectField<T> extends StatelessWidget {
     this.enabled = true,
     this.semanticLabel,
     this.displayLabel,
+    this.menuWidth,
+    this.highlighted = false,
     super.key,
   });
 
@@ -32,11 +34,15 @@ class DesktopSelectField<T> extends StatelessWidget {
   final bool enabled;
   final String? semanticLabel;
   final String? displayLabel;
+  final double? menuWidth;
+  final bool highlighted;
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final ColorScheme colors = theme.colorScheme;
+    final double? menuWidth = this.menuWidth;
+    const menuPadding = 4.0;
     final DesktopSelectItem<T> selected = items.firstWhere(
       (DesktopSelectItem<T> item) => item.value == value,
       orElse: () => items.first,
@@ -48,6 +54,27 @@ class DesktopSelectField<T> extends StatelessWidget {
       ),
       child: MenuAnchor(
         alignmentOffset: const Offset(0, 5),
+        crossAxisUnconstrained: menuWidth == null,
+        style: menuWidth == null
+            ? null
+            : MenuStyle(
+                alignment: AlignmentDirectional.bottomStart,
+                minimumSize: WidgetStatePropertyAll(Size(menuWidth, 0)),
+                maximumSize: WidgetStatePropertyAll(Size(menuWidth, 324)),
+                padding: const WidgetStatePropertyAll(
+                  EdgeInsets.all(menuPadding),
+                ),
+                backgroundColor: WidgetStatePropertyAll(colors.surface),
+                surfaceTintColor: const WidgetStatePropertyAll(
+                  Colors.transparent,
+                ),
+                elevation: const WidgetStatePropertyAll(3),
+                shape: WidgetStatePropertyAll(
+                  RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                ),
+              ),
         menuChildren: items
             .map(
               (DesktopSelectItem<T> item) => MenuItemButton(
@@ -57,7 +84,25 @@ class DesktopSelectField<T> extends StatelessWidget {
                     ? Icon(Icons.check_rounded, size: 16, color: colors.primary)
                     : const SizedBox(width: 16),
                 style: MenuItemButton.styleFrom(
-                  minimumSize: const Size(180, 34),
+                  minimumSize: menuWidth == null
+                      ? const Size(180, 34)
+                      : Size(menuWidth - 2 * menuPadding, 32),
+                  visualDensity: menuWidth == null
+                      ? null
+                      : VisualDensity.standard,
+                  backgroundColor: menuWidth != null && item.value == value
+                      ? colors.primary.withValues(alpha: 0.09)
+                      : null,
+                  foregroundColor: menuWidth != null && item.value == value
+                      ? colors.primary
+                      : null,
+                  textStyle: menuWidth == null
+                      ? null
+                      : theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: item.value == value
+                              ? FontWeight.w600
+                              : FontWeight.w500,
+                        ),
                   padding: const EdgeInsets.symmetric(horizontal: 11),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(7),
@@ -87,20 +132,41 @@ class DesktopSelectField<T> extends StatelessWidget {
                               : controller.open()
                         : null,
                     height: 38,
-                    style: DesktopActionButton.styleFrom(
-                      foregroundColor: enabled
-                          ? colors.onSurface
-                          : colors.onSurfaceVariant,
-                      backgroundColor: enabled
-                          ? colors.surfaceContainerLow
-                          : colors.surfaceContainerHighest.withValues(
-                              alpha: 0.5,
-                            ),
-                      padding: const EdgeInsets.symmetric(horizontal: 11),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                    ),
+                    style:
+                        DesktopActionButton.styleFrom(
+                          foregroundColor: enabled
+                              ? (highlighted
+                                    ? colors.primary
+                                    : colors.onSurface)
+                              : colors.onSurfaceVariant,
+                          backgroundColor: enabled
+                              ? (highlighted
+                                    ? colors.primary.withValues(alpha: 0.09)
+                                    : colors.surfaceContainerLow)
+                              : colors.surfaceContainerHighest.withValues(
+                                  alpha: 0.5,
+                                ),
+                          padding: const EdgeInsets.symmetric(horizontal: 11),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                        ).copyWith(
+                          side: highlighted && enabled
+                              ? WidgetStateProperty.resolveWith((states) {
+                                  final focused = states.contains(
+                                    WidgetState.focused,
+                                  );
+                                  return BorderSide(
+                                    color: focused
+                                        ? colors.primary
+                                        : colors.primary.withValues(
+                                            alpha: 0.35,
+                                          ),
+                                    width: focused ? 1.5 : 1,
+                                  );
+                                })
+                              : null,
+                        ),
                     child: Row(
                       children: <Widget>[
                         if (selected.icon != null) ...<Widget>[

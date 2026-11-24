@@ -1205,40 +1205,31 @@ void main() {
     expect(dispatch, greaterThan(initialize));
   });
 
-  test(
-    'resource manager paints its first frame before the window is shown',
-    () {
-      // Auxiliary window bootstraps live in a private part of main.dart; read
-      // that focused source so the ordering contract survives file splitting.
-      final String mainSource = File(
-        'lib/main_resource_window.dart',
-      ).readAsStringSync();
-      final int functionStart = mainSource.indexOf(
-        'Future<void> _runResourceManagerWindow',
-      );
-      expect(functionStart, greaterThanOrEqualTo(0));
-      final String resourceWindowSource = mainSource.substring(functionStart);
-      final int configureWindow = resourceWindowSource.indexOf(
-        'await windowManager.waitUntilReadyToShow(options);',
-      );
-      final int mountFlutter = resourceWindowSource.indexOf('runApp(');
-      final int waitForFirstFrame = resourceWindowSource.indexOf(
-        'await WidgetsBinding.instance.endOfFrame;',
-      );
-      final int showWindow = resourceWindowSource.indexOf(
-        'await windowManager.show();',
-      );
-      final int focusWindow = resourceWindowSource.indexOf(
-        'await windowManager.focus();',
-      );
+  test('resource manager can show before a hidden engine renders a frame', () {
+    final mainSource = File('lib/main_resource_window.dart').readAsStringSync();
+    final functionStart = mainSource.indexOf(
+      'Future<void> _runResourceManagerWindow',
+    );
+    final functionEnd = mainSource.indexOf(
+      'Future<ResourceManagerApp> _loadResourceManager',
+    );
+    expect(functionStart, greaterThanOrEqualTo(0));
+    expect(functionEnd, greaterThan(functionStart));
+    final bootstrap = mainSource.substring(functionStart, functionEnd);
+    final configureWindow = bootstrap.indexOf(
+      'await windowManager.waitUntilReadyToShow(',
+    );
+    final mountFlutter = bootstrap.indexOf('runApp(');
+    final showWindow = bootstrap.indexOf('await windowManager.show();');
+    final focusWindow = bootstrap.indexOf('await windowManager.focus();');
 
-      expect(configureWindow, greaterThanOrEqualTo(0));
-      expect(mountFlutter, greaterThan(configureWindow));
-      expect(waitForFirstFrame, greaterThan(mountFlutter));
-      expect(showWindow, greaterThan(waitForFirstFrame));
-      expect(focusWindow, greaterThan(showWindow));
-    },
-  );
+    expect(configureWindow, greaterThanOrEqualTo(0));
+    expect(mountFlutter, greaterThan(configureWindow));
+    expect(showWindow, greaterThan(mountFlutter));
+    expect(focusWindow, greaterThan(showWindow));
+    expect(bootstrap, contains('ResourceManagerStartup('));
+    expect(bootstrap, isNot(contains('endOfFrame')));
+  });
 }
 
 String _normalizeLineEndings(String value) {

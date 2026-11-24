@@ -5,6 +5,41 @@ Future<void> _runResourceManagerWindow(
   WindowController windowController,
   Map<String, Object?> arguments,
 ) async {
+  await windowManager.ensureInitialized();
+  await windowManager.waitUntilReadyToShow(
+    WindowOptions(
+      size: const Size(1080, 752),
+      minimumSize: const Size(980, 680),
+      center: true,
+      title: appLocalizationsFor(
+        AppLanguagePreference.system,
+      ).resourceManagerWindowTitle,
+      titleBarStyle: TitleBarStyle.normal,
+    ),
+  );
+  runApp(
+    ResourceManagerStartup(
+      load: () async {
+        try {
+          return await _loadResourceManager(windowController, arguments);
+        } on Object catch (error, stack) {
+          debugPrint(
+            'DingDong Resource Manager startup failed: $error\n$stack',
+          );
+          rethrow;
+        }
+      },
+    ),
+  );
+  // A hidden Flutter engine may have frame scheduling disabled.
+  await windowManager.show();
+  await windowManager.focus();
+}
+
+Future<ResourceManagerApp> _loadResourceManager(
+  WindowController windowController,
+  Map<String, Object?> arguments,
+) async {
   final AppDataPaths paths = AppDataPaths.current();
   final IssueCenterController issueCenterController = IssueCenterController();
   final String? parentWindowId = arguments['parentWindowId'] as String?;
@@ -28,10 +63,6 @@ Future<void> _runResourceManagerWindow(
 
   if (parentWindowId != null) {
     parent = WindowController.fromWindowId(parentWindowId);
-    issueCenterController.replaceSource(
-      agentResourceSyncIssueSource,
-      await loadHostIssues(),
-    );
     issueCenterController.addListener(() {
       unawaited(
         parent!
@@ -108,7 +139,6 @@ Future<void> _runResourceManagerWindow(
       await resourceStore.save(await resourceStore.load());
     },
   );
-  await agentAdapterController.load();
   final TriggerGroupStore triggerGroupStore = SynchronizedTriggerGroupStore(
     baseTriggerGroupStore,
     resourceStore,
@@ -243,22 +273,16 @@ Future<void> _runResourceManagerWindow(
     ),
   );
 
-  await windowManager.ensureInitialized();
-  await preventWindowsAuxiliaryWindowClose();
-  final DingDongLocalizations strings = appLocalizationsFor(settings.language);
-  final WindowOptions options = WindowOptions(
-    size: const Size(1080, 752),
-    minimumSize: const Size(980, 680),
-    center: true,
-    skipTaskbar: desktopWindowSkipsTaskbar(
+  await windowManager.setTitle(
+    appLocalizationsFor(settings.language).resourceManagerWindowTitle,
+  );
+  await windowManager.setSkipTaskbar(
+    desktopWindowSkipsTaskbar(
       defaultTargetPlatform,
       hideDockIcon: settings.hideDockIcon,
       fallback: false,
     ),
-    title: strings.resourceManagerWindowTitle,
-    titleBarStyle: TitleBarStyle.normal,
   );
-  await windowManager.waitUntilReadyToShow(options);
   final tokenUsageRepository = LocalTokenUsageRepository(
     databasePath: paths.tokenUsageDatabaseFile.path,
   );
@@ -280,65 +304,67 @@ Future<void> _runResourceManagerWindow(
     onUsageChanged: tokenUsageController.invalidate,
   );
   await aiCompanionController.load();
-  runApp(
-    ResourceManagerApp(
-      initialWindowVisible: false,
-      onActivityOpened: parent == null
-          ? null
-          : (activity) async {
-              await parent!.invokeMethod<void>(agentActivityOpenedMethod, {
-                'id': activity.id,
-                'sequence': activity.sequence,
-              });
+  await preventWindowsAuxiliaryWindowClose();
+  unawaited(agentAdapterController.load());
+  return ResourceManagerApp(
+    onActivityOpened: parent == null
+        ? null
+        : (activity) async {
+            await parent!.invokeMethod<void>(agentActivityOpenedMethod, {
+              'id': activity.id,
+              'sequence': activity.sequence,
+            });
+            activityController.reload();
+          },
+    onActivityViewed: parent == null
+        ? null
+        : (sequence) async {
+            try {
+              await parent!.invokeMethod<void>(
+                agentActivityViewedMethod,
+                sequence,
+              );
               activityController.reload();
-            },
-      onActivityViewed: parent == null
-          ? null
-          : (sequence) async {
-              try {
-                await parent!.invokeMethod<void>(
-                  agentActivityViewedMethod,
-                  sequence,
-                );
-                activityController.reload();
-              } on Object {
-                // Closing windows can interrupt this optional checkpoint.
-              }
-            },
-      aiCompanionController: aiCompanionController,
-      tokenUsageController: tokenUsageController,
-      onCloseTokenUsage: tokenUsageRepository.close,
-      viewModel: viewModel,
-      clipboardViewModel: clipboardViewModel,
-      activityController: activityController,
-      agentAdapterController: agentAdapterController,
-      agentInstallGateway: LocalAgentInstallGateway(
-        mcpCommandPath: paths.development && Platform.isMacOS
-            ? '/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp'
-            : _mcpCommandPath(),
-        previewOnly: paths.development,
-      ),
-      issueCenterController: issueCenterController,
-      settings: settings,
-      windowController: windowController,
-      initialDestination: initialDestination,
-      jevAction: pluginHost?.jevAction,
-      screenshotAction: pluginHost?.screenshotAction,
-      pluginSettings: pluginSettings,
-      openClipboardCategoriesOnLaunch:
-          arguments['openClipboardCategories'] == true,
-      resourceManagerLauncher: MultiWindowResourceManagerLauncher(
-        parentWindowId: parentWindowId ?? windowController.windowId,
-      ),
-      agentConversationLauncher: agentConversationLauncher,
-      onLoadHostIssues: parent == null ? null : loadHostIssues,
-      desktopContextMenuGateway: Platform.isMacOS
-          ? NativeDesktopContextMenuGateway()
-          : null,
-      onOpenExternalLink: UrlLauncherExternalLinkGateway().open,
+            } on Object {
+              // Closing windows can interrupt this optional checkpoint.
+            }
+          },
+    aiCompanionController: aiCompanionController,
+    tokenUsageController: tokenUsageController,
+    onCloseTokenUsage: tokenUsageRepository.close,
+    viewModel: viewModel,
+    clipboardViewModel: clipboardViewModel,
+    activityController: activityController,
+    agentAdapterController: agentAdapterController,
+    agentInstallGateway: LocalAgentInstallGateway(
+      mcpCommandPath: paths.development && Platform.isMacOS
+          ? '/Applications/DingDong.app/Contents/MCP/bundle/bin/dingdong_mcp'
+          : _mcpCommandPath(),
+      previewOnly: paths.development,
     ),
+    issueCenterController: issueCenterController,
+    settings: settings,
+    windowController: windowController,
+    initialDestination: initialDestination,
+    jevAction: pluginHost?.jevAction,
+    screenshotAction: pluginHost?.screenshotAction,
+    pluginSettings: pluginSettings,
+    openClipboardCategoriesOnLaunch:
+        arguments['openClipboardCategories'] == true,
+    resourceManagerLauncher: MultiWindowResourceManagerLauncher(
+      parentWindowId: parentWindowId ?? windowController.windowId,
+    ),
+    agentConversationLauncher: agentConversationLauncher,
+    onLoadHostIssues: parent == null ? null : loadHostIssues,
+    desktopContextMenuGateway: Platform.isMacOS
+        ? NativeDesktopContextMenuGateway()
+        : null,
+    onOpenExternalLink: UrlLauncherExternalLinkGateway().open,
+    libraryShareGateway: parent == null
+        ? null
+        : MultiWindowLibraryShareGateway(
+            parent,
+            FileLibraryInbox(paths.libraryInboxDirectory),
+          ),
   );
-  await WidgetsBinding.instance.endOfFrame;
-  await windowManager.show();
-  await windowManager.focus();
 }

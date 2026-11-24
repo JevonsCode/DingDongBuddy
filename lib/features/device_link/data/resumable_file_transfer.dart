@@ -68,6 +68,7 @@ class ResumableFileTransfers {
     File file, {
     required String name,
     String? itemId,
+    Future<void> Function()? onFinished,
   }) async {
     if (_disposed) throw StateError('closed');
     final stat = await file.stat();
@@ -106,7 +107,7 @@ class ResumableFileTransfers {
       sending: true,
       itemId: itemId,
     );
-    final outgoing = _Outgoing(view, file, fingerprint);
+    final outgoing = _Outgoing(view, file, fingerprint, onFinished);
     _outgoing[key] = outgoing;
     _views[key] = view;
     _changed();
@@ -200,6 +201,7 @@ class ResumableFileTransfers {
     } finally {
       await reader?.close();
       outgoing.running = false;
+      if (_disposed || view.terminal) await outgoing.finish();
       _changed();
     }
   }
@@ -555,14 +557,8 @@ class ResumableFileTransfers {
           entry.value.completeError(const _TransferError('paused'));
         }
       }
-      if (action == 'cancel') {
-        final incoming = _incoming[key];
-        if (incoming != null) {
-          if (await incoming.partial.exists()) await incoming.partial.delete();
-          if (await incoming.metadata.exists()) {
-            await incoming.metadata.delete();
-          }
-        }
+      if (action == 'cancel' && outgoing != null && !outgoing.running) {
+        await outgoing.finish();
       }
       if (!remote) {
         try {
@@ -657,6 +653,7 @@ class ResumableFileTransfers {
     _disposed = true;
     for (final outgoing in _outgoing.values) {
       outgoing.stopped = true;
+      if (!outgoing.running) await outgoing.finish();
     }
     for (final reply in _replies.values) {
       if (!reply.isCompleted) reply.completeError(StateError('closed'));
@@ -674,11 +671,18 @@ class _TransferError implements Exception {
 }
 
 class _Outgoing {
-  _Outgoing(this.view, this.file, this.fingerprint);
+  _Outgoing(this.view, this.file, this.fingerprint, this.onFinished);
   final FileTransfer view;
   final File file;
   final String fingerprint;
   bool running = false, stopped = false;
+  Future<void> Function()? onFinished;
+
+  Future<void> finish() async {
+    final callback = onFinished;
+    onFinished = null;
+    await callback?.call();
+  }
 }
 
 class _Incoming {

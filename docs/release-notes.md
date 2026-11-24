@@ -1,15 +1,21 @@
-# DingDong 1.11.17
+# DingDong 1.11.18
 
-- Filter clipboard history by source computer in the clipboard popup and Resource Manager. The filter appears when records from another computer are available and displays your remark or the computer’s name.
-
----
-
-# DingDong 1.11.17
-
-- 剪贴板下拉面板和资源管理器新增「来源电脑」筛选。有其他电脑传来的记录时才显示筛选项，优先显示你设的备注，没备注时显示电脑名称。
+- Resource Manager shows loading and lets you retry when it cannot open the library.
+- The Source Computer menu aligns with its button and makes the current selection easier to see.
+- Export selected resources as JSON or send them to a paired DingDong computer. Choose which resources to install from a received bundle.
 
 ---
 
-# DingDong 1.11.17
+# DingDong 1.11.18
 
-- Filtra el historial del portapapeles por equipo de origen en el panel emergente y el Gestor de recursos. El filtro aparece cuando hay registros de otro equipo y muestra tu nota o el nombre del equipo.
+- 资源管理打开时显示加载状态，读取失败后可以重试。
+- 「来源电脑」菜单与按钮等宽，当前选项更容易辨认。
+- 勾选资源后可导出 JSON，或直发给已配对的 DingDong 电脑。接收方可以从收到的资源包中勾选安装。
+
+---
+
+# DingDong 1.11.18
+
+- El Gestor de recursos muestra el estado de carga y permite reintentar si no puede abrir la biblioteca.
+- El menú Equipo de origen se alinea con su botón y destaca la opción seleccionada.
+- Exporta los recursos seleccionados como JSON o envíalos a un equipo DingDong vinculado. Elige qué recursos instalar de un paquete recibido.

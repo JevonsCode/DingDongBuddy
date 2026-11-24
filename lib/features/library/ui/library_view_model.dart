@@ -591,12 +591,11 @@ final class LibraryViewModel extends ChangeNotifier {
 
   Future<LibraryBundleImportResult> importBundleJson(String contents) async {
     final LibraryBundleImportResult result = await prepareBundleJson(contents);
-    await commitBundleImport(
+    return commitBundleImport(
       result,
       source: 'JSON',
       kind: LibraryImportSourceKind.file,
     );
-    return result;
   }
 
   /// Parses a JSON bundle without mutating the library.
@@ -644,17 +643,37 @@ final class LibraryViewModel extends ChangeNotifier {
   }
 
   /// Commits a prepared import after the user has reviewed any online items.
-  Future<void> commitBundleImport(
-    LibraryBundleImportResult result, {
+  Future<LibraryBundleImportResult> commitBundleImport(
+    LibraryBundleImportResult prepared, {
     required String source,
     required LibraryImportSourceKind kind,
   }) async {
-    if (result.imported.isNotEmpty) {
-      _resources = <Resource>[..._resources, ...result.imported];
-      await _repository.save(_resources);
-      _selectedResource = result.imported.first;
-      _isCreating = false;
+    Future<LibraryBundleImportResult> commit() async {
+      final existing = await _repository.load();
+      final merged = LibraryBundle.mergeResources(
+        prepared.imported,
+        existing: existing,
+      );
+      final resources = <Resource>[...existing, ...merged.imported];
+      if (merged.imported.isNotEmpty) await _repository.save(resources);
+      _resources = resources;
+      _refreshSelectedResource();
+      if (merged.imported.isNotEmpty) {
+        _selectedResource = merged.imported.first;
+        _isCreating = false;
+      }
+      return LibraryBundleImportResult(
+        imported: merged.imported,
+        duplicateIds: [...prepared.duplicateIds, ...merged.duplicateIds],
+        conflictIds: [...prepared.conflictIds, ...merged.conflictIds],
+        onlineResources: prepared.onlineResources,
+      );
     }
+
+    final repository = _repository;
+    final result = repository is ExclusiveResourceStore
+        ? await (repository as ExclusiveResourceStore).exclusiveMutation(commit)
+        : await commit();
     final LibraryImportHistoryEntry entry = LibraryImportHistoryEntry(
       source: source,
       kind: kind,
@@ -677,10 +696,11 @@ final class LibraryViewModel extends ChangeNotifier {
       // a successful resource import look like a failure.
     }
     notifyListeners();
+    return result;
   }
 
-  String exportJson() {
-    final List<Resource> exportable = _selectedIds.isEmpty
+  String exportJson({bool selectedOnly = false}) {
+    final List<Resource> exportable = !selectedOnly && _selectedIds.isEmpty
         ? visibleResources
         : _resources
               .where((Resource resource) => _selectedIds.contains(resource.id))

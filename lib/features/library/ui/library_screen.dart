@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dingdong/app/app_localizations.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/platform/desktop_context_menu_gateway.dart';
@@ -8,11 +10,13 @@ import 'package:dingdong/features/agent_plugins/domain/agent_plugin_inventory.da
 import 'package:dingdong/features/agent_plugins/ui/agent_plugins_section.dart';
 import 'package:dingdong/features/library/domain/library_bundle.dart';
 import 'package:dingdong/features/library/domain/library_import_history.dart';
+import 'package:dingdong/features/library/domain/library_share_gateway.dart';
 import 'package:dingdong/features/library/domain/library_transfer_gateway.dart';
 import 'package:dingdong/features/library/domain/skill_version.dart';
 import 'package:dingdong/features/library/ui/library_import_history_dialog.dart';
 import 'package:dingdong/features/library/ui/library_import_review_dialog.dart';
 import 'package:dingdong/features/library/ui/library_link_import_dialog.dart';
+import 'package:dingdong/features/library/ui/library_share_dialogs.dart';
 import 'package:dingdong/features/library/ui/library_view_model.dart';
 import 'package:dingdong/features/library/ui/resource_editor.dart';
 import 'package:dingdong/features/library/ui/resource_filter_bar.dart';
@@ -25,6 +29,7 @@ class LibraryScreen extends StatefulWidget {
   const LibraryScreen({
     required this.viewModel,
     this.transferGateway,
+    this.shareGateway,
     this.contextMenuGateway,
     this.onOpenExternalLink,
     this.skillAgents = ResourceEditor.defaultSkillDeliveryAgents,
@@ -34,6 +39,7 @@ class LibraryScreen extends StatefulWidget {
 
   final LibraryViewModel viewModel;
   final LibraryTransferGateway? transferGateway;
+  final LibraryShareGateway? shareGateway;
   final DesktopContextMenuGateway? contextMenuGateway;
   final Future<void> Function(Uri uri)? onOpenExternalLink;
   final List<SkillDeliveryAgentOption> skillAgents;
@@ -47,17 +53,25 @@ class LibraryScreenState extends State<LibraryScreen> {
   bool _editorDirty = false;
   int _editorEpoch = 0;
   bool _showAgentPlugins = false;
+  bool _choosingShareTarget = false;
+  bool _sending = false;
+  int _inboxRevision = 0;
+  int _receivedCount = 0;
   late final TextEditingController _searchController;
 
   @override
   void initState() {
     super.initState();
     _searchController = TextEditingController(text: widget.viewModel.query);
+    unawaited(reloadReceivedBundles());
   }
 
   @override
   void didUpdateWidget(covariant LibraryScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.shareGateway != widget.shareGateway) {
+      unawaited(reloadReceivedBundles());
+    }
     if (oldWidget.viewModel != widget.viewModel) {
       _searchController.text = widget.viewModel.query;
     }
@@ -186,6 +200,10 @@ class LibraryScreenState extends State<LibraryScreen> {
                           ? null
                           : () => _importLink(context),
                       onImportHistory: () => _showImportHistory(context),
+                      onInbox: widget.shareGateway == null
+                          ? null
+                          : () => _showReceivedBundles(context),
+                      receivedCount: _receivedCount,
                       onExport: widget.transferGateway == null
                           ? null
                           : () => _export(context),
@@ -219,6 +237,14 @@ class LibraryScreenState extends State<LibraryScreen> {
                                 onDelete: () =>
                                     _confirmDeleteSelection(context),
                                 onClear: widget.viewModel.clearSelection,
+                                onExport: widget.transferGateway == null
+                                    ? null
+                                    : () =>
+                                          _export(context, selectedOnly: true),
+                                onSend: widget.shareGateway == null
+                                    ? null
+                                    : () => _sendSelection(context),
+                                sending: _sending,
                               ),
                             ),
                         ],
@@ -373,10 +399,13 @@ class LibraryScreenState extends State<LibraryScreen> {
     }
   }
 
-  Future<void> _export(BuildContext context) async {
+  Future<void> _export(
+    BuildContext context, {
+    bool selectedOnly = false,
+  }) async {
     try {
       final String? path = await widget.transferGateway?.saveExport(
-        contents: widget.viewModel.exportJson(),
+        contents: widget.viewModel.exportJson(selectedOnly: selectedOnly),
       );
       if (path != null && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -400,21 +429,135 @@ class LibraryScreenState extends State<LibraryScreen> {
     }
   }
 
+  Future<void> _sendSelection(BuildContext context) async {
+    final share = widget.shareGateway;
+    if (share == null ||
+        _choosingShareTarget ||
+        _sending ||
+        widget.viewModel.selectionCount == 0) {
+      return;
+    }
+    _choosingShareTarget = true;
+    try {
+      final contents = widget.viewModel.exportJson(selectedOnly: true);
+      final targets = await share.targets();
+      if (!context.mounted) return;
+      final target = await chooseLibraryShareTarget(context, targets);
+      if (target == null || !context.mounted) return;
+      setState(() => _sending = true);
+      final status = await share.send(target, contents);
+      if (!context.mounted) return;
+      final strings = context.l10n;
+      final feedback = switch (status) {
+        'completed' => strings.libraryShareSent,
+        'waiting' || 'paused' || 'failed' => strings.libraryShareInProgress,
+        'bundle_too_large' => strings.libraryShareTooLarge,
+        _ => strings.libraryShareFailed,
+      };
+      _showMessage(context, feedback);
+    } on FormatException catch (error) {
+      if (context.mounted) {
+        _showMessage(
+          context,
+          context.l10n.aSelectedLocalPathResourceCouldNotBeSharedError(error),
+        );
+      }
+    } on Object {
+      if (context.mounted) {
+        _showMessage(context, context.l10n.libraryShareFailed);
+      }
+    } finally {
+      _choosingShareTarget = false;
+      if (mounted && _sending) setState(() => _sending = false);
+    }
+  }
+
+  Future<void> reloadReceivedBundles() async {
+    final revision = ++_inboxRevision;
+    try {
+      final bundles = await widget.shareGateway?.received();
+      if (mounted && revision == _inboxRevision) {
+        setState(() => _receivedCount = bundles?.length ?? 0);
+      }
+    } on Object {
+      // Opening the inbox surfaces read failures and lets the user retry.
+    }
+  }
+
+  Future<void> _showReceivedBundles(BuildContext context) async {
+    final share = widget.shareGateway;
+    if (share == null) return;
+    try {
+      final bundles = await share.received();
+      if (!context.mounted) return;
+      final choice = await chooseReceivedBundle(context, bundles);
+      if (choice == null || !context.mounted) return;
+      if (choice.remove) {
+        await share.remove(choice.bundle.id);
+        await reloadReceivedBundles();
+        return;
+      }
+      final contents = await share.read(choice.bundle.id);
+      if (!context.mounted) return;
+      await _chooseAndImportBundle(
+        context,
+        contents,
+        source: choice.bundle.sender,
+        kind: LibraryImportSourceKind.device,
+      );
+    } on Object {
+      if (context.mounted) {
+        _showMessage(context, context.l10n.libraryInboxFailed);
+      }
+    }
+  }
+
   Future<void> _importJson(BuildContext context) async {
-    final String? contents = await widget.transferGateway?.chooseImportJson();
-    if (contents == null) {
-      return;
+    try {
+      final contents = await widget.transferGateway?.chooseImportJson();
+      if (contents == null || !context.mounted) return;
+      await _chooseAndImportBundle(
+        context,
+        contents,
+        source: context.l10n.jsonFile,
+        kind: LibraryImportSourceKind.file,
+      );
+    } on Object catch (error) {
+      if (context.mounted) _showImportError(context, error);
     }
-    if (!context.mounted) {
-      return;
+  }
+
+  Future<void> _chooseAndImportBundle(
+    BuildContext context,
+    String contents, {
+    required String source,
+    required LibraryImportSourceKind kind,
+  }) async {
+    try {
+      final resources = LibraryBundle.preview(contents);
+      final ids = await showDialog<Set<String>>(
+        context: context,
+        builder: (context) => LibraryInstallSelectionDialog(
+          resources: resources,
+          preselect: kind == LibraryImportSourceKind.file,
+        ),
+      );
+      if (ids == null || ids.isEmpty || !context.mounted) return;
+      await _prepareAndCommitImport(
+        context,
+        prepare: () => widget.viewModel.prepareBundleJson(
+          LibraryBundle.select(contents, ids),
+          resolveOnline: resources.any(
+            (item) => ids.contains(item.id) && item.updateUrl != null,
+          ),
+        ),
+        source: source,
+        kind: kind,
+        reviewOnline: false,
+      );
+    } on Object catch (error) {
+      if (context.mounted) _showImportError(context, error);
     }
-    await _prepareAndCommitImport(
-      context,
-      prepare: () =>
-          widget.viewModel.prepareBundleJson(contents, resolveOnline: true),
-      source: context.l10n.jsonFile,
-      kind: LibraryImportSourceKind.file,
-    );
   }
 
   Future<void> _importLink(BuildContext context) async {
@@ -442,39 +585,47 @@ class LibraryScreenState extends State<LibraryScreen> {
     required Future<LibraryBundleImportResult> Function() prepare,
     required String source,
     required LibraryImportSourceKind kind,
+    bool reviewOnline = true,
   }) async {
     try {
       final LibraryBundleImportResult result = await prepare();
       if (!context.mounted) {
         return;
       }
-      final bool confirmed = await showLibraryImportReviewDialog(
-        context,
-        result,
-        onOpenExternalLink: widget.onOpenExternalLink,
-      );
+      final bool confirmed =
+          !reviewOnline ||
+          await showLibraryImportReviewDialog(
+            context,
+            result,
+            onOpenExternalLink: widget.onOpenExternalLink,
+          );
       if (!confirmed || !context.mounted) {
         return;
       }
-      await widget.viewModel.commitBundleImport(
+      final committed = await widget.viewModel.commitBundleImport(
         result,
         source: source,
         kind: kind,
       );
       if (context.mounted) {
-        _showImportFeedback(context, result);
+        _showImportFeedback(context, committed);
       }
     } on Object catch (error) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              context.l10n.couldNotImportThisResourceBundleError(error),
-            ),
-          ),
-        );
+        _showImportError(context, error);
       }
     }
+  }
+
+  void _showImportError(BuildContext context, Object error) => _showMessage(
+    context,
+    context.l10n.couldNotImportThisResourceBundleError(error),
+  );
+
+  void _showMessage(BuildContext context, String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _showImportFeedback(
@@ -625,11 +776,17 @@ class _ResourceSelectionBar extends StatelessWidget {
     required this.selectionCount,
     required this.onDelete,
     required this.onClear,
+    required this.onExport,
+    required this.onSend,
+    required this.sending,
   });
 
   final int selectionCount;
   final VoidCallback onDelete;
   final VoidCallback onClear;
+  final VoidCallback? onExport;
+  final VoidCallback? onSend;
+  final bool sending;
 
   @override
   Widget build(BuildContext context) {
@@ -657,23 +814,52 @@ class _ResourceSelectionBar extends StatelessWidget {
                 context,
               ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
-            const Spacer(),
-            DesktopActionButton(
-              key: const Key('resource-delete-selection'),
-              onPressed: onDelete,
-              icon: const Icon(Icons.delete_outline_rounded, size: 16),
-              label: context.l10n.delete,
-              compact: true,
-              tone: DesktopActionTone.danger,
-            ),
-            const SizedBox(width: 6),
-            DesktopActionButton(
-              key: const Key('resource-clear-selection'),
-              onPressed: onClear,
-              icon: const Icon(Icons.close_rounded, size: 15),
-              label: context.l10n.clearSelection2,
-              compact: true,
-              tone: DesktopActionTone.neutral,
+            const SizedBox(width: 8),
+            Expanded(
+              child: Wrap(
+                alignment: WrapAlignment.end,
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  if (onExport != null)
+                    DesktopActionButton(
+                      key: const Key('library-export-selection'),
+                      onPressed: onExport,
+                      icon: const Icon(Icons.save_alt_rounded, size: 16),
+                      label: context.l10n.libraryExportSelection,
+                      compact: true,
+                    ),
+                  if (onSend != null)
+                    DesktopActionButton(
+                      key: const Key('library-send-selection'),
+                      onPressed: sending ? null : onSend,
+                      icon: sending
+                          ? const SizedBox.square(
+                              dimension: 14,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.send_outlined, size: 16),
+                      label: context.l10n.librarySendSelection,
+                      tone: DesktopActionTone.primary,
+                      compact: true,
+                    ),
+                  DesktopActionButton(
+                    key: const Key('resource-delete-selection'),
+                    onPressed: onDelete,
+                    icon: const Icon(Icons.delete_outline_rounded, size: 16),
+                    label: context.l10n.delete,
+                    compact: true,
+                    tone: DesktopActionTone.danger,
+                  ),
+                  DesktopActionButton(
+                    key: const Key('resource-clear-selection'),
+                    onPressed: onClear,
+                    icon: const Icon(Icons.close_rounded, size: 15),
+                    label: context.l10n.clearSelection2,
+                    compact: true,
+                  ),
+                ],
+              ),
             ),
           ],
         ),

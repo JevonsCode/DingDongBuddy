@@ -6218,5 +6218,99 @@
   "clipboardGroupNameInvalid": "Elige un nombre único, no vacío y que no esté reservado.",
   "@clipboardRenameGroup": {"description": "Clipboard group editing."},
   "@clipboardGroupName": {"description": "Clipboard group editing."},
-  "@clipboardGroupNameInvalid": {"description": "Clipboard group editing."}
+  "@clipboardGroupNameInvalid": {"description": "Clipboard group editing."},
+  "resourceManagerStarting": "Abriendo el gestor de recursos…",
+  "@resourceManagerStarting": {
+    "description": "Resource Manager window and bundle sharing controls"
+  },
+  "resourceManagerStartupFailed": "No se pudo abrir el gestor de recursos",
+  "@resourceManagerStartupFailed": {
+    "description": "Resource Manager window and bundle sharing controls"
+  },
+  "resourceManagerRetry": "Reintentar",
+  "@resourceManagerRetry": {
+    "description": "Resource Manager window and bundle sharing controls"
+  },
+  "libraryExportSelection": "Exportar selección",
+  "@libraryExportSelection": {
+    "description": "Resource Manager window and bundle sharing controls"
+  },
+  "librarySendSelection": "Enviar a un equipo",
+  "@librarySendSelection": {
+    "description": "Resource Manager window and bundle sharing controls"
+  },
+  "librarySendBundle": "Enviar recursos seleccionados",
+  "@librarySendBundle": {
+    "description": "Resource Manager window and bundle sharing controls"
+  },
+  "libraryNoShareTargets": "Conecta un equipo vinculado compatible con el intercambio de recursos.",
+  "@libraryNoShareTargets": {
+    "description": "Resource Manager window and bundle sharing controls"
+  },
+  "libraryShareSent": "Recursos enviados.",
+  "@libraryShareSent": {
+    "description": "Resource Manager window and bundle sharing controls"
+  },
+  "libraryShareInProgress": "Consulta el progreso en Dispositivos conectados.",
+  "@libraryShareInProgress": {
+    "description": "Resource Manager window and bundle sharing controls"
+  },
+  "libraryShareFailed": "No se pudieron enviar los recursos. Comprueba la conexión del equipo y vuelve a intentarlo.",
+  "@libraryShareFailed": {
+    "description": "Resource Manager window and bundle sharing controls"
+  },
+  "libraryShareTooLarge": "El paquete supera los 25 MiB. Selecciona menos recursos.",
+  "@libraryShareTooLarge": {
+    "description": "Resource Manager window and bundle sharing controls"
+  },
+  "libraryReceivedBundles": "Recursos recibidos",
+  "@libraryReceivedBundles": {
+    "description": "Resource Manager window and bundle sharing controls"
+  },
+  "libraryReceivedBundlesCount": "Recursos recibidos ({count})",
+  "@libraryReceivedBundlesCount": {
+    "description": "Button for the received resources inbox with its bundle count",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryNoReceivedBundles": "Aquí aparecen los paquetes enviados desde equipos vinculados.",
+  "@libraryNoReceivedBundles": {
+    "description": "Resource Manager window and bundle sharing controls"
+  },
+  "libraryInboxFailed": "No se pudieron abrir los recursos recibidos. Vuelve a intentarlo.",
+  "@libraryInboxFailed": {
+    "description": "Resource Manager window and bundle sharing controls"
+  },
+  "libraryInboxRemove": "Quitar de recibidos",
+  "@libraryInboxRemove": {
+    "description": "Resource Manager window and bundle sharing controls"
+  },
+  "librarySelectImport": "Elige los recursos que quieres instalar",
+  "@librarySelectImport": {
+    "description": "Resource Manager window and bundle sharing controls"
+  },
+  "libraryInstallSelection": "Instalar selección ({count})",
+  "@libraryInstallSelection": {
+    "description": "Installs the specified count of checked resources",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "libraryViewBundle": "Ver recursos",
+  "@libraryViewBundle": {
+    "description": "Resource Manager window and bundle sharing controls"
+  },
+  "libraryEmptyBundle": "Este paquete no contiene recursos para instalar.",
+  "@libraryEmptyBundle": {
+    "description": "Resource Manager window and bundle sharing controls"
+  },
+  "libraryInstallOnlineSources": "Los recursos en línea seleccionados se descargan de las fuentes indicadas.",
+  "@libraryInstallOnlineSources": {
+    "description": "Resource Manager window and bundle sharing controls"
+  }
 }

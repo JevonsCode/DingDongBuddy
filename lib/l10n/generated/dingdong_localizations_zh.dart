@@ -4705,4 +4705,71 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
 
   @override
   String get clipboardGroupNameInvalid => '请输入未使用的名称，不能为空或使用系统保留名称。';
+
+  @override
+  String get resourceManagerStarting => '正在打开资源管理…';
+
+  @override
+  String get resourceManagerStartupFailed => '无法打开资源管理';
+
+  @override
+  String get resourceManagerRetry => '重试';
+
+  @override
+  String get libraryExportSelection => '导出所选';
+
+  @override
+  String get librarySendSelection => '发送到电脑';
+
+  @override
+  String get librarySendBundle => '发送所选资源';
+
+  @override
+  String get libraryNoShareTargets => '请连接一台支持资源收发的已配对电脑。';
+
+  @override
+  String get libraryShareSent => '资源已发送。';
+
+  @override
+  String get libraryShareInProgress => '可在「设备连接」查看传输进度。';
+
+  @override
+  String get libraryShareFailed => '无法发送资源，请检查电脑连接后重试。';
+
+  @override
+  String get libraryShareTooLarge => '资源包超过 25 MiB，请减少勾选项。';
+
+  @override
+  String get libraryReceivedBundles => '收到的资源';
+
+  @override
+  String libraryReceivedBundlesCount(int count) {
+    return '收到的资源（$count）';
+  }
+
+  @override
+  String get libraryNoReceivedBundles => '已配对电脑发来的资源包会显示在这里。';
+
+  @override
+  String get libraryInboxFailed => '无法打开收到的资源，请重试。';
+
+  @override
+  String get libraryInboxRemove => '从收件箱移除';
+
+  @override
+  String get librarySelectImport => '选择要安装的资源';
+
+  @override
+  String libraryInstallSelection(int count) {
+    return '安装所选（$count）';
+  }
+
+  @override
+  String get libraryViewBundle => '查看资源';
+
+  @override
+  String get libraryEmptyBundle => '此资源包没有可安装的资源。';
+
+  @override
+  String get libraryInstallOnlineSources => '选中的在线资源将从列表所示来源下载。';
 }

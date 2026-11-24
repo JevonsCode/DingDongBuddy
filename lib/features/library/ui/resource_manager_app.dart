@@ -25,6 +25,7 @@ import 'package:dingdong/features/issue_center/domain/app_issue.dart';
 import 'package:dingdong/features/issue_center/ui/issue_center_controller.dart';
 import 'package:dingdong/features/issue_center/ui/issue_center_screen.dart';
 import 'package:dingdong/features/jev/ui/jev_plugin_section.dart';
+import 'package:dingdong/features/library/domain/library_share_gateway.dart';
 import 'package:dingdong/features/library/domain/resource_manager_launcher.dart';
 import 'package:dingdong/features/library/ui/library_screen.dart';
 import 'package:dingdong/features/library/ui/library_view_model.dart';
@@ -36,6 +37,7 @@ import 'package:dingdong/features/settings/ui/settings_view_model.dart';
 import 'package:dingdong/features/token_usage/ui/token_usage_controller.dart';
 import 'package:dingdong/features/token_usage/ui/token_usage_screen.dart';
 import 'package:dingdong/platform/file_selector_library_transfer_gateway.dart';
+import 'package:dingdong/platform/multi_window_library_share_gateway.dart';
 import 'package:dingdong/platform/native_agent_conversation_launcher.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -52,6 +54,7 @@ class ResourceManagerApp extends StatefulWidget {
     required this.settings,
     required this.windowController,
     this.agentAdapterController,
+    this.libraryShareGateway,
     this.agentInstallGateway,
     this.initialDestination = ResourceManagerDestination.resources,
     this.openClipboardCategoriesOnLaunch = false,
@@ -79,6 +82,7 @@ class ResourceManagerApp extends StatefulWidget {
   final Future<void> Function()? onCloseTokenUsage;
   final AiCompanionController? aiCompanionController;
   final LibraryViewModel viewModel;
+  final LibraryShareGateway? libraryShareGateway;
   final ClipboardViewModel clipboardViewModel;
   final ActivityController activityController;
   final IssueCenterController issueCenterController;
@@ -148,6 +152,8 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
             }
             await _selectDestination(destination);
             await windowManager.focus();
+          case libraryInboxChangedMethod:
+            await _libraryScreenKey.currentState?.reloadReceivedBundles();
           case 'clipboard_changed':
             widget.clipboardViewModel.load();
           case agentActivityChangedMethod:
@@ -339,6 +345,7 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
                       ResourceManagerDestination.resources => LibraryScreen(
                         key: _libraryScreenKey,
                         viewModel: widget.viewModel,
+                        shareGateway: widget.libraryShareGateway,
                         skillAgents: _skillDeliveryAgents(),
                         transferGateway: FileSelectorLibraryTransferGateway(
                           () => appLocalizationsFor(widget.settings.language),
