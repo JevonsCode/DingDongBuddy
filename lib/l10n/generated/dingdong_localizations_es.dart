@@ -4080,14 +4080,14 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   String get lanComputerOnly => 'Red privada · Reconexión automática';
 
   @override
-  String get lanEnterOtherCode => 'Introduce el código de este ordenador';
+  String get lanEnterOtherCode => 'Selecciona este equipo para usar su código';
 
   @override
   String get lanGenerateCode => 'Generar código';
 
   @override
   String get lanGenerateHint =>
-      'Genera un código en un ordenador y selecciónalo e introduce el código en el otro.';
+      'Introduce los seis dígitos del otro equipo o genera un código aquí para introducirlo allí. DingDong puede buscar el código en línea. Los equipos intercambian los datos directamente por la red privada.';
 
   @override
   String get lanNearbyComputers => 'Ordenadores cercanos';
@@ -4101,7 +4101,7 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get lanNoComputers =>
-      'La lista busca equipos en la misma subred. Si están en subredes distintas, genera un código en el otro equipo y búscalo por su IP privada.';
+      'No se encontraron equipos cercanos. Introduce el código arriba o busca por IP privada abajo.';
 
   @override
   String get lanLookupUnavailable =>
@@ -4109,14 +4109,29 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
 
   @override
   String get lanPairingFailed =>
-      'No se pudo vincular. Comprueba el código y la red local. Genera otro código si caducó o alcanzó 5 intentos.';
+      'No se pudo enlazar. Comprueba el código y la conexión entre los equipos. Si la búsqueda por código no funciona, selecciona el equipo en la lista o búscalo por su IP privada e introduce su código.';
 
   @override
   String get lanRefresh => 'Actualizar';
 
   @override
-  String get lanSelectAndEnterCode =>
-      'Selecciona un ordenador e introduce sus 6 dígitos.';
+  String get lanEnterSixDigits =>
+      'Introduce el código de 6 dígitos que aparece en el otro equipo.';
+
+  @override
+  String get lanClearPeer => 'Quitar la selección y conectar por código';
+
+  @override
+  String get lanGenerateFailed =>
+      'No se pudo generar el código. Comprueba la conexión a la red privada e inténtalo de nuevo.';
+
+  @override
+  String get lanCodeLookupUnavailable =>
+      'La búsqueda de códigos en línea no está disponible. En el otro equipo, selecciona este equipo en la lista o búscalo por su IP privada e introduce este código.';
+
+  @override
+  String get lanStillWorking =>
+      'Aún se espera el resultado. Puedes cerrar esta ventana y consultar la lista de dispositivos.';
 
   @override
   String get lanSixDigitCode => 'Código de 6 dígitos';

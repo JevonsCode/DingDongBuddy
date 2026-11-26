@@ -7019,7 +7019,7 @@ abstract class DingDongLocalizations {
   /// LAN-only computer discovery and six-digit pairing.
   ///
   /// In en, this message translates to:
-  /// **'Enter this computer’s pairing code below'**
+  /// **'Select to use this computer’s code'**
   String get lanEnterOtherCode;
 
   /// LAN-only computer discovery and six-digit pairing.
@@ -7031,7 +7031,7 @@ abstract class DingDongLocalizations {
   /// LAN-only computer discovery and six-digit pairing.
   ///
   /// In en, this message translates to:
-  /// **'Generate a code on one computer, then select it and enter the code on the other.'**
+  /// **'Enter the six digits shown on the other computer, or generate a code here for the other computer to enter. DingDong can look up the code online. Paired computers exchange data directly over your private network.'**
   String get lanGenerateHint;
 
   /// LAN-only computer discovery and six-digit pairing.
@@ -7055,7 +7055,7 @@ abstract class DingDongLocalizations {
   /// LAN-only computer discovery and six-digit pairing.
   ///
   /// In en, this message translates to:
-  /// **'Nearby computers must be on the same subnet. For a different subnet, generate a code on the other computer and find it by its private IP.'**
+  /// **'No nearby computers found. Enter a code above or search by private IP below.'**
   String get lanNoComputers;
 
   /// A manually addressed computer did not respond to a pairing lookup.
@@ -7067,7 +7067,7 @@ abstract class DingDongLocalizations {
   /// LAN-only computer discovery and six-digit pairing.
   ///
   /// In en, this message translates to:
-  /// **'Could not pair. Check the code and LAN connection. If the code expired or reached 5 attempts, generate a new one.'**
+  /// **'Could not pair. Check the code and that the computers can reach each other. If code lookup is unavailable, select the computer from the nearby list or find it by private IP, then enter its code.'**
   String get lanPairingFailed;
 
   /// LAN-only computer discovery and six-digit pairing.
@@ -7079,8 +7079,32 @@ abstract class DingDongLocalizations {
   /// LAN-only computer discovery and six-digit pairing.
   ///
   /// In en, this message translates to:
-  /// **'Select a nearby computer and enter its 6-digit code.'**
-  String get lanSelectAndEnterCode;
+  /// **'Enter the 6-digit code shown on the other computer.'**
+  String get lanEnterSixDigits;
+
+  /// Desktop computer pairing dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear selection and connect by code'**
+  String get lanClearPeer;
+
+  /// Desktop computer pairing dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not generate a pairing code. Check the private network connection and try again.'**
+  String get lanGenerateFailed;
+
+  /// Desktop computer pairing dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Online code lookup is unavailable. On the other computer, select this computer from the nearby list or search for its private IP, then enter this code.'**
+  String get lanCodeLookupUnavailable;
+
+  /// Desktop computer pairing dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Still waiting for the result. You can close this window and check your connected devices.'**
+  String get lanStillWorking;
 
   /// LAN-only computer discovery and six-digit pairing.
   ///

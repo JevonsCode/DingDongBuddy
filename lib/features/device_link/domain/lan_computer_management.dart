@@ -27,10 +27,12 @@ abstract interface class LanComputerManagement implements Listenable {
   String? computerAddressOf(String deviceId);
   Future<void> setComputerAddress(String deviceId, String address);
   String? get computerPairingCode;
+  bool get codeLookupAvailable;
   String? get computerDiscoveryError;
   Future<void> refreshComputers();
   Future<void> discoverComputerAddress(String address);
   Future<void> beginComputerPairing();
   Future<void> cancelComputerPairing();
+  Future<void> joinComputer(String code);
   Future<void> joinNearbyComputer(String deviceId, String code);
 }

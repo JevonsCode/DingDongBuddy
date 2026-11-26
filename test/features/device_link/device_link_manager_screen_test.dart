@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -8,6 +9,7 @@ import 'package:dingdong/features/device_link/domain/device_link_models.dart';
 import 'package:dingdong/features/device_link/domain/file_transfer.dart';
 import 'package:dingdong/features/device_link/domain/lan_computer_management.dart';
 import 'package:dingdong/features/device_link/ui/device_link_dialog.dart';
+import 'package:dingdong/platform/multi_window_device_link_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -464,6 +466,130 @@ void main() {
     expect(controller.beganPairing, isTrue);
   });
 
+  testWidgets('code alone joins while the nearby list is still loading', (
+    tester,
+  ) async {
+    final pending = Completer<void>();
+    final controller = _FakeManagement(includeDevice: false)
+      ..nearbyComputers = []
+      ..discoveryPending = pending;
+    await _pumpManager(tester, controller: controller);
+    await tester.tap(find.byKey(const Key('device-join-computer')));
+    await tester.pumpAndSettle();
+    final input = find.byKey(const Key('device-computer-pairing-input'));
+    final submit = find.byKey(const Key('device-computer-pairing-submit'));
+    await tester.enterText(input, '0123');
+    await tester.tap(submit);
+    await tester.pump();
+    expect(
+      find.text('Enter the 6-digit code shown on the other computer.'),
+      findsOneWidget,
+    );
+    expect(controller.joinedComputerLink, isNull);
+    await tester.enterText(input, '012345');
+    await tester.tap(submit);
+    await tester.pumpAndSettle();
+    expect(controller.joinedComputerLink, '012345');
+    expect(controller.selectedPeer, isNull);
+    expect(
+      find.byKey(const Key('device-computer-pairing-dialog')),
+      findsNothing,
+    );
+    pending.complete();
+    await tester.pump();
+  });
+
+  testWidgets(
+    'a delayed host reply keeps the join pending and allows dismissing the dialog',
+    (tester) async {
+      final result = Completer<void>();
+      final controller = _FakeManagement(includeDevice: false)
+        ..joinPending = result;
+      await _pumpManager(tester, controller: controller);
+      await tester.tap(find.byKey(const Key('device-join-computer')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('device-computer-pairing-input')),
+        '012345',
+      );
+      await tester.tap(find.byKey(const Key('device-computer-pairing-submit')));
+      await tester.pump();
+      await tester.pump(const Duration(minutes: 1));
+      expect(
+        find.textContaining('Still waiting for the result.'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Could not pair.'), findsNothing);
+      await tester.tap(find.text('Close'));
+      await tester.pumpAndSettle();
+      result.complete();
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const Key('device-computer-pairing-dialog')),
+        findsNothing,
+      );
+      expect(find.byKey(const Key('device-join-computer')), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'code lookup failure and local discovery warning both remain actionable',
+    (tester) async {
+      final controller = _FakeManagement(includeDevice: false)
+        ..discoveryError = 'access_denied'
+        ..codeLookupAvailable = false
+        ..joinFailure = TimeoutException('Code lookup timed out');
+      await _pumpManager(tester, controller: controller);
+      await tester.tap(find.byKey(const Key('device-join-computer')));
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining('Online code lookup is unavailable.'),
+        findsNothing,
+      );
+      await tester.tap(find.byKey(const Key('device-computer-generate-code')));
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining('Online code lookup is unavailable.'),
+        findsOneWidget,
+      );
+      await tester.enterText(
+        find.byKey(const Key('device-computer-pairing-input')),
+        '012345',
+      );
+      await tester.tap(find.byKey(const Key('device-computer-pairing-submit')));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Could not pair.'), findsOneWidget);
+      expect(
+        find.textContaining('Local network access was denied.'),
+        findsOneWidget,
+      );
+      expect(controller.joinedComputerLink, '012345');
+      expect(controller.selectedPeer, isNull);
+    },
+  );
+
+  test(
+    'host receives a six-digit code with no selected peer and reports online availability',
+    () async {
+      final controller = _FakeManagement(includeDevice: false)
+        ..nearbyComputers = [];
+      expect(
+        isDeviceLinkManagerHostMethod(deviceLinkManagerJoinComputerMethod),
+        isTrue,
+      );
+      await handleDeviceLinkManagerHostCall(
+        controller,
+        const MethodCall(deviceLinkManagerJoinComputerMethod, '012345'),
+      );
+      expect(controller.joinedComputerLink, '012345');
+      expect(controller.selectedPeer, isNull);
+      expect(
+        encodeDeviceLinkManagerSnapshot(controller)['codeLookupAvailable'],
+        isTrue,
+      );
+    },
+  );
+
   testWidgets(
     'another computer can be joined using six digits and nearby discovery',
     (WidgetTester tester) async {
@@ -514,6 +640,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(controller.joinedComputerLink, pairingLink);
+      expect(controller.selectedPeer, 'nearby');
       expect(
         find.byKey(const Key('device-computer-pairing-dialog')),
         findsNothing,
@@ -716,16 +843,25 @@ final class _FakeManagement extends ChangeNotifier
        );
 
   @override
-  List<NearbyComputer> get nearbyComputers => const [
+  List<NearbyComputer> nearbyComputers = const [
     NearbyComputer(id: 'nearby', name: '另一台电脑', pairing: true),
   ];
   @override
   String? computerPairingCode;
+  @override
+  bool codeLookupAvailable = true;
+  Completer<void>? discoveryPending;
+  Completer<void>? joinPending;
+  Object? joinFailure;
+  String? selectedPeer;
   String? discoveryError;
   @override
   String? get computerDiscoveryError => discoveryError;
   @override
-  Future<void> refreshComputers() async {}
+  Future<void> refreshComputers() async {
+    await discoveryPending?.future;
+  }
+
   bool lookupFails = false;
   String? discoveredAddress;
   @override
@@ -747,6 +883,7 @@ final class _FakeManagement extends ChangeNotifier
 
   @override
   Future<void> joinNearbyComputer(String deviceId, String code) async {
+    selectedPeer = deviceId;
     joinedComputerLink = code;
   }
 
@@ -840,6 +977,8 @@ final class _FakeManagement extends ChangeNotifier
   @override
   Future<void> joinComputer(String pairingLink) async {
     joinedComputerLink = pairingLink;
+    await joinPending?.future;
+    if (joinFailure case final failure?) throw failure;
   }
 
   @override

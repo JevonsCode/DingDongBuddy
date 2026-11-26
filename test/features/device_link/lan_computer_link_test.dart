@@ -93,6 +93,72 @@ void main() {
     },
   );
   test(
+    'code registration and TCP survive an exclusive UDP bind and retain the invite on recovery',
+    () async {
+      final udp = await RawDatagramSocket.bind(
+        InternetAddress.anyIPv4,
+        0,
+        reuseAddress: false,
+      );
+      addTearDown(udp.close);
+      final port = udp.port;
+      final tcp = await ServerSocket.bind(InternetAddress.anyIPv4, port);
+      addTearDown(tcp.close);
+
+      final service = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      addTearDown(() => service.close(force: true));
+      var registrations = 0;
+      service.listen((request) async {
+        final socket = await WebSocketTransformer.upgrade(request);
+        registrations++;
+        socket.add(jsonEncode({'type': 'relay', 'event': 'ready'}));
+        await socket.drain<void>();
+      });
+      final link =
+          LanComputerLink(
+              discoveryPort: port,
+              discoveryBaseUrl: Uri.parse('http://127.0.0.1:${service.port}'),
+            )
+            ..identity = const LocalDeviceIdentity(
+              id: 'independent-host',
+              name: 'Fixture host',
+              platform: 'test',
+            );
+      addTearDown(link.close);
+      await link.start();
+      expect(link.discoveryListenPort, isNull);
+      expect(link.routedListenPort, isNull);
+      expect(link.error, isIn(['address_in_use', 'access_denied']));
+      final tcpSessionPort = link.advertisement['port'];
+      expect(tcpSessionPort, isA<int>());
+
+      await tcp.close();
+      await link.beginPairing();
+      expect(link.routedListenPort, port);
+      expect(link.discoveryListenPort, isNull);
+      expect(link.codeLookupAvailable, isTrue);
+      final code = link.pairingCode!;
+      await link.refresh();
+      expect(link.error, isIn(['address_in_use', 'access_denied']));
+      final prefixes = await readLanSubnets();
+      expect(link.localAddresses.toSet(), {
+        for (final subnet in prefixes)
+          if (LanComputerLink.isLanAddress(subnet.address))
+            subnet.address.address,
+      });
+
+      udp.close();
+      await _until(
+        () => link.discoveryListenPort == port && link.error == null,
+      );
+      expect(link.advertisement['port'], tcpSessionPort);
+      expect(link.routedListenPort, port);
+      expect(link.pairingCode, code);
+      expect(link.codeLookupAvailable, isTrue);
+      expect(registrations, 1);
+    },
+  );
+  test(
     'refresh keeps local IP metadata available when discovery startup fails',
     () async {
       var reads = 0;

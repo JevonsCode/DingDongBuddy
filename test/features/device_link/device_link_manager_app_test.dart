@@ -139,6 +139,46 @@ void main() {
   );
 
   test(
+    'child window sends only the code and refreshes the host registration status',
+    () async {
+      const channels = MethodChannel('mixin.one/desktop_multi_window/channels');
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      String? joinedCode;
+      var snapshotFails = false;
+      messenger.setMockMethodCallHandler(channels, (call) async {
+        final args = call.arguments as Map;
+        if (args['method'] == deviceLinkManagerJoinComputerMethod) {
+          joinedCode = args['arguments'] as String;
+        }
+        if (args['method'] == deviceLinkManagerSnapshotMethod) {
+          if (snapshotFails) throw PlatformException(code: 'snapshot_failed');
+          return {
+            'localDevice': {
+              'id': 'fixture-host',
+              'name': 'Host',
+              'platform': 'macos',
+            },
+            'codeLookupAvailable': true,
+          };
+        }
+        return null;
+      });
+      addTearDown(() => messenger.setMockMethodCallHandler(channels, null));
+      final remote = RemoteDeviceLinkManagement(
+        parentController: WindowController.fromWindowId('fixture-main'),
+      );
+      addTearDown(remote.dispose);
+      await remote.joinComputer('012345');
+      expect(joinedCode, '012345');
+      expect(remote.codeLookupAvailable, isTrue);
+      snapshotFails = true;
+      await remote.joinComputer('654321');
+      expect(joinedCode, '654321');
+    },
+  );
+
+  test(
     'child window reloads local IP and discovery error after a failed refresh',
     () async {
       const channels = MethodChannel('mixin.one/desktop_multi_window/channels');

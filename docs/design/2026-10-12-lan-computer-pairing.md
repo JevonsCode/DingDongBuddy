@@ -1,9 +1,10 @@
 # Private-network computer pairing
 
-One computer generates a six-digit code. The other selects it from nearby
-computers and enters that code. As of 1.11.12, the second computer can also enter
-a private IPv4 address to find a peer on a reachable routed subnet. Paired
-computers reconnect automatically. Phone QR pairing retains its own protocol.
+One computer generates a six-digit invitation. The other can enter that code
+directly, select a nearby computer, or look up a private IPv4 address. The
+discovery service helps the two desktops exchange addresses. Clipboard,
+files, and pairing credentials travel over their authenticated TCP connection.
+Phone QR pairing retains its separate protocol.
 
 ## Implementation
 
@@ -24,13 +25,23 @@ computers reconnect automatically. Phone QR pairing retains its own protocol.
   Windows adapters or macOS Ethernet/Wi-Fi interfaces. They use TTL 1 and an
   explicit local source address. IPv6-only LANs and other desktop platforms are
   currently unsupported.
-- An explicitly entered RFC 1918 address outside the physical subnet is queried
-  through TCP on port 45893. The receiving computer answers lookup only while
-  its pairing code is active. After SRP authentication, each computer saves the
-  authenticated peer IP for reconnect. Previous pairings keep their existing
-  scope. Routed sessions use the operating system route and retain the size
-  limit for transfers outside a verified physical LAN. There is no public relay
-  for computer-to-computer sessions.
+- Code-only discovery uses a five-minute WebSocket reservation. Two public digits
+  locate a slot. The other four digits remain secret. A discovery-specific SRP
+  exchange proves knowledge of the code before the host discloses its encrypted
+  identity and addresses. The host enforces a shared five-attempt limit. A
+  successful discovery proof allows the subsequent direct pairing handshake.
+  A busy slot triggers a new code. Offline, existing nearby and IP lookup are
+  available.
+- Already paired devices derive a private discovery slot and a separate
+  encryption key from their saved pair secret. Fresh challenges, device IDs
+  and directions bind address responses to this exchange. This also applies to
+  pairs saved before assisted discovery was introduced. Manually disconnecting
+  or forgetting a device closes its discovery channel.
+- Directed lookup and authenticated reconnect use TCP on port 45893. A new
+  private address received through paired discovery can replace a stale route.
+  Each direct connection must prove the existing pair key. Routed connections
+  keep the existing size policy for transfers outside a verified physical LAN.
+  The computer protocol has no relay fallback for user data.
 - Discovery keeps multiple addresses per identity. Active connections retain their
   address; reconnect tries alternatives when one adapter cannot accept TCP.
 - Pairing uses SRP-6a, the fixed RFC 5054 2048-bit group, SHA-256, random 256-bit

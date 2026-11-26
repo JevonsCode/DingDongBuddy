@@ -5147,7 +5147,7 @@
   "@lanComputerOnly": {
     "description": "LAN-only computer discovery and six-digit pairing."
   },
-  "lanEnterOtherCode": "Enter this computer’s pairing code below",
+  "lanEnterOtherCode": "Select to use this computer’s code",
   "@lanEnterOtherCode": {
     "description": "LAN-only computer discovery and six-digit pairing."
   },
@@ -5155,7 +5155,7 @@
   "@lanGenerateCode": {
     "description": "LAN-only computer discovery and six-digit pairing."
   },
-  "lanGenerateHint": "Generate a code on one computer, then select it and enter the code on the other.",
+  "lanGenerateHint": "Enter the six digits shown on the other computer, or generate a code here for the other computer to enter. DingDong can look up the code online. Paired computers exchange data directly over your private network.",
   "@lanGenerateHint": {
     "description": "LAN-only computer discovery and six-digit pairing."
   },
@@ -5171,7 +5171,7 @@
   "@lanNewCode": {
     "description": "LAN-only computer discovery and six-digit pairing."
   },
-  "lanNoComputers": "Nearby computers must be on the same subnet. For a different subnet, generate a code on the other computer and find it by its private IP.",
+  "lanNoComputers": "No nearby computers found. Enter a code above or search by private IP below.",
   "@lanNoComputers": {
     "description": "LAN-only computer discovery and six-digit pairing."
   },
@@ -5179,7 +5179,7 @@
   "@lanLookupUnavailable": {
     "description": "A manually addressed computer did not respond to a pairing lookup."
   },
-  "lanPairingFailed": "Could not pair. Check the code and LAN connection. If the code expired or reached 5 attempts, generate a new one.",
+  "lanPairingFailed": "Could not pair. Check the code and that the computers can reach each other. If code lookup is unavailable, select the computer from the nearby list or find it by private IP, then enter its code.",
   "@lanPairingFailed": {
     "description": "LAN-only computer discovery and six-digit pairing."
   },
@@ -5187,9 +5187,25 @@
   "@lanRefresh": {
     "description": "LAN-only computer discovery and six-digit pairing."
   },
-  "lanSelectAndEnterCode": "Select a nearby computer and enter its 6-digit code.",
-  "@lanSelectAndEnterCode": {
+  "lanEnterSixDigits": "Enter the 6-digit code shown on the other computer.",
+  "@lanEnterSixDigits": {
     "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "lanClearPeer": "Clear selection and connect by code",
+  "@lanClearPeer": {
+    "description": "Desktop computer pairing dialog."
+  },
+  "lanGenerateFailed": "Could not generate a pairing code. Check the private network connection and try again.",
+  "@lanGenerateFailed": {
+    "description": "Desktop computer pairing dialog."
+  },
+  "lanCodeLookupUnavailable": "Online code lookup is unavailable. On the other computer, select this computer from the nearby list or search for its private IP, then enter this code.",
+  "@lanCodeLookupUnavailable": {
+    "description": "Desktop computer pairing dialog."
+  },
+  "lanStillWorking": "Still waiting for the result. You can close this window and check your connected devices.",
+  "@lanStillWorking": {
+    "description": "Desktop computer pairing dialog."
   },
   "lanSixDigitCode": "6-digit pairing code",
   "@lanSixDigitCode": {
