@@ -573,14 +573,43 @@ final class LanComputerLink extends ChangeNotifier {
     if (!_isRoutedAddress(address)) {
       throw const SocketException('Private IPv4 address required');
     }
-    return LanWire(
-      await Socket.connect(
-        address,
-        _routedDiscoveryPort,
-        timeout: _routedTimeout,
-      ),
-      routed: true,
+    Future<Socket> connect([InternetAddress? source]) => Socket.connect(
+      address,
+      _routedDiscoveryPort,
+      sourceAddress: source,
+      timeout: _routedTimeout,
     );
+
+    Socket socket;
+    try {
+      socket = await connect();
+    } on SocketException {
+      // A tunnel can own the default route to a peer that also has a
+      // reachable route from Wi-Fi or Ethernet.
+      final sources = _subnets
+          .map((s) => s.address)
+          .where((source) => isLanAddress(source) && !source.isLinkLocal)
+          .toSet();
+      Socket? fallback;
+      for (final source in sources) {
+        if (_closed) break;
+        try {
+          fallback = await connect(source);
+          break;
+        } on SocketException {
+          // The interface may be disconnected or unable to route to the peer.
+        }
+      }
+      if (fallback == null) rethrow;
+      socket = fallback;
+    }
+    try {
+      if (_closed) throw const SocketException('LAN service closed');
+      return LanWire(socket, routed: true);
+    } catch (_) {
+      socket.destroy();
+      rethrow;
+    }
   }
 
   Future<LanWire> _dialPeer(String id, {bool pairing = false}) async {

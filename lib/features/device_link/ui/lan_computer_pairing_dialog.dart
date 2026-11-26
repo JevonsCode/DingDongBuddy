@@ -59,13 +59,13 @@ class _LanComputerPairingDialogState extends State<LanComputerPairingDialog> {
     } catch (failure) {
       if (mounted) {
         setState(() {
-          if (address && failure is FormatException) {
-            _addressError = context.l10n.deviceAddressInvalid;
+          if (address) {
+            _addressError = failure is FormatException
+                ? context.l10n.deviceAddressInvalid
+                : context.l10n.lanLookupUnavailable;
           } else {
             _generalError = finish
                 ? context.l10n.lanPairingFailed
-                : address
-                ? context.l10n.lanLookupUnavailable
                 : context.l10n.lanNetworkHelp;
           }
         });

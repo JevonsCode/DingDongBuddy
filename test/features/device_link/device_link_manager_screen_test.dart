@@ -78,6 +78,30 @@ void main() {
     },
   );
 
+  testWidgets('IP lookup failure stays visible during a discovery warning', (
+    tester,
+  ) async {
+    final controller = _FakeManagement(includeDevice: false)
+      ..discoveryError = 'network'
+      ..lookupFails = true;
+    await _pumpManager(
+      tester,
+      controller: controller,
+      locale: const Locale('zh'),
+    );
+    await tester.tap(find.byKey(const Key('device-join-computer')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('device-computer-find-address')),
+      '10.20.1.2',
+    );
+    await tester.tap(
+      find.byKey(const Key('device-computer-find-address-submit')),
+    );
+    await tester.pumpAndSettle();
+    expect(find.textContaining('对方已生成有效配对码'), findsOneWidget);
+  });
+
   for (final route in [
     DeviceLinkActiveTransport.localNetwork,
     DeviceLinkActiveTransport.serviceRelay,
@@ -702,9 +726,11 @@ final class _FakeManagement extends ChangeNotifier
   String? get computerDiscoveryError => discoveryError;
   @override
   Future<void> refreshComputers() async {}
+  bool lookupFails = false;
   String? discoveredAddress;
   @override
   Future<void> discoverComputerAddress(String address) async {
+    if (lookupFails) throw const SocketException('lookup failed');
     discoveredAddress = address;
   }
 

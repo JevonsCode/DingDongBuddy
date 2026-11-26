@@ -195,6 +195,50 @@ void main() {
       expect(paired?.id, 'manual-host');
     },
   );
+  test(
+    'routed lookup, pairing and reconnect survive a tunnel timeout',
+    () async {
+      final host = _service('routed-host');
+      addTearDown(host.close);
+      LinkedDevice? hostDevice;
+      host.onPaired = (device) async => hostDevice = device;
+      await host.beginPairing();
+      final peer = _routedPeer(host.routedListenPort!);
+      addTearDown(peer.close);
+      LinkedDevice? peerDevice;
+      peer.onPaired = (device) async => peerDevice = device;
+
+      final networkZone = Zone.current;
+      final attempts = <String?>[];
+      await IOOverrides.runZoned(
+        () async {
+          await peer.discoverAddress('127.0.0.1');
+          expect(peer.nearby.single.id, host.identity.id);
+          await peer.join(host.identity.id, host.pairingCode!);
+          final hostSession = host.session(hostDevice!);
+          final peerSession = peer.session(peerDevice!);
+          await peerSession.connect();
+          await _until(() => peerSession.connected && hostSession.connected);
+          expect(await peerSession.verifyLocalNetwork(), isFalse);
+        },
+        socketConnect:
+            (target, port, {sourceAddress, sourcePort = 0, timeout}) async {
+              attempts.add((sourceAddress as InternetAddress?)?.address);
+              if (sourceAddress == null) {
+                throw const SocketException('Connection timed out');
+              }
+              // Route the simulated adapter to the real loopback peer.
+              return networkZone.run(
+                () => Socket.connect(target, port, timeout: timeout),
+              );
+            },
+      );
+      expect(attempts, [
+        for (var i = 0; i < 3; i++) ...[null, '10.20.0.1'],
+      ]);
+    },
+  );
+
   test('manual discovery can pair from outside the physical subnet', () async {
     final host = _service('routed-host');
     addTearDown(host.close);
