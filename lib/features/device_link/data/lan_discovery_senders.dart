@@ -93,8 +93,9 @@ final class _DiscoverySender {
           while (!_closed) {
             final packet = socket.receive();
             if (packet == null) break;
-            if (multicastGroup != null || packet.address == address)
+            if (multicastGroup != null || packet.address == address) {
               _onReply(packet);
+            }
           }
         },
         onError: (Object _) => _failed(),
