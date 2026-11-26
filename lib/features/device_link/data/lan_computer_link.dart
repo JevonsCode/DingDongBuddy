@@ -28,14 +28,14 @@ final class LanComputerLink extends ChangeNotifier {
       _readSubnets = readLanSubnets;
   @visibleForTesting
   LanComputerLink.loopbackTest({
+    this.discoveryPort = 0,
     DateTime Function()? now,
     int unicastDiscoveryPort = 45893,
     int routedDiscoveryPort = 45893,
     int? linkLocalBroadcastTestPort,
     Future<List<LanSubnet>> Function()? subnetReader,
     Uri? discoveryBaseUrl,
-  }) : discoveryPort = 0,
-       _discovery = LanDiscoveryService.tryCreate(
+  }) : _discovery = LanDiscoveryService.tryCreate(
          discoveryBaseUrl,
          allowLoopbackCandidates: true,
        ),

@@ -114,9 +114,11 @@ void main() {
         socket.add(jsonEncode({'type': 'relay', 'event': 'ready'}));
         await socket.drain<void>();
       });
+      final prefix = LanSubnet(InternetAddress('192.168.42.17'), 24);
       final link =
-          LanComputerLink(
+          LanComputerLink.loopbackTest(
               discoveryPort: port,
+              subnetReader: () async => [prefix],
               discoveryBaseUrl: Uri.parse('http://127.0.0.1:${service.port}'),
             )
             ..identity = const LocalDeviceIdentity(
@@ -140,12 +142,7 @@ void main() {
       final code = link.pairingCode!;
       await link.refresh();
       expect(link.error, isIn(['address_in_use', 'access_denied']));
-      final prefixes = await readLanSubnets();
-      expect(link.localAddresses.toSet(), {
-        for (final subnet in prefixes)
-          if (LanComputerLink.isLanAddress(subnet.address))
-            subnet.address.address,
-      });
+      expect(link.localAddresses, [prefix.address.address]);
 
       udp.close();
       await _until(
