@@ -1,8 +1,37 @@
 # DingDong Cloudflare service
 
-This Worker hosts the phone PWA, the encrypted device-link relay, Web Push, and
-DingDong's bounded install/upgrade counts. Lifecycle statistics use D1 and are
+This Worker hosts the phone PWA, the encrypted device-link relay, desktop peer
+discovery, Web Push, and DingDong's bounded install/upgrade counts. Lifecycle statistics use D1 and are
 independent of clipboard relay traffic.
+
+## Desktop peer discovery
+
+Desktop clients open `/v1/discovery/{slot}?side=host|peer` over WSS. The
+existing `RELAY_ROOMS` binding uses a separate `discovery:` object name prefix.
+Only the first two digits of an invitation appear in its `invite-NN` slot.
+The peers authenticate the remaining digits with SRP. A host reserves its
+slot for five minutes, with one concurrent peer and five peer admissions total.
+When the user cancels or pairing succeeds, the current host sends the local
+control frame `{"type":"release"}` and the Worker immediately frees the slot.
+An unexpected disconnect keeps the slot and its trial count until expiry.
+Each source IP can try eight public reservations and fifteen public lookups per
+fixed minute. Phone and private paired-device connections retain their shared
+60-connection-per-minute allowance. HTTP 404 means no host is present, 409 means the slot or peer position is
+occupied, and 429 indicates a rate or admission limit.
+
+A paired slot uses `pair-` followed by a secret 43-character base64url value.
+Either device can connect first. A reconnect replaces that side's old socket.
+Each socket receives a `relay` message with event `ready`. When both sides
+are present, each receives `host_joined` or `peer_joined` naming its partner.
+Clients initiate exchanges on those events and discard outstanding challenges
+when their partner changes or leaves.
+
+Invitations forward one `hello`, `challenge`, `proof`, `offer` sequence per
+peer. Paired devices exchange `who` and encrypted `addresses` responses.
+The Worker validates frame type, allowed fields, direction, size (4 KiB) and
+rate (12 frames per minute per socket). Only the random lease ID, expiry and admission count
+go into invitation storage. Connection attachments hold protocol state, and
+the desktop clients exchange clipboard and file data over their direct link.
 
 ## Lifecycle-statistics privacy contract
 
