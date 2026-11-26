@@ -3,11 +3,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dingdong/features/device_link/data/device_link_session.dart';
+import 'package:dingdong/features/device_link/data/lan_discovery_senders.dart';
 import 'package:dingdong/features/device_link/data/lan_discovery_service.dart';
 import 'package:dingdong/features/device_link/data/lan_link_local_discovery.dart';
 import 'package:dingdong/features/device_link/data/lan_network_policy.dart';
 import 'package:dingdong/features/device_link/data/lan_pairing_crypto.dart';
-import 'package:dingdong/features/device_link/data/lan_unicast_discovery.dart';
 import 'package:dingdong/features/device_link/data/lan_wire.dart';
 import 'package:dingdong/features/device_link/data/secure_message_codec.dart';
 import 'package:dingdong/features/device_link/domain/device_link_models.dart';
@@ -69,7 +69,11 @@ final class LanComputerLink extends ChangeNotifier {
     _receiveDiscovery,
     loopbackTestPort: _linkLocalBroadcastTestPort,
   );
-  late final _unicastDiscovery = LanUnicastDiscovery(_receiveDiscovery);
+  late final _multicastDiscovery = LanDiscoverySenders(
+    _receiveDiscovery,
+    multicastGroup: _group,
+  );
+  late final _unicastDiscovery = LanDiscoverySenders(_receiveDiscovery);
   @visibleForTesting
   int? get discoveryListenPort => _udp?.port;
   @visibleForTesting
@@ -230,6 +234,7 @@ final class LanComputerLink extends ChangeNotifier {
     } catch (_) {
       _linkLocalDiscovery.reset();
       _unicastDiscovery.reset();
+      _multicastDiscovery.reset();
       _udp?.close();
       _udp = null;
       await _server?.close();
@@ -330,6 +335,7 @@ final class LanComputerLink extends ChangeNotifier {
       _interfaces = [];
       _linkLocalDiscovery.reset();
       _unicastDiscovery.reset();
+      _multicastDiscovery.reset();
       rethrow;
     }
     if (_closed) return;
@@ -410,24 +416,12 @@ final class LanComputerLink extends ChangeNotifier {
     final bytes = utf8.encode(jsonEncode(advertisement));
     _linkLocalDiscovery.announce(bytes);
     if (socket != null && discoveryPort != 0) {
-      for (final iface in _interfaces) {
-        for (final address in iface.addresses.where(
-          (a) => _subnets.any((s) => s.address.address == a.address),
-        )) {
-          try {
-            socket.setRawOption(
-              RawSocketOption(
-                RawSocketOption.levelIPv4,
-                RawSocketOption.IPv4MulticastInterface,
-                address.rawAddress,
-              ),
-            );
-            socket.send(bytes, _group, discoveryPort);
-          } on SocketException {
-            /* An adapter may disappear during enumeration. */
-          }
-        }
-      }
+      _multicastDiscovery.announce(bytes, {
+        for (final iface in _interfaces)
+          for (final address in iface.addresses)
+            if (_subnets.any((s) => s.address.address == address.address))
+              address: {discoveryPort},
+      });
     }
     // A router or adapter can pass multicast in only one direction. Reply to
     // actual discovery senders and keep their view of us fresh across retries.
@@ -921,6 +915,7 @@ final class LanComputerLink extends ChangeNotifier {
     _timer?.cancel();
     _linkLocalDiscovery.reset();
     _unicastDiscovery.reset();
+    _multicastDiscovery.reset();
     _udp?.close();
     _udp = null;
     await _server?.close();

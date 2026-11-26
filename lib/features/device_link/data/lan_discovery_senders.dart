@@ -3,11 +3,15 @@ import 'dart:io';
 
 /// Dart closes a datagram socket after a send error. Use a separate socket per
 /// address so a failed probe cannot close the LAN listener or other probes.
-final class LanUnicastDiscovery {
-  LanUnicastDiscovery(this._onReply);
+final class LanDiscoverySenders {
+  LanDiscoverySenders(this._onReply, {this.multicastGroup});
+
+  /// In multicast mode each key is a local interface address. In unicast
+  /// mode it is the address of the peer from which replies are accepted.
+  final InternetAddress? multicastGroup;
 
   final void Function(Datagram) _onReply;
-  final _senders = <InternetAddress, _UnicastSender>{};
+  final _senders = <InternetAddress, _DiscoverySender>{};
 
   void announce(List<int> bytes, Map<InternetAddress, Set<int>> targets) {
     for (final address in _senders.keys.toList()) {
@@ -16,13 +20,13 @@ final class LanUnicastDiscovery {
     for (final MapEntry(:key, :value) in targets.entries) {
       final sender = _senders.putIfAbsent(
         key,
-        () => _UnicastSender(key, _onReply, _forget),
+        () => _DiscoverySender(key, multicastGroup, _onReply, _forget),
       );
       unawaited(sender.announce(bytes, value));
     }
   }
 
-  void _forget(_UnicastSender sender) {
+  void _forget(_DiscoverySender sender) {
     if (identical(_senders[sender.address], sender)) {
       _senders.remove(sender.address);
     }
@@ -36,19 +40,29 @@ final class LanUnicastDiscovery {
   }
 }
 
-final class _UnicastSender {
-  _UnicastSender(this.address, this._onReply, this._onFailure);
+final class _DiscoverySender {
+  _DiscoverySender(
+    this.address,
+    this.multicastGroup,
+    this._onReply,
+    this._onFailure,
+  );
+
+  final InternetAddress? multicastGroup;
 
   final InternetAddress address;
   final void Function(Datagram) _onReply;
-  final void Function(_UnicastSender) _onFailure;
+  final void Function(_DiscoverySender) _onFailure;
   late final _binding = _bind();
   RawDatagramSocket? _socket;
   bool _closed = false;
 
   Future<RawDatagramSocket?> _bind() async {
     try {
-      final socket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, 0);
+      final socket = await RawDatagramSocket.bind(
+        multicastGroup == null ? InternetAddress.anyIPv4 : address,
+        0,
+      );
       if (_closed) {
         socket.close();
         return null;
@@ -62,13 +76,25 @@ final class _UnicastSender {
           1,
         ),
       );
+      if (multicastGroup != null) {
+        socket.multicastHops = 1;
+        socket.multicastLoopback = false;
+        socket.setRawOption(
+          RawSocketOption(
+            RawSocketOption.levelIPv4,
+            RawSocketOption.IPv4MulticastInterface,
+            address.rawAddress,
+          ),
+        );
+      }
       socket.listen(
         (event) {
           if (event != RawSocketEvent.read) return;
           while (!_closed) {
             final packet = socket.receive();
             if (packet == null) break;
-            if (packet.address == address) _onReply(packet);
+            if (multicastGroup != null || packet.address == address)
+              _onReply(packet);
           }
         },
         onError: (Object _) => _failed(),
@@ -86,7 +112,7 @@ final class _UnicastSender {
     if (_closed || socket == null) return;
     try {
       for (final port in ports) {
-        if (socket.send(bytes, address, port) == 0) break;
+        if (socket.send(bytes, multicastGroup ?? address, port) == 0) break;
       }
     } on SocketException {
       _failed();

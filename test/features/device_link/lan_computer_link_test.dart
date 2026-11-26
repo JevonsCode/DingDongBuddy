@@ -4,9 +4,9 @@ import 'dart:io';
 
 import 'package:dingdong/features/device_link/data/device_link_session.dart';
 import 'package:dingdong/features/device_link/data/lan_computer_link.dart';
+import 'package:dingdong/features/device_link/data/lan_discovery_senders.dart';
 import 'package:dingdong/features/device_link/data/lan_network_policy.dart';
 import 'package:dingdong/features/device_link/data/lan_pairing_crypto.dart';
-import 'package:dingdong/features/device_link/data/lan_unicast_discovery.dart';
 import 'package:dingdong/features/device_link/data/lan_wire.dart';
 import 'package:dingdong/features/device_link/data/secure_message_codec.dart';
 import 'package:dingdong/features/device_link/domain/device_link_models.dart';
@@ -28,7 +28,7 @@ void main() {
       }
     });
     final delivered = Completer<Datagram>();
-    final discovery = LanUnicastDiscovery(delivered.complete);
+    final discovery = LanDiscoverySenders(delivered.complete);
     addTearDown(discovery.reset);
 
     discovery.announce(
@@ -114,7 +114,18 @@ void main() {
         socket.add(jsonEncode({'type': 'relay', 'event': 'ready'}));
         await socket.drain<void>();
       });
-      final prefix = LanSubnet(InternetAddress('192.168.42.17'), 24);
+      // Exercise real multicast interfaces when available without timing an
+      // OS-specific netmask query as part of the socket recovery test.
+      final interfaces = await NetworkInterface.list(
+        type: InternetAddressType.IPv4,
+      );
+      final address =
+          interfaces
+              .expand((iface) => iface.addresses)
+              .where(LanComputerLink.isLanAddress)
+              .firstOrNull ??
+          InternetAddress('192.168.42.17');
+      final prefix = LanSubnet(address, 32);
       final link =
           LanComputerLink.loopbackTest(
               discoveryPort: port,
@@ -148,6 +159,10 @@ void main() {
       await _until(
         () => link.discoveryListenPort == port && link.error == null,
       );
+      final listener = link.discoverySocketForTest;
+      await link.refresh();
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(link.discoverySocketForTest, same(listener));
       expect(link.advertisement['port'], tcpSessionPort);
       expect(link.routedListenPort, port);
       expect(link.pairingCode, code);
