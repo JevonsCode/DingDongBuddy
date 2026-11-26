@@ -1,6 +1,20 @@
+import {
+  discoveryUpgrade,
+  discoveryMessage,
+  discoveryClosed,
+  expireDiscoveryLease,
+  isDiscoverySlot,
+} from "./discovery.js";
 import webPush from "web-push";
 
 const serviceVersion = "1.11.18";
+const rateLimitsPerMinute = new Map([
+  ["invite-host", 8],
+  ["invite-peer", 15],
+  ["connection", 60],
+  ["subscription", 20],
+  ["receipt", 120],
+]);
 const maximumFrameBytes = 256 * 1024;
 const maximumLifecycleTelemetryBytes = 4 * 1024;
 // Web Push providers only guarantee a 4 KiB encrypted message. Keeping the
@@ -73,6 +87,21 @@ export default {
       if (rateLimitResponse) return rateLimitResponse;
       return recordLifecycleTelemetry(request, env);
     }
+    if (url.pathname.startsWith("/v1/discovery/")) {
+      const slot = url.pathname.slice("/v1/discovery/".length);
+      const side = url.searchParams.get("side");
+      if (!isDiscoverySlot(slot) || (side !== "host" && side !== "peer") ||
+          [...url.searchParams].length !== 1) {
+        return jsonResponse({ error: "Invalid discovery request" }, 400);
+      }
+      const methodError = relayMethodError(request, "connection");
+      if (methodError) return methodError;
+      const rateKind = slot.startsWith("invite-") ? `invite-${side}` : "connection";
+      const rateError = await enforceGlobalRateLimit(request, env, rateKind);
+      if (rateError) return rateError;
+      const id = env.RELAY_ROOMS.idFromName(`discovery:${slot}`);
+      return env.RELAY_ROOMS.get(id).fetch(request);
+    }
     const route = relayRoute(url.pathname);
     if (route) {
       const room = route.room;
@@ -102,6 +131,9 @@ export class RelayRoom {
 
   async fetch(request) {
     const url = new URL(request.url);
+    if (url.pathname.startsWith("/v1/discovery/")) {
+      return discoveryUpgrade(this.ctx, url);
+    }
     if (url.pathname === "/internal/push-rate-limit") {
       return this.enforceRateLimit(request);
     }
@@ -164,6 +196,9 @@ export class RelayRoom {
   }
 
   webSocketMessage(socket, message) {
+    if (this.ctx.getTags?.(socket).includes("discovery")) {
+      return discoveryMessage(this.ctx, socket, message);
+    }
     const bytes =
       typeof message === "string"
         ? new TextEncoder().encode(message).byteLength
@@ -179,6 +214,9 @@ export class RelayRoom {
   }
 
   webSocketClose(socket) {
+    if (this.ctx.getTags?.(socket).includes("discovery")) {
+      return discoveryClosed(this.ctx, socket);
+    }
     const attachment = readAttachment(socket);
     if (attachment?.replaced === true) return;
     const sourceSide = attachment?.side;
@@ -204,7 +242,10 @@ export class RelayRoom {
     );
   }
 
-  webSocketError() {
+  webSocketError(socket) {
+    if (this.ctx.getTags?.(socket).includes("discovery")) {
+      return discoveryClosed(this.ctx, socket);
+    }
     // Cloudflare closes the failed socket. No application data is persisted.
   }
 
@@ -389,14 +430,7 @@ export class RelayRoom {
     if (!/^[a-f0-9]{64}$/.test(key)) {
       return jsonResponse({ error: "Invalid rate key" }, 400);
     }
-    const limit =
-      kind === "receipt"
-        ? 120
-        : kind === "connection"
-          ? 60
-          : kind === "subscription"
-            ? 20
-            : 30;
+    const limit = rateLimitsPerMinute.get(kind) ?? 30;
     const minute = Math.floor(Date.now() / 60000);
     const storageKey = `rate:${kind}`;
     const current = await this.ctx.storage.get(storageKey);
@@ -409,6 +443,7 @@ export class RelayRoom {
   }
 
   async alarm() {
+    if (await expireDiscoveryLease(this.ctx)) return;
     await this.ctx.storage.deleteAll();
   }
 
