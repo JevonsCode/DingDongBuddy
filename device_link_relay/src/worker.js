@@ -7,7 +7,7 @@ import {
 } from "./discovery.js";
 import webPush from "web-push";
 
-const serviceVersion = "1.11.18";
+const serviceVersion = "1.11.19";
 const rateLimitsPerMinute = new Map([
   ["invite-host", 8],
   ["invite-peer", 15],

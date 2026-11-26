@@ -110,6 +110,8 @@ Map<String, Object?> encodeDeviceLinkManagerSnapshot(
           .toList(),
       'computerPairingCode':
           (controller as LanComputerManagement).computerPairingCode,
+      'codeLookupAvailable':
+          (controller as LanComputerManagement).codeLookupAvailable,
       'computerDiscoveryError':
           (controller as LanComputerManagement).computerDiscoveryError,
     },
@@ -337,11 +339,15 @@ final class RemoteDeviceLinkManagement extends ChangeNotifier
   @override
   String? computerPairingCode;
   @override
+  bool codeLookupAvailable = false;
+  @override
   String? computerDiscoveryError;
   @override
   Future<void> refreshComputers() async {
     try {
-      await _parentController.invokeMethod<void>('device_link_lan_refresh');
+      await _parentController
+          .invokeMethod<void>('device_link_lan_refresh')
+          .timeout(const Duration(seconds: 15));
     } finally {
       await reload();
     }
@@ -370,7 +376,7 @@ final class RemoteDeviceLinkManagement extends ChangeNotifier
       _invokeAndReload('device_link_lan_cancel');
   @override
   Future<void> joinNearbyComputer(String deviceId, String code) =>
-      _invokeAndReload('device_link_lan_join', {'id': deviceId, 'code': code});
+      _joinAndReload('device_link_lan_join', {'id': deviceId, 'code': code});
   @override
   List<FileTransfer> fileTransfers = const [];
   @override
@@ -414,9 +420,9 @@ final class RemoteDeviceLinkManagement extends ChangeNotifier
       statusOf(deviceId) == DeviceConnectionStatus.connected;
 
   Future<void> reload() async {
-    final Object? response = await _parentController.invokeMethod<Object?>(
-      deviceLinkManagerSnapshotMethod,
-    );
+    final Object? response = await _parentController
+        .invokeMethod<Object?>(deviceLinkManagerSnapshotMethod)
+        .timeout(const Duration(seconds: 10));
     if (response is! Map) return;
     final Map<String, Object?> json = Map<String, Object?>.from(response);
     _localComputerName = json['localComputerName'] as String?;
@@ -437,6 +443,7 @@ final class RemoteDeviceLinkManagement extends ChangeNotifier
           }
         : {};
     computerPairingCode = json['computerPairingCode'] as String?;
+    codeLookupAvailable = json['codeLookupAvailable'] == true;
     computerDiscoveryError = json['computerDiscoveryError'] as String?;
     fileTransfers = (json['fileTransfers'] as List? ?? [])
         .whereType<Map>()
@@ -494,8 +501,17 @@ final class RemoteDeviceLinkManagement extends ChangeNotifier
       _invokeAndReload(deviceLinkManagerCancelPairingMethod);
 
   @override
-  Future<void> joinComputer(String pairingLink) =>
-      _invokeAndReload(deviceLinkManagerJoinComputerMethod, pairingLink);
+  Future<void> joinComputer(String code) =>
+      _joinAndReload(deviceLinkManagerJoinComputerMethod, code);
+
+  Future<void> _joinAndReload(String method, Object arguments) async {
+    await _parentController.invokeMethod<void>(method, arguments);
+    try {
+      await reload();
+    } on Object {
+      // The host has already saved the pair. A later snapshot can refresh it.
+    }
+  }
 
   @override
   Future<void> setAutoSendClipboard(String deviceId, bool value) =>

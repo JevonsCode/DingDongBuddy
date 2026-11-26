@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/features/library/domain/resource_update_fetcher.dart';
+import 'package:dingdong/features/library/domain/trigger_group.dart';
 import 'package:path/path.dart' as path;
 
 /// Portable, selective resource bundle with stable-ID and content deduplication.
@@ -12,15 +13,21 @@ final class LibraryBundle {
   static String encode(
     Iterable<Resource> resources, {
     required DateTime generatedAt,
+    Map<String, TriggerGroup> triggerGroups = const {},
   }) {
-    return const JsonEncoder.withIndent(
-      '  ',
-    ).convert(payload(resources, generatedAt: generatedAt));
+    return const JsonEncoder.withIndent('  ').convert(
+      payload(
+        resources,
+        generatedAt: generatedAt,
+        triggerGroups: triggerGroups,
+      ),
+    );
   }
 
   static Map<String, Object?> payload(
     Iterable<Resource> resources, {
     required DateTime generatedAt,
+    Map<String, TriggerGroup> triggerGroups = const {},
   }) {
     final List<Resource> items = resources
         .where((Resource resource) => resource.type.isLibraryResource)
@@ -32,7 +39,9 @@ final class LibraryBundle {
       'selectedIds': items
           .map((Resource resource) => resource.id)
           .toList(growable: false),
-      'items': items.map(_portableJson).toList(growable: false),
+      'items': items
+          .map((item) => portableItem(item, triggerGroups: triggerGroups))
+          .toList(growable: false),
     };
   }
 
@@ -40,15 +49,18 @@ final class LibraryBundle {
   ///
   /// Resources backed by an online source carry only `contentURL`; local
   /// snapshots are intentionally excluded from the portable representation.
-  static Map<String, Object?> portableItem(Resource resource) {
-    return _portableJson(resource);
+  static Map<String, Object?> portableItem(
+    Resource resource, {
+    Map<String, TriggerGroup> triggerGroups = const {},
+  }) {
+    return _portableJson(resource, triggerGroups);
   }
 
   /// Lists the sender's selected items without resolving online content.
   static List<Resource> preview(String contents) {
     return _previewItems(_decodePayload(contents))
         .map(
-          (item) => Resource.fromJson({
+          (item) => _incomingResource({
             ...item,
             if (!item.containsKey('content') && _onlineContentUrl(item) != null)
               'content': '',
@@ -74,8 +86,13 @@ final class LibraryBundle {
   static LibraryBundleImportResult decode(
     String contents, {
     required List<Resource> existing,
+    bool allowLocalPackage = true,
   }) {
-    return importPayload(_decodePayload(contents), existing: existing);
+    return importPayload(
+      _decodePayload(contents),
+      existing: existing,
+      allowLocalPackage: allowLocalPackage,
+    );
   }
 
   /// Decodes a bundle and resolves item-level online links before deduping.
@@ -125,7 +142,7 @@ final class LibraryBundle {
         ..remove('contentURL')
         ..remove('sourceURL');
       resolvedItems.add(resolved);
-      onlineCandidates.add(Resource.fromJson(resolved));
+      onlineCandidates.add(_incomingResource(resolved));
       onlineUrls.add(link);
     }
     final LibraryBundleImportResult result = importPayload(<String, Object?>{
@@ -146,6 +163,7 @@ final class LibraryBundle {
   static LibraryBundleImportResult importPayload(
     Map<String, Object?> payload, {
     required List<Resource> existing,
+    bool allowLocalPackage = false,
   }) {
     final List<Object?> rawItems = _validatedItems(payload);
     final Set<String>? selectedIds = switch (payload['selectedIds']) {
@@ -154,15 +172,34 @@ final class LibraryBundle {
       _ => null,
     };
     final candidates = <Resource>[];
+    final reviewRules = Map<Resource, List<TriggerRule>>.identity();
     for (final Object? rawItem in rawItems) {
       if (rawItem is! Map<String, Object?>) {
         throw const FormatException('Library bundle item must be an object.');
       }
       if (selectedIds != null && !selectedIds.contains(rawItem['id'])) continue;
-      final Resource candidate = Resource.fromJson(rawItem);
-      if (candidate.type.isLibraryResource) candidates.add(candidate);
+      final candidate = _incomingResource(
+        rawItem,
+        allowLocalPackage: allowLocalPackage,
+      );
+      if (!candidate.type.isLibraryResource) continue;
+      candidates.add(candidate);
+      if (_needsRuleReview(rawItem)) {
+        final rawRules = rawItem['portableRules'] as List<Object?>? ?? const [];
+        reviewRules[candidate] = rawRules
+            .map((rule) => TriggerRule.fromJson(rule as Map<String, Object?>))
+            .where(_portableRule)
+            .toSet()
+            .toList();
+      }
     }
-    return mergeResources(candidates, existing: existing);
+    final merged = mergeResources(candidates, existing: existing);
+    return merged.copyWith(
+      reviewRules: {
+        for (final item in merged.imported)
+          if (reviewRules.containsKey(item)) item.id: reviewRules[item]!,
+      },
+    );
   }
 
   static LibraryBundleImportResult mergeResources(
@@ -218,8 +255,73 @@ final class LibraryBundle {
   }
 }
 
-Map<String, Object?> _portableJson(Resource resource) {
-  final Map<String, Object?> json = Map<String, Object?>.of(resource.toJson());
+bool _portableRule(TriggerRule rule) {
+  if (rule.field == TriggerRuleField.projectPath || rule.value.isEmpty) {
+    return false;
+  }
+  final value = rule.value.replaceAll('\\', '/');
+  return !_looksLikeLocalPath(value) &&
+      !value.toLowerCase().startsWith('file:') &&
+      !value.startsWith('./') &&
+      !value.startsWith('../') &&
+      value != '~';
+}
+
+bool _needsRuleReview(Map<String, Object?> item) =>
+    item['requiresRuleReview'] == true ||
+    item['strictProjectSkill'] == true ||
+    (item['triggerGroupIds'] as List?)?.isNotEmpty == true ||
+    (item['skillProjectPaths'] as List?)?.isNotEmpty == true ||
+    (item['portableRules'] as List?)?.isNotEmpty == true ||
+    (item['skillDeliveryByAgent'] as Map?)?.containsValue('nativeProject') ==
+        true;
+
+Map<String, Object?> _withoutMachineScope(Map<String, Object?> item) {
+  final json = Map<String, Object?>.of(item);
+  for (final key in [
+    'source',
+    'packagePath',
+    'triggerGroupIds',
+    'skillProjectPaths',
+    'strictProjectSkill',
+  ]) {
+    json.remove(key);
+  }
+  if (json['skillDeliveryByAgent'] case final Map<String, Object?> modes) {
+    json['skillDeliveryByAgent'] = Map<String, Object?>.of(modes)
+      ..removeWhere((_, mode) => mode == 'nativeProject');
+  }
+  if (_needsRuleReview(item)) json['enabled'] = false;
+  return json;
+}
+
+Resource _incomingResource(
+  Map<String, Object?> item, {
+  bool allowLocalPackage = false,
+}) => Resource.fromJson({
+  ..._withoutMachineScope(item),
+  // Offline cleanup backups reference their complete Skill package on this computer.
+  if (allowLocalPackage && item['type'] == 'skill')
+    'packagePath': item['packagePath'],
+});
+
+Map<String, Object?> _portableJson(
+  Resource resource,
+  Map<String, TriggerGroup> triggerGroups,
+) {
+  final raw = resource.toJson();
+  final json = _withoutMachineScope(raw);
+  if (_needsRuleReview(raw)) {
+    json['requiresRuleReview'] = true;
+    // Both trigger groups and the conditions inside them are OR-ed.
+    final rules = {
+      for (final id in resource.triggerGroupIds)
+        ...?triggerGroups[id]?.rules.where(_portableRule),
+    };
+    if (rules.isNotEmpty) {
+      json['portableRules'] = rules.map((rule) => rule.toJson()).toList();
+    }
+  }
   final String? updateUrl = resource.updateUrl;
   if (updateUrl != null) {
     // Online resources are shared by reference. The local snapshot remains
@@ -232,10 +334,6 @@ Map<String, Object?> _portableJson(Resource resource) {
   } else {
     json['content'] = _portableContent(resource);
   }
-  // These fields can contain machine-specific paths or private URLs and are
-  // intentionally not transferred to another computer.
-  json.remove('source');
-  json.remove('packagePath');
   return json;
 }
 
@@ -341,6 +439,7 @@ final class LibraryBundleImportResult {
     required this.duplicateIds,
     required this.conflictIds,
     this.onlineResources = const <Resource>[],
+    this.reviewRules = const {},
   });
 
   final List<Resource> imported;
@@ -348,14 +447,21 @@ final class LibraryBundleImportResult {
   final List<String> conflictIds;
   final List<Resource> onlineResources;
 
+  /// A key with no conditions denotes a resource requiring local reconfiguration.
+  final Map<String, List<TriggerRule>> reviewRules;
+
   int get skippedCount => duplicateIds.length + conflictIds.length;
 
-  LibraryBundleImportResult copyWith({List<Resource>? onlineResources}) {
+  LibraryBundleImportResult copyWith({
+    List<Resource>? onlineResources,
+    Map<String, List<TriggerRule>>? reviewRules,
+  }) {
     return LibraryBundleImportResult(
       imported: imported,
       duplicateIds: duplicateIds,
       conflictIds: conflictIds,
       onlineResources: onlineResources ?? this.onlineResources,
+      reviewRules: reviewRules ?? this.reviewRules,
     );
   }
 }

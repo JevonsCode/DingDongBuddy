@@ -19,26 +19,50 @@ class LanComputerPairingDialog extends StatefulWidget {
 
 class _LanComputerPairingDialogState extends State<LanComputerPairingDialog> {
   final _code = TextEditingController();
+  final _codeFocus = FocusNode();
   final _address = TextEditingController();
   String? _addressError;
   String? _generalError;
-  String? _selected;
+  NearbyComputer? _selected;
+  bool _refreshing = false;
+  bool _refreshFailed = false;
+  bool _slowAction = false;
+  Timer? _slowActionTimer;
   String? _error;
   bool _busy = false;
   @override
   void initState() {
     super.initState();
-    unawaited(_run(widget.controller.refreshComputers));
+    unawaited(_refresh());
   }
 
   @override
   void dispose() {
+    _slowActionTimer?.cancel();
+    _codeFocus.dispose();
     _code.dispose();
     _address.dispose();
     unawaited(
       widget.controller.cancelComputerPairing().catchError((Object _) {}),
     );
     super.dispose();
+  }
+
+  Future<void> _refresh() async {
+    if (_refreshing) return;
+    setState(() {
+      _refreshing = true;
+      _refreshFailed = false;
+    });
+    try {
+      await widget.controller.refreshComputers().timeout(
+        const Duration(seconds: 25),
+      );
+    } on Object {
+      if (mounted) setState(() => _refreshFailed = true);
+    } finally {
+      if (mounted) setState(() => _refreshing = false);
+    }
   }
 
   Future<void> _run(
@@ -53,25 +77,36 @@ class _LanComputerPairingDialogState extends State<LanComputerPairingDialog> {
       _generalError = null;
       _addressError = null;
     });
+    _slowActionTimer = Timer(const Duration(minutes: 1), () {
+      if (mounted) setState(() => _slowAction = true);
+    });
     try {
       await action();
-      if (mounted && finish) Navigator.pop(context);
+      if (mounted && finish && ModalRoute.of(context)?.isCurrent == true) {
+        Navigator.pop(context);
+      }
     } catch (failure) {
       if (mounted) {
         setState(() {
-          if (address && failure is FormatException) {
-            _addressError = context.l10n.deviceAddressInvalid;
+          if (address) {
+            _addressError = failure is FormatException
+                ? context.l10n.deviceAddressInvalid
+                : context.l10n.lanLookupUnavailable;
           } else {
             _generalError = finish
                 ? context.l10n.lanPairingFailed
-                : address
-                ? context.l10n.lanLookupUnavailable
-                : context.l10n.lanNetworkHelp;
+                : context.l10n.lanGenerateFailed;
           }
         });
       }
     } finally {
-      if (mounted) setState(() => _busy = false);
+      _slowActionTimer?.cancel();
+      if (mounted) {
+        setState(() {
+          _slowAction = false;
+          _busy = false;
+        });
+      }
     }
   }
 
@@ -81,12 +116,16 @@ class _LanComputerPairingDialogState extends State<LanComputerPairingDialog> {
   );
 
   Future<void> _join() async {
-    if (_selected == null || !RegExp(r'^\d{6}$').hasMatch(_code.text)) {
-      setState(() => _error = context.l10n.lanSelectAndEnterCode);
+    final code = _code.text;
+    final selected = _selected;
+    if (!RegExp(r'^\d{6}$').hasMatch(code)) {
+      setState(() => _error = context.l10n.lanEnterSixDigits);
       return;
     }
     await _run(
-      () => widget.controller.joinNearbyComputer(_selected!, _code.text),
+      () => selected == null
+          ? widget.controller.joinComputer(code)
+          : widget.controller.joinNearbyComputer(selected.id, code),
       finish: true,
     );
   }
@@ -106,7 +145,7 @@ class _LanComputerPairingDialogState extends State<LanComputerPairingDialog> {
           title: Text(l.connectAnotherComputer),
           subtitle: Text(l.lanComputerOnly),
           leading: const Icon(Icons.lan_outlined),
-          onClose: _busy ? null : () => Navigator.pop(context),
+          onClose: _busy && !_slowAction ? null : () => Navigator.pop(context),
         ),
         body: SingleChildScrollView(
           child: Column(
@@ -114,6 +153,45 @@ class _LanComputerPairingDialogState extends State<LanComputerPairingDialog> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(l.lanGenerateHint),
+              const SizedBox(height: 10),
+              DesktopTextField(
+                key: const Key('device-computer-pairing-input'),
+                controller: _code,
+                focusNode: _codeFocus,
+                autofocus: true,
+                enabled: !_busy,
+                keyboardType: TextInputType.number,
+                maxLength: 6,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                decoration: InputDecoration(
+                  labelText: l.lanSixDigitCode,
+                  hintText: '000000',
+                  helperText: _selected?.name,
+                  suffixIcon: _selected == null
+                      ? null
+                      : DesktopIconButton(
+                          icon: const Icon(Icons.clear),
+                          tooltip: l.lanClearPeer,
+                          onPressed: _busy
+                              ? null
+                              : () => setState(() => _selected = null),
+                        ),
+                  errorText: _error,
+                  errorMaxLines: 3,
+                  counterText: '',
+                ),
+                onChanged: (_) {
+                  if (_error != null) setState(() => _error = null);
+                },
+                onSubmitted: (_) => unawaited(_join()),
+              ),
+              if (_generalError != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  _generalError!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ],
               const SizedBox(height: 10),
               if (code != null) ...[
                 SelectableText(
@@ -126,6 +204,8 @@ class _LanComputerPairingDialogState extends State<LanComputerPairingDialog> {
                 ),
                 const SizedBox(height: 6),
                 Text(l.lanCodeExpiry, textAlign: TextAlign.center),
+                if (!_busy && !widget.controller.codeLookupAvailable)
+                  Text(l.lanCodeLookupUnavailable),
                 const SizedBox(height: 10),
               ],
               DesktopActionButton(
@@ -138,6 +218,7 @@ class _LanComputerPairingDialogState extends State<LanComputerPairingDialog> {
                         _run(widget.controller.beginComputerPairing),
                       ),
               ),
+              if (_slowAction) Text(l.lanStillWorking),
               const Divider(height: 30),
               Row(
                 children: [
@@ -148,11 +229,9 @@ class _LanComputerPairingDialogState extends State<LanComputerPairingDialog> {
                     ),
                   ),
                   DesktopActionButton(
-                    onPressed: _busy
+                    onPressed: _busy || _refreshing
                         ? null
-                        : () => unawaited(
-                            _run(widget.controller.refreshComputers),
-                          ),
+                        : () => unawaited(_refresh()),
                     label: l.lanRefresh,
                   ),
                 ],
@@ -177,16 +256,19 @@ class _LanComputerPairingDialogState extends State<LanComputerPairingDialog> {
                         ? l.lanEnterOtherCode
                         : l.lanWaitingForCode,
                   ),
-                  selected: _selected == computer.id,
-                  trailing: _selected == computer.id
+                  selected: _selected?.id == computer.id,
+                  trailing: _selected?.id == computer.id
                       ? const Icon(Icons.check_circle_outline)
                       : null,
                   onTap: _busy || !computer.pairing
                       ? null
-                      : () => setState(() {
-                          _selected = computer.id;
-                          _error = null;
-                        }),
+                      : () {
+                          setState(() {
+                            _selected = computer;
+                            _error = null;
+                          });
+                          _codeFocus.requestFocus();
+                        },
                 ),
               const SizedBox(height: 12),
               SelectableText(
@@ -194,7 +276,7 @@ class _LanComputerPairingDialogState extends State<LanComputerPairingDialog> {
                     ? l.deviceLocalAddresses(
                         widget.controller.localComputerAddresses.join(' · '),
                       )
-                    : _busy
+                    : _refreshing
                     ? l.deviceLocalAddressLoading
                     : l.deviceLocalAddressUnavailable,
                 key: const Key('device-computer-local-addresses'),
@@ -224,37 +306,14 @@ class _LanComputerPairingDialogState extends State<LanComputerPairingDialog> {
                 onSubmitted: (_) => unawaited(_find()),
               ),
               const SizedBox(height: 16),
-              DesktopTextField(
-                key: const Key('device-computer-pairing-input'),
-                controller: _code,
-                enabled: !_busy,
-                keyboardType: TextInputType.number,
-                maxLength: 6,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                decoration: InputDecoration(
-                  labelText: l.lanSixDigitCode,
-                  hintText: '000000',
-                  errorText: _error,
-                  errorMaxLines: 3,
-                  counterText: '',
-                ),
-                onSubmitted: (_) => unawaited(_join()),
-              ),
-              if (widget.controller.computerDiscoveryError != null) ...[
+              if (_refreshFailed ||
+                  widget.controller.computerDiscoveryError != null) ...[
                 const SizedBox(height: 8),
                 Text(switch (widget.controller.computerDiscoveryError) {
                   'address_in_use' => l.lanPortBusy,
                   'access_denied' => l.lanNetworkAccessDenied,
                   _ => l.lanNetworkHelp,
                 }),
-              ],
-              if (_generalError != null &&
-                  widget.controller.computerDiscoveryError == null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  _generalError!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
               ],
               const SizedBox(height: 12),
               Text(
@@ -267,8 +326,10 @@ class _LanComputerPairingDialogState extends State<LanComputerPairingDialog> {
         footer: DesktopDialogFooter(
           actions: [
             DesktopActionButton(
-              label: l.cancel,
-              onPressed: _busy ? null : () => Navigator.pop(context),
+              label: _slowAction ? l.close : l.cancel,
+              onPressed: _busy && !_slowAction
+                  ? null
+                  : () => Navigator.pop(context),
             ),
             DesktopActionButton(
               key: const Key('device-computer-pairing-submit'),

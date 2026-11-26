@@ -15,6 +15,11 @@ final class LanComputerSession
   final LinkedDevice device;
   String? _addressHint;
   final SecureMessageCodec _codec;
+  LanDiscoveryChannel? _discoveryChannel;
+  List<InternetAddress> _discovered = const [];
+  DateTime? _nextDiscovery;
+  int _discoveryFailures = 0;
+
   final _events = StreamController<DeviceLinkSessionEvent>.broadcast();
   LanWire? _wire;
   bool _closed = false;
@@ -25,9 +30,9 @@ final class LanComputerSession
   int _received = 0;
   Future<void> _sendTail = Future.value();
   bool _permitsRoutedAddress(InternetAddress address) =>
-      device.lanRouted &&
-      address.address == _addressHint &&
-      owner._isRoutedAddress(address);
+      owner._isRoutedAddress(address) &&
+      ((device.lanRouted && address.address == _addressHint) ||
+          _discovered.contains(address));
 
   bool _canUseWire(LanWire wire) {
     final address = wire.socket.remoteAddress;
@@ -62,27 +67,57 @@ final class LanComputerSession
   Future<void> _connect({bool background = false}) async {
     if (_closed || _connecting || connected) return;
     _connecting = true;
-    LanWire? wire;
     try {
       await owner.start();
-      if (_closed || device.connectionSide == DeviceLinkConnectionSide.host) {
-        return;
-      }
+      if (_closed) return;
+      _ensureDiscovery();
+      if (device.connectionSide == DeviceLinkConnectionSide.host) return;
       final local = owner._findEndpoint(device.id) != null;
       final hint = InternetAddress.tryParse(_addressHint ?? '');
-      final routed = hint != null && _permitsRoutedAddress(hint) ? hint : null;
-      if (!local && routed == null) return;
+      final routes = {
+        ..._discovered,
+        if (hint != null && _permitsRoutedAddress(hint)) hint,
+      };
+      if (!local && routes.isEmpty) return;
       if (!background) {
         _emit(const DeviceLinkStatusEvent(DeviceConnectionStatus.connecting));
       }
-      if (local) {
+      final attempts = <Future<LanWire> Function()>[
+        if (local) () => owner._dialPeer(device.id),
+        for (final address in routes)
+          for (final source in owner._routedSources)
+            () => owner._dialRoutedVia(address, source),
+      ];
+      Object? lastFailure;
+      for (final dial in attempts) {
+        if (_closed) return;
         try {
-          wire = await owner._dialPeer(device.id);
-        } on SocketException {
-          if (routed == null) rethrow;
+          await _authenticate(await dial());
+          return;
+        } on Exception catch (failure) {
+          lastFailure = failure;
+        } on StateError catch (failure) {
+          lastFailure = failure;
         }
       }
-      wire ??= await owner._dialRouted(routed!);
+      if (lastFailure != null) throw lastFailure;
+    } on Object catch (error) {
+      _emit(
+        DeviceLinkStatusEvent(
+          DeviceConnectionStatus.disconnected,
+          error: error,
+        ),
+      );
+    } finally {
+      _connecting = false;
+      _scheduleRetry();
+    }
+  }
+
+  Future<void> _authenticate(LanWire wire) async {
+    var attached = false;
+    try {
+      if (_closed) return;
       final clientNonce = LanPairingCrypto.token();
       await wire.write({
         'type': 'connect',
@@ -90,9 +125,7 @@ final class LanComputerSession
         'id': owner.identity.id,
         'nonce': clientNonce,
       });
-      final challenge = await _codec.open(
-        (await wire.read())['proof'] as String,
-      );
+      final challenge = await _codec.open(await wire.readProof());
       if (challenge['type'] != 'host-proof' ||
           challenge['clientNonce'] != clientNonce ||
           challenge['hostId'] != device.id) {
@@ -107,25 +140,60 @@ final class LanComputerSession
           'id': owner.identity.id,
         }),
       });
-      final ack = await _codec.open((await wire.read())['proof'] as String);
+      final ack = await _codec.open(await wire.readProof());
       if (ack['type'] != 'ready' || ack['nonce'] != nonce) {
         throw const FormatException('ack');
       }
       if (_closed || !_canUseWire(wire)) return;
       _attach(wire, nonce);
-      wire = null;
-    } on Object catch (error) {
-      _emit(
-        DeviceLinkStatusEvent(
-          DeviceConnectionStatus.disconnected,
-          error: error,
-        ),
-      );
+      attached = true;
     } finally {
-      wire?.close();
-      _connecting = false;
-      _scheduleRetry();
+      if (!attached) wire.close();
     }
+  }
+
+  void _ensureDiscovery() {
+    final service = owner._discovery;
+    final next = _nextDiscovery;
+    if (service == null ||
+        _closed ||
+        _discoveryChannel != null ||
+        (next != null && owner._now().isBefore(next))) {
+      return;
+    }
+    final channel = service.watchPair(
+      secret: device.secret,
+      localId: owner.identity.id,
+      peerId: device.id,
+      addresses: () => owner.localAddresses,
+      onAddresses: (values) {
+        if (_closed) return;
+        _discoveryFailures = 0;
+        final candidates = owner._eligibleCandidates(values).toList();
+        final wire = _wire;
+        final previous = _discovered;
+        _discovered = candidates;
+        if (wire != null &&
+            wire.routed &&
+            previous.contains(wire.socket.remoteAddress) &&
+            !candidates.contains(wire.socket.remoteAddress)) {
+          _drop();
+        }
+        if (!connected) unawaited(_connect(background: true));
+      },
+    );
+    _discoveryChannel = channel;
+    unawaited(channel.ready.catchError((Object _) {}));
+    unawaited(
+      channel.done.then((_) {
+        if (!identical(_discoveryChannel, channel)) return;
+        _discoveryChannel = null;
+        _discoveryFailures = (_discoveryFailures + 1).clamp(1, 6);
+        _nextDiscovery = owner._now().add(
+          Duration(seconds: 1 << _discoveryFailures),
+        );
+      }),
+    );
   }
 
   Future<void> _accept(LanWire wire) async {
@@ -144,7 +212,7 @@ final class LanComputerSession
         'hostId': owner.identity.id,
       }),
     });
-    final proof = await _codec.open((await wire.read())['proof'] as String);
+    final proof = await _codec.open(await wire.readProof());
     if (proof['type'] != 'peer-proof' ||
         proof['nonce'] != nonce ||
         proof['clientNonce'] != clientNonce ||
@@ -256,6 +324,8 @@ final class LanComputerSession
   Future<void> close() async {
     if (_closed) return;
     _closed = true;
+    _discoveryChannel?.close();
+    _discoveryChannel = null;
     _retry?.cancel();
     _retry = null;
     _drop();

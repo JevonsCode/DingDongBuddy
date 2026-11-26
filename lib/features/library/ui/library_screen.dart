@@ -547,6 +547,7 @@ class LibraryScreenState extends State<LibraryScreen> {
         context,
         prepare: () => widget.viewModel.prepareBundleJson(
           LibraryBundle.select(contents, ids),
+          allowLocalPackage: kind == LibraryImportSourceKind.file,
           resolveOnline: resources.any(
             (item) => ids.contains(item.id) && item.updateUrl != null,
           ),
@@ -592,13 +593,12 @@ class LibraryScreenState extends State<LibraryScreen> {
       if (!context.mounted) {
         return;
       }
-      final bool confirmed =
-          !reviewOnline ||
-          await showLibraryImportReviewDialog(
-            context,
-            result,
-            onOpenExternalLink: widget.onOpenExternalLink,
-          );
+      final bool confirmed = await showLibraryImportReviewDialog(
+        context,
+        result,
+        reviewOnline: reviewOnline,
+        onOpenExternalLink: widget.onOpenExternalLink,
+      );
       if (!confirmed || !context.mounted) {
         return;
       }

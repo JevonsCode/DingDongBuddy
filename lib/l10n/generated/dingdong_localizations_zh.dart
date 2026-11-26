@@ -2160,6 +2160,13 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get returnedAsACandidate => '成为候选';
 
   @override
+  String get reviewImportRules => '确认导入规则';
+
+  @override
+  String get importRulesDisabled =>
+      '以下资源导入后默认关闭。发送端的本机目录条件会跳过。请在资源设置中检查触发规则，按需配置本机项目目录，再手动启用。';
+
+  @override
   String get reviewOnlineResources => '检查在线资源';
 
   @override
@@ -3877,13 +3884,14 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get lanComputerOnly => '内网连接 · 配对后自动重连';
 
   @override
-  String get lanEnterOtherCode => '在下方输入这台电脑的配对码';
+  String get lanEnterOtherCode => '选择后输入这台电脑的配对码';
 
   @override
   String get lanGenerateCode => '生成配对码';
 
   @override
-  String get lanGenerateHint => '在一台电脑上生成配对码，在另一台选择这台电脑并输入配对码。';
+  String get lanGenerateHint =>
+      '输入另一台电脑显示的 6 位配对码，或在这里生成配对码，让对方输入。DingDong 可通过在线服务查找电脑，配对后的数据通过内网直传。';
 
   @override
   String get lanNearbyComputers => '附近的电脑';
@@ -3895,19 +3903,33 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get lanNewCode => '换一个配对码';
 
   @override
-  String get lanNoComputers => '附近列表自动查找同一子网内的电脑。跨子网时，先在另一台电脑生成配对码，再按内网 IP 搜索。';
+  String get lanNoComputers => '附近未发现电脑。可以直接在上方输入配对码，也可以在下方按内网 IP 查找。';
 
   @override
   String get lanLookupUnavailable => '另一台电脑未响应。请确认两台电脑均已更新、能在内网互访，且对方已生成有效配对码。';
 
   @override
-  String get lanPairingFailed => '配对未完成，请检查配对码和局域网连接。配对码过期或已尝试 5 次时，请重新生成。';
+  String get lanPairingFailed =>
+      '配对未完成。请核对配对码，并确认两台电脑能在内网互访。如果无法按码查找，可在附近列表中选择对方，或先按内网 IP 搜索，再选择对方并输入配对码。';
 
   @override
   String get lanRefresh => '刷新';
 
   @override
-  String get lanSelectAndEnterCode => '请选择附近的电脑，并输入它显示的 6 位数字。';
+  String get lanEnterSixDigits => '请输入另一台电脑显示的 6 位配对码。';
+
+  @override
+  String get lanClearPeer => '取消选择，直接按码连接';
+
+  @override
+  String get lanGenerateFailed => '无法生成配对码，请检查内网连接后重试。';
+
+  @override
+  String get lanCodeLookupUnavailable =>
+      '在线配对码查找暂不可用。请在另一台电脑的附近列表中选择本机，或按本机内网 IP 搜索后选择，再输入此码。';
+
+  @override
+  String get lanStillWorking => '仍在等待操作结果。你可以关闭此窗口，稍后在设备列表中查看。';
 
   @override
   String get lanSixDigitCode => '6 位数字配对码';

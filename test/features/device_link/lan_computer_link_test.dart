@@ -93,6 +93,72 @@ void main() {
     },
   );
   test(
+    'code registration and TCP survive an exclusive UDP bind and retain the invite on recovery',
+    () async {
+      final udp = await RawDatagramSocket.bind(
+        InternetAddress.anyIPv4,
+        0,
+        reuseAddress: false,
+      );
+      addTearDown(udp.close);
+      final port = udp.port;
+      final tcp = await ServerSocket.bind(InternetAddress.anyIPv4, port);
+      addTearDown(tcp.close);
+
+      final service = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      addTearDown(() => service.close(force: true));
+      var registrations = 0;
+      service.listen((request) async {
+        final socket = await WebSocketTransformer.upgrade(request);
+        registrations++;
+        socket.add(jsonEncode({'type': 'relay', 'event': 'ready'}));
+        await socket.drain<void>();
+      });
+      final link =
+          LanComputerLink(
+              discoveryPort: port,
+              discoveryBaseUrl: Uri.parse('http://127.0.0.1:${service.port}'),
+            )
+            ..identity = const LocalDeviceIdentity(
+              id: 'independent-host',
+              name: 'Fixture host',
+              platform: 'test',
+            );
+      addTearDown(link.close);
+      await link.start();
+      expect(link.discoveryListenPort, isNull);
+      expect(link.routedListenPort, isNull);
+      expect(link.error, isIn(['address_in_use', 'access_denied']));
+      final tcpSessionPort = link.advertisement['port'];
+      expect(tcpSessionPort, isA<int>());
+
+      await tcp.close();
+      await link.beginPairing();
+      expect(link.routedListenPort, port);
+      expect(link.discoveryListenPort, isNull);
+      expect(link.codeLookupAvailable, isTrue);
+      final code = link.pairingCode!;
+      await link.refresh();
+      expect(link.error, isIn(['address_in_use', 'access_denied']));
+      final prefixes = await readLanSubnets();
+      expect(link.localAddresses.toSet(), {
+        for (final subnet in prefixes)
+          if (LanComputerLink.isLanAddress(subnet.address))
+            subnet.address.address,
+      });
+
+      udp.close();
+      await _until(
+        () => link.discoveryListenPort == port && link.error == null,
+      );
+      expect(link.advertisement['port'], tcpSessionPort);
+      expect(link.routedListenPort, port);
+      expect(link.pairingCode, code);
+      expect(link.codeLookupAvailable, isTrue);
+      expect(registrations, 1);
+    },
+  );
+  test(
     'refresh keeps local IP metadata available when discovery startup fails',
     () async {
       var reads = 0;
@@ -195,6 +261,50 @@ void main() {
       expect(paired?.id, 'manual-host');
     },
   );
+  test(
+    'routed lookup, pairing and reconnect survive a tunnel timeout',
+    () async {
+      final host = _service('routed-host');
+      addTearDown(host.close);
+      LinkedDevice? hostDevice;
+      host.onPaired = (device) async => hostDevice = device;
+      await host.beginPairing();
+      final peer = _routedPeer(host.routedListenPort!);
+      addTearDown(peer.close);
+      LinkedDevice? peerDevice;
+      peer.onPaired = (device) async => peerDevice = device;
+
+      final networkZone = Zone.current;
+      final attempts = <String?>[];
+      await IOOverrides.runZoned(
+        () async {
+          await peer.discoverAddress('127.0.0.1');
+          expect(peer.nearby.single.id, host.identity.id);
+          await peer.join(host.identity.id, host.pairingCode!);
+          final hostSession = host.session(hostDevice!);
+          final peerSession = peer.session(peerDevice!);
+          await peerSession.connect();
+          await _until(() => peerSession.connected && hostSession.connected);
+          expect(await peerSession.verifyLocalNetwork(), isFalse);
+        },
+        socketConnect:
+            (target, port, {sourceAddress, sourcePort = 0, timeout}) async {
+              attempts.add((sourceAddress as InternetAddress?)?.address);
+              if (sourceAddress == null) {
+                throw const SocketException('Connection timed out');
+              }
+              // Route the simulated adapter to the real loopback peer.
+              return networkZone.run(
+                () => Socket.connect(target, port, timeout: timeout),
+              );
+            },
+      );
+      expect(attempts, [
+        for (var i = 0; i < 3; i++) ...[null, '10.20.0.1'],
+      ]);
+    },
+  );
+
   test('manual discovery can pair from outside the physical subnet', () async {
     final host = _service('routed-host');
     addTearDown(host.close);

@@ -2929,6 +2929,10 @@
   "@returnedAsACandidate": {
     "description": "DingDong built-in interface copy."
   },
+  "reviewImportRules": "Revisar reglas de importación",
+  "importRulesDisabled": "Estos recursos se importarán desactivados. Se omitirán las condiciones de directorio del remitente. Revisa las reglas en los ajustes de cada recurso, configura un directorio local si hace falta y actívalo cuando esté listo.",
+  "@reviewImportRules": { "description": "Title for the import review when selected resources have activation rules." },
+  "@importRulesDisabled": { "description": "Explains the disabled state and skipped directory conditions before importing resources." },
   "reviewOnlineResources": "Revisar recursos en línea",
   "@reviewOnlineResources": {
     "description": "DingDong built-in interface copy."
@@ -5146,7 +5150,7 @@
   "@lanComputerOnly": {
     "description": "LAN-only computer discovery and six-digit pairing."
   },
-  "lanEnterOtherCode": "Introduce el código de este ordenador",
+  "lanEnterOtherCode": "Selecciona este equipo para usar su código",
   "@lanEnterOtherCode": {
     "description": "LAN-only computer discovery and six-digit pairing."
   },
@@ -5154,7 +5158,7 @@
   "@lanGenerateCode": {
     "description": "LAN-only computer discovery and six-digit pairing."
   },
-  "lanGenerateHint": "Genera un código en un ordenador y selecciónalo e introduce el código en el otro.",
+  "lanGenerateHint": "Introduce los seis dígitos del otro equipo o genera un código aquí para introducirlo allí. DingDong puede buscar el código en línea. Los equipos intercambian los datos directamente por la red privada.",
   "@lanGenerateHint": {
     "description": "LAN-only computer discovery and six-digit pairing."
   },
@@ -5170,7 +5174,7 @@
   "@lanNewCode": {
     "description": "LAN-only computer discovery and six-digit pairing."
   },
-  "lanNoComputers": "La lista busca equipos en la misma subred. Si están en subredes distintas, genera un código en el otro equipo y búscalo por su IP privada.",
+  "lanNoComputers": "No se encontraron equipos cercanos. Introduce el código arriba o busca por IP privada abajo.",
   "@lanNoComputers": {
     "description": "LAN-only computer discovery and six-digit pairing."
   },
@@ -5178,7 +5182,7 @@
   "@lanLookupUnavailable": {
     "description": "A manually addressed computer did not respond to a pairing lookup."
   },
-  "lanPairingFailed": "No se pudo vincular. Comprueba el código y la red local. Genera otro código si caducó o alcanzó 5 intentos.",
+  "lanPairingFailed": "No se pudo enlazar. Comprueba el código y la conexión entre los equipos. Si la búsqueda por código no funciona, selecciona el equipo en la lista o búscalo por su IP privada e introduce su código.",
   "@lanPairingFailed": {
     "description": "LAN-only computer discovery and six-digit pairing."
   },
@@ -5186,9 +5190,25 @@
   "@lanRefresh": {
     "description": "LAN-only computer discovery and six-digit pairing."
   },
-  "lanSelectAndEnterCode": "Selecciona un ordenador e introduce sus 6 dígitos.",
-  "@lanSelectAndEnterCode": {
+  "lanEnterSixDigits": "Introduce el código de 6 dígitos que aparece en el otro equipo.",
+  "@lanEnterSixDigits": {
     "description": "LAN-only computer discovery and six-digit pairing."
+  },
+  "lanClearPeer": "Quitar la selección y conectar por código",
+  "@lanClearPeer": {
+    "description": "Desktop computer pairing dialog."
+  },
+  "lanGenerateFailed": "No se pudo generar el código. Comprueba la conexión a la red privada e inténtalo de nuevo.",
+  "@lanGenerateFailed": {
+    "description": "Desktop computer pairing dialog."
+  },
+  "lanCodeLookupUnavailable": "La búsqueda de códigos en línea no está disponible. En el otro equipo, selecciona este equipo en la lista o búscalo por su IP privada e introduce este código.",
+  "@lanCodeLookupUnavailable": {
+    "description": "Desktop computer pairing dialog."
+  },
+  "lanStillWorking": "Aún se espera el resultado. Puedes cerrar esta ventana y consultar la lista de dispositivos.",
+  "@lanStillWorking": {
+    "description": "Desktop computer pairing dialog."
   },
   "lanSixDigitCode": "Código de 6 dígitos",
   "@lanSixDigitCode": {

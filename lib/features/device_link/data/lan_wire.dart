@@ -28,9 +28,11 @@ final class LanWire {
     await for (final chunk in socket) {
       for (final byte in chunk) {
         if (byte == 10) {
-          yield Map<String, Object?>.from(
-            jsonDecode(utf8.decode(pending)) as Map,
-          );
+          final frame = jsonDecode(utf8.decode(pending));
+          if (frame is! Map<String, Object?>) {
+            throw const FormatException('Expected a LAN frame object');
+          }
+          yield frame;
           pending = <int>[];
         } else {
           pending.add(byte);
@@ -49,6 +51,12 @@ final class LanWire {
       throw const SocketException('LAN connection closed');
     }
     return frames.current;
+  }
+
+  Future<String> readProof() async {
+    final proof = (await read())['proof'];
+    if (proof is! String) throw const FormatException('Missing peer proof');
+    return proof;
   }
 
   Future<void> write(Map<String, Object?> value) async {

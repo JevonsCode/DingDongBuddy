@@ -147,7 +147,8 @@ final class DeviceLinkController extends ChangeNotifier
     this._agentStateProvider,
     this._onAgentSeen,
     DingDongLocalizations Function()? localizations,
-  }) : _computerLink = computerLink ?? LanComputerLink(),
+  }) : _computerLink =
+           computerLink ?? LanComputerLink(discoveryBaseUrl: _relayBaseUrl),
        _localizations =
            localizations ??
            (() => lookupDingDongLocalizations(const Locale('en')));
@@ -443,6 +444,8 @@ final class DeviceLinkController extends ChangeNotifier
   @override
   String? get computerPairingCode => _computerLink.pairingCode;
   @override
+  bool get codeLookupAvailable => _computerLink.codeLookupAvailable;
+  @override
   String? get computerDiscoveryError => _computerLink.error;
   @override
   Future<void> refreshComputers() => _computerLink.refresh();
@@ -515,9 +518,7 @@ final class DeviceLinkController extends ChangeNotifier
     if (!RegExp(r'^\d{6}$').hasMatch(code)) {
       throw const FormatException('Enter the six-digit LAN pairing code.');
     }
-    final candidates = nearbyComputers.where((c) => c.pairing).toList();
-    if (candidates.length != 1) throw StateError('Select a nearby computer.');
-    await joinNearbyComputer(candidates.single.id, code);
+    await _computerLink.joinByCode(code);
   }
 
   void requestShare(ClipboardRecord record) {

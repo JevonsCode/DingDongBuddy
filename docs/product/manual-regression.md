@@ -1,4 +1,15 @@
-# DingDong 1.11.18 Manual Regression Checklist
+# DingDong 1.11.19 Manual Regression Checklist
+
+## Computer discovery and resource import rules (1.11.19)
+
+- Pair two computers on routed subnets by code. Verify a previously paired
+  computer reconnects with a stale saved IP and can exchange text and files.
+- Share a resource with directory and repository conditions. Verify the export
+  omits the directory, the import lists the affected resource, and cancellation
+  leaves the library untouched. Confirm an imported resource stays disabled
+  and retains its portable conditions.
+- Verify desktop version 1.11.19, build 102, and PWA shell 77 in published
+  packages and update metadata.
 
 ## Resource Manager and library bundles (1.11.18)
 

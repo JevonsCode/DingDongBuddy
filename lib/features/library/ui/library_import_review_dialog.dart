@@ -6,19 +6,22 @@ import 'package:dingdong/core/widgets/desktop_icon_button.dart';
 import 'package:dingdong/features/library/domain/library_bundle.dart';
 import 'package:flutter/material.dart';
 
-/// Asks the user to inspect every online source before committing an import.
+/// Reviews incoming rules and any online sources not shown during selection.
 Future<bool> showLibraryImportReviewDialog(
   BuildContext context,
   LibraryBundleImportResult result, {
+  bool reviewOnline = true,
   Future<void> Function(Uri uri)? onOpenExternalLink,
 }) async {
-  if (result.onlineResources.isEmpty) {
+  if (result.reviewRules.isEmpty &&
+      (!reviewOnline || result.onlineResources.isEmpty)) {
     return true;
   }
   return await showDialog<bool>(
         context: context,
         builder: (BuildContext context) => LibraryImportReviewDialog(
           result: result,
+          reviewOnline: reviewOnline,
           onOpenExternalLink: onOpenExternalLink,
         ),
       ) ??
@@ -29,68 +32,69 @@ final class LibraryImportReviewDialog extends StatelessWidget {
   const LibraryImportReviewDialog({
     required this.result,
     this.onOpenExternalLink,
+    this.reviewOnline = true,
     super.key,
   });
 
   final LibraryBundleImportResult result;
+  final bool reviewOnline;
   final Future<void> Function(Uri uri)? onOpenExternalLink;
 
   @override
   Widget build(BuildContext context) {
     final List<Resource> resources = _uniqueOnlineResources(
-      result.onlineResources,
+      reviewOnline ? result.onlineResources : const [],
     );
     return DesktopAlertDialog(
       maxWidth: 680,
       scrollable: true,
-      title: Text(context.l10n.reviewOnlineResources),
+      title: Text(
+        result.reviewRules.isEmpty
+            ? context.l10n.reviewOnlineResources
+            : context.l10n.reviewImportRules,
+      ),
       content: SizedBox(
         width: 620,
-        height: 390,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              context
-                  .l10n
-                  .theseResourcesWillBeLoadedFromTheInternetCheckTheSource_08e83c52,
-            ),
-            if (result.skippedCount > 0) ...<Widget>[
-              const SizedBox(height: 10),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 8,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 390),
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              if (result.reviewRules.isNotEmpty) ...[
+                Text(context.l10n.importRulesDisabled),
+                const SizedBox(height: 8),
+                for (final item in result.imported)
+                  if (result.reviewRules.containsKey(item.id))
+                    Text(
+                      item.title,
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+              ],
+              if (resources.isNotEmpty) ...[
+                if (result.reviewRules.isNotEmpty) const SizedBox(height: 16),
+                Text(
+                  context
+                      .l10n
+                      .theseResourcesWillBeLoadedFromTheInternetCheckTheSource_08e83c52,
                 ),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.tertiaryContainer,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
+                for (final resource in resources)
+                  _OnlineResourceRow(
+                    resource: resource,
+                    onOpenExternalLink: onOpenExternalLink,
+                  ),
+              ],
+              if (result.skippedCount > 0) ...[
+                const SizedBox(height: 10),
+                Text(
                   context.l10n
                       .skippedcountResourcesAlreadyExistAndWillBeSkippedOr_6aa841ce(
                         result.skippedCount,
                       ),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
-              ),
+              ],
             ],
-            const SizedBox(height: 14),
-            Expanded(
-              child: ListView.separated(
-                itemCount: resources.length,
-                separatorBuilder: (_, _) => const Divider(height: 1),
-                itemBuilder: (BuildContext context, int index) {
-                  final Resource resource = resources[index];
-                  return _OnlineResourceRow(
-                    resource: resource,
-                    onOpenExternalLink: onOpenExternalLink,
-                  );
-                },
-              ),
-            ),
-          ],
+          ),
         ),
       ),
       actions: <Widget>[

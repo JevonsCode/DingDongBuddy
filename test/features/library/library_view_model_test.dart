@@ -12,6 +12,37 @@ import 'package:dingdong/features/library/ui/library_view_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('failed resource save rolls back imported rule groups', () async {
+    final now = DateTime.utc(2026);
+    final groups = InMemoryTriggerGroupStore();
+    final model = LibraryViewModel(
+      _FailingResourceStore([]),
+      triggerGroupStore: groups,
+    );
+    await model.load();
+    final input = jsonEncode({
+      'schemaVersion': 2,
+      'items': [
+        {
+          ...Resource(
+            id: 'scoped',
+            title: 'Scoped',
+            type: ResourceType.prompt,
+            content: 'test',
+            createdAt: now,
+            updatedAt: now,
+          ).toJson(),
+          'portableRules': [
+            {'field': 'source', 'operator': 'equals', 'value': 'Codex'},
+          ],
+        },
+      ],
+    });
+    await expectLater(model.importBundleJson(input), throwsStateError);
+    expect(await groups.load(), isEmpty);
+    expect(model.allResources, isEmpty);
+  });
+
   test('group filters preserve the compact library browsing context', () async {
     final DateTime now = DateTime.utc(2026);
     final LibraryViewModel model = LibraryViewModel(

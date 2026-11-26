@@ -2240,6 +2240,13 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   String get returnedAsACandidate => 'returned as a candidate';
 
   @override
+  String get reviewImportRules => 'Review import rules';
+
+  @override
+  String get importRulesDisabled =>
+      'These resources will be imported turned off. Directory conditions from the sender are skipped. Review the rules in resource settings, set a local project directory if needed, then enable the resource.';
+
+  @override
   String get reviewOnlineResources => 'Review online resources';
 
   @override
@@ -4033,14 +4040,14 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
       'Private network · Reconnects automatically after pairing';
 
   @override
-  String get lanEnterOtherCode => 'Enter this computer’s pairing code below';
+  String get lanEnterOtherCode => 'Select to use this computer’s code';
 
   @override
   String get lanGenerateCode => 'Generate pairing code';
 
   @override
   String get lanGenerateHint =>
-      'Generate a code on one computer, then select it and enter the code on the other.';
+      'Enter the six digits shown on the other computer, or generate a code here for the other computer to enter. DingDong can look up the code online. Paired computers exchange data directly over your private network.';
 
   @override
   String get lanNearbyComputers => 'Nearby computers';
@@ -4054,7 +4061,7 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get lanNoComputers =>
-      'Nearby computers must be on the same subnet. For a different subnet, generate a code on the other computer and find it by its private IP.';
+      'No nearby computers found. Enter a code above or search by private IP below.';
 
   @override
   String get lanLookupUnavailable =>
@@ -4062,14 +4069,29 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
 
   @override
   String get lanPairingFailed =>
-      'Could not pair. Check the code and LAN connection. If the code expired or reached 5 attempts, generate a new one.';
+      'Could not pair. Check the code and that the computers can reach each other. If code lookup is unavailable, select the computer from the nearby list or find it by private IP, then enter its code.';
 
   @override
   String get lanRefresh => 'Refresh';
 
   @override
-  String get lanSelectAndEnterCode =>
-      'Select a nearby computer and enter its 6-digit code.';
+  String get lanEnterSixDigits =>
+      'Enter the 6-digit code shown on the other computer.';
+
+  @override
+  String get lanClearPeer => 'Clear selection and connect by code';
+
+  @override
+  String get lanGenerateFailed =>
+      'Could not generate a pairing code. Check the private network connection and try again.';
+
+  @override
+  String get lanCodeLookupUnavailable =>
+      'Online code lookup is unavailable. On the other computer, select this computer from the nearby list or search for its private IP, then enter this code.';
+
+  @override
+  String get lanStillWorking =>
+      'Still waiting for the result. You can close this window and check your connected devices.';
 
   @override
   String get lanSixDigitCode => '6-digit pairing code';

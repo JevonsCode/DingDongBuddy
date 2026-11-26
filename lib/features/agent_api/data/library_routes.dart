@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/utils/uuid.dart';
 import 'package:dingdong/features/agent_api/data/http_response_data.dart';
+import 'package:dingdong/features/library/data/library_bundle_commit.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/skill_deployment_store.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
@@ -875,20 +876,24 @@ final class LibraryRoutes {
               item['sourceURL'] is String ||
               (item['updateURL'] is String && item['content'] == null);
         });
-        final LibraryBundleImportResult result = hasOnlineItems
+        final LibraryBundleImportResult prepared = hasOnlineItems
             ? await LibraryBundle.decodeOnline(
                 body,
                 existing: existing,
                 fetcher: _updateFetcher,
               )
             : LibraryBundle.importPayload(payload, existing: existing);
-        if (result.imported.isNotEmpty) {
-          await _store.save(<Resource>[...existing, ...result.imported]);
-        }
+        final result = (await commitLibraryBundle(
+          prepared,
+          _store,
+          _triggerGroupStore,
+        )).result;
         return HttpResponseData(
           statusCode: 200,
           json: <String, Object?>{
             'status': 'imported',
+            if (result.reviewRules.isNotEmpty)
+              'disabledForRuleReview': result.reviewRules.keys.toList(),
             'importedCount': result.imported.length,
             'skippedCount': result.skippedCount,
             'duplicateIds': result.duplicateIds,
@@ -1067,6 +1072,10 @@ final class LibraryRoutes {
         ? visible.length
         : min(max(0, requestedLimit), _maximumExportLimit);
     final List<Resource> returned = visible.take(limit).toList(growable: false);
+    final groups = {
+      for (final group in await _triggerGroupStore?.load() ?? <TriggerGroup>[])
+        group.id: group,
+    };
     final Map<String, int> countsByType = <String, int>{
       for (final ResourceType type in ResourceType.values)
         type.name: visible.where((Resource item) => item.type == type).length,
@@ -1117,7 +1126,9 @@ final class LibraryRoutes {
           'clipboardContentCharacters': 20000,
         },
         'items': returned
-            .map(LibraryBundle.portableItem)
+            .map(
+              (item) => LibraryBundle.portableItem(item, triggerGroups: groups),
+            )
             .toList(growable: false),
       },
     );

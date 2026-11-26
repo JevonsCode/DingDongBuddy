@@ -18,7 +18,7 @@ abstract interface class DeviceLinkManagement implements Listenable {
 
   Future<PendingDevicePairing?> beginPairing();
   Future<void> cancelPairing();
-  Future<void> joinComputer(String pairingLink);
+  Future<void> joinComputer(String code);
   Future<void> setAutoSendClipboard(String deviceId, bool value);
   Future<void> setAgentNotifications(String deviceId, bool value);
   Future<void> setTransportPreference(
