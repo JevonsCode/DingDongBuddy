@@ -4021,6 +4021,18 @@ abstract class DingDongLocalizations {
   /// **'returned as a candidate'**
   String get returnedAsACandidate;
 
+  /// Title for the import review when selected resources have activation rules.
+  ///
+  /// In en, this message translates to:
+  /// **'Review import rules'**
+  String get reviewImportRules;
+
+  /// Explains the disabled state and skipped directory conditions before importing resources.
+  ///
+  /// In en, this message translates to:
+  /// **'These resources will be imported turned off. Directory conditions from the sender are skipped. Review the rules in resource settings, set a local project directory if needed, then enable the resource.'**
+  String get importRulesDisabled;
+
   /// DingDong built-in interface copy.
   ///
   /// In en, this message translates to:

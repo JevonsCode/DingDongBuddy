@@ -2,11 +2,126 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dingdong/core/models/resource.dart';
+import 'package:dingdong/features/agent_api/data/library_routes.dart';
+import 'package:dingdong/features/library/data/resource_repository.dart';
+import 'package:dingdong/features/library/data/trigger_group_repository.dart';
 import 'package:dingdong/features/library/domain/library_bundle.dart';
 import 'package:dingdong/features/library/domain/resource_update_fetcher.dart';
+import 'package:dingdong/features/library/domain/trigger_group.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  final timestamp = DateTime.utc(2026);
+  final scoped = Resource(
+    id: 'scoped',
+    type: ResourceType.skill,
+    title: 'Review Skill',
+    content: 'Run review',
+    createdAt: timestamp,
+    updatedAt: timestamp,
+    strictProjectSkill: true,
+    skillProjectPaths: const ['/sender/private'],
+    triggerGroupIds: const ['sender-group'],
+    skillDeliveryByAgent: const {'Codex': SkillDeliveryMode.nativeProject},
+  );
+  TriggerRule rule(TriggerRuleField field, String value) => TriggerRule(
+    field: field,
+    operator: TriggerRuleOperator.equals,
+    value: value,
+  );
+  final sourceRule = rule(TriggerRuleField.source, 'Codex');
+  final repoRule = rule(
+    TriggerRuleField.repositoryUrl,
+    'git@example.org:team/repo.git',
+  );
+  final local = rule(TriggerRuleField.projectPath, '/sender/private');
+  final mixedGroup = TriggerGroup(
+    id: 'sender-group',
+    name: '/sender/private',
+    rules: [
+      local,
+      rule(TriggerRuleField.repositoryUrl, r'C:\sender\private'),
+      rule(TriggerRuleField.repositoryUrl, 'file:///sender/private'),
+      sourceRule,
+      repoRule,
+    ],
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  );
+
+  test(
+    'API export and import preserve portable conditions with recipient-owned IDs',
+    () async {
+      final sender = LibraryRoutes(
+        InMemoryResourceStore([scoped]),
+        triggerGroupStore: InMemoryTriggerGroupStore([mixedGroup]),
+      );
+      final exported = (await sender.export({})).json;
+      final wire = jsonEncode(exported);
+      for (final value in [
+        '/sender/private',
+        'sender-group',
+        'nativeProject',
+        'file://',
+        'C:',
+      ]) {
+        expect(wire, isNot(contains(value)));
+      }
+      expect(scoped.enabled, isTrue);
+      final recipientStore = InMemoryResourceStore();
+      final groups = InMemoryTriggerGroupStore([mixedGroup]);
+      final recipient = LibraryRoutes(
+        recipientStore,
+        triggerGroupStore: groups,
+      );
+      final response = await recipient.importResources(wire);
+      expect(response.json['disabledForRuleReview'], ['scoped']);
+      final imported = (await recipientStore.load()).single;
+      expect(imported.enabled, isFalse);
+      expect(imported.strictProjectSkill, isFalse);
+      expect(imported.skillProjectPaths, isEmpty);
+      expect(imported.skillDeliveryByAgent, isEmpty);
+      final binding = imported.triggerGroupIds.single;
+      expect(binding, isNot('sender-group'));
+      expect((await groups.load()).singleWhere((g) => g.id == binding).rules, [
+        sourceRule,
+        repoRule,
+      ]);
+      await recipientStore.save([imported.copyWith(enabled: true)]);
+      final duplicate = await recipient.importResources(wire);
+      expect(duplicate.json['disabledForRuleReview'], isNull);
+      expect((await recipientStore.load()).single.enabled, isTrue);
+      expect(await groups.load(), hasLength(2));
+    },
+  );
+
+  test(
+    'legacy and hand-edited bundles discard local scope before committing',
+    () async {
+      final item = {
+        ...scoped.toJson(),
+        'packagePath': '/sender/private/package',
+        'portableRules': [local.toJson()],
+      };
+      final plain = {...scoped.toJson(), 'id': 'plain', 'content': 'plain'}
+        ..remove('strictProjectSkill')
+        ..remove('skillProjectPaths')
+        ..remove('triggerGroupIds')
+        ..remove('skillDeliveryByAgent');
+      final result = LibraryBundle.importPayload({
+        'schemaVersion': 2,
+        'items': [item, plain],
+      }, existing: []);
+      expect(result.reviewRules.keys, ['scoped']);
+      expect(result.reviewRules['scoped'], isEmpty);
+      expect(result.imported.first.skillProjectPaths, isEmpty);
+      expect(result.imported.first.packagePath, isNull);
+      expect(result.imported.first.triggerGroupIds, isEmpty);
+      expect(result.imported.first.enabled, isFalse);
+      expect(result.imported.last.enabled, isTrue);
+    },
+  );
+
   test('selective bundles preserve stable IDs and usage metadata', () {
     final DateTime now = DateTime.utc(2026, 7, 13);
     final Resource skill = Resource(

@@ -432,7 +432,8 @@ final class SynchronizedResourceStore
 
 /// Keeps native Agent MCP files in sync when a trigger group changes without
 /// requiring an unrelated resource edit to occur first.
-final class SynchronizedTriggerGroupStore implements TriggerGroupStore {
+final class SynchronizedTriggerGroupStore
+    implements TriggerGroupStore, ExclusiveTriggerGroupStore {
   SynchronizedTriggerGroupStore(
     this._delegate,
     this._resourceStore,
@@ -444,6 +445,14 @@ final class SynchronizedTriggerGroupStore implements TriggerGroupStore {
   final ResourceStore _resourceStore;
   final AgentResourceSynchronizer _synchronizer;
   final IssueCenterController? issueCenter;
+
+  @override
+  Future<T> exclusiveMutation<T>(Future<T> Function() action) {
+    final store = _delegate;
+    return store is ExclusiveTriggerGroupStore
+        ? (store as ExclusiveTriggerGroupStore).exclusiveMutation(action)
+        : action();
+  }
 
   @override
   Future<List<TriggerGroup>> load() => _delegate.load();

@@ -2929,6 +2929,10 @@
   "@returnedAsACandidate": {
     "description": "DingDong built-in interface copy."
   },
+  "reviewImportRules": "确认导入规则",
+  "importRulesDisabled": "以下资源导入后默认关闭。发送端的本机目录条件会跳过。请在资源设置中检查触发规则，按需配置本机项目目录，再手动启用。",
+  "@reviewImportRules": { "description": "Title for the import review when selected resources have activation rules." },
+  "@importRulesDisabled": { "description": "Explains the disabled state and skipped directory conditions before importing resources." },
   "reviewOnlineResources": "检查在线资源",
   "@reviewOnlineResources": {
     "description": "DingDong built-in interface copy."

@@ -2929,6 +2929,10 @@
   "@returnedAsACandidate": {
     "description": "DingDong built-in interface copy."
   },
+  "reviewImportRules": "Revisar reglas de importación",
+  "importRulesDisabled": "Estos recursos se importarán desactivados. Se omitirán las condiciones de directorio del remitente. Revisa las reglas en los ajustes de cada recurso, configura un directorio local si hace falta y actívalo cuando esté listo.",
+  "@reviewImportRules": { "description": "Title for the import review when selected resources have activation rules." },
+  "@importRulesDisabled": { "description": "Explains the disabled state and skipped directory conditions before importing resources." },
   "reviewOnlineResources": "Revisar recursos en línea",
   "@reviewOnlineResources": {
     "description": "DingDong built-in interface copy."

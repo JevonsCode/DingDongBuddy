@@ -46,6 +46,50 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets(
+    'receiving a resource with rules allows cancelling before a disabled import',
+    (tester) async {
+      final store = InMemoryResourceStore();
+      final model = LibraryViewModel(store);
+      await model.load();
+      final sharing = _Sharing()
+        ..incoming = LibraryBundle.encode([
+          _prompt('scoped').copyWith(triggerGroupIds: ['sender-only']),
+        ], generatedAt: DateTime.utc(2026));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: LibraryScreen(viewModel: model, shareGateway: sharing),
+          ),
+        ),
+      );
+      Future<void> select() async {
+        for (final key in [
+          'library-inbox',
+          'library-open-bundle-incoming',
+          'library-install-select-scoped',
+          'library-install-selection',
+        ]) {
+          await tester.pumpAndSettle();
+          await tester.tap(find.byKey(Key(key)));
+        }
+        await tester.pumpAndSettle();
+        expect(find.textContaining('Directory conditions'), findsOneWidget);
+        expect(find.text('scoped'), findsOneWidget);
+      }
+
+      await select();
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(await store.load(), isEmpty);
+      await select();
+      await tester.tap(find.byKey(const Key('library-import-review-confirm')));
+      await tester.pumpAndSettle();
+      expect((await store.load()).single.enabled, isFalse);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('received bundles install only checked items after review', (
     tester,
   ) async {

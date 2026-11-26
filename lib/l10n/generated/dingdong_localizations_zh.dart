@@ -2160,6 +2160,13 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get returnedAsACandidate => '成为候选';
 
   @override
+  String get reviewImportRules => '确认导入规则';
+
+  @override
+  String get importRulesDisabled =>
+      '以下资源导入后默认关闭。发送端的本机目录条件会跳过。请在资源设置中检查触发规则，按需配置本机项目目录，再手动启用。';
+
+  @override
   String get reviewOnlineResources => '检查在线资源';
 
   @override

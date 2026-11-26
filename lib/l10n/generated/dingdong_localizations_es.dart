@@ -2272,6 +2272,13 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   String get returnedAsACandidate => 'regresó como candidato';
 
   @override
+  String get reviewImportRules => 'Revisar reglas de importación';
+
+  @override
+  String get importRulesDisabled =>
+      'Estos recursos se importarán desactivados. Se omitirán las condiciones de directorio del remitente. Revisa las reglas en los ajustes de cada recurso, configura un directorio local si hace falta y actívalo cuando esté listo.';
+
+  @override
   String get reviewOnlineResources => 'Revisar recursos en línea';
 
   @override

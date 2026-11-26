@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dingdong/core/data/data_revision_bus.dart';
 import 'package:dingdong/core/models/resource.dart';
 import 'package:dingdong/core/utils/uuid.dart';
+import 'package:dingdong/features/library/data/library_bundle_commit.dart';
 import 'package:dingdong/features/library/data/resource_repository.dart';
 import 'package:dingdong/features/library/data/trigger_group_repository.dart';
 import 'package:dingdong/features/library/domain/library_bundle.dart';
@@ -606,10 +607,15 @@ final class LibraryViewModel extends ChangeNotifier {
   Future<LibraryBundleImportResult> prepareBundleJson(
     String contents, {
     bool resolveOnline = false,
+    bool allowLocalPackage = true,
   }) {
     if (!resolveOnline) {
       return Future<LibraryBundleImportResult>.value(
-        LibraryBundle.decode(contents, existing: _resources),
+        LibraryBundle.decode(
+          contents,
+          existing: _resources,
+          allowLocalPackage: allowLocalPackage,
+        ),
       );
     }
     final ResourceUpdateFetcher? fetcher = updateFetcher;
@@ -648,32 +654,19 @@ final class LibraryViewModel extends ChangeNotifier {
     required String source,
     required LibraryImportSourceKind kind,
   }) async {
-    Future<LibraryBundleImportResult> commit() async {
-      final existing = await _repository.load();
-      final merged = LibraryBundle.mergeResources(
-        prepared.imported,
-        existing: existing,
-      );
-      final resources = <Resource>[...existing, ...merged.imported];
-      if (merged.imported.isNotEmpty) await _repository.save(resources);
-      _resources = resources;
-      _refreshSelectedResource();
-      if (merged.imported.isNotEmpty) {
-        _selectedResource = merged.imported.first;
-        _isCreating = false;
-      }
-      return LibraryBundleImportResult(
-        imported: merged.imported,
-        duplicateIds: [...prepared.duplicateIds, ...merged.duplicateIds],
-        conflictIds: [...prepared.conflictIds, ...merged.conflictIds],
-        onlineResources: prepared.onlineResources,
-      );
+    final committed = await commitLibraryBundle(
+      prepared,
+      _repository,
+      _triggerGroupStore,
+    );
+    final result = committed.result;
+    _resources = committed.resources;
+    if (committed.groups case final groups?) _triggerGroups = groups;
+    _refreshSelectedResource();
+    if (result.imported.isNotEmpty) {
+      _selectedResource = result.imported.first;
+      _isCreating = false;
     }
-
-    final repository = _repository;
-    final result = repository is ExclusiveResourceStore
-        ? await (repository as ExclusiveResourceStore).exclusiveMutation(commit)
-        : await commit();
     final LibraryImportHistoryEntry entry = LibraryImportHistoryEntry(
       source: source,
       kind: kind,
@@ -705,7 +698,11 @@ final class LibraryViewModel extends ChangeNotifier {
         : _resources
               .where((Resource resource) => _selectedIds.contains(resource.id))
               .toList(growable: false);
-    return LibraryBundle.encode(exportable, generatedAt: _now());
+    return LibraryBundle.encode(
+      exportable,
+      generatedAt: _now(),
+      triggerGroups: {for (final group in _triggerGroups) group.id: group},
+    );
   }
 }
 
