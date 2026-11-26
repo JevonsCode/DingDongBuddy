@@ -83,11 +83,14 @@ void main() {
       addTearDown(restoredPeer.close);
       final hostSession = restoredHost.session(legacy(hostRecord));
       final peerSession = restoredPeer.session(legacy(peerRecord));
-      final ready = peerSession.events.firstWhere(
-        (event) =>
-            event is DeviceLinkStatusEvent &&
-            event.status == DeviceConnectionStatus.connected,
-      );
+      final ready = Future.wait([
+        for (final session in [hostSession, peerSession])
+          session.events.firstWhere(
+            (event) =>
+                event is DeviceLinkStatusEvent &&
+                event.status == DeviceConnectionStatus.connected,
+          ),
+      ]);
       await Future.wait([hostSession.connect(), peerSession.connect()]);
       await ready.timeout(const Duration(seconds: 10));
       expect(hostSession.connected, isTrue);
