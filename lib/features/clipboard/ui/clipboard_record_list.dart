@@ -4,6 +4,7 @@ class _ClipboardList extends StatefulWidget {
   const _ClipboardList({
     required this.viewModel,
     required this.includeShare,
+    required this.includeSaveAsPrompt,
     required this.showShortcutHints,
     required this.showPlainTextShortcutHints,
     required this.onShortcutStartIndexChanged,
@@ -17,6 +18,7 @@ class _ClipboardList extends StatefulWidget {
 
   final ClipboardViewModel viewModel;
   final bool includeShare;
+  final bool includeSaveAsPrompt;
   final bool showShortcutHints;
   final bool showPlainTextShortcutHints;
   final ValueChanged<int> onShortcutStartIndexChanged;
@@ -147,6 +149,7 @@ class _ClipboardListState extends State<_ClipboardList> {
                             details.globalPosition,
                             record,
                             widget.includeShare,
+                            widget.includeSaveAsPrompt,
                             showArchiveControls,
                             widget.onAction,
                           )
@@ -156,6 +159,7 @@ class _ClipboardListState extends State<_ClipboardList> {
                             widget.contextMenuGateway!,
                             record,
                             widget.includeShare,
+                            widget.includeSaveAsPrompt,
                             showArchiveControls,
                             widget.onAction,
                           ),
@@ -196,6 +200,7 @@ Future<void> _showNativeClipboardContextMenu(
   DesktopContextMenuGateway gateway,
   ClipboardRecord record,
   bool includeShare,
+  bool includeSaveAsPrompt,
   bool includePin,
   ValueChanged<_ClipboardAction> onAction,
 ) async {
@@ -209,6 +214,7 @@ Future<void> _showNativeClipboardContextMenu(
         includePaste: true,
         canPasteAsPlainText: record.canPasteAsPlainText,
         includeShare: includeShare,
+        includeSaveAsPrompt: includeSaveAsPrompt,
         includePin: includePin,
         pinned: record.pinned,
         hasTitle: record.title.trim().isNotEmpty,
@@ -240,6 +246,7 @@ Future<void> _showClipboardContextMenu(
   Offset position,
   ClipboardRecord record,
   bool includeShare,
+  bool includeSaveAsPrompt,
   bool includePin,
   ValueChanged<_ClipboardAction> onAction,
 ) async {
@@ -289,11 +296,12 @@ Future<void> _showClipboardContextMenu(
             symbol: 'edit',
             label: context.l10n.editText,
           ),
-          DesktopMenuItem<_ClipboardAction>(
-            value: _ClipboardAction.promotePrompt,
-            symbol: 'prompt',
-            label: context.l10n.saveAsPrompt,
-          ),
+          if (includeSaveAsPrompt)
+            DesktopMenuItem<_ClipboardAction>(
+              value: _ClipboardAction.promotePrompt,
+              symbol: 'prompt',
+              label: context.l10n.saveAsPrompt,
+            ),
           DesktopMenuItem<_ClipboardAction>(
             value: _ClipboardAction.archiveTo,
             symbol: 'archive_to',

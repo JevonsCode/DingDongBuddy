@@ -42,6 +42,7 @@ class ClipboardScreen extends StatefulWidget {
   const ClipboardScreen({
     required this.viewModel,
     this.settingsViewModel,
+    this.allowSaveAsPrompt = true,
     this.showShortcutHints = false,
     this.showPlainTextShortcutHints = false,
     this.showGroupShortcutHints = false,
@@ -62,6 +63,7 @@ class ClipboardScreen extends StatefulWidget {
 
   final ClipboardViewModel viewModel;
   final ClipboardSettingsController? settingsViewModel;
+  final bool allowSaveAsPrompt;
   final bool showShortcutHints;
   final bool showPlainTextShortcutHints;
   final bool showGroupShortcutHints;
@@ -497,6 +499,7 @@ class _ClipboardScreenState extends State<ClipboardScreen>
                             final Widget list = _ClipboardList(
                               viewModel: viewModel,
                               includeShare: onShare != null,
+                              includeSaveAsPrompt: widget.allowSaveAsPrompt,
                               showShortcutHints: showShortcutHints,
                               showPlainTextShortcutHints:
                                   showPlainTextShortcutHints,
@@ -523,6 +526,8 @@ class _ClipboardScreenState extends State<ClipboardScreen>
                                 Expanded(
                                   child: _ClipboardPreview(
                                     record: viewModel.selectedRecord,
+                                    includeSaveAsPrompt:
+                                        widget.allowSaveAsPrompt,
                                     onRestore: () async {
                                       await viewModel.restoreSelected();
                                     },

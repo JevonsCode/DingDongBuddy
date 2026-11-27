@@ -253,6 +253,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _navigationPending = false;
           unawaited(_revealSection(releaseContext));
         case SettingsWindowDestination.voice:
+          if (widget.viewModel.settings.clipboardOnly) {
+            _navigationPending = false;
+            return;
+          }
           final sectionContext = _voiceSectionKey.currentContext;
           final issueNumber = _navigationController.voiceIssueNumber;
           if (sectionContext == null ||
@@ -269,7 +273,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _openVoice(BuildContext sectionContext, int issueNumber) async {
     await _revealSection(sectionContext);
-    if (mounted) {
+    if (mounted && !widget.viewModel.settings.clipboardOnly) {
       await showDialog<void>(
         context: context,
         builder: (_) => VoiceInstallDialog(
@@ -296,8 +300,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           final AppSettings settings = widget.viewModel.settings;
-          final terms = _settingsSearchTerms(context);
-          terms['notifications']!.addAll(
+          final terms = _settingsSearchTerms(
+            context,
+            clipboardOnly: settings.clipboardOnly,
+          );
+          terms['notifications']?.addAll(
             settings.reminderProfiles.expand(
               (p) => [p.name, p.id, p.description],
             ),
@@ -308,9 +315,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               .split(RegExp(r'\s+'))
               .where((w) => w.isNotEmpty)
               .toList();
-          bool matches(String id) => words.every(
-            (word) => terms[id]!.join(' ').toLowerCase().contains(word),
-          );
+          bool matches(String id) =>
+              terms.containsKey(id) &&
+              words.every(
+                (word) => terms[id]!.join(' ').toLowerCase().contains(word),
+              );
           final hasMatches = terms.keys.any(matches);
           final content = CustomScrollView(
             controller: _scrollController,
@@ -349,10 +358,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             _SettingsSection(
                               key: _keyFor('general'),
                               title: context.l10n.general,
-                              description: context
-                                  .l10n
-                                  .chooseHowDingDongBehavesWhenYouSignIn,
+                              description:
+                                  context.l10n.generalSettingsDescription,
                               children: <Widget>[
+                                CompactSwitchListTile(
+                                  key: const Key('settings-clipboard-only'),
+                                  contentPadding: EdgeInsets.zero,
+                                  title: Text(context.l10n.clipboardOnlyMode),
+                                  subtitle: Text(
+                                    context.l10n.clipboardOnlyModeDescription,
+                                  ),
+                                  value: settings.clipboardOnly,
+                                  onChanged: widget.viewModel.setClipboardOnly,
+                                ),
                                 CompactSwitchListTile(
                                   key: const Key('settings-launch-at-startup'),
                                   contentPadding: EdgeInsets.zero,
@@ -380,8 +398,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     value: settings.hideDockIcon,
                                     onChanged: widget.viewModel.setHideDockIcon,
                                   ),
-                                if (defaultTargetPlatform ==
-                                    TargetPlatform.macOS)
+                                if (!settings.clipboardOnly &&
+                                    defaultTargetPlatform ==
+                                        TargetPlatform.macOS)
                                   CompactSwitchListTile(
                                     key: const Key('settings-notch-hover'),
                                     contentPadding: EdgeInsets.zero,
@@ -423,9 +442,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             _SettingsSection(
                               key: _keyFor('keyboardShortcuts'),
                               title: context.l10n.keyboardShortcuts,
-                              description: context
-                                  .l10n
-                                  .setTheSystemWidePanelShortcutAndTheShortcutsUsedInside_4f5138fb,
+                              description: settings.clipboardOnly
+                                  ? context
+                                        .l10n
+                                        .clipboardOnlyShortcutDescription
+                                  : context
+                                        .l10n
+                                        .setTheSystemWidePanelShortcutAndTheShortcutsUsedInside_4f5138fb,
                               children: <Widget>[
                                 _SettingRow(
                                   label: context.l10n.openOrHideClipboard,
@@ -434,69 +457,73 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     onChanged: widget.viewModel.setGlobalHotKey,
                                   ),
                                 ),
-                                Padding(
-                                  padding: const EdgeInsets.only(
-                                    top: 8,
-                                    bottom: 2,
+                                if (!settings.clipboardOnly) ...[
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                      top: 8,
+                                      bottom: 2,
+                                    ),
+                                    child: Text(
+                                      context
+                                          .l10n
+                                          .workspaceShortcutsApplyOnlyWhileThePanelIsFocused_1b6f2968,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall,
+                                    ),
                                   ),
-                                  child: Text(
-                                    context
-                                        .l10n
-                                        .workspaceShortcutsApplyOnlyWhileThePanelIsFocused_1b6f2968,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.bodySmall,
+                                  _SettingRow(
+                                    label: context.l10n.dynamicWorkspace,
+                                    child: WorkspaceShortcutRecorder(
+                                      settingId: 'today',
+                                      semanticLabel:
+                                          context.l10n.dynamicWorkspaceShortcut,
+                                      value: settings.workspaceShortcuts.today,
+                                      defaultValue:
+                                          WorkspaceShortcuts.defaultToday,
+                                      onChanged: (WorkspaceShortcut value) =>
+                                          widget.viewModel.setWorkspaceShortcut(
+                                            0,
+                                            value,
+                                          ),
+                                    ),
                                   ),
-                                ),
-                                _SettingRow(
-                                  label: context.l10n.dynamicWorkspace,
-                                  child: WorkspaceShortcutRecorder(
-                                    settingId: 'today',
-                                    semanticLabel:
-                                        context.l10n.dynamicWorkspaceShortcut,
-                                    value: settings.workspaceShortcuts.today,
-                                    defaultValue:
-                                        WorkspaceShortcuts.defaultToday,
-                                    onChanged: (WorkspaceShortcut value) =>
-                                        widget.viewModel.setWorkspaceShortcut(
-                                          0,
-                                          value,
-                                        ),
+                                  _SettingRow(
+                                    label: context.l10n.libraryWorkspace,
+                                    child: WorkspaceShortcutRecorder(
+                                      settingId: 'library',
+                                      semanticLabel:
+                                          context.l10n.libraryWorkspaceShortcut,
+                                      value:
+                                          settings.workspaceShortcuts.library,
+                                      defaultValue:
+                                          WorkspaceShortcuts.defaultLibrary,
+                                      onChanged: (WorkspaceShortcut value) =>
+                                          widget.viewModel.setWorkspaceShortcut(
+                                            1,
+                                            value,
+                                          ),
+                                    ),
                                   ),
-                                ),
-                                _SettingRow(
-                                  label: context.l10n.libraryWorkspace,
-                                  child: WorkspaceShortcutRecorder(
-                                    settingId: 'library',
-                                    semanticLabel:
-                                        context.l10n.libraryWorkspaceShortcut,
-                                    value: settings.workspaceShortcuts.library,
-                                    defaultValue:
-                                        WorkspaceShortcuts.defaultLibrary,
-                                    onChanged: (WorkspaceShortcut value) =>
-                                        widget.viewModel.setWorkspaceShortcut(
-                                          1,
-                                          value,
-                                        ),
+                                  _SettingRow(
+                                    label: context.l10n.clipboardWorkspace,
+                                    child: WorkspaceShortcutRecorder(
+                                      settingId: 'clipboard',
+                                      semanticLabel: context
+                                          .l10n
+                                          .clipboardWorkspaceShortcut,
+                                      value:
+                                          settings.workspaceShortcuts.clipboard,
+                                      defaultValue:
+                                          WorkspaceShortcuts.defaultClipboard,
+                                      onChanged: (WorkspaceShortcut value) =>
+                                          widget.viewModel.setWorkspaceShortcut(
+                                            2,
+                                            value,
+                                          ),
+                                    ),
                                   ),
-                                ),
-                                _SettingRow(
-                                  label: context.l10n.clipboardWorkspace,
-                                  child: WorkspaceShortcutRecorder(
-                                    settingId: 'clipboard',
-                                    semanticLabel:
-                                        context.l10n.clipboardWorkspaceShortcut,
-                                    value:
-                                        settings.workspaceShortcuts.clipboard,
-                                    defaultValue:
-                                        WorkspaceShortcuts.defaultClipboard,
-                                    onChanged: (WorkspaceShortcut value) =>
-                                        widget.viewModel.setWorkspaceShortcut(
-                                          2,
-                                          value,
-                                        ),
-                                  ),
-                                ),
+                                ],
                               ],
                             ),
                           if (matches('quickPaste'))
@@ -619,50 +646,64 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     ),
                                   ),
                                 ),
-                                _SettingRow(
-                                  label: context.l10n.defaultWorkspace,
-                                  child:
-                                      DesktopSegmentedControl<DefaultWorkspace>(
-                                        key: const Key(
-                                          'settings-default-workspace',
+                                if (!settings.clipboardOnly)
+                                  _SettingRow(
+                                    label: context.l10n.defaultWorkspace,
+                                    child:
+                                        DesktopSegmentedControl<
+                                          DefaultWorkspace
+                                        >(
+                                          key: const Key(
+                                            'settings-default-workspace',
+                                          ),
+                                          value: settings.defaultWorkspace,
+                                          segments:
+                                              <
+                                                DesktopSegment<DefaultWorkspace>
+                                              >[
+                                                DesktopSegment<
+                                                  DefaultWorkspace
+                                                >(
+                                                  value: DefaultWorkspace.today,
+                                                  label: Text(
+                                                    context.l10n.dynamicMessage,
+                                                  ),
+                                                ),
+                                                DesktopSegment<
+                                                  DefaultWorkspace
+                                                >(
+                                                  value:
+                                                      DefaultWorkspace.library,
+                                                  label: Text(
+                                                    context.l10n.libraryMessage,
+                                                  ),
+                                                ),
+                                                DesktopSegment<
+                                                  DefaultWorkspace
+                                                >(
+                                                  value: DefaultWorkspace
+                                                      .clipboard,
+                                                  label: Text(
+                                                    context.l10n.clipboard,
+                                                  ),
+                                                ),
+                                              ],
+                                          onChanged: widget
+                                              .viewModel
+                                              .setDefaultWorkspace,
                                         ),
-                                        value: settings.defaultWorkspace,
-                                        segments:
-                                            <DesktopSegment<DefaultWorkspace>>[
-                                              DesktopSegment<DefaultWorkspace>(
-                                                value: DefaultWorkspace.today,
-                                                label: Text(
-                                                  context.l10n.dynamicMessage,
-                                                ),
-                                              ),
-                                              DesktopSegment<DefaultWorkspace>(
-                                                value: DefaultWorkspace.library,
-                                                label: Text(
-                                                  context.l10n.libraryMessage,
-                                                ),
-                                              ),
-                                              DesktopSegment<DefaultWorkspace>(
-                                                value:
-                                                    DefaultWorkspace.clipboard,
-                                                label: Text(
-                                                  context.l10n.clipboard,
-                                                ),
-                                              ),
-                                            ],
-                                        onChanged: widget
-                                            .viewModel
-                                            .setDefaultWorkspace,
-                                      ),
-                                ),
+                                  ),
                               ],
                             ),
                           if (matches('clipboardHistory2'))
                             _SettingsSection(
                               key: _keyFor('clipboardHistory2'),
                               title: context.l10n.clipboardHistory2,
-                              description: context
-                                  .l10n
-                                  .historyStaysOnThisDeviceAgentAccessToClipboardContentIs_74a8f236,
+                              description: settings.clipboardOnly
+                                  ? context.l10n.clipboardOnlyHistoryDescription
+                                  : context
+                                        .l10n
+                                        .historyStaysOnThisDeviceAgentAccessToClipboardContentIs_74a8f236,
                               children: <Widget>[
                                 CompactSwitchListTile(
                                   key: const Key(
@@ -681,26 +722,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   onChanged:
                                       widget.viewModel.setClipboardMonitoring,
                                 ),
-                                CompactSwitchListTile(
-                                  key: const Key(
-                                    'settings-agent-clipboard-content',
+                                if (!settings.clipboardOnly)
+                                  CompactSwitchListTile(
+                                    key: const Key(
+                                      'settings-agent-clipboard-content',
+                                    ),
+                                    contentPadding: EdgeInsets.zero,
+                                    title: Text(
+                                      context
+                                          .l10n
+                                          .allowAgentsToReadClipboardContent,
+                                    ),
+                                    subtitle: Text(
+                                      context
+                                          .l10n
+                                          .offByDefaultMetadataStaysAvailableSensitiveRecordsStill_fa1a5f8f,
+                                    ),
+                                    value: settings.allowAgentClipboardContent,
+                                    onChanged: widget
+                                        .viewModel
+                                        .setAllowAgentClipboardContent,
                                   ),
-                                  contentPadding: EdgeInsets.zero,
-                                  title: Text(
-                                    context
-                                        .l10n
-                                        .allowAgentsToReadClipboardContent,
-                                  ),
-                                  subtitle: Text(
-                                    context
-                                        .l10n
-                                        .offByDefaultMetadataStaysAvailableSensitiveRecordsStill_fa1a5f8f,
-                                  ),
-                                  value: settings.allowAgentClipboardContent,
-                                  onChanged: widget
-                                      .viewModel
-                                      .setAllowAgentClipboardContent,
-                                ),
                                 _SettingRow(
                                   label: context.l10n.maximumItems,
                                   child: _NumberField(

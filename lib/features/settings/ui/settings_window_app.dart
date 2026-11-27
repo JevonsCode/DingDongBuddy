@@ -57,6 +57,7 @@ class _SettingsWindowAppState extends State<SettingsWindowApp>
     unawaited(
       widget.windowController.setWindowMethodHandler((call) async {
         if (call.method == 'window_focus') {
+          await widget.viewModel.reload();
           _navigationController.navigateTo(
             SettingsWindowDestination.fromValue(call.arguments),
           );

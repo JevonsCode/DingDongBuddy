@@ -43,7 +43,8 @@ extension _DeviceLinkResumableTransfer on DeviceLinkController {
     final device = _device(peer);
     if (transfer.itemId == libraryBundleTransferItemId) {
       final receive = onLibraryBundleReceived;
-      if (device.kind != LinkedDeviceKind.computer ||
+      if (clipboardOnly ||
+          device.kind != LinkedDeviceKind.computer ||
           receive == null ||
           transfer.size > relayFileLimit) {
         throw const FormatException('Resource bundle transfer is unavailable.');

@@ -39,6 +39,7 @@ void main() {
     final AppSettings settings = await SettingsRepository(backend).load();
     expect(settings.notchBubbleDirection, NotchBubbleDirection.left);
 
+    expect(settings.clipboardOnly, isFalse);
     expect(settings.clipboardMaxItems, 5000);
     expect(settings.clipboardMaxAgeDays, 120);
     expect(settings.allowAgentClipboardContent, isFalse);

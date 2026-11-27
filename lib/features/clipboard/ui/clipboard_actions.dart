@@ -176,7 +176,11 @@ extension _ClipboardActions on _ClipboardScreenState {
   Future<void> _promote(BuildContext context, ResourceType type) async {
     final ResourceManagerLauncher? launcher = resourceManagerLauncher;
     final ClipboardRecord? selected = viewModel.selectedRecord;
-    if (launcher == null || selected == null || !type.isLibraryResource) {
+    if (!mounted ||
+        !widget.allowSaveAsPrompt ||
+        launcher == null ||
+        selected == null ||
+        !type.isLibraryResource) {
       return;
     }
     await launcher.show(

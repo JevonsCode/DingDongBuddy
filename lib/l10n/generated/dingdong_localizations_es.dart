@@ -626,8 +626,8 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   String get choose => 'Elegir';
 
   @override
-  String get chooseHowDingDongBehavesWhenYouSignIn =>
-      'Elija cómo se comporta DingDong cuando inicia sesión.';
+  String get generalSettingsDescription =>
+      'Elige cómo usar DingDong y si quieres que se abra al iniciar sesión.';
 
   @override
   String get chooseRules => 'Elige reglas';
@@ -5063,4 +5063,23 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   @override
   String get libraryInstallOnlineSources =>
       'Los recursos en línea seleccionados se descargan de las fuentes indicadas.';
+
+  @override
+  String get clipboardOnlyMode => 'Modo de solo portapapeles';
+
+  @override
+  String get clipboardOnlyModeDescription =>
+      'Pausa los avisos de IA y conserva el historial del portapapeles, el pegado rápido y el envío entre dispositivos. Desactiva este modo para recuperar tus ajustes de IA.';
+
+  @override
+  String get clipboardOnlyHistoryDescription =>
+      'El historial del portapapeles se guarda en este dispositivo.';
+
+  @override
+  String get clipboardOnlyShortcutDescription =>
+      'Elige un atajo global para abrir el portapapeles.';
+
+  @override
+  String get clipboardOnlyConfigurationDescription =>
+      'Reglas del portapapeles y preferencias de la aplicación';
 }

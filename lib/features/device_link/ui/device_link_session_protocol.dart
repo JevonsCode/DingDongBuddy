@@ -253,7 +253,7 @@ extension _DeviceLinkSessionProtocol on DeviceLinkController {
           }
         }
       case 'agent.seen':
-        _handleAgentSeen(message);
+        if (!clipboardOnly) _handleAgentSeen(message);
     }
   }
 

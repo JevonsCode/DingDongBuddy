@@ -9,11 +9,83 @@ import 'package:dingdong/features/library/ui/library_screen.dart';
 import 'package:dingdong/features/library/ui/library_view_model.dart';
 import 'package:dingdong/features/settings/data/preferences_backend.dart';
 import 'package:dingdong/features/settings/data/settings_repository.dart';
+import 'package:dingdong/features/settings/ui/settings_view_model.dart';
 import 'package:dingdong/features/shell/ui/shell_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets(
+    'welcome offers clipboard-only mode and keeps access to management',
+    (tester) async {
+      _useCompactWindow(tester);
+      final backend = MemoryPreferencesBackend();
+      final settings = SettingsViewModel(SettingsRepository(backend));
+      final controller = ShellController();
+      final launcher = _ResourceLauncher();
+      addTearDown(settings.dispose);
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        DingDongApp(
+          settingsViewModel: settings,
+          shellController: controller,
+          resourceManagerLauncher: launcher,
+          agentInstallGateway: _InstallerGateway(),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('agent-install-clipboard-only')));
+      await tester.pumpAndSettle();
+      expect((await SettingsRepository(backend).load()).clipboardOnly, isTrue);
+      expect(controller.selectedIndex, 2);
+      expect(find.byKey(const Key('popup-tab-bar')), findsNothing);
+      expect(find.byKey(const Key('popup-open-settings')), findsOneWidget);
+      expect(find.byKey(const Key('agent-install-onboarding')), findsNothing);
+      await tester.tap(find.byKey(const Key('popup-open-clipboard-manager')));
+      expect(launcher.destination, ResourceManagerDestination.clipboard);
+
+      controller.open(0);
+      controller.open(1);
+      controller.open(3);
+      expect(controller.selectedIndex, 2);
+      await settings.setClipboardOnly(false);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('popup-tab-0')), findsOneWidget);
+      expect(find.byKey(const Key('agent-install-onboarding')), findsOneWidget);
+      await settings.setClipboardOnly(true);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('agent-install-onboarding')), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'persisted clipboard-only mode suppresses setup scans and previews',
+    (tester) async {
+      _useCompactWindow(tester);
+      final controller = ShellController(initialIndex: 3);
+      final installer = _InstallerGateway();
+      final settings = SettingsRepository(
+        MemoryPreferencesBackend({'dingdong.mode.clipboardOnly': true}),
+      );
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        DingDongApp(
+          developmentBuild: true,
+          settingsRepository: settings,
+          shellController: controller,
+          agentInstallGateway: installer,
+        ),
+      );
+      await tester.pumpAndSettle();
+      controller.requestAgentInstallPreview();
+      await tester.pumpAndSettle();
+      expect(controller.selectedIndex, 2);
+      expect(find.byKey(const Key('agent-install-onboarding')), findsNothing);
+      expect(installer.scanCount, 0);
+    },
+  );
+
   for (final seen in [false, true]) {
     testWidgets(
       'DEV preview can repeat without changing onboarding seen=$seen',
@@ -292,6 +364,7 @@ void _useCompactWindow(WidgetTester tester) {
 
 final class _ResourceLauncher implements ResourceManagerLauncher {
   int openCount = 0;
+  ResourceManagerDestination? destination;
   ResourceManagerCreateRequest? request;
 
   @override
@@ -302,6 +375,7 @@ final class _ResourceLauncher implements ResourceManagerLauncher {
         ResourceManagerDestination.resources,
   }) async {
     openCount += 1;
+    this.destination = destination;
     request = createRequest;
   }
 }
@@ -337,18 +411,23 @@ final class _TransferGateway implements LibraryTransferGateway {
 }
 
 final class _InstallerGateway implements AgentInstallGateway {
+  int scanCount = 0;
   AgentInstallState state = AgentInstallState.connected;
   @override
   bool get previewOnly => true;
   @override
-  Future<List<AgentInstallClient>> scan() async => [
-    AgentInstallClient(
-      id: 'codex',
-      name: 'Codex',
-      detected: true,
-      state: state,
-    ),
-  ];
+  Future<List<AgentInstallClient>> scan() async {
+    scanCount++;
+    return [
+      AgentInstallClient(
+        id: 'codex',
+        name: 'Codex',
+        detected: true,
+        state: state,
+      ),
+    ];
+  }
+
   @override
   Future<List<AgentInstallOutcome>> plan(List<String> ids) async => [];
   @override

@@ -110,6 +110,7 @@ final class SettingsViewModel extends ChangeNotifier
   bool _isClearingSystemData = false;
   int _loadedApiPort = 2333;
   bool _savePending = false;
+  bool _saveClipboardMode = false;
   Future<void>? _saveInFlight;
   bool _disposed = false;
 
@@ -161,6 +162,7 @@ final class SettingsViewModel extends ChangeNotifier
       if (!_loaded) {
         _loadedApiPort = loadedSettings.apiPort;
       }
+      final wasClipboardOnly = _settings.clipboardOnly;
       _settings = loadedSettings;
       _releaseStatus = _releaseStatus.withAllowBeta(
         loadedSettings.allowBetaUpdates,
@@ -197,7 +199,7 @@ final class SettingsViewModel extends ChangeNotifier
           _settings = _settings.copyWith(
             globalHotKey: GlobalHotKey.defaultValue,
           );
-          await _repository.save(_settings);
+          await _repository.save(_settings, includeClipboardMode: false);
           if (_disposed) return;
           loadWarning = _globalHotKeyRegistrationError;
         }
@@ -211,9 +213,16 @@ final class SettingsViewModel extends ChangeNotifier
       if (_disposed) return;
       _isQuickPastePermissionGranted = quickPastePermissionGranted;
       if (!_loaded && _restoreSelectionPluginOnLoad) {
-        await _applySelectionPluginConfiguration(_settings.selectionPlugin);
+        await _applySelectionPluginConfiguration(
+          _settings.effectiveSelectionPlugin,
+        );
       } else {
-        await refreshSelectionPluginStatus();
+        // When leaving clipboard-only mode the host may still be suspended.
+        // Preserve the enablement that the main window is about to restore.
+        await _queueSelectionOperation(
+          () =>
+              _refreshSelectionPluginStatus(preserveEnabled: wasClipboardOnly),
+        );
       }
       if (_disposed) return;
       await _loadSystemUsage();
@@ -230,6 +239,13 @@ final class SettingsViewModel extends ChangeNotifier
     if (!_disposed) {
       notifyListeners();
     }
+  }
+
+  Future<void> setClipboardOnly(bool enabled) async {
+    _saveClipboardMode = true;
+    _settings = _settings.copyWith(clipboardOnly: enabled);
+    notifyListeners();
+    await _save();
   }
 
   @override
@@ -323,7 +339,9 @@ final class SettingsViewModel extends ChangeNotifier
   Future<void> refreshSelectionPluginStatus() =>
       _queueSelectionOperation(_refreshSelectionPluginStatus);
 
-  Future<void> _refreshSelectionPluginStatus() async {
+  Future<void> _refreshSelectionPluginStatus({
+    bool preserveEnabled = false,
+  }) async {
     final SelectionPluginGateway? gateway = _selectionPluginGateway;
     if (_disposed || gateway == null) return;
     try {
@@ -332,11 +350,13 @@ final class SettingsViewModel extends ChangeNotifier
       _selectionPluginStatus = status;
       // A refresh observes the host; replaying persisted settings could undo
       // an in-flight change made by the dedicated settings window.
-      _settings = _settings.copyWith(
-        selectionPlugin: _settings.selectionPlugin.copyWith(
-          enabled: _selectionPluginStatus.enabled,
-        ),
-      );
+      if (!_settings.clipboardOnly && !preserveEnabled) {
+        _settings = _settings.copyWith(
+          selectionPlugin: _settings.selectionPlugin.copyWith(
+            enabled: _selectionPluginStatus.enabled,
+          ),
+        );
+      }
       _selectionPluginConfigurationError = null;
     } on Object {
       if (_disposed) return;
@@ -422,6 +442,14 @@ final class SettingsViewModel extends ChangeNotifier
     final SelectionPluginGateway? gateway = _selectionPluginGateway;
     if (gateway == null) throw StateError('Selection host is unavailable.');
     return gateway;
+  }
+
+  /// Applies the current mode without changing the user's saved configuration.
+  Future<void> restoreSelectionPlugin() async {
+    await _applySelectionPluginConfiguration(
+      _settings.effectiveSelectionPlugin,
+    );
+    if (!_disposed) notifyListeners();
   }
 
   Future<bool> _applySelectionPluginConfiguration(
@@ -1056,15 +1084,22 @@ final class SettingsViewModel extends ChangeNotifier
     do {
       _savePending = false;
       final AppSettings snapshot = _settings;
+      // An unrelated save from another window must preserve its newer mode.
+      final saveClipboardMode = _saveClipboardMode;
+      _saveClipboardMode = false;
       try {
         if (selectionOnlyPersistence) {
           await _repository.saveSelectionPlugin(snapshot.selectionPlugin);
         } else {
-          await _repository.save(snapshot);
+          await _repository.save(
+            snapshot,
+            includeClipboardMode: saveClipboardMode,
+          );
         }
         await _onSettingsSaved?.call();
         _errorMessage = null;
       } on Object {
+        _saveClipboardMode |= saveClipboardMode;
         _errorMessage = 'Settings could not be saved.';
       }
     } while (_savePending);

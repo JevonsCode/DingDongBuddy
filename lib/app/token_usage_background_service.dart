@@ -30,11 +30,15 @@ final class TokenUsageBackgroundService {
     }
   }
 
+  void stop() {
+    _timer?.cancel();
+    _timer = null;
+  }
+
   Future<void> close() async {
     if (_closed) return;
     _closed = true;
-    _timer?.cancel();
-    _timer = null;
+    stop();
     await repository.close();
   }
 }

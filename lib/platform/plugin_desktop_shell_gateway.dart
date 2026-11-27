@@ -67,6 +67,7 @@ final class PluginDesktopShellGateway
   Timer? _trayBuddyPreviewTimer;
   Timer? _trayBuddyFrameTimer;
   bool _started = false;
+  bool _clipboardOnly = false;
   bool _unreadControllerRestored = false;
   int _pendingUnreadAcknowledgements = 0;
   bool _methodHandlersInstalled = false;
@@ -123,8 +124,12 @@ final class PluginDesktopShellGateway
     trayManager.addListener(this);
     await _unreadController.restore();
     if (Platform.isMacOS) {
-      await trayManager.setNotchBubbleDirection(_notchBubbleDirection.name);
-      if (_unreadController.count > 0) {
+      await trayManager.setNotchBubbleDirection(
+        _clipboardOnly
+            ? NotchBubbleDirection.off.name
+            : _notchBubbleDirection.name,
+      );
+      if (!_clipboardOnly && _unreadController.count > 0) {
         await trayManager.showNotchReminderIfHidden();
       }
     }
@@ -153,7 +158,9 @@ final class PluginDesktopShellGateway
     _hotKeyChannel.setMethodCallHandler((MethodCall call) async {
       if (call.method == 'openApplication') {
         _commands.add(DesktopShellCommand.openApplication);
-      } else if (call.method == 'showTestPanel' && _developmentBuild) {
+      } else if (call.method == 'showTestPanel' &&
+          _developmentBuild &&
+          !_clipboardOnly) {
         _commands.add(DesktopShellCommand.showTestPanel);
       } else if (call.method == 'hideDockIcon') {
         _commands.add(DesktopShellCommand.hideDockIcon);
@@ -190,7 +197,7 @@ final class PluginDesktopShellGateway
     await windowManager.restore();
     await windowManager.focus();
     await _applyWindowOpacity();
-    if (acknowledgeUnread) {
+    if (acknowledgeUnread && !_clipboardOnly) {
       _scheduleUnreadAcknowledgement();
     }
   }
@@ -263,17 +270,33 @@ final class PluginDesktopShellGateway
     return windowManager.startDragging();
   }
 
+  Future<void> setClipboardOnly(bool enabled) async {
+    if (_clipboardOnly == enabled) return;
+    _clipboardOnly = enabled;
+    _unreadAcknowledgementTimer?.cancel();
+    if (_started) {
+      if (Platform.isMacOS) {
+        await trayManager.setNotchBubbleDirection(
+          enabled ? NotchBubbleDirection.off.name : _notchBubbleDirection.name,
+        );
+      }
+      await _unreadController.refresh();
+      await _rebuildContextMenu();
+    }
+  }
+
   Future<void> markUnread({
     AgentNotificationKind kind = AgentNotificationKind.completion,
     String? reminderId,
     ReminderProfile? reminder,
   }) async {
+    if (_clipboardOnly) return;
     await _unreadController.markUnread(
       kind: kind,
       reminderId: reminderId,
       reminder: reminder,
     );
-    if (Platform.isMacOS && _started) {
+    if (!_clipboardOnly && Platform.isMacOS && _started) {
       await trayManager.showNotchReminderIfHidden();
     }
   }
@@ -297,14 +320,14 @@ final class PluginDesktopShellGateway
   }
 
   Future<void> nudgeTrayIcon() async {
-    if (!Platform.isMacOS) {
+    if (_clipboardOnly || !Platform.isMacOS) {
       return;
     }
     await trayManager.nudgeIcon();
   }
 
   Future<void> previewNotchBubble(String direction) async {
-    if (!_developmentBuild || !Platform.isMacOS) return;
+    if (_clipboardOnly || !_developmentBuild || !Platform.isMacOS) return;
     final bool shown = await trayManager.previewNotchBubble(direction);
     if (!shown) throw StateError('No available notch screen for preview');
   }
@@ -312,8 +335,12 @@ final class PluginDesktopShellGateway
   Future<void> setNotchBubbleDirection(NotchBubbleDirection value) async {
     _notchBubbleDirection = value;
     if (_started && Platform.isMacOS) {
-      await trayManager.setNotchBubbleDirection(value.name);
-      if (value != NotchBubbleDirection.off && _unreadController.count > 0) {
+      await trayManager.setNotchBubbleDirection(
+        _clipboardOnly ? NotchBubbleDirection.off.name : value.name,
+      );
+      if (value != NotchBubbleDirection.off &&
+          !_clipboardOnly &&
+          _unreadController.count > 0) {
         await trayManager.showNotchReminderIfHidden();
       }
     }
@@ -356,6 +383,7 @@ final class PluginDesktopShellGateway
       Menu(
         items: desktopTrayContextMenuItems(
           monitoring: monitoring,
+          clipboardOnly: _clipboardOnly,
           strings: strings,
           developmentBuild: _developmentBuild,
           onCommand: _commands.add,
@@ -374,7 +402,7 @@ final class PluginDesktopShellGateway
       0,
       (a, b) => a + b,
     );
-    unreadCount += previewCount;
+    unreadCount = _clipboardOnly ? 0 : unreadCount + previewCount;
     hot = unreadCount > 0;
     title = hot ? ' ${unreadCount > 99 ? '99+' : unreadCount}' : '';
     final bool windows = Platform.isWindows;
@@ -404,6 +432,7 @@ final class PluginDesktopShellGateway
             ),
           ),
     );
+    if (_clipboardOnly) unreadProfiles.clear();
     final counts = {
       ..._unreadController.unreadReminderCounts,
       for (final e in _developmentReminderCounts.entries)
@@ -422,8 +451,10 @@ final class PluginDesktopShellGateway
           kind,
           legacyCompletionColor: _trayNotificationColor,
         );
-    final TrayBuddyState mascotState =
-        _trayBuddyPreviewState ?? _trayBuddyState;
+    final state = _trayBuddyPreviewState ?? _trayBuddyState;
+    final mascotState = _clipboardOnly && state == TrayBuddyState.reminder
+        ? TrayBuddyState.normal
+        : state;
     final TrayBuddyState visualState = trayBuddyVisualState(
       hot: hot,
       state: mascotState,
@@ -477,7 +508,7 @@ final class PluginDesktopShellGateway
       unreadCount: windows ? unreadCount : 0,
       reminderKind: hot ? kind.apiValue : null,
       badgeColorRgb: hot ? color.rgbValue : null,
-      animateUnread: pulseReminder,
+      animateUnread: hot && pulseReminder,
     );
     final DingDongLocalizations strings = _localizations();
     final String unreadTooltip = windowsTrayTooltip(
@@ -718,7 +749,7 @@ final class PluginDesktopShellGateway
   }
 
   Future<void> _acknowledgeUnreadIfVisible(TrayUnreadSnapshot snapshot) async {
-    if (await windowManager.isVisible()) {
+    if (!_clipboardOnly && await windowManager.isVisible()) {
       await _unreadController.acknowledge(snapshot);
     }
   }
@@ -829,6 +860,7 @@ String macOSTrayBuddyIconPath({
 
 @visibleForTesting
 List<MenuItem> desktopTrayContextMenuItems({
+  bool clipboardOnly = false,
   required bool monitoring,
   required DingDongLocalizations strings,
   required bool developmentBuild,
@@ -842,7 +874,7 @@ List<MenuItem> desktopTrayContextMenuItems({
     label: strings.openConnectedDevices,
     onClick: (_) => onCommand(DesktopShellCommand.showDeviceLinks),
   ),
-  if (developmentBuild)
+  if (developmentBuild && !clipboardOnly)
     MenuItem(
       label: strings.testPanel,
       onClick: (_) => onCommand(DesktopShellCommand.showTestPanel),
@@ -865,13 +897,14 @@ List<MenuItem> desktopTrayContextMenuItems({
   ),
   MenuItem.separator(),
   MenuItem(
-    label: strings.resourceManager,
+    label: clipboardOnly ? strings.clipboardHistory2 : strings.resourceManager,
     onClick: (_) => onCommand(DesktopShellCommand.showResourceManager),
   ),
-  MenuItem(
-    label: strings.pluginMarket,
-    onClick: (_) => onCommand(DesktopShellCommand.showPluginMarket),
-  ),
+  if (!clipboardOnly)
+    MenuItem(
+      label: strings.pluginMarket,
+      onClick: (_) => onCommand(DesktopShellCommand.showPluginMarket),
+    ),
   MenuItem(
     label: strings.settings2,
     onClick: (_) => onCommand(DesktopShellCommand.showSettings),

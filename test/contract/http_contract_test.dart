@@ -71,6 +71,61 @@ void main() {
     });
   });
 
+  test(
+    'clipboard-only mode gates Agent routes before their side effects',
+    () async {
+      var clipboardOnly = true;
+      var deliveries = 0;
+      final shown = <int>[];
+      final router = AgentRouter(
+        clipboardOnly: () => clipboardOnly,
+        clipboardStore: InMemoryClipboardStore(),
+        resourceStore: InMemoryResourceStore(),
+        onDing: (_) => deliveries++,
+        onShowUi: shown.add,
+      );
+      Future<HttpResponseData> call(String method, String uri) =>
+          router.route(HttpRequestData(method: method, uri: uri, body: '{}'));
+
+      expect((await call('POST', '/ding')).json['status'], 'suppressed');
+      expect(deliveries, 0);
+      for (final method in ['GET', 'POST']) {
+        final result = await call(method, '/agent/bridge');
+        expect(result.json['active'], {
+          'prompts': [],
+          'skills': [],
+          'mcps': [],
+        });
+      }
+      for (final path in [
+        '/plugins/jev/check',
+        '/library',
+        '/agent/session',
+        '/settings/reminders',
+        '/clipboard/collect',
+        '/clipboard/promote/one',
+        '/ui/show?tab=library',
+      ]) {
+        expect((await call('POST', path)).statusCode, 403, reason: path);
+      }
+      expect(shown, isEmpty);
+      expect((await call('POST', '/ui/show?tab=clipboard')).statusCode, 200);
+      expect(shown, [2]);
+      expect((await call('GET', '/clipboard/history')).statusCode, 200);
+      expect(
+        (await call(
+          'GET',
+          '/clipboard/history?includeContent=true',
+        )).statusCode,
+        403,
+      );
+      expect((await call('GET', '/health')).statusCode, 200);
+      clipboardOnly = false;
+      expect((await call('POST', '/ding')).json['status'], 'triggered');
+      expect(deliveries, 1);
+    },
+  );
+
   test('POST /agent/conversation/opened acknowledges only its target', () async {
     AgentConversationTarget? received;
     final AgentRouter router = AgentRouter(

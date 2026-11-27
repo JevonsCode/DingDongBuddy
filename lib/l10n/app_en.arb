@@ -758,8 +758,8 @@
   "@choose": {
     "description": "DingDong built-in interface copy."
   },
-  "chooseHowDingDongBehavesWhenYouSignIn": "Choose how DingDong behaves when you sign in.",
-  "@chooseHowDingDongBehavesWhenYouSignIn": {
+  "generalSettingsDescription": "Choose how you use DingDong and whether it starts at sign-in.",
+  "@generalSettingsDescription": {
     "description": "DingDong built-in interface copy."
   },
   "chooseRules": "Choose rules",
@@ -6333,5 +6333,25 @@
   "libraryInstallOnlineSources": "Selected online resources are downloaded from the sources shown.",
   "@libraryInstallOnlineSources": {
     "description": "Resource Manager window and bundle sharing controls"
+  },
+  "clipboardOnlyMode": "Clipboard-only mode",
+  "@clipboardOnlyMode": {
+    "description": "Name of the clipboard-only application mode"
+  },
+  "clipboardOnlyModeDescription": "Pause AI notifications and keep clipboard history, quick paste, and device sharing. Turn this off to restore your AI settings.",
+  "@clipboardOnlyModeDescription": {
+    "description": "Description of the reversible clipboard-only mode"
+  },
+  "clipboardOnlyHistoryDescription": "Clipboard history stays on this device.",
+  "@clipboardOnlyHistoryDescription": {
+    "description": "Privacy description for local clipboard history"
+  },
+  "clipboardOnlyShortcutDescription": "Choose a system-wide shortcut to open the clipboard.",
+  "@clipboardOnlyShortcutDescription": {
+    "description": "Description of the global clipboard shortcut"
+  },
+  "clipboardOnlyConfigurationDescription": "Clipboard rules and application preferences",
+  "@clipboardOnlyConfigurationDescription": {
+    "description": "Description of protected settings storage in clipboard-only mode"
   }
 }

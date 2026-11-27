@@ -114,6 +114,7 @@ void main() {
         initialIndex: 1,
         key: 'library-dark',
       );
+      expect(find.text('Release readiness checklist'), findsOneWidget);
       await _capture(tester, 'library_dark');
       await tester.pumpWidget(const SizedBox.shrink());
       libraryWorkspace.activity.dispose();

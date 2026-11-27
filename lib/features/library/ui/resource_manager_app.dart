@@ -62,6 +62,7 @@ class ResourceManagerApp extends StatefulWidget {
     this.agentConversationLauncher,
     this.desktopContextMenuGateway,
     this.onLoadHostIssues,
+    this.readHostClipboardOnly,
     this.onOpenExternalLink,
     this.jevAction,
     this.screenshotAction,
@@ -96,6 +97,7 @@ class ResourceManagerApp extends StatefulWidget {
   final AgentConversationLauncher? agentConversationLauncher;
   final DesktopContextMenuGateway? desktopContextMenuGateway;
   final Future<List<AppIssue>> Function()? onLoadHostIssues;
+  final Future<bool?> Function()? readHostClipboardOnly;
   final Future<void> Function(Uri uri)? onOpenExternalLink;
   final bool initialWindowVisible;
   final Future<void> Function(AgentActivity activity)? onActivityOpened;
@@ -109,6 +111,8 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
     with
         WindowListener,
         WindowsAuxiliaryWindowCloseBehavior<ResourceManagerApp> {
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  late bool _clipboardOnly;
   int _selectedIndex = 0;
   int _clipboardCategoryRequestRevision = 0;
   int _handledClipboardCategoryRequestRevision = 0;
@@ -127,69 +131,122 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
       windowManager.addListener(this);
       _ownsWindowListener = true;
     }
-    _selectedIndex = widget.initialDestination.index;
+    _clipboardOnly = widget.settings.clipboardOnly;
+    _selectedIndex = _clipboardOnly
+        ? ResourceManagerDestination.clipboard.index
+        : widget.initialDestination.index;
     _clipboardCategoryRequestRevision = widget.openClipboardCategoriesOnLaunch
         ? 1
         : 0;
     _agentConversationLauncher =
         widget.agentConversationLauncher ?? NativeAgentConversationLauncher();
-    _preflightActivityTargets();
-    unawaited(_loadHostIssues());
-    unawaited(
-      widget.windowController.setWindowMethodHandler((call) async {
-        switch (call.method) {
-          case 'window_focus':
+    if (!_clipboardOnly) {
+      _preflightActivityTargets();
+      unawaited(_loadHostIssues());
+    }
+    unawaited(_connectHostWindow());
+  }
+
+  Future<void> _connectHostWindow() async {
+    bool receivedMode = false;
+    await widget.windowController.setWindowMethodHandler((call) async {
+      switch (call.method) {
+        case 'set_clipboard_only':
+          if (call.arguments case final bool enabled) {
+            receivedMode = true;
+            await _setClipboardOnly(enabled);
+          }
+        case 'window_focus':
+          widget.clipboardViewModel.load();
+          if (!_clipboardOnly) await _refreshWorkspace();
+          final destination = ResourceManagerDestination.parse(call.arguments);
+          await _selectDestination(destination);
+          await windowManager.focus();
+        case libraryInboxChangedMethod:
+          await _libraryScreenKey.currentState?.reloadReceivedBundles();
+        case 'clipboard_changed':
+          widget.clipboardViewModel.load();
+        case agentActivityChangedMethod:
+          if (_clipboardOnly) return;
+          widget.activityController.reload();
+          _preflightActivityTargets();
+        case manageClipboardCategoriesMethod:
+          await _selectDestination(ResourceManagerDestination.clipboard);
+          if (mounted &&
+              _selectedIndex == ResourceManagerDestination.clipboard.index) {
+            setState(() => _clipboardCategoryRequestRevision += 1);
+          }
+        case 'edit_resource':
+          if (_clipboardOnly) return;
+          final Object? arguments = call.arguments;
+          final String? id = arguments is Map
+              ? arguments['id'] as String?
+              : null;
+          if (id != null && await _confirmDiscardLibraryChanges()) {
+            _selectResource(id);
+          }
+        case 'create_resource':
+          if (_clipboardOnly) return;
+          final ResourceManagerCreateRequest? request =
+              ResourceManagerCreateRequest.fromJson(call.arguments);
+          if (request != null && await _confirmDiscardLibraryChanges()) {
             await widget.viewModel.load();
-            widget.clipboardViewModel.load();
-            widget.activityController.reload();
-            await widget.pluginSettings?.load();
-            _preflightActivityTargets();
-            await widget.agentAdapterController?.load();
-            final ResourceManagerDestination destination =
-                ResourceManagerDestination.parse(call.arguments);
-            if (destination == ResourceManagerDestination.issues) {
-              await _loadHostIssues();
-            }
-            await _selectDestination(destination);
-            await windowManager.focus();
-          case libraryInboxChangedMethod:
-            await _libraryScreenKey.currentState?.reloadReceivedBundles();
-          case 'clipboard_changed':
-            widget.clipboardViewModel.load();
-          case agentActivityChangedMethod:
-            widget.activityController.reload();
-            _preflightActivityTargets();
-          case manageClipboardCategoriesMethod:
-            await _selectDestination(ResourceManagerDestination.clipboard);
-            if (mounted &&
-                _selectedIndex == ResourceManagerDestination.clipboard.index) {
-              setState(() => _clipboardCategoryRequestRevision += 1);
-            }
-          case 'edit_resource':
-            final Object? arguments = call.arguments;
-            final String? id = arguments is Map
-                ? arguments['id'] as String?
-                : null;
-            if (id != null && await _confirmDiscardLibraryChanges()) {
-              _selectResource(id);
-            }
-          case 'create_resource':
-            final ResourceManagerCreateRequest? request =
-                ResourceManagerCreateRequest.fromJson(call.arguments);
-            if (request != null && await _confirmDiscardLibraryChanges()) {
-              await widget.viewModel.load();
-              await _selectDestination(ResourceManagerDestination.resources);
-              widget.viewModel.startCreating(
-                type: request.type,
-                title: request.title,
-                content: request.content,
-              );
-            }
-          default:
-            return;
-        }
-      }),
+            await _selectDestination(ResourceManagerDestination.resources);
+            if (_clipboardOnly || !mounted) return;
+            widget.viewModel.startCreating(
+              type: request.type,
+              title: request.title,
+              content: request.content,
+            );
+          }
+        default:
+          return;
+      }
+    });
+    final read = widget.readHostClipboardOnly;
+    if (!mounted || receivedMode || read == null) return;
+    bool? enabled;
+    try {
+      enabled = await read();
+    } on Object {
+      // A closing host leaves this window on its last known settings.
+      return;
+    }
+    if (mounted && !receivedMode && enabled != null) {
+      await _setClipboardOnly(enabled);
+    }
+  }
+
+  Future<void> _setClipboardOnly(bool enabled) async {
+    if (_clipboardOnly == enabled || !mounted) return;
+    final leavingWorkspace =
+        _selectedIndex != ResourceManagerDestination.clipboard.index;
+    setState(() {
+      _clipboardOnly = enabled;
+      if (enabled) _selectedIndex = ResourceManagerDestination.clipboard.index;
+    });
+    if (enabled && leavingWorkspace) {
+      _navigatorKey.currentState?.popUntil((route) => route.isFirst);
+    }
+    final strings = appLocalizationsFor(widget.settings.language);
+    await windowManager.setTitle(
+      enabled ? strings.clipboardHistory : strings.resourceManagerWindowTitle,
     );
+    if (mounted && !_clipboardOnly && !enabled) {
+      await _refreshWorkspace();
+      if (!mounted || _clipboardOnly) return;
+      await widget.aiCompanionController?.load();
+      if (mounted && !_clipboardOnly) await _loadHostIssues();
+    }
+  }
+
+  Future<void> _refreshWorkspace() async {
+    await widget.viewModel.load();
+    if (!mounted || _clipboardOnly) return;
+    widget.activityController.reload();
+    _preflightActivityTargets();
+    await widget.pluginSettings?.load();
+    if (mounted && !_clipboardOnly) await widget.agentAdapterController?.load();
   }
 
   void _preflightActivityTargets() {
@@ -226,7 +283,7 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
 
   void _setActivityVisible(bool visible) {
     if (_activityWindowVisible == visible || !mounted) return;
-    if (visible) widget.activityController.reload();
+    if (visible && !_clipboardOnly) widget.activityController.reload();
     setState(() => _activityWindowVisible = visible);
   }
 
@@ -248,9 +305,12 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
   Future<void> _selectDestination(
     ResourceManagerDestination destination,
   ) async {
+    if (_clipboardOnly && destination != ResourceManagerDestination.clipboard) {
+      return;
+    }
     if (destination.index != _selectedIndex &&
         _selectedIndex == ResourceManagerDestination.resources.index) {
-      if (!await _confirmDiscardLibraryChanges()) {
+      if (!await _confirmDiscardLibraryChanges() || _clipboardOnly) {
         return;
       }
     }
@@ -278,6 +338,7 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
   }
 
   void _selectResource(String id) {
+    if (_clipboardOnly || !mounted) return;
     for (final resource in widget.viewModel.allResources) {
       if (resource.id == id) {
         widget.viewModel.selectResource(resource);
@@ -290,6 +351,7 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
   }
 
   void _openIssueResource(String id) {
+    if (_clipboardOnly || !mounted) return;
     _selectResource(id);
     if (_selectedIndex != ResourceManagerDestination.resources.index) {
       setState(
@@ -301,8 +363,10 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      onGenerateTitle: (BuildContext context) =>
-          context.l10n.resourceManagerWindowTitle,
+      navigatorKey: _navigatorKey,
+      onGenerateTitle: (BuildContext context) => _clipboardOnly
+          ? context.l10n.clipboardHistory
+          : context.l10n.resourceManagerWindowTitle,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.desktopPanelLight(),
       darkTheme: AppTheme.desktopPanelDark(),
@@ -318,7 +382,9 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
         builder: (BuildContext context) => Semantics(
           container: true,
           explicitChildNodes: true,
-          label: context.l10n.dingdongResourceManagerWindow,
+          label: _clipboardOnly
+              ? context.l10n.clipboardHistory
+              : context.l10n.dingdongResourceManagerWindow,
           child: Scaffold(
             key: const Key('resource-manager-shell'),
             body: AnimatedBuilder(
@@ -329,16 +395,18 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
               ]),
               builder: (BuildContext context, _) => Row(
                 children: <Widget>[
-                  _WorkspaceSidebar(
-                    selectedIndex: _selectedIndex,
-                    issueCount: widget.issueCenterController.count,
-                    onSelected: (int value) => unawaited(
-                      _selectDestination(
-                        ResourceManagerDestination.values[value],
+                  if (!_clipboardOnly) ...[
+                    _WorkspaceSidebar(
+                      selectedIndex: _selectedIndex,
+                      issueCount: widget.issueCenterController.count,
+                      onSelected: (int value) => unawaited(
+                        _selectDestination(
+                          ResourceManagerDestination.values[value],
+                        ),
                       ),
                     ),
-                  ),
-                  const VerticalDivider(width: 1),
+                    const VerticalDivider(width: 1),
+                  ],
                   Expanded(
                     child: switch (ResourceManagerDestination
                         .values[_selectedIndex]) {
@@ -356,6 +424,7 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
                       ResourceManagerDestination.clipboard =>
                         ClipboardManagerScreen(
                           viewModel: widget.clipboardViewModel,
+                          allowSaveAsPrompt: !_clipboardOnly,
                           contextMenuGateway: widget.desktopContextMenuGateway,
                           resourceManagerLauncher:
                               widget.resourceManagerLauncher,

@@ -218,6 +218,9 @@ Future<void> main(List<String> arguments) async {
   );
   late final NativeAgentConversationLauncher agentConversationLauncher;
   late final AppDependencies dependencies;
+  bool clipboardOnly() => settingsViewModelReady
+      ? settingsViewModel.settings.clipboardOnly
+      : dependencies.initialSettings.clipboardOnly;
   late final TrayBuddyController trayBuddyController;
   late final DeviceLinkController deviceLinkController;
   final PluginDesktopShellGateway shellGateway = PluginDesktopShellGateway(
@@ -232,6 +235,7 @@ Future<void> main(List<String> arguments) async {
     developmentBuild: appDataPaths.development,
   );
   dependencies = await AppDependencies.production(
+    clipboardOnly: clipboardOnly,
     preferencesBackend: preferencesBackend,
     onResourceLibraryChanged: shellController.requestLibraryRefresh,
     onCopyDetected: () => unawaited(shellGateway.shakeTrayIcon()),
@@ -355,12 +359,13 @@ Future<void> main(List<String> arguments) async {
       }
     },
     onShowUi: (int index) {
-      shellController.requestLibraryRefresh();
+      if (!clipboardOnly()) shellController.requestLibraryRefresh();
       if (index == 4) {
         unawaited(settingsWindowLauncher.show());
         return;
       }
       if (index == 5) {
+        if (clipboardOnly()) return;
         unawaited(
           resourceManagerLauncher.show(
             destination: ResourceManagerDestination.plugins,
@@ -374,8 +379,11 @@ Future<void> main(List<String> arguments) async {
   );
   final AppSettings startupSettings = dependencies.initialSettings;
   startupLanguage = startupSettings.language;
+  shellController.setClipboardOnly(startupSettings.clipboardOnly);
+  await shellGateway.setClipboardOnly(startupSettings.clipboardOnly);
   final libraryInbox = FileLibraryInbox(appDataPaths.libraryInboxDirectory);
   deviceLinkController = DeviceLinkController(
+    clipboardOnly: clipboardOnly,
     store: FileDeviceLinkStore(appDataPaths.deviceLinksFile),
     clipboardStore: dependencies.clipboardStore,
     transferDirectory: appDataPaths.deviceTransferDirectory,
@@ -412,6 +420,7 @@ Future<void> main(List<String> arguments) async {
   );
   await deviceLinkController.start();
   activityController.addListener(() {
+    if (clipboardOnly()) return;
     unawaited(deviceLinkController.syncAgentState());
     unawaited(resourceManagerLauncher.refreshActivity());
   });
@@ -441,27 +450,38 @@ Future<void> main(List<String> arguments) async {
       dependencies.paths.agentLaunchersFile,
     ).load,
   );
-  activityController.configure(
-    rememberAcrossRestarts: startupSettings.rememberAgentActivity,
-    maxItems: startupSettings.agentActivityMaxItems,
-    countWindowHours: startupSettings.agentActivityCountHours,
-    groupRepeatedAgentSessions: startupSettings.groupRepeatedAgentSessions,
-  );
-  activityController.load(resetPreviousSession: true);
+  var activityLoaded = false;
+  void prepareAgentActivity(AppSettings settings) {
+    activityController.configure(
+      rememberAcrossRestarts: settings.rememberAgentActivity,
+      maxItems: settings.agentActivityMaxItems,
+      countWindowHours: settings.agentActivityCountHours,
+      groupRepeatedAgentSessions: settings.groupRepeatedAgentSessions,
+    );
+    if (activityLoaded) return;
+    activityController.load(resetPreviousSession: true);
+    activityLoaded = true;
+    unawaited(
+      agentConversationLauncher.preflight(
+        activityController.activities
+            .map((AgentActivity activity) => activity.conversationTarget)
+            .whereType<AgentConversationTarget>(),
+      ),
+    );
+  }
+
+  if (!startupSettings.clipboardOnly) prepareAgentActivity(startupSettings);
   trayBuddyController = TrayBuddyController(
     activityController: activityController,
     onStateChanged: (TrayBuddyState state) async {
-      shellController.setMascotState(state);
+      shellController.setMascotState(
+        clipboardOnly() && state == TrayBuddyState.reminder
+            ? TrayBuddyState.normal
+            : state,
+      );
       await shellGateway.setTrayBuddyState(state);
     },
     onReminderNudge: shellGateway.nudgeTrayIcon,
-  );
-  unawaited(
-    agentConversationLauncher.preflight(
-      activityController.activities
-          .map((AgentActivity activity) => activity.conversationTarget)
-          .whereType<AgentConversationTarget>(),
-    ),
   );
   await dependencies.start();
   shellController.open(dependencies.initialSettings.defaultWorkspace.index);
@@ -482,8 +502,48 @@ Future<void> main(List<String> arguments) async {
       NativeNotificationGateway();
   const NativeApplicationUpdater applicationUpdater =
       NativeApplicationUpdater();
+  final tokenUsageBackgroundService = TokenUsageBackgroundService(
+    LocalTokenUsageRepository(
+      databasePath: appDataPaths.tokenUsageDatabaseFile.path,
+    ),
+  );
+  bool? appliedMode = startupSettings.clipboardOnly;
+  Future<void> modeUpdates = Future<void>.value();
+  Future<void> applyClipboardMode() {
+    final update = modeUpdates.then((_) async {
+      final enabled = clipboardOnly();
+      if (appliedMode == enabled) return;
+      appliedMode = null;
+      shellController.setClipboardOnly(enabled);
+      final mascot = trayBuddyController.state;
+      shellController.setMascotState(
+        enabled && mascot == TrayBuddyState.reminder
+            ? TrayBuddyState.normal
+            : mascot,
+      );
+      if (enabled) {
+        tokenUsageBackgroundService.stop();
+      } else {
+        await dependencies.ensureAgentResourcesInitialized();
+        prepareAgentActivity(settingsViewModel.settings);
+        tokenUsageBackgroundService.start();
+      }
+      await Future.wait<void>([
+        shellGateway.setClipboardOnly(enabled),
+        resourceManagerLauncher.setClipboardOnly(enabled),
+        deviceLinkManagerLauncher.refresh(),
+        if (!isolatedPreview && (Platform.isMacOS || Platform.isWindows))
+          settingsViewModel.restoreSelectionPlugin(),
+      ]);
+      appliedMode = enabled;
+    });
+    modeUpdates = update.catchError((Object _) {});
+    return update;
+  }
+
   settingsViewModel = SettingsViewModel(
     dependencies.settingsRepository,
+    onSettingsSaved: applyClipboardMode,
     clipboardMonitoring: isolatedPreview
         ? null
         : dependencies.clipboardMonitorService,
@@ -549,9 +609,14 @@ Future<void> main(List<String> arguments) async {
     onClearClipboardHistory: () => _clearClipboardHistory(dependencies),
     onShowResourceManager: () async {
       await shellGateway.hide();
-      await resourceManagerLauncher.show();
+      await resourceManagerLauncher.show(
+        destination: clipboardOnly()
+            ? ResourceManagerDestination.clipboard
+            : ResourceManagerDestination.resources,
+      );
     },
     onShowPluginMarket: () async {
+      if (clipboardOnly()) return;
       await shellGateway.hide();
       await resourceManagerLauncher.show(
         destination: ResourceManagerDestination.plugins,
@@ -631,7 +696,10 @@ Future<void> main(List<String> arguments) async {
       case 'settings_quick_open':
         await quickPasteGateway.openSettings();
         return null;
+      case 'get_clipboard_only':
+        return clipboardOnly();
       case 'settings_jev':
+        if (clipboardOnly()) return {'enabled': false};
         final values = Map<String, Object?>.from(call.arguments! as Map);
         return dependencies.jev.manage(
           values['action']! as String,
@@ -647,7 +715,7 @@ Future<void> main(List<String> arguments) async {
         final Map<Object?, Object?> values = call.arguments! as Map;
         return (await selectionPluginGateway.apply(
           SelectionPluginConfiguration(
-            enabled: values['enabled'] == true,
+            enabled: !clipboardOnly() && values['enabled'] == true,
             provider: SelectionModelProvider.parse(values['provider']),
             endpoint: values['endpoint']! as String,
             model: values['model']! as String,
@@ -701,22 +769,17 @@ Future<void> main(List<String> arguments) async {
         );
       case 'settings_changed':
         await settingsViewModel.reload();
+        await applyClipboardMode();
         unawaited(
           lifecycleTelemetryController.setEnabled(
             settingsViewModel.settings.lifecycleTelemetryEnabled,
           ),
         );
         dependencies.applyClipboardRetention(settingsViewModel.settings);
-        activityController.configure(
-          rememberAcrossRestarts:
-              settingsViewModel.settings.rememberAgentActivity,
-          maxItems: settingsViewModel.settings.agentActivityMaxItems,
-          countWindowHours: settingsViewModel.settings.agentActivityCountHours,
-          groupRepeatedAgentSessions:
-              settingsViewModel.settings.groupRepeatedAgentSessions,
-        );
+        if (!clipboardOnly()) prepareAgentActivity(settingsViewModel.settings);
         return null;
       case 'settings_sound_preview':
+        if (clipboardOnly()) return null;
         final Map<Object?, Object?> values = call.arguments! as Map;
         await notificationGateway.preview(
           sound: values['sound']! as String,
@@ -858,15 +921,8 @@ Future<void> main(List<String> arguments) async {
   await windowController.setWindowMethodHandler(handleChildWindowCall);
   if (windowsSelectionGateway != null) {
     // The overlay handshake must have a host before restored monitoring starts.
-    await settingsViewModel.setSelectionPluginConfiguration(
-      settingsViewModel.settings.selectionPlugin,
-    );
+    await settingsViewModel.restoreSelectionPlugin();
   }
-  final tokenUsageBackgroundService = TokenUsageBackgroundService(
-    LocalTokenUsageRepository(
-      databasePath: appDataPaths.tokenUsageDatabaseFile.path,
-    ),
-  );
   runApp(
     DingDongApp(
       agentInstallGateway: LocalAgentInstallGateway(
@@ -917,6 +973,7 @@ Future<void> main(List<String> arguments) async {
   if (Platform.isMacOS) {
     const voiceLinks = MethodChannel('dingdong/voice_links');
     Future<void> openVoiceLink(Object? value) async {
+      if (clipboardOnly()) return;
       final issueNumber = voiceInstallIssueNumber(
         value is String ? value : null,
         development: appDataPaths.development,
@@ -940,7 +997,7 @@ Future<void> main(List<String> arguments) async {
       // An unavailable URL handler must not stop the app from starting.
     }
   }
-  tokenUsageBackgroundService.start();
+  if (!clipboardOnly()) tokenUsageBackgroundService.start();
   unawaited(
     lifecycleTelemetryController.setEnabled(
       startupSettings.lifecycleTelemetryEnabled,

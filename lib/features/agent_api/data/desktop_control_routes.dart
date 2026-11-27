@@ -10,6 +10,7 @@ final class DesktopControlRoutes {
   final void Function(int index)? onShowUi;
 
   HttpResponseData? route({
+    bool clipboardOnly = false,
     required String method,
     required String path,
     required Map<String, String> query,
@@ -19,7 +20,7 @@ final class DesktopControlRoutes {
       return _monitor(query, body);
     }
     if (method == 'POST' && path == '/ui/show') {
-      return _show(query, body);
+      return _show(query, body, clipboardOnly: clipboardOnly);
     }
     return null;
   }
@@ -48,7 +49,11 @@ final class DesktopControlRoutes {
     }
   }
 
-  HttpResponseData _show(Map<String, String> query, String body) {
+  HttpResponseData _show(
+    Map<String, String> query,
+    String body, {
+    required bool clipboardOnly,
+  }) {
     try {
       final Map<String, Object?> payload = body.trim().isEmpty
           ? const <String, Object?>{}
@@ -67,6 +72,12 @@ final class DesktopControlRoutes {
       };
       if (index == null) {
         return HttpResponseData.badRequest('Invalid UI tab');
+      }
+      if (clipboardOnly && index != 2 && index != 4) {
+        return HttpResponseData.error(
+          403,
+          'Unavailable in clipboard-only mode.',
+        );
       }
       onShowUi?.call(index);
       return HttpResponseData(

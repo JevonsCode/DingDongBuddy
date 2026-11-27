@@ -142,7 +142,7 @@ extension _DeviceLinkAgentSync on DeviceLinkController {
 
   Future<void> _sendAgentState(_ManagedDeviceSession managed) async {
     final AgentStateProvider? provider = _agentStateProvider;
-    if (provider == null) return;
+    if (clipboardOnly || provider == null) return;
     final snapshot = provider();
     await managed.handle.send(<String, Object?>{
       'type': 'agent.state',

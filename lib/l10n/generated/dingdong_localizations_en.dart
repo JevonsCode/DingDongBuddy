@@ -617,8 +617,8 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   String get choose => 'Choose';
 
   @override
-  String get chooseHowDingDongBehavesWhenYouSignIn =>
-      'Choose how DingDong behaves when you sign in.';
+  String get generalSettingsDescription =>
+      'Choose how you use DingDong and whether it starts at sign-in.';
 
   @override
   String get chooseRules => 'Choose rules';
@@ -5004,4 +5004,23 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   @override
   String get libraryInstallOnlineSources =>
       'Selected online resources are downloaded from the sources shown.';
+
+  @override
+  String get clipboardOnlyMode => 'Clipboard-only mode';
+
+  @override
+  String get clipboardOnlyModeDescription =>
+      'Pause AI notifications and keep clipboard history, quick paste, and device sharing. Turn this off to restore your AI settings.';
+
+  @override
+  String get clipboardOnlyHistoryDescription =>
+      'Clipboard history stays on this device.';
+
+  @override
+  String get clipboardOnlyShortcutDescription =>
+      'Choose a system-wide shortcut to open the clipboard.';
+
+  @override
+  String get clipboardOnlyConfigurationDescription =>
+      'Clipboard rules and application preferences';
 }

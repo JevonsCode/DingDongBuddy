@@ -145,7 +145,10 @@ void main() {
       final peerStore = FileDeviceLinkStore(
         File('${directory.path}/peer.json'),
       );
+      var hostClipboardOnly = false;
+      var peerClipboardOnly = false;
       final host = DeviceLinkController(
+        clipboardOnly: () => hostClipboardOnly,
         store: hostStore,
         clipboardStore: hostClipboard,
         transferDirectory: Directory('${directory.path}/host'),
@@ -156,6 +159,7 @@ void main() {
             throw StateError('Public relay forbidden'),
       );
       final peer = DeviceLinkController(
+        clipboardOnly: () => peerClipboardOnly,
         store: peerStore,
         clipboardStore: peerClipboard,
         transferDirectory: Directory('${directory.path}/peer'),
@@ -288,6 +292,20 @@ void main() {
             .status,
         'completed',
       );
+
+      hostClipboardOnly = true;
+      expect(host.libraryShareTargets, isEmpty);
+      await expectLater(
+        host.sendLibraryBundle(peer.localDevice.id, bundle),
+        throwsStateError,
+      );
+      hostClipboardOnly = false;
+      peerClipboardOnly = true;
+      expect(
+        await host.sendLibraryBundle(peer.localDevice.id, bundle),
+        'failed',
+      );
+      expect(await reopenedInbox.list(), hasLength(1));
 
       final received = peerClipboard
           .list(limit: 10)
@@ -1858,6 +1876,49 @@ void main() {
     },
   );
 
+  test(
+    'clipboard-only devices sync clipboard without exchanging Agent activity',
+    () async {
+      var clipboardOnly = true;
+      var snapshots = 0;
+      var acknowledgements = 0;
+      final harness = await _connectedHarness(
+        autoSend: true,
+        clipboardOnly: () => clipboardOnly,
+        agentStateProvider: () {
+          snapshots++;
+          return (activities: [], activeRuns: []);
+        },
+        onAgentSeen: (_) => acknowledgements++,
+      );
+      addTearDown(harness.dispose);
+      await harness.controller.syncAgentState();
+      await _sendTestAgentCompletion(harness);
+      const seen = DeviceLinkMessageEvent({
+        'type': 'agent.seen',
+        'activityIds': ['activity-1'],
+      });
+      harness.session.emit(seen);
+      await harness.controller.handleLocalClipboard(_record('local', 'copied'));
+      await _flushEvents();
+      expect(snapshots, 0);
+      expect(acknowledgements, 0);
+      expect(harness.session.sent.map((item) => item['type']), [
+        'clipboard.upsert',
+      ]);
+      expect(
+        harness.store.document!.devices.single.receiveAgentNotifications,
+        isTrue,
+      );
+      clipboardOnly = false;
+      await harness.controller.syncAgentState();
+      harness.session.emit(seen);
+      await _flushEvents();
+      expect(snapshots, 1);
+      expect(acknowledgements, 1);
+    },
+  );
+
   test('a linked phone can acknowledge exact Agent activity ids', () async {
     List<String>? acknowledgedIds;
     final _Harness harness = await _connectedHarness(
@@ -2215,6 +2276,7 @@ Future<_Harness> _connectedHarness({
   Uri? relayBaseUrl,
   Uri? deviceRelayUrl,
   bool useDefaultRelayBaseUrl = true,
+  bool Function()? clipboardOnly,
   AgentStateProvider? agentStateProvider,
   AgentSeenCallback? onAgentSeen,
   ClipboardGateway? systemClipboard,
@@ -2262,6 +2324,7 @@ Future<_Harness> _connectedHarness({
     sessionFactory: ({required relayUrl, required room, required secret}) =>
         session,
     computerSessionFactory: (_) => session,
+    clipboardOnly: clipboardOnly,
     agentStateProvider: agentStateProvider,
     onAgentSeen: onAgentSeen,
     systemClipboard: systemClipboard,

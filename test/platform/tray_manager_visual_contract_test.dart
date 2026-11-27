@@ -392,7 +392,6 @@ void main() {
     expect(gateway, isNot(contains('useChinese')));
     expect(gateway, isNot(contains("'清空剪贴板历史'")));
     expect(gateway, isNot(contains("'Clear Clipboard History'")));
-    expect(gateway, contains('label: strings.resourceManager'));
     expect(gateway, contains('label: strings.settings2'));
     expect(gateway, contains('label: strings.about'));
     expect(gateway, isNot(contains("'资源管理…'")));
@@ -412,6 +411,30 @@ void main() {
     expect(gateway, contains('DesktopShellCommand.showSettings'));
     expect(gateway, contains('DesktopShellCommand.showAbout'));
     expect(gateway, contains('DesktopShellCommand.quit'));
+  });
+
+  test('clipboard-only tray keeps sharing and settings accessible', () {
+    final strings = lookupDingDongLocalizations(const Locale('zh'));
+    final menu = desktopTrayContextMenuItems(
+      clipboardOnly: true,
+      monitoring: false,
+      developmentBuild: true,
+      strings: strings,
+      onCommand: (_) {},
+    );
+    final labels = menu.map((item) => item.label);
+    expect(
+      labels,
+      containsAll([
+        strings.openClipboard,
+        strings.openConnectedDevices,
+        strings.clipboardHistory2,
+        strings.startMonitoring,
+        strings.settings2,
+      ]),
+    );
+    expect(labels, isNot(contains(strings.pluginMarket)));
+    expect(labels, isNot(contains(strings.testPanel)));
   });
 
   test('device links follows Clipboard and test panel remains DEV-only', () {
@@ -442,6 +465,7 @@ void main() {
       releaseItems.map((MenuItem item) => item.label),
       isNot(contains('测试面板')),
     );
+    expect(releaseItems.map((item) => item.label), contains('资源管理'));
     expect(developmentItems.map((MenuItem item) => item.label), contains('设置'));
     expect(
       developmentItems.map((MenuItem item) => item.label),

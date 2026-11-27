@@ -30,6 +30,83 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets(
+    'clipboard-only manager guards deep links at launch and after mode changes',
+    (tester) async {
+      const channels = MethodChannel('mixin.one/desktop_multi_window/channels');
+      const nativeWindow = MethodChannel('window_manager');
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(1280, 800);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetPhysicalSize);
+      final messenger = tester.binding.defaultBinaryMessenger;
+      const registry = MethodChannel('mixin.one/desktop_multi_window');
+      messenger.setMockMethodCallHandler(
+        registry,
+        (call) async => call.method == 'getWindowDefinition'
+            ? {'windowId': 'clipboard-only', 'windowArgument': ''}
+            : null,
+      );
+      addTearDown(() => messenger.setMockMethodCallHandler(registry, null));
+      final hostModeRead = Completer<bool?>();
+      messenger.setMockMethodCallHandler(channels, (_) async => null);
+      messenger.setMockMethodCallHandler(nativeWindow, (_) async => null);
+      addTearDown(() {
+        messenger.setMockMethodCallHandler(channels, null);
+        messenger.setMockMethodCallHandler(nativeWindow, null);
+      });
+      final library = LibraryViewModel(InMemoryResourceStore());
+      final clipboard = ClipboardViewModel(InMemoryClipboardStore())..load();
+      final activity = ActivityController()..load();
+      final issues = IssueCenterController();
+      addTearDown(library.dispose);
+      addTearDown(clipboard.dispose);
+      addTearDown(activity.dispose);
+      addTearDown(issues.dispose);
+      await tester.pumpWidget(
+        ResourceManagerApp(
+          viewModel: library,
+          clipboardViewModel: clipboard,
+          activityController: activity,
+          issueCenterController: issues,
+          settings: const AppSettings(clipboardOnly: true),
+          readHostClipboardOnly: () => hostModeRead.future,
+          windowController: WindowController.fromWindowId('clipboard-only'),
+          initialDestination: ResourceManagerDestination.aiCompanion,
+        ),
+      );
+      await tester.pumpAndSettle();
+      final search = find.byKey(const Key('clipboard-manager-search'));
+      final nav = find.byKey(const Key('resource-manager-nav-plugins'));
+      expect(search, findsOneWidget);
+      expect(nav, findsNothing);
+      Future<void> send(String method, Object? arguments) async {
+        await _sendWindowMethod(
+          messenger,
+          channel: 'mixin.one/window_controller/clipboard-only',
+          method: method,
+          arguments: arguments,
+        );
+        await tester.pumpAndSettle();
+      }
+
+      await send('window_focus', 'recentAgents');
+      await send('create_resource', {'content': 'unused'});
+      expect(search, findsOneWidget);
+      await send('set_clipboard_only', false);
+      hostModeRead.complete(true);
+      await tester.pumpAndSettle();
+      expect(nav, findsOneWidget);
+      await send('window_focus', 'resources');
+      expect(search, findsNothing);
+      await send('set_clipboard_only', true);
+      expect(nav, findsNothing);
+      expect(search, findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  testWidgets(
     'resource manager open icon retains host acknowledgement and resets on the next update',
     (tester) async {
       const channels = MethodChannel('mixin.one/desktop_multi_window/channels');

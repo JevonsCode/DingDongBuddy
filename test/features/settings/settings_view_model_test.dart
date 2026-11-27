@@ -35,6 +35,59 @@ void main() {
     },
   );
 
+  test(
+    'mode changes notify other windows after saving and preserve preferences',
+    () async {
+      final repo = SettingsRepository(MemoryPreferencesBackend());
+      await repo.save(
+        const AppSettings(
+          clipboardMonitoring: true,
+          allowAgentClipboardContent: true,
+          defaultWorkspace: DefaultWorkspace.library,
+          notifyAgentAttention: false,
+        ),
+      );
+      final savedModes = <bool>[];
+      final monitor = _FakeClipboardMonitoring();
+      final model = SettingsViewModel(
+        repo,
+        clipboardMonitoring: monitor,
+        onSettingsSaved: () async =>
+            savedModes.add((await repo.load()).clipboardOnly),
+      );
+      await model.load();
+      expect(model.settings.clipboardOnly, isFalse);
+      for (final enabled in [true, false]) {
+        await model.setClipboardOnly(enabled);
+        final settings = await repo.load();
+        expect(settings.clipboardOnly, enabled);
+        expect(settings.clipboardMonitoring, isTrue);
+        expect(settings.defaultWorkspace, DefaultWorkspace.library);
+        expect(settings.allowAgentClipboardContent, isTrue);
+        expect(settings.notifyAgentAttention, isFalse);
+      }
+      expect(savedModes, [true, false]);
+      expect(monitor.startCount, 1);
+      expect(monitor.stopCount, 0);
+      model.dispose();
+    },
+  );
+
+  test('saving other settings in a stale window preserves the mode', () async {
+    final repository = SettingsRepository(MemoryPreferencesBackend());
+    final host = SettingsViewModel(repository);
+    final panel = SettingsViewModel(repository);
+    await host.load();
+    await panel.load();
+    await host.setClipboardOnly(true);
+    await panel.setThemeMode(AppThemePreference.dark);
+    expect((await repository.load()).clipboardOnly, isTrue);
+    await panel.reload();
+    expect(panel.settings.clipboardOnly, isTrue);
+    host.dispose();
+    panel.dispose();
+  });
+
   test('updates persist immediately and control the native monitor', () async {
     final MemoryPreferencesBackend backend = MemoryPreferencesBackend();
     final _FakeClipboardMonitoring monitoring = _FakeClipboardMonitoring();

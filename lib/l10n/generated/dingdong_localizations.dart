@@ -1180,8 +1180,8 @@ abstract class DingDongLocalizations {
   /// DingDong built-in interface copy.
   ///
   /// In en, this message translates to:
-  /// **'Choose how DingDong behaves when you sign in.'**
-  String get chooseHowDingDongBehavesWhenYouSignIn;
+  /// **'Choose how you use DingDong and whether it starts at sign-in.'**
+  String get generalSettingsDescription;
 
   /// DingDong built-in interface copy.
   ///
@@ -8755,6 +8755,36 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'Selected online resources are downloaded from the sources shown.'**
   String get libraryInstallOnlineSources;
+
+  /// Name of the clipboard-only application mode
+  ///
+  /// In en, this message translates to:
+  /// **'Clipboard-only mode'**
+  String get clipboardOnlyMode;
+
+  /// Description of the reversible clipboard-only mode
+  ///
+  /// In en, this message translates to:
+  /// **'Pause AI notifications and keep clipboard history, quick paste, and device sharing. Turn this off to restore your AI settings.'**
+  String get clipboardOnlyModeDescription;
+
+  /// Privacy description for local clipboard history
+  ///
+  /// In en, this message translates to:
+  /// **'Clipboard history stays on this device.'**
+  String get clipboardOnlyHistoryDescription;
+
+  /// Description of the global clipboard shortcut
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a system-wide shortcut to open the clipboard.'**
+  String get clipboardOnlyShortcutDescription;
+
+  /// Description of protected settings storage in clipboard-only mode
+  ///
+  /// In en, this message translates to:
+  /// **'Clipboard rules and application preferences'**
+  String get clipboardOnlyConfigurationDescription;
 }
 
 class _DingDongLocalizationsDelegate

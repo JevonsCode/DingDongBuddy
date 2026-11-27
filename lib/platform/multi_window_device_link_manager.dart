@@ -93,6 +93,7 @@ Map<String, Object?> encodeDeviceLinkManagerSnapshot(
     'pairing': controller.pendingPairing?.toJson(),
     'pairingStatus': controller.pairingStatus.name,
     'canPair': controller.canPair,
+    'clipboardOnly': controller.clipboardOnly,
     if (controller is LanComputerManagement) ...{
       'localComputerName':
           (controller as LanComputerManagement).localComputerName,
@@ -290,6 +291,8 @@ final class RemoteDeviceLinkManagement extends ChangeNotifier
   PendingDevicePairing? _pendingPairing;
   DeviceConnectionStatus _pairingStatus = DeviceConnectionStatus.disconnected;
   bool _canPair = false;
+  @override
+  bool clipboardOnly = false;
   bool _disposed = false;
   String? _localComputerName;
   @override
@@ -487,6 +490,7 @@ final class RemoteDeviceLinkManagement extends ChangeNotifier
         : null;
     _pairingStatus = _parseStatus(json['pairingStatus']);
     _canPair = json['canPair'] == true;
+    clipboardOnly = json['clipboardOnly'] == true;
     if (!_disposed) notifyListeners();
   }
 

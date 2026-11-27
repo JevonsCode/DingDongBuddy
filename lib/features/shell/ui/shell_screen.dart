@@ -106,8 +106,13 @@ class ShellScreen extends StatefulWidget {
   State<ShellScreen> createState() => _ShellScreenState();
 }
 
+enum _InstallChoice { skip, start, clipboardOnly }
+
 class _ShellScreenState extends State<ShellScreen> {
   static const Duration _searchClearHoldDuration = Duration(seconds: 2);
+
+  bool? _loadedClipboardOnly;
+  bool get _clipboardOnly => widget.settingsViewModel.settings.clipboardOnly;
 
   bool _showShortcutHints = false;
   bool _showWorkspaceShortcutHints = false;
@@ -135,7 +140,12 @@ class _ShellScreenState extends State<ShellScreen> {
 
   Future<void> _refreshInstallStatus() async {
     final gateway = widget.agentInstallGateway;
-    if (gateway == null || _installScanBusy) return;
+    if (_clipboardOnly ||
+        !widget.settingsViewModel.isLoaded ||
+        gateway == null ||
+        _installScanBusy) {
+      return;
+    }
     _installScanBusy = true;
     try {
       _installScanCompleted(await gateway.scan());
@@ -148,19 +158,32 @@ class _ShellScreenState extends State<ShellScreen> {
   }
 
   void _handleInstallVisibility() {
-    if (widget.windowVisible?.value == false) return;
+    if (_clipboardOnly || widget.windowVisible?.value == false) return;
     unawaited(_refreshInstallStatus());
     WidgetsBinding.instance.addPostFrameCallback((_) => _offerAgentInstall());
   }
 
   void _handleInstallSettingsLoaded() {
-    if (widget.settingsViewModel.isLoaded) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _offerAgentInstall());
+    if (!widget.settingsViewModel.isLoaded) return;
+    final bool enabled = _clipboardOnly;
+    if (_loadedClipboardOnly != enabled) {
+      if (_loadedClipboardOnly == false &&
+          enabled &&
+          (_installDialogOpen || _lastSelectedIndex != 2)) {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      }
+      _loadedClipboardOnly = enabled;
+      widget.controller.setClipboardOnly(enabled);
+      if (!enabled) {
+        widget.libraryViewModel.load();
+        _handleInstallVisibility();
+      }
     }
   }
 
   Future<void> _offerAgentInstall({bool preview = false}) async {
     if (!mounted ||
+        _clipboardOnly ||
         _installDialogOpen ||
         widget.agentInstallGateway == null ||
         !widget.settingsViewModel.isLoaded ||
@@ -177,7 +200,7 @@ class _ShellScreenState extends State<ShellScreen> {
     if (!preview) _installOfferShown = true;
     _installDialogOpen = true;
     try {
-      final install = await showDialog<bool>(
+      final choice = await showDialog<_InstallChoice>(
         context: context,
         builder: (context) => DesktopAlertDialog(
           key: const Key('agent-install-onboarding'),
@@ -185,21 +208,33 @@ class _ShellScreenState extends State<ShellScreen> {
           content: Text(context.l10n.agentInstallWelcomeDescription),
           actions: [
             DesktopActionButton(
+              key: const Key('agent-install-clipboard-only'),
+              label: context.l10n.clipboardOnlyMode,
+              onPressed: () =>
+                  Navigator.of(context).pop(_InstallChoice.clipboardOnly),
+            ),
+            DesktopActionButton(
               key: const Key('agent-install-skip'),
               label: context.l10n.agentInstallSkip,
-              onPressed: () => Navigator.of(context).pop(false),
+              onPressed: () => Navigator.of(context).pop(_InstallChoice.skip),
             ),
             DesktopActionButton(
               key: const Key('agent-install-start'),
               label: context.l10n.agentInstallStart,
               tone: DesktopActionTone.primary,
-              onPressed: () => Navigator.of(context).pop(true),
+              onPressed: () => Navigator.of(context).pop(_InstallChoice.start),
             ),
           ],
         ),
       );
+      if (!mounted || _clipboardOnly) return;
+      if (choice == _InstallChoice.clipboardOnly) {
+        _installOfferShown = false;
+        await widget.settingsViewModel.setClipboardOnly(true);
+        return;
+      }
       if (!preview) await widget.settingsViewModel.markMcpAccessSeen();
-      if (mounted && install == true) await _openAgentApi();
+      if (mounted && choice == _InstallChoice.start) await _openAgentApi();
     } finally {
       _installDialogOpen = false;
     }
@@ -232,10 +267,9 @@ class _ShellScreenState extends State<ShellScreen> {
         widget.deviceLinkController?.shareRequestRevision ?? 0;
     widget.deviceLinkController?.addListener(_handleDeviceLinkChanged);
     widget.clipboardViewModel.load();
-    widget.libraryViewModel.load();
     widget.settingsViewModel.addListener(_handleInstallSettingsLoaded);
     widget.windowVisible?.addListener(_handleInstallVisibility);
-    _handleInstallVisibility();
+    _handleInstallSettingsLoaded();
   }
 
   @override
@@ -248,6 +282,7 @@ class _ShellScreenState extends State<ShellScreen> {
     if (oldWidget.controller != widget.controller) {
       _cancelSearchClearHold();
       oldWidget.controller.removeListener(_handleNavigationChanged);
+      widget.controller.setClipboardOnly(_clipboardOnly);
       widget.controller.addListener(_handleNavigationChanged);
       _lastClipboardFilterToggleRevision =
           widget.controller.clipboardFilterToggleRevision;
@@ -314,7 +349,7 @@ class _ShellScreenState extends State<ShellScreen> {
     final int libraryRefreshRevision = widget.controller.libraryRefreshRevision;
     if (libraryRefreshRevision != _lastLibraryRefreshRevision) {
       _lastLibraryRefreshRevision = libraryRefreshRevision;
-      widget.libraryViewModel.load();
+      if (!_clipboardOnly) widget.libraryViewModel.load();
     }
     setState(() {
       final int revision = widget.controller.clipboardFilterToggleRevision;
@@ -385,6 +420,7 @@ class _ShellScreenState extends State<ShellScreen> {
   }
 
   void _openIssueCenter() {
+    if (_clipboardOnly) return;
     final ResourceManagerLauncher? launcher = widget.resourceManagerLauncher;
     if (launcher != null) {
       unawaited(launcher.show(destination: ResourceManagerDestination.issues));
@@ -625,7 +661,9 @@ class _ShellScreenState extends State<ShellScreen> {
   Future<void> _previewConfiguredSound() async {
     final SoundPreviewGateway? gateway = widget.soundPreviewGateway;
     final AppSettings settings = widget.settingsViewModel.settings;
-    if (gateway == null || settings.selectedSound == 'muted') {
+    if (settings.clipboardOnly ||
+        gateway == null ||
+        settings.selectedSound == 'muted') {
       return;
     }
     await gateway.preview(
@@ -635,6 +673,7 @@ class _ShellScreenState extends State<ShellScreen> {
   }
 
   Future<void> _openAgentApi() async {
+    if (_clipboardOnly) return;
     final bool firstOpen = !widget.settingsViewModel.settings.mcpAccessSeen;
     final bool requiresSetupUpdate =
         widget.settingsViewModel.settings.requiresAgentSetupUpdate;
@@ -688,10 +727,12 @@ class _ShellScreenState extends State<ShellScreen> {
         const SingleActivator(LogicalKeyboardKey.escape): () {
           _handleEscape();
         },
-        workspaceShortcuts.today.activator(platform): () =>
-            widget.controller.open(0),
-        workspaceShortcuts.library.activator(platform): () =>
-            widget.controller.open(1),
+        if (!_clipboardOnly)
+          workspaceShortcuts.today.activator(platform): () =>
+              widget.controller.open(0),
+        if (!_clipboardOnly)
+          workspaceShortcuts.library.activator(platform): () =>
+              widget.controller.open(1),
         workspaceShortcuts.clipboard.activator(platform): () =>
             widget.controller.open(2),
         const SingleActivator(LogicalKeyboardKey.keyR, meta: true):
@@ -744,6 +785,14 @@ class _ShellScreenState extends State<ShellScreen> {
                   ]),
                   builder: (BuildContext context, _) => PopupHeader(
                     selectedIndex: widget.controller.selectedIndex,
+                    clipboardOnly: _clipboardOnly,
+                    onClipboardManager: widget.resourceManagerLauncher == null
+                        ? null
+                        : () => unawaited(
+                            _resourceManagerLauncher()!.show(
+                              destination: ResourceManagerDestination.clipboard,
+                            ),
+                          ),
                     issueCount: widget.issueCenterController.count,
                     connectedDeviceCount:
                         widget.deviceLinkController?.connectedDeviceCount ?? 0,
@@ -779,6 +828,7 @@ class _ShellScreenState extends State<ShellScreen> {
                 ),
                 Expanded(child: _selectedWorkspace()),
                 PopupFooter(
+                  clipboardOnly: _clipboardOnly,
                   agentBaseUri: widget.agentBaseUri,
                   globalHotKey: widget.settingsViewModel.settings.globalHotKey,
                 ),
@@ -816,6 +866,7 @@ class _ShellScreenState extends State<ShellScreen> {
         resourceManagerLauncher: _resourceManagerLauncher(),
       ),
       2 => ClipboardScreen(
+        allowSaveAsPrompt: !_clipboardOnly,
         viewModel: widget.clipboardViewModel,
         settingsViewModel: widget.settingsViewModel,
         showShortcutHints: _showShortcutHints,

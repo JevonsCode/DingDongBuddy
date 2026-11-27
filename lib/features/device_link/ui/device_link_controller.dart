@@ -110,6 +110,7 @@ final class DeviceLinkController extends ChangeNotifier
     VoidCallback? onClipboardReceived,
     Future<void> Function(String id, String sender, File file)?
     onLibraryBundleReceived,
+    bool Function()? clipboardOnly,
     AgentStateProvider? agentStateProvider,
     AgentSeenCallback? onAgentSeen,
     DingDongLocalizations Function()? localizations,
@@ -126,6 +127,7 @@ final class DeviceLinkController extends ChangeNotifier
     systemClipboard: systemClipboard,
     onClipboardReceived: onClipboardReceived,
     onLibraryBundleReceived: onLibraryBundleReceived,
+    clipboardOnly: clipboardOnly,
     agentStateProvider: agentStateProvider,
     onAgentSeen: onAgentSeen,
     localizations: localizations,
@@ -144,6 +146,7 @@ final class DeviceLinkController extends ChangeNotifier
     this._systemClipboard,
     this.onClipboardReceived,
     this.onLibraryBundleReceived,
+    this._clipboardOnly,
     this._agentStateProvider,
     this._onAgentSeen,
     DingDongLocalizations Function()? localizations,
@@ -166,6 +169,9 @@ final class DeviceLinkController extends ChangeNotifier
   final VoidCallback? onClipboardReceived;
   final Future<void> Function(String id, String sender, File file)?
   onLibraryBundleReceived;
+  final bool Function()? _clipboardOnly;
+  @override
+  bool get clipboardOnly => _clipboardOnly?.call() == true;
   final AgentStateProvider? _agentStateProvider;
   final AgentSeenCallback? _onAgentSeen;
   final DingDongLocalizations Function() _localizations;
@@ -195,6 +201,7 @@ final class DeviceLinkController extends ChangeNotifier
     isLan: _verifiedLan,
     onChange: _notifyFileProgress,
     onReceived: _receiveResumableFile,
+    acceptItem: (id) => id != libraryBundleTransferItemId || !clipboardOnly,
   );
   late final FileTransferHistory _fileHistory = FileTransferHistory(
     File(path.join(_transferDirectory.path, '.history', 'transfers.json')),
@@ -281,7 +288,8 @@ final class DeviceLinkController extends ChangeNotifier
 
   bool _canShareLibraryWith(LinkedDevice device) {
     final session = _sessionsByRoom[device.room];
-    return device.kind == LinkedDeviceKind.computer &&
+    return !clipboardOnly &&
+        device.kind == LinkedDeviceKind.computer &&
         isConnected(device.id) &&
         session != null &&
         session.fileProtocol >= 2 &&
@@ -564,6 +572,7 @@ final class DeviceLinkController extends ChangeNotifier
     final bool needsUserAttention =
         request.notificationKind == AgentNotificationKind.attention;
     for (final LinkedDevice device in _devices) {
+      if (clipboardOnly) return;
       if (device.kind == LinkedDeviceKind.computer) continue;
       final Map<String, Object?> message = <String, Object?>{
         'type': 'agent.completed',
@@ -597,6 +606,7 @@ final class DeviceLinkController extends ChangeNotifier
           // The encrypted Web Push below is the background fallback.
         }
       }
+      if (clipboardOnly) return;
       if (!device.receiveAgentNotifications || !request.alertPhone) continue;
       try {
         await _sendPush(device, message);
@@ -612,7 +622,7 @@ final class DeviceLinkController extends ChangeNotifier
   /// Broadcasts the authoritative in-app Agent state immediately. This does
   /// not alter or retract any system notification already shown by the phone.
   Future<void> syncAgentState() {
-    if (_agentStateProvider == null) {
+    if (clipboardOnly || _agentStateProvider == null) {
       return Future<void>.value();
     }
     final Future<void> next = _agentSyncTail.then(
@@ -632,6 +642,7 @@ final class DeviceLinkController extends ChangeNotifier
 
   @override
   Future<void> setAgentNotifications(String deviceId, bool value) async {
+    if (clipboardOnly) return;
     await _updateDevice(
       deviceId,
       (LinkedDevice device) =>

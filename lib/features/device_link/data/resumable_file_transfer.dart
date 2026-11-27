@@ -18,6 +18,7 @@ class ResumableFileTransfers {
     required this.isLan,
     required this.onChange,
     required this.onReceived,
+    this.acceptItem,
     this.replyTimeout = const Duration(seconds: 20),
   });
   final Directory directory;
@@ -26,6 +27,7 @@ class ResumableFileTransfers {
   final void Function() onChange;
   final Future<void> Function(String peer, File file, FileTransfer transfer)
   onReceived;
+  final bool Function(String? itemId)? acceptItem;
   final Duration replyTimeout;
   final Map<String, _Outgoing> _outgoing = {};
   final Map<String, _Incoming> _incoming = {};
@@ -307,6 +309,9 @@ class ResumableFileTransfers {
         fingerprint is! String ||
         fingerprint.length > 256) {
       throw const _TransferError('invalid_metadata');
+    }
+    if (acceptItem?.call(message['itemId'] as String?) == false) {
+      throw const _TransferError('item_unavailable');
     }
     final lan = await isLan(peer);
     if (size > relayFileLimit && !lan) {

@@ -12,6 +12,26 @@ void main() {
   group('Agent notification preferences', () {
     const DingRequest request = DingRequest(source: 'Codex');
 
+    test('clipboard-only mode skips all reminder side effects', () async {
+      var sideEffects = 0;
+      const settings = AppSettings(clipboardOnly: true);
+      for (final deduplicated in [false, true]) {
+        await deliverAgentNotification(
+          request: request,
+          settings: settings,
+          suppressNativeNotification: deduplicated,
+          isCodexVoiceNotification: (_) async {
+            sideEffects++;
+            return false;
+          },
+          nativeDelivery: (_) async => sideEffects++,
+          companionDelivery: (_) async => sideEffects++,
+          onFiltered: (_) async => sideEffects++,
+        );
+      }
+      expect(sideEffects, 0);
+    });
+
     test('suppresses a positively identified subagent by default', () async {
       expect(
         await shouldDeliverAgentNotification(
@@ -256,6 +276,16 @@ void main() {
       conversationId: 'subagent-thread',
       workspacePath: '/workspace/dingdong',
     );
+
+    test('clipboard-only mode ignores task starts', () async {
+      expect(
+        await shouldRecordAgentTaskStart(
+          start: start,
+          settings: const AppSettings(clipboardOnly: true),
+        ),
+        isFalse,
+      );
+    });
 
     test('suppresses an identified subagent run by default', () async {
       expect(

@@ -41,6 +41,7 @@ Future<ResourceManagerApp> _loadResourceManager(
   Map<String, Object?> arguments,
 ) async {
   final AppDataPaths paths = AppDataPaths.current();
+  final settings = await SettingsRepository(SharedPreferencesBackend()).load();
   final IssueCenterController issueCenterController = IssueCenterController();
   final String? parentWindowId = arguments['parentWindowId'] as String?;
   WindowController? parent;
@@ -99,6 +100,7 @@ Future<ResourceManagerApp> _loadResourceManager(
   final AgentResourceSynchronizer resourceSynchronizer =
       await AgentResourceSynchronizer.currentUser(
         paths.skillPackagesDirectory,
+        preloadAdapterTargets: !settings.clipboardOnly,
         sandbox:
             paths.development &&
             (Platform.isWindows ||
@@ -150,7 +152,7 @@ Future<ResourceManagerApp> _loadResourceManager(
     triggerGroupStore: triggerGroupStore,
     revisions: dataRevisions,
   );
-  await viewModel.load();
+  if (!settings.clipboardOnly) await viewModel.load();
   final DuplicateResourceCleanup duplicateCleanup = DuplicateResourceCleanup(
     resourceStore: resourceStore,
     synchronizer: resourceSynchronizer,
@@ -215,14 +217,13 @@ Future<ResourceManagerApp> _loadResourceManager(
       }
     }
   }
-  if (createRequest != null) {
+  if (!settings.clipboardOnly && createRequest != null) {
     viewModel.startCreating(
       type: createRequest.type,
       title: createRequest.title,
       content: createRequest.content,
     );
   }
-  final settings = await SettingsRepository(SharedPreferencesBackend()).load();
   final pluginHost = parentWindowId == null
       ? null
       : MultiWindowSettingsHostBridge(parentWindowId);
@@ -243,21 +244,20 @@ Future<ResourceManagerApp> _loadResourceManager(
   await pluginSettings.load();
   final ActivityController activityController =
       ActivityController(
-          persistHistory: parent == null,
-          store: FileAgentActivityStore(
-            paths.agentActivityFile,
-            claudeDesktopSessionDirectory:
-                claudeDesktopSessionDirectoryForCurrentPlatform(),
-          ),
-          localizations: () => appLocalizationsFor(settings.language),
-        )
-        ..configure(
-          rememberAcrossRestarts: settings.rememberAgentActivity,
-          maxItems: settings.agentActivityMaxItems,
-          countWindowHours: settings.agentActivityCountHours,
-          groupRepeatedAgentSessions: settings.groupRepeatedAgentSessions,
-        )
-        ..load();
+        persistHistory: parent == null,
+        store: FileAgentActivityStore(
+          paths.agentActivityFile,
+          claudeDesktopSessionDirectory:
+              claudeDesktopSessionDirectoryForCurrentPlatform(),
+        ),
+        localizations: () => appLocalizationsFor(settings.language),
+      )..configure(
+        rememberAcrossRestarts: settings.rememberAgentActivity,
+        maxItems: settings.agentActivityMaxItems,
+        countWindowHours: settings.agentActivityCountHours,
+        groupRepeatedAgentSessions: settings.groupRepeatedAgentSessions,
+      );
+  if (!settings.clipboardOnly) activityController.load();
   final NativeAgentConversationLauncher agentConversationLauncher =
       NativeAgentConversationLauncher(
         codexConversationPreflightBatch: codexThreadInspector.inspectThreadIds,
@@ -265,16 +265,20 @@ Future<ResourceManagerApp> _loadResourceManager(
           paths.agentLaunchersFile,
         ).load,
       );
-  unawaited(
-    agentConversationLauncher.preflight(
-      activityController.activities
-          .map((AgentActivity activity) => activity.conversationTarget)
-          .whereType<AgentConversationTarget>(),
-    ),
-  );
+  if (!settings.clipboardOnly) {
+    unawaited(
+      agentConversationLauncher.preflight(
+        activityController.activities
+            .map((AgentActivity activity) => activity.conversationTarget)
+            .whereType<AgentConversationTarget>(),
+      ),
+    );
+  }
 
   await windowManager.setTitle(
-    appLocalizationsFor(settings.language).resourceManagerWindowTitle,
+    settings.clipboardOnly
+        ? appLocalizationsFor(settings.language).clipboardHistory2
+        : appLocalizationsFor(settings.language).resourceManagerWindowTitle,
   );
   await windowManager.setSkipTaskbar(
     desktopWindowSkipsTaskbar(
@@ -303,10 +307,13 @@ Future<ResourceManagerApp> _loadResourceManager(
     usageRepository: tokenUsageRepository,
     onUsageChanged: tokenUsageController.invalidate,
   );
-  await aiCompanionController.load();
+  if (!settings.clipboardOnly) await aiCompanionController.load();
   await preventWindowsAuxiliaryWindowClose();
-  unawaited(agentAdapterController.load());
+  if (!settings.clipboardOnly) unawaited(agentAdapterController.load());
   return ResourceManagerApp(
+    readHostClipboardOnly: parent == null
+        ? null
+        : () => parent!.invokeMethod<bool>('get_clipboard_only'),
     onActivityOpened: parent == null
         ? null
         : (activity) async {

@@ -21,6 +21,7 @@ List<DesktopContextMenuItem> clipboardContextMenuItems({
   bool includePaste = false,
   bool canPasteAsPlainText = false,
   bool includeShare = true,
+  bool includeSaveAsPrompt = true,
   bool includePin = true,
   bool pinned = false,
   bool hasTitle = false,
@@ -45,7 +46,8 @@ List<DesktopContextMenuItem> clipboardContextMenuItems({
     label: hasTitle ? strings.editTitle : strings.addTitle,
   ),
   DesktopContextMenuItem(id: 'editText', label: strings.editText),
-  DesktopContextMenuItem(id: 'saveAsPrompt', label: strings.saveAsPrompt),
+  if (includeSaveAsPrompt)
+    DesktopContextMenuItem(id: 'saveAsPrompt', label: strings.saveAsPrompt),
   DesktopContextMenuItem(id: 'archiveTo', label: strings.archiveTo),
   if (includeShare)
     DesktopContextMenuItem(id: 'share', label: strings.sendToDevice),

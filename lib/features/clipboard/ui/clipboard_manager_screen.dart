@@ -43,6 +43,7 @@ class ClipboardManagerScreen extends StatefulWidget {
     required this.viewModel,
     this.contextMenuGateway,
     this.resourceManagerLauncher,
+    this.allowSaveAsPrompt = true,
     this.categoryManagementRequestRevision = 0,
     this.onCategoryManagementRequestHandled,
     super.key,
@@ -51,6 +52,7 @@ class ClipboardManagerScreen extends StatefulWidget {
   final ClipboardViewModel viewModel;
   final DesktopContextMenuGateway? contextMenuGateway;
   final ResourceManagerLauncher? resourceManagerLauncher;
+  final bool allowSaveAsPrompt;
   final int categoryManagementRequestRevision;
   final ValueChanged<int>? onCategoryManagementRequestHandled;
 
@@ -362,6 +364,7 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
                 items: clipboardContextMenuItems(
                   strings: context.l10n,
                   includeShare: false,
+                  includeSaveAsPrompt: widget.allowSaveAsPrompt,
                   includePin: widget.viewModel.showingArchivedRecords,
                   pinned: record.pinned,
                   hasTitle: record.title.trim().isNotEmpty,
@@ -411,7 +414,7 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
 
   Future<void> _openPromptCreation(ClipboardRecord record) async {
     final ResourceManagerLauncher? launcher = widget.resourceManagerLauncher;
-    if (launcher == null) {
+    if (!widget.allowSaveAsPrompt || launcher == null) {
       return;
     }
     await launcher.show(
@@ -465,12 +468,13 @@ class _ClipboardManagerScreenState extends State<ClipboardManagerScreen> {
         'archive_to',
         context.l10n.archiveTo,
       ),
-      _managerMenuItem(
-        context,
-        _ManagerAction.savePrompt,
-        'prompt',
-        context.l10n.saveAsPrompt,
-      ),
+      if (widget.allowSaveAsPrompt)
+        _managerMenuItem(
+          context,
+          _ManagerAction.savePrompt,
+          'prompt',
+          context.l10n.saveAsPrompt,
+        ),
       const DesktopMenuDivider<_ManagerAction>(),
       _managerMenuItem(
         context,

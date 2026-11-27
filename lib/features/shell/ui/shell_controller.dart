@@ -6,6 +6,7 @@ final class ShellController extends ChangeNotifier {
   ShellController({int initialIndex = 0})
     : _selectedIndex = initialIndex.clamp(0, 3);
 
+  bool _clipboardOnly = false;
   int _selectedIndex;
   int _clipboardFilterToggleRevision = 0;
   int _clipboardRefreshRevision = 0;
@@ -14,6 +15,7 @@ final class ShellController extends ChangeNotifier {
   int _agentInstallPreviewRevision = 0;
   TrayBuddyState _mascotState = TrayBuddyState.normal;
 
+  bool get clipboardOnly => _clipboardOnly;
   int get selectedIndex => _selectedIndex;
   int get clipboardFilterToggleRevision => _clipboardFilterToggleRevision;
   int get clipboardRefreshRevision => _clipboardRefreshRevision;
@@ -22,7 +24,15 @@ final class ShellController extends ChangeNotifier {
   int get agentInstallPreviewRevision => _agentInstallPreviewRevision;
   TrayBuddyState get mascotState => _mascotState;
 
+  void setClipboardOnly(bool value) {
+    if (value == _clipboardOnly) return;
+    _clipboardOnly = value;
+    if (value) _selectedIndex = 2;
+    notifyListeners();
+  }
+
   void open(int index) {
+    if (_clipboardOnly && index != 2) return;
     final int next = index.clamp(0, 3);
     if (_selectedIndex == next) {
       return;

@@ -81,6 +81,7 @@ Future<bool> shouldDeliverAgentNotification({
   CodexVoiceNotificationDetector? isCodexVoiceNotification,
   SubagentNotificationDetector? isSubagentNotification,
 }) async {
+  if (settings.clipboardOnly) return false;
   final profile = request.reminderId == null
       ? null
       : request.reminder ?? settings.reminderProfile(request.reminderId);
@@ -124,6 +125,7 @@ Future<bool> shouldRecordAgentTaskStart({
   required AppSettings settings,
   SubagentConversationDetector? isSubagentConversation,
 }) async {
+  if (settings.clipboardOnly) return false;
   if (settings.notifySubagentActivity || isSubagentConversation == null) {
     return true;
   }
@@ -158,6 +160,7 @@ Future<void> deliverAgentNotification({
   Future<void> Function(DingRequest request)? companionDelivery,
   Future<void> Function(DingRequest request)? onFiltered,
   bool suppressNativeNotification = false,
+  bool Function()? clipboardOnly,
   CodexVoiceNotificationDetector? isCodexVoiceNotification,
   SubagentNotificationDetector? isSubagentNotification,
   NotificationDeliveryFailureObserver? onFailure,
@@ -165,12 +168,15 @@ Future<void> deliverAgentNotification({
   AgentTaskStartLookup? taskStartedAt,
   DateTime Function() now = DateTime.now,
 }) async {
-  if (!await shouldDeliverAgentNotification(
+  if (settings.clipboardOnly || clipboardOnly?.call() == true) return;
+  final allowed = await shouldDeliverAgentNotification(
     request: request,
     settings: settings,
     isCodexVoiceNotification: isCodexVoiceNotification,
     isSubagentNotification: isSubagentNotification,
-  )) {
+  );
+  if (clipboardOnly?.call() == true) return;
+  if (!allowed) {
     await onFiltered?.call(request);
     return;
   }
@@ -207,6 +213,7 @@ Future<void> deliverAgentNotification({
       !await consumeTemporary(profile!)) {
     return;
   }
+  if (clipboardOnly?.call() == true) return;
   final snapshot =
       profile ?? settings.reminderProfile(request.notificationKind.apiValue);
   final DingRequest resolvedRequest =
@@ -297,6 +304,7 @@ Future<void> _observeNotificationDelivery({
 /// Composition root for production repositories and long-lived services.
 final class AppDependencies {
   AppDependencies._({
+    required this.initialSettings,
     required this.jev,
     required this.clipboardStore,
     required this.clipboardGateway,
@@ -314,6 +322,7 @@ final class AppDependencies {
   });
 
   static Future<AppDependencies> production({
+    bool Function()? clipboardOnly,
     void Function(int index)? onShowUi,
     void Function()? onResourceLibraryChanged,
     void Function()? onCopyDetected,
@@ -355,6 +364,17 @@ final class AppDependencies {
           captureService: clipboardCaptureService,
           onCopyDetected: onCopyDetected,
         );
+    final PreferencesBackend preferences =
+        preferencesBackend ?? SharedPreferencesBackend();
+    final SettingsRepository settingsRepository = SettingsRepository(
+      preferences,
+      defaultTrayNotificationColor: paths.development
+          ? TrayNotificationColor.pink
+          : TrayNotificationColor.orange,
+    );
+    final initialSettings = await settingsRepository.load();
+    final currentClipboardOnly =
+        clipboardOnly ?? () => initialSettings.clipboardOnly;
     final ResourceStore baseResourceStore = ResourceRepository(
       ResourceFileService(paths.resourceLibraryFile),
     );
@@ -376,11 +396,13 @@ final class AppDependencies {
     final AgentResourceSynchronizer resourceSynchronizer =
         await AgentResourceSynchronizer.currentUser(
           paths.skillPackagesDirectory,
+          preloadAdapterTargets: !initialSettings.clipboardOnly,
           sandbox:
               paths.development &&
               (Platform.isWindows ||
                   const bool.fromEnvironment('DINGDONG_PREVIEW_SANDBOX')),
-          loadAdapters: () => loadInstallerResourceAdapters(agentAdapterRepository),
+          loadAdapters: () =>
+              loadInstallerResourceAdapters(agentAdapterRepository),
           skillPackageInstaller: skillPackageInstaller,
           triggerGroupStore: baseTriggerGroupStore,
         );
@@ -398,14 +420,6 @@ final class AppDependencies {
       resourceStore,
       resourceSynchronizer,
       issueCenter: issueCenterController,
-    );
-    final PreferencesBackend preferences =
-        preferencesBackend ?? SharedPreferencesBackend();
-    final SettingsRepository settingsRepository = SettingsRepository(
-      preferences,
-      defaultTrayNotificationColor: paths.development
-          ? TrayNotificationColor.pink
-          : TrayNotificationColor.orange,
     );
     final BuiltInResourceInstaller builtInResourceInstaller =
         BuiltInResourceInstaller(
@@ -447,6 +461,7 @@ final class AppDependencies {
       },
     );
     final AgentRouter router = AgentRouter(
+      clipboardOnly: currentClipboardOnly,
       selectBridgeResources: aiResourceSelector.select,
       jevRoutes: JevRoutes(jev),
       loadJevUsage: (request) async {
@@ -472,7 +487,7 @@ final class AppDependencies {
         )) {
           return;
         }
-        onAgentTaskStarted?.call(start);
+        if (!currentClipboardOnly()) onAgentTaskStarted?.call(start);
       },
       onAgentConversationOpened: onAgentConversationOpened,
       onDing: (request) => unawaited(() async {
@@ -480,6 +495,7 @@ final class AppDependencies {
         await deliverAgentNotification(
           request: request,
           settings: settings,
+          clipboardOnly: currentClipboardOnly,
           nativeDelivery: (DingRequest resolvedRequest) =>
               notificationGateway.trigger(
                 resolvedRequest,
@@ -525,6 +541,7 @@ final class AppDependencies {
         await deliverAgentNotification(
           request: request,
           settings: settings,
+          clipboardOnly: currentClipboardOnly,
           suppressNativeNotification: true,
           nativeDelivery: (DingRequest resolvedRequest) =>
               notificationGateway.trigger(
@@ -581,6 +598,7 @@ final class AppDependencies {
         final AppSettings settings = await settingsRepository.load();
         await settingsRepository.save(
           settings.copyWith(clipboardMonitoring: enabled),
+          includeClipboardMode: false,
         );
       }()),
       onShowUi: onShowUi,
@@ -588,7 +606,7 @@ final class AppDependencies {
       updateReminderSounds: ({String? completion, String? attention}) async {
         final AppSettings next = (await settingsRepository.load())
             .withReminderSounds(completion: completion, attention: attention);
-        await settingsRepository.save(next);
+        await settingsRepository.save(next, includeClipboardMode: false);
         await onSettingsChangedByAgent?.call();
         return <String, Object?>{
           'completionSound': next.selectedSound,
@@ -597,6 +615,7 @@ final class AppDependencies {
       },
     );
     return AppDependencies._(
+      initialSettings: initialSettings,
       jev: jev,
       clipboardStore: clipboardStore,
       clipboardGateway: clipboardGateway,
@@ -628,7 +647,8 @@ final class AppDependencies {
   final IssueCenterController issueCenterController;
   final SettingsRepository settingsRepository;
   final AgentHttpServer agentHttpServer;
-  AppSettings initialSettings = const AppSettings();
+  final AppSettings initialSettings;
+  Future<void>? _agentResourceInitialization;
 
   void applyClipboardRetention(AppSettings settings, {DateTime? now}) {
     final List<ClipboardRecord> deleted = clipboardStore.trim(
@@ -660,6 +680,19 @@ final class AppDependencies {
 
   Future<void> start() async {
     await paths.applicationSupportDirectory.create(recursive: true);
+    if (!initialSettings.clipboardOnly) await ensureAgentResourcesInitialized();
+    applyClipboardRetention(initialSettings);
+    await agentHttpServer.start(port: initialSettings.apiPort);
+    await paths.activePortFile.writeAsString(
+      agentHttpServer.baseUri.port.toString(),
+      flush: true,
+    );
+  }
+
+  Future<void> ensureAgentResourcesInitialized() =>
+      _agentResourceInitialization ??= _initializeAgentResources();
+
+  Future<void> _initializeAgentResources() async {
     bool builtInInstallFailed = false;
     try {
       await builtInResourceInstaller.install();
@@ -675,12 +708,5 @@ final class AppDependencies {
         // The synchronized store publishes the problem to the issue center.
       }
     }
-    initialSettings = await settingsRepository.load();
-    applyClipboardRetention(initialSettings);
-    await agentHttpServer.start(port: initialSettings.apiPort);
-    await paths.activePortFile.writeAsString(
-      agentHttpServer.baseUri.port.toString(),
-      flush: true,
-    );
   }
 }

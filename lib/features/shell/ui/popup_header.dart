@@ -17,6 +17,8 @@ class PopupHeader extends StatelessWidget {
   const PopupHeader({
     required this.selectedIndex,
     required this.issueCount,
+    this.clipboardOnly = false,
+    this.onClipboardManager,
     this.connectedDeviceCount = 0,
     required this.updateAvailable,
     required this.showShortcutHints,
@@ -34,6 +36,8 @@ class PopupHeader extends StatelessWidget {
     super.key,
   });
 
+  final bool clipboardOnly;
+  final VoidCallback? onClipboardManager;
   final int selectedIndex;
   final int issueCount;
   final int connectedDeviceCount;
@@ -54,7 +58,7 @@ class PopupHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 108,
+      height: clipboardOnly ? 55 : 108,
       color: PopupStyle.of(context).surface,
       child: Column(
         children: <Widget>[
@@ -83,11 +87,11 @@ class PopupHeader extends StatelessWidget {
                                     minWidth: 86,
                                   ),
                                   child: Semantics(
-                                    button: true,
+                                    button: !clipboardOnly,
                                     child: GestureDetector(
                                       key: const Key('popup-brand-sound'),
                                       behavior: HitTestBehavior.opaque,
-                                      onTap: onBrand,
+                                      onTap: clipboardOnly ? null : onBrand,
                                       child: Text(
                                         'DingDong',
                                         maxLines: 1,
@@ -122,7 +126,16 @@ class PopupHeader extends StatelessWidget {
                       ),
                     ),
                   ),
-                  if (issueCount > 0) ...<Widget>[
+                  if (clipboardOnly && onClipboardManager != null) ...<Widget>[
+                    _HeaderButton(
+                      key: const Key('popup-open-clipboard-manager'),
+                      tooltip: context.l10n.clipboardHistory,
+                      symbol: 'clipboard',
+                      onPressed: onClipboardManager,
+                    ),
+                    const SizedBox(width: 5),
+                  ],
+                  if (!clipboardOnly && issueCount > 0) ...<Widget>[
                     SizedBox.square(
                       dimension: 30,
                       child: _IssueButton(
@@ -159,54 +172,55 @@ class PopupHeader extends StatelessWidget {
               ),
             ),
           ),
-          Expanded(
-            child: Padding(
-              key: const Key('popup-tab-bar'),
-              padding: const EdgeInsets.fromLTRB(17, 5, 17, 12),
-              child: Row(
-                children: <Widget>[
-                  _WorkspaceTab(
-                    key: const Key('popup-tab-0'),
-                    contentKey: const Key('popup-tab-content-0'),
-                    selected: selectedIndex == 0,
-                    symbol: 'today',
-                    label: context.l10n.dynamicMessage,
-                    shortcut: workspaceShortcuts.today.label(
-                      defaultTargetPlatform,
+          if (!clipboardOnly)
+            Expanded(
+              child: Padding(
+                key: const Key('popup-tab-bar'),
+                padding: const EdgeInsets.fromLTRB(17, 5, 17, 12),
+                child: Row(
+                  children: <Widget>[
+                    _WorkspaceTab(
+                      key: const Key('popup-tab-0'),
+                      contentKey: const Key('popup-tab-content-0'),
+                      selected: selectedIndex == 0,
+                      symbol: 'today',
+                      label: context.l10n.dynamicMessage,
+                      shortcut: workspaceShortcuts.today.label(
+                        defaultTargetPlatform,
+                      ),
+                      showShortcut: showShortcutHints,
+                      onPressed: () => onSelected(0),
                     ),
-                    showShortcut: showShortcutHints,
-                    onPressed: () => onSelected(0),
-                  ),
-                  const SizedBox(width: 6),
-                  _WorkspaceTab(
-                    key: const Key('popup-tab-1'),
-                    contentKey: const Key('popup-tab-content-1'),
-                    selected: selectedIndex == 1,
-                    symbol: 'library',
-                    label: context.l10n.libraryMessage,
-                    shortcut: workspaceShortcuts.library.label(
-                      defaultTargetPlatform,
+                    const SizedBox(width: 6),
+                    _WorkspaceTab(
+                      key: const Key('popup-tab-1'),
+                      contentKey: const Key('popup-tab-content-1'),
+                      selected: selectedIndex == 1,
+                      symbol: 'library',
+                      label: context.l10n.libraryMessage,
+                      shortcut: workspaceShortcuts.library.label(
+                        defaultTargetPlatform,
+                      ),
+                      showShortcut: showShortcutHints,
+                      onPressed: () => onSelected(1),
                     ),
-                    showShortcut: showShortcutHints,
-                    onPressed: () => onSelected(1),
-                  ),
-                  const SizedBox(width: 6),
-                  _WorkspaceTab(
-                    key: const Key('popup-tab-2'),
-                    contentKey: const Key('popup-tab-content-2'),
-                    selected: selectedIndex == 2,
-                    symbol: 'clipboard',
-                    label: context.l10n.clipboard,
-                    shortcut: workspaceShortcuts.clipboard.label(
-                      defaultTargetPlatform,
+                    const SizedBox(width: 6),
+                    _WorkspaceTab(
+                      key: const Key('popup-tab-2'),
+                      contentKey: const Key('popup-tab-content-2'),
+                      selected: selectedIndex == 2,
+                      symbol: 'clipboard',
+                      label: context.l10n.clipboard,
+                      shortcut: workspaceShortcuts.clipboard.label(
+                        defaultTargetPlatform,
+                      ),
+                      showShortcut: showShortcutHints,
+                      onPressed: () => onSelected(2),
                     ),
-                    showShortcut: showShortcutHints,
-                    onPressed: () => onSelected(2),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
         ],
       ),
     );

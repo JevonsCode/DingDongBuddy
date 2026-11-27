@@ -661,7 +661,8 @@ class _DeviceCardState extends State<_DeviceCard> {
                   controller.setAutoSendClipboard(device.id, value),
                 ),
               ),
-              if (device.kind == LinkedDeviceKind.phone)
+              if (device.kind == LinkedDeviceKind.phone &&
+                  !controller.clipboardOnly)
                 _DeviceSettingRow(
                   key: Key('device-agent-notifications-${device.id}'),
                   title: context.l10n.agentCompletion,
@@ -777,7 +778,9 @@ class _PairingCard extends StatelessWidget {
               const SizedBox(height: 14),
               const Divider(height: 1),
               const SizedBox(height: 12),
-              _SecurityNote(pairingVisible: pairing != null),
+              _SecurityNote(
+                showPairingNote: pairing != null || controller.clipboardOnly,
+              ),
             ],
           ],
         ),
@@ -995,9 +998,9 @@ class _PairingQr extends StatelessWidget {
 }
 
 class _SecurityNote extends StatelessWidget {
-  const _SecurityNote({required this.pairingVisible});
+  const _SecurityNote({required this.showPairingNote});
 
-  final bool pairingVisible;
+  final bool showPairingNote;
 
   @override
   Widget build(BuildContext context) {
@@ -1009,7 +1012,7 @@ class _SecurityNote extends StatelessWidget {
         const SizedBox(width: 8),
         Expanded(
           child: Text(
-            pairingVisible
+            showPairingNote
                 ? context
                       .l10n
                       .theKeyStaysInTheQRWebRTCIsPreferredTheEncryptedRelay_ca235c45
