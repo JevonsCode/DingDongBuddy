@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -32,7 +33,9 @@ void initCompanionService() {
       showNotification: false,
     ),
     foregroundTaskOptions: ForegroundTaskOptions(
-      eventAction: ForegroundTaskEventAction.nothing(),
+      // A one-minute watchdog: Android may hold the reconnect timer while
+      // the CPU sleeps, and the tick reconnects a peer whose retry is late.
+      eventAction: ForegroundTaskEventAction.repeat(60 * 1000),
       autoRunOnBoot: true,
       autoRunOnMyPackageReplaced: true,
       allowWakeLock: true,
@@ -88,11 +91,21 @@ final class CompanionTaskHandler extends TaskHandler {
     );
     _engine = engine;
     engine.start();
+    Set<ConnectivityResult>? previous;
     _connectivity = Connectivity().onConnectivityChanged.listen((
       List<ConnectivityResult> results,
     ) {
-      if (results.any((ConnectivityResult r) => r != ConnectivityResult.none)) {
+      final Set<ConnectivityResult> current = results
+          .where((ConnectivityResult r) => r != ConnectivityResult.none)
+          .toSet();
+      final Set<ConnectivityResult>? before = previous;
+      previous = current;
+      if (current.isEmpty) return;
+      if (before == null || before.isEmpty) {
         engine.networkAvailable();
+      } else if (!setEquals(before, current)) {
+        // Wi-Fi ↔ mobile data: the old socket's route is gone.
+        engine.networkChanged();
       }
     });
     for (final Object data in _early) {
@@ -113,7 +126,7 @@ final class CompanionTaskHandler extends TaskHandler {
   }
 
   @override
-  void onRepeatEvent(DateTime timestamp) {}
+  void onRepeatEvent(DateTime timestamp) => _engine?.tick();
 
   @override
   void onReceiveData(Object data) {
@@ -153,29 +166,114 @@ final class _LocalAgentNotifier implements AgentNotifier {
   @override
   Future<void> show(AgentEvent event, {required String hostName}) async {
     final bool attention = event.needsAttention;
+    // A reminder that arrives long after it was sent is shown, labelled with
+    // its delay, on a quiet channel instead of ringing as if it were new.
+    final bool late = event.isLate;
+    final String channelId = late ? lateChannelId : event.kind.channelId;
+    final String title = event.notificationTitleFrom(hostName);
+    final String body = late
+        ? '延迟 ${AgentEvent.formatDelay(event.deliveryDelay!)} · ${event.notificationBody}'
+        : event.notificationBody;
+    final DateTime? completedAt = event.completedAt;
     await _plugin.show(
       id: event.id.hashCode,
-      title: event.notificationTitleFrom(hostName),
-      body: event.notificationBody,
+      title: title,
+      body: body,
       notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           // Channels (sound, vibration, importance) are owned by
           // CompanionChannels.kt; these values only matter if it is missing.
-          event.kind.channelId,
-          attention ? 'Agent 需要你处理' : 'Agent 完成',
-          importance: attention
+          channelId,
+          late
+              ? '延迟送达的提醒'
+              : attention
+              ? 'Agent 需要你处理'
+              : 'Agent 完成',
+          importance: late
+              ? Importance.low
+              : attention
               ? Importance.high
               : Importance.defaultImportance,
-          priority: attention ? Priority.high : Priority.defaultPriority,
+          priority: late
+              ? Priority.low
+              : attention
+              ? Priority.high
+              : Priority.defaultPriority,
           category: attention
               ? AndroidNotificationCategory.reminder
               : AndroidNotificationCategory.status,
           icon: 'ic_notification',
-          styleInformation: BigTextStyleInformation(event.notificationBody),
+          // Expanded, the notification shows the Agent's whole message.
+          styleInformation: BigTextStyleInformation(
+            event.notificationDetail(),
+            contentTitle: title,
+            summaryText: attention ? '需要你处理' : '已完成',
+          ),
+          when: completedAt?.millisecondsSinceEpoch,
+          showWhen: completedAt != null,
           autoCancel: true,
         ),
       ),
       payload: 'agent',
     );
+    final Duration? delay = event.deliveryDelay;
+    debugPrint(
+      'DingDongAgent posted id=${event.id} kind=${event.kind.name} '
+      'channel=$channelId late=$late '
+      'sentAt=${event.sentAt?.toIso8601String()} '
+      'receivedAt=${event.receivedAt?.toIso8601String()} '
+      'postedAt=${DateTime.now().toUtc().toIso8601String()} '
+      'delayMs=${delay?.inMilliseconds}',
+    );
+  }
+
+  @override
+  Future<void> showMissed(
+    List<AgentEvent> events, {
+    required String hostName,
+  }) async {
+    if (events.isEmpty) return;
+    final int attention = events
+        .where((AgentEvent e) => e.needsAttention)
+        .length;
+    final String title = attention > 0
+        ? '离线期间有 $attention 条需要你处理 · $hostName'
+        : '离线期间有 ${events.length} 条 Agent 完成 · $hostName';
+    final String lines = <String>[
+      for (final AgentEvent event in events.take(8))
+        '${event.needsAttention ? '需要你处理' : '已完成'} · ${event.source.isEmpty ? 'Agent' : event.source}'
+            ' · ${event.timingLine()}\n${event.notificationBody}',
+      if (events.length > 8) '还有 ${events.length - 8} 条，打开 DingDong 查看',
+    ].join('\n\n');
+    await _plugin.show(
+      id: 'missed:$hostName'.hashCode,
+      title: title,
+      body: events.first.notificationBody,
+      notificationDetails: NotificationDetails(
+        android: AndroidNotificationDetails(
+          lateChannelId,
+          '延迟送达的提醒',
+          importance: Importance.low,
+          priority: Priority.low,
+          icon: 'ic_notification',
+          styleInformation: BigTextStyleInformation(
+            lines,
+            contentTitle: title,
+            summaryText: '连接恢复后补发',
+          ),
+          autoCancel: true,
+        ),
+      ),
+      payload: 'agent',
+    );
+    debugPrint(
+      'DingDongAgent missed host=$hostName count=${events.length} '
+      'ids=${events.map((AgentEvent e) => e.id).join(',')} '
+      'postedAt=${DateTime.now().toUtc().toIso8601String()}',
+    );
   }
 }
+
+/// Quiet channel for reminders that arrived late or were missed offline;
+/// created in CompanionChannels.kt.
+const String lateChannelId = 'agent_late_v1';

@@ -1,3 +1,4 @@
+import 'package:dingdong/features/activity/domain/agent_notification_kind.dart';
 import 'package:dingdong_link_protocol/dingdong_link_protocol.dart';
 
 export 'package:dingdong_link_protocol/dingdong_link_protocol.dart'
@@ -102,6 +103,7 @@ final class LinkedDevice {
     required this.vibrationEnabled,
     required this.manuallyDisconnected,
     required this.pairedAt,
+    this.agentNotificationKinds = allAgentNotificationKinds,
     this.sharedClipboardItemIds = const <String>[],
     this.lastSeenAt,
   });
@@ -132,6 +134,9 @@ final class LinkedDevice {
       vibrationEnabled: json['vibrationEnabled'] != false,
       manuallyDisconnected: json['manuallyDisconnected'] == true,
       pairedAt: DateTime.parse(json['pairedAt']! as String).toUtc(),
+      agentNotificationKinds:
+          parseAgentNotificationKinds(json['agentNotificationKinds']) ??
+          allAgentNotificationKinds,
       sharedClipboardItemIds: _boundedStringList(
         json['sharedClipboardItemIds'],
         limit: deviceLinkClipboardHistoryLimit,
@@ -171,6 +176,10 @@ final class LinkedDevice {
   final bool manuallyDisconnected;
   final DateTime pairedAt;
 
+  /// Reminder kinds the phone chose to receive. Kinds outside this set still
+  /// reach its in-app list, marked silent, and are never sent by Web Push.
+  final Set<AgentNotificationKind> agentNotificationKinds;
+
   /// A bounded authorization ledger for clipboard records actually delivered
   /// to this device. Content remains exclusively in the host clipboard store.
   final List<String> sharedClipboardItemIds;
@@ -192,6 +201,7 @@ final class LinkedDevice {
     bool? vibrationEnabled,
     bool? manuallyDisconnected,
     DateTime? pairedAt,
+    Set<AgentNotificationKind>? agentNotificationKinds,
     List<String>? sharedClipboardItemIds,
     DateTime? lastSeenAt,
   }) {
@@ -214,6 +224,8 @@ final class LinkedDevice {
       vibrationEnabled: vibrationEnabled ?? this.vibrationEnabled,
       manuallyDisconnected: manuallyDisconnected ?? this.manuallyDisconnected,
       pairedAt: pairedAt ?? this.pairedAt,
+      agentNotificationKinds:
+          agentNotificationKinds ?? this.agentNotificationKinds,
       sharedClipboardItemIds:
           sharedClipboardItemIds ?? this.sharedClipboardItemIds,
       lastSeenAt: lastSeenAt ?? this.lastSeenAt,
@@ -238,10 +250,40 @@ final class LinkedDevice {
     'vibrationEnabled': vibrationEnabled,
     'manuallyDisconnected': manuallyDisconnected,
     'pairedAt': pairedAt.toUtc().toIso8601String(),
+    if (agentNotificationKinds.length != allAgentNotificationKinds.length)
+      'agentNotificationKinds': agentNotificationKindNames(
+        agentNotificationKinds,
+      ),
     'sharedClipboardItemIds': sharedClipboardItemIds,
     if (lastSeenAt != null) 'lastSeenAt': lastSeenAt!.toUtc().toIso8601String(),
   };
 }
+
+/// Both reminder kinds, the default for phones that never chose.
+const Set<AgentNotificationKind> allAgentNotificationKinds =
+    <AgentNotificationKind>{
+      AgentNotificationKind.completion,
+      AgentNotificationKind.attention,
+    };
+
+/// Reads a phone's `agentNotificationKinds` list. Unknown names are ignored
+/// so a newer phone can add kinds; anything that is not a list means "not
+/// sent", which keeps the stored choice.
+Set<AgentNotificationKind>? parseAgentNotificationKinds(Object? value) {
+  if (value is! List) return null;
+  return <AgentNotificationKind>{
+    for (final Object? name in value.take(8))
+      if (name is String)
+        for (final AgentNotificationKind kind in AgentNotificationKind.values)
+          if (kind.apiValue == name) kind,
+  };
+}
+
+List<String> agentNotificationKindNames(Set<AgentNotificationKind> kinds) =>
+    <String>[
+      for (final AgentNotificationKind kind in AgentNotificationKind.values)
+        if (kinds.contains(kind)) kind.apiValue,
+    ];
 
 List<String> _boundedStringList(Object? value, {required int limit}) {
   if (value is! List) return const <String>[];

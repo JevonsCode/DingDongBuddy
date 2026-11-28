@@ -280,6 +280,25 @@ Future<void> showSettingsDialog(
               : '已关闭，这台电脑不会再提醒这台手机';
           void setAlerts(String key, bool value) =>
               controller.send(<String, Object?>{'cmd': 'alerts', key: value});
+          String kindStatus({
+            required String kind,
+            required String label,
+            required bool enabled,
+            required ChannelState channel,
+          }) {
+            if (!alerts) return '手机通知已关闭';
+            if (!controller.notificationsGranted) return '系统未允许 DingDong 通知';
+            if (!enabled) return '已关闭 · 列表照常更新，不响铃';
+            if (channel.blocked) return '系统已关闭“$label”渠道，点下方“铃声与振动”打开';
+            if (computer.computerClipboardOnly) {
+              return '${computer.hostName} 处于仅剪贴板模式，不发送 Agent 提醒';
+            }
+            if (computer.computerSends(kind) == false) {
+              return '${computer.hostName} 未推送此类提醒，可在电脑端提醒设置中打开';
+            }
+            return channel.sound ? '开启 · 响铃' : '开启 · 系统渠道为静音';
+          }
+
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
@@ -300,7 +319,12 @@ Future<void> showSettingsDialog(
               ),
               SettingRow(
                 title: '完成时提醒',
-                subtitle: 'Agent 完成一轮任务',
+                subtitle: kindStatus(
+                  kind: 'completion',
+                  label: 'Agent 完成',
+                  enabled: controller.completionAlertsEnabled,
+                  channel: controller.completionChannel,
+                ),
                 trailing: DingSwitch(
                   semanticLabel: '完成时提醒',
                   value: controller.completionAlertsEnabled,
@@ -311,7 +335,12 @@ Future<void> showSettingsDialog(
               ),
               SettingRow(
                 title: '需要你处理时提醒',
-                subtitle: 'Agent 在等你确认或回答',
+                subtitle: kindStatus(
+                  kind: 'attention',
+                  label: 'Agent 需要你处理',
+                  enabled: controller.attentionAlertsEnabled,
+                  channel: controller.attentionChannel,
+                ),
                 trailing: DingSwitch(
                   semanticLabel: '需要你处理时提醒',
                   value: controller.attentionAlertsEnabled,
@@ -321,6 +350,11 @@ Future<void> showSettingsDialog(
                 ),
               ),
               const _SectionLabel('这台电脑'),
+              SettingRow(
+                title: '连接状态',
+                subtitle: connectionStatus(computer, controller),
+                trailing: const SizedBox.shrink(),
+              ),
               SettingRow(
                 title: '接收这台电脑的提醒',
                 subtitle: computerStatus,
@@ -396,7 +430,7 @@ Future<void> showSettingsDialog(
               ),
               const SettingRow(
                 title: '版本',
-                subtitle: 'DingDong Android 0.2.0 · 原生通知',
+                subtitle: 'DingDong Android 0.3.0 · 原生通知',
                 trailing: SizedBox.shrink(),
               ),
               DialogActions(
@@ -586,4 +620,29 @@ Future<void> showBackgroundHelp(
       ];
     },
   );
+}
+
+/// One line answering "will reminders reach this phone right now?".
+String connectionStatus(ComputerView computer, CompanionController controller) {
+  String clock(DateTime value) =>
+      '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';
+  final List<String> parts = <String>[
+    if (computer.connected)
+      '已连接'
+    else if (computer.manualDisconnect)
+      '已手动断开'
+    else if (computer.replaced)
+      '连接已转移到另一个设备'
+    else if (computer.waitingForComputer)
+      '等待电脑上线'
+    else
+      '正在重新连接',
+    if (computer.lastMessageAt case final DateTime at) '最近收到 ${clock(at)}',
+    if (computer.lastReminderDelay case final Duration delay)
+      delay > const Duration(minutes: 10)
+          ? '上条提醒延迟 ${delay.inMinutes} 分钟'
+          : '上条提醒 ${delay.inSeconds} 秒内送达',
+    if (!controller.serviceRunning) '后台服务未运行',
+  ];
+  return parts.join(' · ');
 }

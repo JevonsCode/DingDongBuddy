@@ -67,9 +67,19 @@ final class FakeSocket implements LinkSocket {
 final class RecordingNotifier implements AgentNotifier {
   final List<AgentEvent> shown = <AgentEvent>[];
   final List<String> hostNames = <String>[];
+  final List<List<AgentEvent>> missed = <List<AgentEvent>>[];
   @override
   Future<void> show(AgentEvent event, {required String hostName}) async {
     shown.add(event);
+    hostNames.add(hostName);
+  }
+
+  @override
+  Future<void> showMissed(
+    List<AgentEvent> events, {
+    required String hostName,
+  }) async {
+    missed.add(events);
     hostNames.add(hostName);
   }
 }
@@ -461,5 +471,144 @@ void main() {
             as Map<String, Object?>;
     expect(computer['hostName'], '工作电脑');
     expect((computer['events']! as List).single, containsPair('id', 'persist'));
+  });
+
+  test('kind choices reach the computer in hello and after a change', () async {
+    final FakeSocket socket = await pairAndWelcome();
+    expect(socket.sent.first['agentNotificationKinds'], <String>[
+      'completion',
+      'attention',
+    ]);
+    await engine.handleCommand(<String, Object?>{
+      'cmd': 'alerts',
+      'completion': false,
+    });
+    await _settle();
+    expect(socket.sent.last['type'], 'settings.update');
+    expect(socket.sent.last['agentNotificationKinds'], <String>['attention']);
+  });
+
+  test(
+    'a reminder delivered hours late is labelled and posted quietly',
+    () async {
+      final FakeSocket socket = await pairAndWelcome();
+      final DateTime sent = DateTime.now().toUtc().subtract(
+        const Duration(hours: 3, minutes: 12),
+      );
+      await socket.host(<String, Object?>{
+        'type': 'agent.completed',
+        'id': 'late-1',
+        'activityId': 'late-activity',
+        'notificationKind': 'attention',
+        'source': 'Codex',
+        'summary': '部署停在第 1 步。',
+        'detail': '部署停在第 1 步。\n请在 Chrome 点击 Authorize 后告诉我。',
+        'completedAt': sent.toIso8601String(),
+        'sentAt': sent.toIso8601String(),
+      });
+      await _settleUntil(() => notifier.shown.isNotEmpty);
+      final AgentEvent event = notifier.shown.single;
+      expect(event.isLate, isTrue);
+      expect(AgentEvent.formatDelay(event.deliveryDelay!), '3 小时 12 分');
+      // The collapsed line says what to do; the expanded text keeps it all.
+      expect(event.notificationBody, '请在 Chrome 点击 Authorize 后告诉我。');
+      expect(
+        event.notificationDetail(),
+        contains('部署停在第 1 步。\n请在 Chrome 点击 Authorize 后告诉我。'),
+      );
+      expect(event.timingLine(), contains('延迟 3 小时 12 分送达'));
+    },
+  );
+
+  test('reminders missed while offline get one quiet summary', () async {
+    final FakeSocket first = await pairAndWelcome();
+    await first.host(<String, Object?>{
+      'type': 'agent.state',
+      'running': <Object?>[],
+      'completed': <Object?>[],
+    });
+    await _settle();
+    await engine.dispose();
+    final DateTime missedAt = DateTime.now().toUtc().add(
+      const Duration(minutes: -5),
+    );
+    // Make the earlier contact older than the missed reminder.
+    final File file = File('${temp.path}/companion.json');
+    final Map<String, Object?> saved = Map<String, Object?>.from(
+      jsonDecode(file.readAsStringSync()) as Map,
+    );
+    final List<Object?> pairings = saved['pairings']! as List<Object?>;
+    (pairings.single! as Map)['lastSyncedAt'] = missedAt
+        .subtract(const Duration(hours: 2))
+        .toIso8601String();
+    file.writeAsStringSync(jsonEncode(saved));
+    engine = await build();
+    await _settle();
+    final FakeSocket socket = sockets.last;
+    socket
+      ..relay('ready')
+      ..relay('host_joined');
+    await _settle();
+    await socket.host(<String, Object?>{
+      'type': 'welcome',
+      'host': <String, Object?>{'name': '工作电脑'},
+      'agentDelivery': <String, Object?>{
+        'completion': false,
+        'attention': true,
+      },
+    });
+    final Map<String, Object?> missed = <String, Object?>{
+      'id': 'missed-activity',
+      'activityId': 'missed-activity',
+      'notificationKind': 'attention',
+      'summary': '需要你确认发布',
+      'unseen': true,
+      'completedAt': missedAt.toIso8601String(),
+    };
+    await socket.host(<String, Object?>{
+      'type': 'agent.state',
+      'running': <Object?>[],
+      'completed': <Object?>[
+        missed,
+        <String, Object?>{
+          'id': 'seen-activity',
+          'notificationKind': 'completion',
+          'unseen': false,
+          'completedAt': missedAt.toIso8601String(),
+        },
+        <String, Object?>{
+          'id': 'before-contact',
+          'notificationKind': 'completion',
+          'unseen': true,
+          'completedAt': missedAt
+              .subtract(const Duration(hours: 3))
+              .toIso8601String(),
+        },
+      ],
+    });
+    await _settleUntil(() => notifier.missed.isNotEmpty);
+    expect(notifier.missed.single.map((AgentEvent e) => e.id), <String>[
+      'missed-activity',
+    ]);
+    // A later live copy of the same occurrence does not ring again.
+    await socket.host(<String, Object?>{
+      'type': 'agent.completed',
+      ...missed,
+      'id': 'notification-for-missed',
+    });
+    await _settle();
+    expect(notifier.shown, isEmpty);
+    final Map<String, Object?> computer =
+        (engine.snapshot()['computers']! as List).single
+            as Map<String, Object?>;
+    expect(computer['agentDelivery'], containsPair('completion', false));
+  });
+
+  test('a network change replaces a connected socket at once', () async {
+    final FakeSocket first = await pairAndWelcome();
+    engine.networkChanged();
+    await _settle();
+    expect(sockets.length, 2);
+    expect(identical(sockets.last, first), isFalse);
   });
 }

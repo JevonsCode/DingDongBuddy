@@ -69,6 +69,7 @@ final class DingRequest {
     this.tokenUsage,
     this.transcriptPath,
     this.receivedAt,
+    this.createdAt,
     this.alertPhone = true,
   });
 
@@ -101,6 +102,9 @@ final class DingRequest {
         json['transcriptPath'],
         json['transcript_path'],
       ]),
+      createdAt: json['createdAt'] is String
+          ? DateTime.tryParse(json['createdAt']! as String)?.toUtc()
+          : null,
     );
   }
 
@@ -119,6 +123,30 @@ final class DingRequest {
   final ConversationTokenUsage? tokenUsage;
   final String? transcriptPath;
   final DateTime? receivedAt;
+
+  /// When the Agent's hook or tool created this reminder, if it said. A
+  /// reminder can wait in the local connection while DingDong is suspended
+  /// or the computer sleeps; it is delivered with this time, quietly.
+  final DateTime? createdAt;
+
+  /// How long the reminder waited before DingDong received it. Clock skew
+  /// within one computer is ignored below zero and capped at two days.
+  Duration? get waitedFor {
+    final DateTime? created = createdAt;
+    final DateTime? received = receivedAt;
+    if (created == null || received == null) return null;
+    final Duration waited = received.difference(created);
+    if (waited.isNegative || waited > const Duration(days: 2)) return null;
+    return waited;
+  }
+
+  /// Reminders that waited longer than this play no sound when they arrive.
+  static const Duration lateAfter = Duration(minutes: 10);
+
+  bool get isLate => (waitedFor ?? Duration.zero) > lateAfter;
+
+  /// When the Agent actually stopped: the creation time for a late reminder.
+  DateTime? get occurredAt => isLate ? createdAt : receivedAt;
 
   /// Set by the desktop's reminder rules, never by API callers. False keeps
   /// linked phones in sync without raising a system notification there.
@@ -147,6 +175,7 @@ final class DingRequest {
       tokenUsage: tokenUsage ?? this.tokenUsage,
       transcriptPath: transcriptPath,
       receivedAt: receivedAt ?? this.receivedAt,
+      createdAt: createdAt,
       alertPhone: alertPhone ?? this.alertPhone,
     );
   }

@@ -1,6 +1,6 @@
 # DingDong Android companion
 
-Status: Flutter app in `mobile/` (0.2.0), 2026-10-19. Not released. It replaces the
+Status: Flutter app in `mobile/` (0.3.0), updated 2026-11-28. Not released. It replaces the
 Kotlin prototype (`android_companion/`, 2026-10-18), which proved the pairing,
 relay and notification-channel path on the user's phone before it was removed.
 
@@ -311,6 +311,56 @@ answered later connections with error 1101. The PWA is exposed to the same bug.
 the replacement close. In an A/B run against `wrangler dev`, the old worker
 reproduced the stall and the fixed one delivered `welcome` 1 s after the network
 returned. Deploying the Worker is the user's call.
+
+## Late and missed reminders (1.12.0-beta.1)
+
+Reports of reminders arriving hours late were traced to these paths:
+
+- **The phone app was not running.** On the Xiaomi test phone (HyperOS,
+  Android 16) the foreground service had not run for weeks: autostart
+  (`MIUIOP(10008)`) was denied, the app sat in the RARE standby bucket and was
+  not exempt from battery optimization. Android does not restart a stopped
+  service, so reminders only appeared when the user opened the app, and
+  history from `agent.state` never notified. The app cannot override these
+  system settings; settings now show "后台服务未运行", the battery state and
+  the last time the computer was heard from.
+- **The desktop was suspended.** On 2026-11-28 the installed desktop app
+  stopped scheduling work for over an hour (0 % CPU, connections left in the
+  accept backlog, AppleEvents timing out) until it received `SIGCONT`. Hook
+  and `dingdong_notify` requests that waited in the local connection were then
+  processed together. Hooks now send `createdAt`; a reminder that waited more
+  than 10 minutes is recorded with its original time and plays no sound.
+- **Web Push waited at the provider** for up to 24 hours. Pushes now live for
+  1 hour (completion) or 6 hours (attention) and use a Topic per activity and
+  kind, so only the newest undelivered copy is kept.
+- **Sockets that looked open.** A connect that timed out could still open
+  later and replace the retry (relay code 1008), and a network change left
+  the old socket in place. Late sockets are closed, a network type change
+  reconnects at once, and a one-minute watchdog reconnects a retry that
+  Android delayed. The PWA asks the relay for a `ping`/`pong` when it becomes
+  visible or comes back online and reconnects if the answer is missing.
+
+Receivers now compare the reminder's completion and send time with their own
+receive time. A reminder older than 10 minutes is shown with "延迟 … 送达"
+on a quiet channel (`agent_late_v1` on Android, `silent` on the PWA). On
+reconnect, unseen reminders completed since the last contact appear once as a
+quiet summary; seen items, older history and kinds turned off are skipped.
+
+### Choosing reminder kinds
+
+Phones send `agentNotificationKinds` (`["completion","attention"]` by
+default) in `hello` and `settings.update`. The desktop stores it per phone;
+a kind outside the list still reaches the in-app list with `silent: true` and
+is never sent by Web Push. The desktop sends `agentDelivery` (which kinds its
+own rules push to phones, and whether it is in clipboard-only mode) in
+`welcome` and `agent.state`, so each switch can say whether that kind will
+ring. Older desktops ignore the new fields; older phones receive both kinds.
+
+### Side-by-side test installs
+
+`flutter build apk -PdingdongAcceptance=true` builds
+`com.dingdongbuddy.companion.acceptance` ("DingDong 验收"), which installs
+next to a copy signed on another computer without touching its pairings.
 
 ## What blocks a release
 

@@ -3726,6 +3726,8 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
       'too_many_transfers': 'Wait for another transfer to finish.',
       'restart_required': 'The receiving device lost its progress. Send again.',
       'invalid_offset': 'Transfer progress does not match. Send again.',
+      'item_unavailable':
+          'The other computer only shares the clipboard right now and cannot receive resources.',
       'other': 'Transfer incomplete. Try again.',
     });
     return '$_temp0';
@@ -5023,4 +5025,10 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   @override
   String get clipboardOnlyConfigurationDescription =>
       'Clipboard rules and application preferences';
+
+  @override
+  String get activityShowFullMessage => 'Show the full message';
+
+  @override
+  String get activityHideFullMessage => 'Hide the full message';
 }

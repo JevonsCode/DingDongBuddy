@@ -168,6 +168,14 @@ void main() {
 
     expect(transport.method, 'POST');
     expect(transport.path, '/ding');
+    // The creation time lets DingDong recognise a reminder that waited.
+    final DateTime createdAt = DateTime.parse(
+      transport.body!.remove('createdAt')! as String,
+    );
+    expect(
+      DateTime.now().toUtc().difference(createdAt).inSeconds.abs(),
+      lessThan(60),
+    );
     expect(transport.body, <String, Object?>{
       'source': 'Codex',
       'flashCount': 4,

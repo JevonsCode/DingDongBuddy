@@ -23,6 +23,14 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders["appLabel"] = "DingDong"
+        // `-PdingdongAcceptance=true` builds a side-by-side test install
+        // ("DingDong 验收") that leaves an installed copy and its pairings
+        // untouched, e.g. when that copy was signed on another computer.
+        if (project.findProperty("dingdongAcceptance") == "true") {
+            applicationIdSuffix = ".acceptance"
+            manifestPlaceholders["appLabel"] = "DingDong 验收"
+        }
     }
 
     buildTypes {

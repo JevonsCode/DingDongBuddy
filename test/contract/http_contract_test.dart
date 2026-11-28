@@ -126,6 +126,30 @@ void main() {
     },
   );
 
+  test(
+    'clipboard-only mode withholds clipboard text even when Agents were allowed',
+    () async {
+      var clipboardOnly = true;
+      final router = AgentRouter(
+        clipboardOnly: () => clipboardOnly,
+        clipboardStore: InMemoryClipboardStore(),
+        resourceStore: InMemoryResourceStore(),
+        allowAgentClipboardContent: () async => true,
+      );
+      Future<HttpResponseData> read() => router.route(
+        const HttpRequestData(
+          method: 'GET',
+          uri: '/clipboard/history?includeContent=true',
+          body: '',
+        ),
+      );
+
+      expect((await read()).statusCode, 403);
+      clipboardOnly = false;
+      expect((await read()).statusCode, 200);
+    },
+  );
+
   test('POST /agent/conversation/opened acknowledges only its target', () async {
     AgentConversationTarget? received;
     final AgentRouter router = AgentRouter(

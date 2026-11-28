@@ -113,6 +113,7 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
         WindowsAuxiliaryWindowCloseBehavior<ResourceManagerApp> {
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
   late bool _clipboardOnly;
+  bool _confirmingClipboardOnly = false;
   int _selectedIndex = 0;
   int _clipboardCategoryRequestRevision = 0;
   int _handledClipboardCategoryRequestRevision = 0;
@@ -221,6 +222,22 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
     if (_clipboardOnly == enabled || !mounted) return;
     final leavingWorkspace =
         _selectedIndex != ResourceManagerDestination.clipboard.index;
+    // Leaving the resource editor would drop an unsaved draft. If the user
+    // keeps editing, the mode is applied the next time this window is
+    // focused (see onWindowFocus).
+    if (enabled &&
+        _selectedIndex == ResourceManagerDestination.resources.index) {
+      if (_confirmingClipboardOnly) return;
+      _confirmingClipboardOnly = true;
+      final bool discard;
+      try {
+        discard = await _confirmDiscardLibraryChanges();
+      } finally {
+        _confirmingClipboardOnly = false;
+      }
+      if (!discard) return;
+    }
+    if (!mounted || _clipboardOnly == enabled) return;
     setState(() {
       _clipboardOnly = enabled;
       if (enabled) _selectedIndex = ResourceManagerDestination.clipboard.index;
@@ -288,7 +305,23 @@ class _ResourceManagerAppState extends State<ResourceManagerApp>
   }
 
   @override
-  void onWindowFocus() => _setActivityVisible(true);
+  void onWindowFocus() {
+    _setActivityVisible(true);
+    unawaited(_catchUpHostClipboardOnly());
+  }
+
+  /// Applies a mode change this window postponed to protect a draft.
+  Future<void> _catchUpHostClipboardOnly() async {
+    final read = widget.readHostClipboardOnly;
+    if (read == null || _clipboardOnly || !mounted) return;
+    bool? enabled;
+    try {
+      enabled = await read();
+    } on Object {
+      return;
+    }
+    if (enabled == true && mounted) await _setClipboardOnly(true);
+  }
 
   @override
   void onWindowMinimize() => _setActivityVisible(false);

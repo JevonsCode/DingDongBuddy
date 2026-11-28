@@ -33,6 +33,10 @@ import {
 import {
   agentEventNeedsAttention,
   agentNotificationBody,
+  agentNotificationKinds,
+  agentReminderDelayMs,
+  formatReminderDelay,
+  wantsAgentKind,
   agentNotificationTitle,
   agentNotificationsAreActive,
   applyAgentNotificationDefault,
@@ -229,7 +233,7 @@ test("pairing never promises or displays unsent host history", () => {
 test("PWA settings can check and apply an update without replacing pairings", () => {
   assert.match(pageSource, /id="pwa-update-button"[\s\S]*检查更新/);
   assert.match(pageSource, /id="pwa-update-status"[\s\S]*aria-live="polite"/);
-  assert.match(appSource, /const currentPwaVersion = "1.11.19"/);
+  assert.match(appSource, /const currentPwaVersion = "1.12.0-beta.1"/);
   // The running shell version comes from the module URL instead of a second,
   // hand-maintained constant that can drift from version.json.
   assert.match(
@@ -245,7 +249,7 @@ test("PWA settings can check and apply an update without replacing pairings", ()
   assert.match(appSource, /await persistPairingsForWorker\(\)/);
   assert.match(appSource, /location\.reload\(\)/);
   assert.match(serviceWorkerSource, /version\.json/);
-  assert.equal(pwaVersion.version, "1.11.19");
+  assert.equal(pwaVersion.version, "1.12.0-beta.1");
 });
 
 test("every PWA shell reference and precache entry matches version.json", () => {
@@ -588,10 +592,32 @@ test("Agent reminder presentation distinguishes completion from attention", () =
   };
   assert.equal(agentEventNeedsAttention(attention), true);
   assert.equal(agentNotificationTitle(attention), "Agent 需要你处理");
+  // What the Agent needs comes first; the task the user asked for follows.
   assert.equal(
     agentNotificationBody(attention),
-    "确认发布范围：需要选择正式发布或预发布。",
+    "需要选择正式发布或预发布。\n\n任务：确认发布范围",
   );
+  // The whole message is kept for the expanded notification, and the line
+  // asking the user leads even when it is not the first one.
+  const long = "部署停在第 1 步。\n" + "细节".repeat(200) + "\n请在 Chrome 点击 Authorize 后告诉我。";
+  const body = agentNotificationBody({ notificationKind: "attention", detail: long });
+  assert.equal(body.split("\n")[0], "请在 Chrome 点击 Authorize 后告诉我。");
+  assert.ok(body.includes("细节".repeat(200)));
+  assert.ok(Array.from(body).length > 260);
+  assert.deepEqual(agentNotificationKinds({}), ["completion", "attention"]);
+  assert.deepEqual(
+    agentNotificationKinds({ agentNotificationKinds: ["attention", "junk"] }),
+    ["attention"],
+  );
+  assert.equal(wantsAgentKind({ agentNotificationKinds: [] }, "attention"), false);
+  assert.equal(
+    agentReminderDelayMs({ sentAt: "2026-01-01T00:00:00Z" }, Date.parse("2026-01-01T03:12:00Z")),
+    (3 * 60 + 12) * 60 * 1000,
+  );
+  assert.equal(formatReminderDelay((3 * 60 + 12) * 60 * 1000), "3 小时 12 分");
+  assert.match(serviceWorkerSource, /silent: quiet/);
+  assert.match(serviceWorkerSource, /延迟 \$\{reminderDelayText\(delayMs\)\}送达/);
+  assert.match(serviceWorkerSource, /workerWantsAgentKind\(/);
   assert.equal(agentEventNeedsAttention({ needsUserAttention: true }), true);
   assert.equal(agentEventNeedsAttention({ notificationKind: "completion" }), false);
   assert.equal(
@@ -1251,3 +1277,29 @@ function pngDimensions(value) {
     height: value.readUInt32BE(20),
   };
 }
+
+test("the PWA probes an open-looking socket when it returns or the network does", () => {
+  assert.match(appSource, /window\.addEventListener\("online", probeAllConnections\)/);
+  assert.match(appSource, /function probeAllConnections\(\)/);
+  assert.match(appSource, /if \(raw === relayHeartbeatResponse\)/);
+  assert.match(appSource, /socket\.send\(relayHeartbeatRequest\)/);
+  assert.match(appSource, /config\?\.heartbeat\?\.request === relayHeartbeatRequest/);
+  assert.match(appSource, /socket\.close\(4000, "Heartbeat timeout"\)/);
+});
+
+test("phones choose reminder kinds and see whether each will ring", () => {
+  for (const id of [
+    "completion-kind-toggle",
+    "completion-kind-status",
+    "attention-kind-toggle",
+    "attention-kind-status",
+  ]) {
+    assert.match(pageSource, new RegExp(`id="${id}"`));
+    assert.match(appSource, new RegExp(`"${id}"`));
+  }
+  assert.match(appSource, /agentNotificationKinds: agentNotificationKinds\(session\.pair\)/);
+  assert.match(appSource, /function readAgentDelivery\(message, session\)/);
+  assert.match(appSource, /未推送此类提醒/);
+  assert.match(desktopControllerSource, /'agentDelivery': agentDelivery\(\)/);
+  assert.match(desktopControllerSource, /device\.agentNotificationKinds\.contains/);
+});

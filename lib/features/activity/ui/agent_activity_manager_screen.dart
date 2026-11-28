@@ -330,7 +330,10 @@ class _ActivityHistoryRow extends StatelessWidget {
                     ),
                     const SizedBox(height: 5),
                     Text(
-                      activity.message,
+                      // The whole reply, so a reminder that waits for the
+                      // user says what it needs; the summary is its first line.
+                      _fullActivityText(activity),
+                      key: Key('agent-activity-manager-message-${activity.id}'),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: colors.onSurfaceVariant,
                         height: 1.4,
@@ -345,4 +348,9 @@ class _ActivityHistoryRow extends StatelessWidget {
       ),
     );
   }
+}
+
+String _fullActivityText(AgentActivity activity) {
+  final String? detail = activity.detail?.trim();
+  return detail == null || detail.isEmpty ? activity.message : detail;
 }

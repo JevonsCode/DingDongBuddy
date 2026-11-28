@@ -465,7 +465,8 @@ final class McpServer {
         ),
         'flashCount': _integerProperty(maximum: 20),
         'conversationId': _stringProperty(
-          description: 'Required current conversation ID supplied by the host. Never invent an ID or use a workspace path in its place.',
+          description:
+              'Required current conversation ID supplied by the host. Never invent an ID or use a workspace path in its place.',
         ),
         'workspacePath': _stringProperty(),
         'notificationKind': <String, Object?>{

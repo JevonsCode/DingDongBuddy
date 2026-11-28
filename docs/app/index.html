@@ -12,7 +12,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="../assets/dingdong-pwa-192.png" type="image/png" />
     <link rel="apple-touch-icon" href="../assets/dingdong-pwa-512.png" />
-    <link rel="stylesheet" href="./styles.css?shell=77" />
+    <link rel="stylesheet" href="./styles.css?shell=78" />
   </head>
   <body>
     <div class="app-shell">
@@ -289,6 +289,38 @@
         </div>
         <div class="setting-row">
           <div>
+            <strong>完成时提醒</strong>
+            <span id="completion-kind-status" role="status" aria-live="polite">
+              Agent 完成一轮任务
+            </span>
+          </div>
+          <label class="switch-control">
+            <input
+              id="completion-kind-toggle"
+              type="checkbox"
+              aria-label="完成时提醒"
+            />
+            <span></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <div>
+            <strong>需要你处理时提醒</strong>
+            <span id="attention-kind-status" role="status" aria-live="polite">
+              Agent 在等你确认或回答
+            </span>
+          </div>
+          <label class="switch-control">
+            <input
+              id="attention-kind-toggle"
+              type="checkbox"
+              aria-label="需要你处理时提醒"
+            />
+            <span></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <div>
             <strong>提醒时震动</strong>
             <span id="vibration-support-label">实际触感仍受手机系统设置控制</span>
           </div>
@@ -305,7 +337,7 @@
           <div>
             <strong>版本</strong>
             <span id="pwa-update-status" role="status" aria-live="polite">
-              当前版本 1.11.19 · 联网时自动保持最新
+              当前版本 1.12.0-beta.1 · 联网时自动保持最新
             </span>
           </div>
           <button id="pwa-update-button" class="small-button" type="button">
@@ -454,6 +486,6 @@
       </div>
     </dialog>
 
-    <script type="module" src="./app.js?shell=77"></script>
+    <script type="module" src="./app.js?shell=78"></script>
   </body>
 </html>

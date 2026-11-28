@@ -3588,6 +3588,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
       'too_many_transfers': '请等待其他文件完成',
       'restart_required': '接收端进度已清除，请重新发送',
       'invalid_offset': '传输进度不一致，请重新发送',
+      'item_unavailable': '对方电脑当前为仅剪贴板模式，无法接收资源',
       'other': '传输未完成，请重试',
     });
     return '$_temp0';
@@ -4810,4 +4811,10 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
 
   @override
   String get clipboardOnlyConfigurationDescription => '剪贴板规则与应用偏好设置';
+
+  @override
+  String get activityShowFullMessage => '展开全文';
+
+  @override
+  String get activityHideFullMessage => '收起全文';
 }

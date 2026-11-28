@@ -226,8 +226,12 @@ extension _DeviceLinkSessionProtocol on DeviceLinkController {
         final Object? vibration = message['vibrationEnabled'];
         final Object? agentNotifications = message['agentNotificationsEnabled'];
         final Object? transport = message['transportPreference'];
+        final Set<AgentNotificationKind>? kinds = parseAgentNotificationKinds(
+          message['agentNotificationKinds'],
+        );
         if (vibration is bool ||
             agentNotifications is bool ||
+            kinds != null ||
             transport is String) {
           final DeviceLinkTransportPreference? transportPreference =
               device.kind == LinkedDeviceKind.computer
@@ -242,6 +246,7 @@ extension _DeviceLinkSessionProtocol on DeviceLinkController {
               receiveAgentNotifications: agentNotifications is bool
                   ? agentNotifications
                   : null,
+              agentNotificationKinds: kinds,
               transportPreference: transportPreference,
             ),
           );
@@ -355,6 +360,9 @@ extension _DeviceLinkSessionProtocol on DeviceLinkController {
         vibrationEnabled: message['vibrationEnabled'] != false,
         manuallyDisconnected: false,
         pairedAt: DateTime.now().toUtc(),
+        agentNotificationKinds:
+            parseAgentNotificationKinds(message['agentNotificationKinds']) ??
+            allAgentNotificationKinds,
         sharedClipboardItemIds: const <String>[],
         lastSeenAt: DateTime.now().toUtc(),
       );
@@ -390,6 +398,9 @@ extension _DeviceLinkSessionProtocol on DeviceLinkController {
           vibrationEnabled: message['vibrationEnabled'] is bool
               ? message['vibrationEnabled']! as bool
               : null,
+          agentNotificationKinds: parseAgentNotificationKinds(
+            message['agentNotificationKinds'],
+          ),
           manuallyDisconnected: replacingExistingPair ? false : null,
           pairedAt: replacingExistingPair ? DateTime.now().toUtc() : null,
           lastSeenAt: DateTime.now().toUtc(),
@@ -427,8 +438,13 @@ extension _DeviceLinkSessionProtocol on DeviceLinkController {
       'permissions': <String, Object?>{
         'autoSendClipboard': device.autoSendClipboard,
         'receiveAgentNotifications': device.receiveAgentNotifications,
+        'agentNotificationKinds': agentNotificationKindNames(
+          device.agentNotificationKinds,
+        ),
         'transportPreference': device.transportPreference.name,
       },
+      if (remoteKind == LinkedDeviceKind.phone)
+        'agentDelivery': agentDelivery(),
     });
     if (!_sessionIsCurrent(managed)) return;
     // The receiving engine enables file transfer when it processes welcome.

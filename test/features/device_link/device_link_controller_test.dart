@@ -2128,6 +2128,107 @@ void main() {
     },
   );
 
+  test(
+    'a kind the phone turned off stays in its list and skips Web Push',
+    () async {
+      final HttpServer server = await HttpServer.bind(
+        InternetAddress.loopbackIPv4,
+        0,
+      );
+      final List<Map<String, Object?>> pushes = <Map<String, Object?>>[];
+      server.listen((HttpRequest request) async {
+        pushes.add(
+          Map<String, Object?>.from(
+            jsonDecode(await utf8.decoder.bind(request).join()) as Map,
+          ),
+        );
+        request.response
+          ..statusCode = HttpStatus.ok
+          ..headers.contentType = ContentType.json
+          ..write('{"accepted":true}');
+        await request.response.close();
+      });
+      final _Harness harness = await _connectedHarness(
+        autoSend: false,
+        relayBaseUrl: Uri.parse('http://127.0.0.1:${server.port}'),
+      );
+      addTearDown(() async {
+        await harness.dispose();
+        await server.close(force: true);
+      });
+
+      harness.session.emit(
+        const DeviceLinkMessageEvent(<String, Object?>{
+          'type': 'settings.update',
+          'agentNotificationKinds': <Object?>['attention', 'unknown'],
+        }),
+      );
+      await _waitUntil(
+        () =>
+            harness
+                .store
+                .document!
+                .devices
+                .single
+                .agentNotificationKinds
+                .length ==
+            1,
+      );
+      expect(
+        harness.store.document!.devices.single
+            .toJson()['agentNotificationKinds'],
+        <String>['attention'],
+      );
+
+      Future<void> remind(AgentNotificationKind kind, String id) =>
+          harness.controller.sendAgentCompleted(
+            DingRequest(message: '摘要', source: 'Codex', notificationKind: kind),
+            activity: AgentActivity(
+              id: 'activity-$id',
+              source: 'Codex',
+              message: '摘要',
+              completedAt: DateTime.utc(2026, 8, 8, 8),
+              unseen: true,
+              notificationKind: kind,
+            ),
+            notificationId: id,
+          );
+      await remind(AgentNotificationKind.completion, 'done');
+      await remind(AgentNotificationKind.attention, 'ask');
+
+      final List<Map<String, Object?>> live = harness.session.sent
+          .where((Map<String, Object?> m) => m['type'] == 'agent.completed')
+          .toList();
+      expect(live.map((Map<String, Object?> m) => m['id']), <String>[
+        'done',
+        'ask',
+      ]);
+      expect(live.first['silent'], isTrue);
+      expect(live.last.containsKey('silent'), isFalse);
+      expect(DateTime.tryParse(live.last['sentAt']! as String), isNotNull);
+      expect(pushes, hasLength(1));
+      expect(pushes.single['messageId'], 'ask');
+      expect(pushes.single['ttlSeconds'], agentAttentionPushTtl.inSeconds);
+      expect(pushes.single['topic'], 'activity-ask:attention');
+    },
+  );
+
+  test(
+    'clipboard-only mode clears the Agent list on connected phones',
+    () async {
+      final _Harness harness = await _connectedHarness(autoSend: false);
+      addTearDown(harness.dispose);
+
+      await harness.controller.clearAgentState();
+
+      final Map<String, Object?> state = harness.session.sent.lastWhere(
+        (Map<String, Object?> m) => m['type'] == 'agent.state',
+      );
+      expect(state['running'], isEmpty);
+      expect(state['completed'], isEmpty);
+    },
+  );
+
   test('a silent reminder updates the phone list without Web Push', () async {
     final HttpServer server = await HttpServer.bind(
       InternetAddress.loopbackIPv4,

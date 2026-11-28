@@ -77,6 +77,9 @@ final class CompletionHookNotifier {
           'hostSessionId': _environment['CLAUDE_CODE_HOST_SESSION_ID'],
         'workspacePath': ?workspacePath,
         'transcriptPath': ?transcriptPath,
+        // Lets DingDong tell a reminder that waited (the app was suspended or
+        // the computer asleep) from a fresh one.
+        'createdAt': DateTime.now().toUtc().toIso8601String(),
       },
     );
   }
@@ -173,16 +176,26 @@ bool replyNeedsUserAttention(String? message) {
   }
   return _attentionMarkers.any(text.contains) ||
       _chineseRequest.hasMatch(text) ||
+      _blockedOnUser.hasMatch(text) ||
       RegExp(
         r'(?:是否|要不要|do you want|would you like).{0,40}[?？]',
       ).hasMatch(text);
 }
 
 /// 请 opening a clause addresses the reader (请点取消、请在手机打开); 请求,
-/// 申请 and 邀请 do not.
+/// 申请 and 邀请 do not, and neither do 请假 (leave, a report field) or
+/// 请他/请她 (the Agent asked someone else).
 final RegExp _chineseRequest = RegExp(
-  r'(?:^|[，。；！？、,.;!?:：\s🟥])请(?!求)',
+  r'(?:^|[，。；！？、,.;!?:：\s🟥])请(?![求假他她它])',
   multiLine: true,
+  unicode: true,
+);
+
+/// Work that stopped on something only the user can grant: 卡在…权限 or a
+/// headline such as 验收受阻。 Reports that something "仍受阻" describe a
+/// state and stay completions.
+final RegExp _blockedOnUser = RegExp(
+  r'卡在.{0,40}(?:权限|授权|登录|审批|批准)|(?<!仍)受阻[。：:，,]',
   unicode: true,
 );
 
@@ -192,6 +205,12 @@ final RegExp _quotedText = RegExp(
 
 /// "Nothing is needed from you" reports that the user can stay away.
 const List<String> _negatedRequests = <String>[
+  '没有再停下来等你确认',
+  '没有出现等你确认',
+  '没有等待确认',
+  '没有等你',
+  '不用等你',
+  '无需等你',
   '不需要你',
   '不需要您',
   '无需你',
@@ -244,6 +263,16 @@ const List<String> _attentionMarkers = <String>[
   '待你决定',
   '等你决定',
   '由你决定',
+  '要你拍板',
+  '等你拍板',
+  '请你拍板',
+  '待你拍板',
+  '等你授权',
+  '等你统一',
+  '等你处理',
+  '等你操作',
+  '等你手动',
+  '需你',
   'please confirm',
   'please approve',
   'please allow',

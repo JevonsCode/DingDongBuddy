@@ -279,6 +279,11 @@ final class PluginDesktopShellGateway
         await trayManager.setNotchBubbleDirection(
           enabled ? NotchBubbleDirection.off.name : _notchBubbleDirection.name,
         );
+        // Unread reminders kept while the mode was on show again, as they
+        // do after a restart.
+        if (!enabled && _unreadController.count > 0) {
+          await trayManager.showNotchReminderIfHidden();
+        }
       }
       await _unreadController.refresh();
       await _rebuildContextMenu();

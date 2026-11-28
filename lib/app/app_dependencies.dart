@@ -217,7 +217,10 @@ Future<void> deliverAgentNotification({
   final snapshot =
       profile ?? settings.reminderProfile(request.notificationKind.apiValue);
   final DingRequest resolvedRequest =
-      (request.sound == DingSound.defaultSound
+      (request.isLate
+              // Shown with its original time, without a sound hours later.
+              ? request.copyWith(sound: DingSound.muted)
+              : request.sound == DingSound.defaultSound
               ? request.copyWith(sound: DingSound.parse(plan.sound))
               : request)
           .copyWith(

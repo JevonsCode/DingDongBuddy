@@ -3772,6 +3772,8 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
       'too_many_transfers': 'Espera a que termine otra transferencia.',
       'restart_required': 'Se perdió el progreso del receptor. Envía de nuevo.',
       'invalid_offset': 'El progreso no coincide. Envía de nuevo.',
+      'item_unavailable':
+          'El otro equipo solo comparte el portapapeles ahora y no puede recibir recursos.',
       'other': 'Transferencia incompleta. Inténtalo de nuevo.',
     });
     return '$_temp0';
@@ -5082,4 +5084,10 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   @override
   String get clipboardOnlyConfigurationDescription =>
       'Reglas del portapapeles y preferencias de la aplicación';
+
+  @override
+  String get activityShowFullMessage => 'Mostrar el mensaje completo';
+
+  @override
+  String get activityHideFullMessage => 'Ocultar el mensaje completo';
 }

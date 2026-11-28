@@ -6491,7 +6491,7 @@ abstract class DingDongLocalizations {
   /// No description provided for @fileTransferIssue.
   ///
   /// In en, this message translates to:
-  /// **'{code, select, waiting_lan{Waiting for a local network connection. Progress is saved.} connection_lost{Connection lost. Resumes when reconnected.} source_changed{The source file changed. Select it again.} storage_error{Cannot write the file. Check available storage.} storage_unsupported{This browser cannot store large files locally.} checksum_failed{File verification failed. Try again.} too_many_transfers{Wait for another transfer to finish.} restart_required{The receiving device lost its progress. Send again.} invalid_offset{Transfer progress does not match. Send again.} other{Transfer incomplete. Try again.}}'**
+  /// **'{code, select, waiting_lan{Waiting for a local network connection. Progress is saved.} connection_lost{Connection lost. Resumes when reconnected.} source_changed{The source file changed. Select it again.} storage_error{Cannot write the file. Check available storage.} storage_unsupported{This browser cannot store large files locally.} checksum_failed{File verification failed. Try again.} too_many_transfers{Wait for another transfer to finish.} restart_required{The receiving device lost its progress. Send again.} invalid_offset{Transfer progress does not match. Send again.} item_unavailable{The other computer only shares the clipboard right now and cannot receive resources.} other{Transfer incomplete. Try again.}}'**
   String fileTransferIssue(String code);
 
   /// Local token history interface.
@@ -8785,6 +8785,18 @@ abstract class DingDongLocalizations {
   /// In en, this message translates to:
   /// **'Clipboard rules and application preferences'**
   String get clipboardOnlyConfigurationDescription;
+
+  /// Tooltip on the button that expands an Agent reminder card to its full text.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the full message'**
+  String get activityShowFullMessage;
+
+  /// Tooltip on the button that collapses an expanded Agent reminder card.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide the full message'**
+  String get activityHideFullMessage;
 }
 
 class _DingDongLocalizationsDelegate

@@ -908,6 +908,14 @@ HttpResponseData? _clipboardOnlyResponse(HttpRequestData request) {
       request.method == 'POST' &&
       (uri.path == '/clipboard/collect' ||
           (parts.length == 3 && parts[1] == 'promote'));
+  // Settings hides the Agent clipboard-content switch in this mode, so an
+  // earlier "allow" must not keep handing clipboard text to Agents.
+  if (request.method == 'GET' && _requestsClipboardContent(request)) {
+    return HttpResponseData.error(
+      403,
+      'Clipboard content access is unavailable in clipboard-only mode.',
+    );
+  }
   if (parts.firstOrNull == 'clipboard' && !writesLibrary) return null;
   if (uri.path == '/health' || uri.path == '/ui/show') return null;
   return HttpResponseData.error(403, 'Unavailable in clipboard-only mode.');

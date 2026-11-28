@@ -313,7 +313,7 @@ Future<void> main(List<String> arguments) async {
         source: request.source ?? 'Agent',
         message: request.message,
         detail: request.detail,
-        completedAt: request.receivedAt,
+        completedAt: request.occurredAt,
         conversationTarget: request.conversationTarget,
         notificationKind: request.notificationKind,
         tokenUsage: request.tokenUsage,
@@ -408,6 +408,17 @@ Future<void> main(List<String> arguments) async {
     onAgentSeen: (List<String> activityIds) {
       final int acknowledged = activityController.markSeen(activityIds);
       unawaited(shellGateway.acknowledgeUnreadCount(acknowledged));
+    },
+    agentDelivery: () {
+      final AppSettings settings = settingsViewModelReady
+          ? settingsViewModel.settings
+          : dependencies.initialSettings;
+      final NotificationRules rules = settings.notificationRules;
+      return (
+        completion: settings.notifyAgentCompletion && rules.completionToPhone,
+        attention: settings.notifyAgentAttention && rules.attentionToPhone,
+        clipboardOnly: settings.clipboardOnly,
+      );
     },
     onLibraryBundleReceived: (id, sender, file) async {
       await libraryInbox.receive(id, sender, file);
@@ -528,13 +539,23 @@ Future<void> main(List<String> arguments) async {
         prepareAgentActivity(settingsViewModel.settings);
         tokenUsageBackgroundService.start();
       }
+      // The resource window reloads plugin settings when told about the
+      // mode, so the selection plugin must be restored before that.
+      if (!isolatedPreview && (Platform.isMacOS || Platform.isWindows)) {
+        await settingsViewModel.restoreSelectionPlugin();
+      }
       await Future.wait<void>([
         shellGateway.setClipboardOnly(enabled),
         resourceManagerLauncher.setClipboardOnly(enabled),
         deviceLinkManagerLauncher.refresh(),
-        if (!isolatedPreview && (Platform.isMacOS || Platform.isWindows))
-          settingsViewModel.restoreSelectionPlugin(),
       ]);
+      // Phones keep the last Agent list until told otherwise: clear it while
+      // only the clipboard is shared, and resend it when Agents return.
+      unawaited(
+        enabled
+            ? deviceLinkController.clearAgentState()
+            : deviceLinkController.syncAgentState(),
+      );
       appliedMode = enabled;
     });
     modeUpdates = update.catchError((Object _) {});
@@ -543,7 +564,11 @@ Future<void> main(List<String> arguments) async {
 
   settingsViewModel = SettingsViewModel(
     dependencies.settingsRepository,
-    onSettingsSaved: applyClipboardMode,
+    onSettingsSaved: () async {
+      await applyClipboardMode();
+      // Phones show which reminder kinds this computer pushes.
+      unawaited(deviceLinkController.syncAgentState());
+    },
     clipboardMonitoring: isolatedPreview
         ? null
         : dependencies.clipboardMonitorService,

@@ -1,18 +1,33 @@
-# DingDong 1.11.19
+# DingDong 1.12.0-beta.1
 
-- Pair computers on different subnets with a six-digit code. Paired computers can find each other after an IP change. Clipboard items and files travel directly between the computers.
-- Shared resources omit local directory rules. Before import, DingDong lists resources with rules and leaves them turned off until you review and enable them.
-
----
-
-# DingDong 1.11.19
-
-- 跨子网连接电脑时，首次输入 6 位配对码即可。已配对的电脑更换 IP 后可自动找回，剪贴板和文件继续在两台电脑之间直传。
-- 分享资源时会跳过本机目录规则。导入前会列出带规则的资源，这些资源默认关闭，检查规则后可手动启用。
+- Clipboard-only mode: keep clipboard history, search, quick paste and sharing with paired devices while Agent features step aside. Agent reminders stay silent on the computer and on phones; switching back restores your previous reminder settings.
+- Phones can choose which reminders to receive (finished, or needs you) and show for each kind whether it will actually ring, including when the computer does not send it.
+- Reminders say what the Agent needs first and expand to the full message on phones and on the computer.
+- Reminders that arrive late show their original time and delay and no longer ring as if they were new. Reminders missed while a phone was offline arrive as one quiet summary when it reconnects.
+- Telling "needs you" apart from "finished" is more accurate, including blocked work and requests for a decision.
+- Phones reconnect right after a network change and replace connections that look open but no longer deliver.
+- On Macs with a notch, the DingDong bubble appears only when the menu bar hides the DingDong icon.
 
 ---
 
-# DingDong 1.11.19
+# DingDong 1.12.0-beta.1 测试版
 
-- Vincula equipos de distintas subredes con un código de seis dígitos. Los equipos vinculados pueden volver a encontrarse si cambia su IP. El portapapeles y los archivos se transfieren directamente entre los equipos.
-- Los recursos compartidos omiten las reglas de directorios locales. Antes de importar, DingDong muestra los recursos con reglas y los deja desactivados hasta que los revises y actives.
+- 仅剪贴板模式：保留剪贴板历史、搜索、快捷粘贴和跨设备分享，Agent 相关功能暂时收起。电脑和手机上的 Agent 提醒都会静音；切回后恢复原有提醒设置。
+- 手机可以分别选择接收「完成」和「需要你处理」两类提醒，并显示每一类是否真的会响铃，包括电脑端未推送的情况。
+- 提醒先写 Agent 需要你做什么，在手机和电脑上都可以展开查看全文。
+- 延迟送达的提醒会标出原始时间和延迟时长，不再像新提醒一样响铃；手机离线期间错过的提醒，会在恢复连接后汇总为一条静音提醒。
+- 更准确地区分「需要你处理」和「已完成」，包括卡在权限、等你拍板等情况。
+- 手机切换网络后会立即重连，也会替换看起来在线、实际已收不到消息的连接。
+- 有刘海的 Mac 上，只有菜单栏放不下 DingDong 图标时才显示 DingDong 气泡。
+
+---
+
+# DingDong 1.12.0-beta.1 beta
+
+- Modo solo portapapeles: conserva el historial, la búsqueda, el pegado rápido y el uso compartido con dispositivos vinculados mientras se apartan las funciones de Agents. Los avisos de Agents se silencian en el equipo y en los teléfonos; al volver se recupera tu configuración de avisos.
+- Los teléfonos pueden elegir qué avisos recibir (terminado o te necesita) y muestran para cada tipo si sonará de verdad, también cuando el equipo no lo envía.
+- Los avisos dicen primero qué necesita el Agent y se amplían al mensaje completo en el teléfono y en el equipo.
+- Los avisos que llegan tarde muestran su hora original y el retraso, y ya no suenan como si fueran nuevos. Los avisos perdidos mientras el teléfono estaba sin conexión llegan como un resumen silencioso al reconectar.
+- Distingue con más precisión «te necesita» de «terminado», incluido el trabajo bloqueado y las peticiones de decisión.
+- Los teléfonos se reconectan justo después de un cambio de red y sustituyen conexiones que parecen abiertas pero ya no entregan mensajes.
+- En los Mac con muesca, la burbuja de DingDong aparece solo cuando la barra de menús oculta el icono de DingDong.

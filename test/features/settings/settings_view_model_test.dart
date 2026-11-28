@@ -88,6 +88,34 @@ void main() {
     panel.dispose();
   });
 
+  test(
+    'a focused settings window picks up the mode without replaying load',
+    () async {
+      final repository = SettingsRepository(MemoryPreferencesBackend());
+      final host = SettingsViewModel(repository);
+      var hotKeyRegistrations = 0;
+      final panel = SettingsViewModel(
+        repository,
+        onGlobalHotKeyChanged: (_) async {
+          hotKeyRegistrations++;
+          return true;
+        },
+      );
+      await host.load();
+      await panel.load();
+      expect(hotKeyRegistrations, 1);
+      await host.setClipboardOnly(true);
+      await panel.refreshClipboardOnly();
+      expect(panel.settings.clipboardOnly, isTrue);
+      await host.setClipboardOnly(false);
+      await panel.refreshClipboardOnly();
+      expect(panel.settings.clipboardOnly, isFalse);
+      expect(hotKeyRegistrations, 1);
+      host.dispose();
+      panel.dispose();
+    },
+  );
+
   test('updates persist immediately and control the native monitor', () async {
     final MemoryPreferencesBackend backend = MemoryPreferencesBackend();
     final _FakeClipboardMonitoring monitoring = _FakeClipboardMonitoring();

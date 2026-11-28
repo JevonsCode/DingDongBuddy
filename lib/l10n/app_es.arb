@@ -4721,7 +4721,7 @@
   "resumeTransfer": "Continuar",
   "cancelTransfer": "Cancelar",
   "fileTransferStatus": "{state, select, preparing{Preparando} transferring{Transfiriendo} verifying{Confirmando archivo} waiting{Esperando conexión} paused{En pausa} failed{Transferencia incompleta} completed{Transferencia completa} cancelled{Cancelada} sent{Enviado} other{Preparando}}",
-  "fileTransferIssue": "{code, select, waiting_lan{Esperando una conexión local. Progreso guardado.} connection_lost{Sin conexión. Se reanudará al reconectar.} source_changed{El archivo cambió. Selecciónalo de nuevo.} storage_error{No se puede escribir. Comprueba el espacio disponible.} storage_unsupported{Este navegador no admite archivos grandes locales.} checksum_failed{Falló la verificación. Inténtalo de nuevo.} too_many_transfers{Espera a que termine otra transferencia.} restart_required{Se perdió el progreso del receptor. Envía de nuevo.} invalid_offset{El progreso no coincide. Envía de nuevo.} other{Transferencia incompleta. Inténtalo de nuevo.}}",
+  "fileTransferIssue": "{code, select, waiting_lan{Esperando una conexión local. Progreso guardado.} connection_lost{Sin conexión. Se reanudará al reconectar.} source_changed{El archivo cambió. Selecciónalo de nuevo.} storage_error{No se puede escribir. Comprueba el espacio disponible.} storage_unsupported{Este navegador no admite archivos grandes locales.} checksum_failed{Falló la verificación. Inténtalo de nuevo.} too_many_transfers{Espera a que termine otra transferencia.} restart_required{Se perdió el progreso del receptor. Envía de nuevo.} invalid_offset{El progreso no coincide. Envía de nuevo.} item_unavailable{El otro equipo solo comparte el portapapeles ahora y no puede recibir recursos.} other{Transferencia incompleta. Inténtalo de nuevo.}}",
   "@transferSendingTo": {
     "placeholders": {
       "device": {
@@ -6352,5 +6352,13 @@
   "clipboardOnlyConfigurationDescription": "Reglas del portapapeles y preferencias de la aplicación",
   "@clipboardOnlyConfigurationDescription": {
     "description": "Description of protected settings storage in clipboard-only mode"
+  },
+  "activityShowFullMessage": "Mostrar el mensaje completo",
+  "@activityShowFullMessage": {
+    "description": "Tooltip on the button that expands an Agent reminder card to its full text."
+  },
+  "activityHideFullMessage": "Ocultar el mensaje completo",
+  "@activityHideFullMessage": {
+    "description": "Tooltip on the button that collapses an expanded Agent reminder card."
   }
 }

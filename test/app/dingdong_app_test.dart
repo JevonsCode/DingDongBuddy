@@ -789,6 +789,51 @@ void main() {
     activityController.dispose();
   });
 
+  testWidgets('a reminder card expands to the whole Agent reply', (
+    WidgetTester tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 540);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPhysicalSize);
+    final ActivityController activityController = ActivityController(
+      idGenerator: () => 'needs-you',
+      now: () => DateTime.utc(2026, 7, 22, 10),
+    );
+    activityController.record(
+      source: 'Codex',
+      message: 'Deployment stopped at step 1.',
+      detail:
+          'Deployment stopped at step 1.\nPlease click Authorize in Chrome, then tell me.',
+    );
+
+    await tester.pumpWidget(
+      DingDongApp(activityController: activityController),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const Key('activity-full-message-needs-you')),
+      findsNothing,
+    );
+    await tester.tap(find.byKey(const Key('activity-expand-needs-you')));
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining('Please click Authorize in Chrome'),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const Key('activity-expand-needs-you')));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const Key('activity-full-message-needs-you')),
+      findsNothing,
+    );
+    expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    activityController.dispose();
+  });
+
   testWidgets('Dynamic reserves the open action slot across activity rows', (
     WidgetTester tester,
   ) async {

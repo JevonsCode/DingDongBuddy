@@ -241,6 +241,17 @@ final class SettingsViewModel extends ChangeNotifier
     }
   }
 
+  /// Picks up a clipboard-only change made in another window without
+  /// replaying load side effects (hotkeys, monitoring, window chrome).
+  Future<void> refreshClipboardOnly() async {
+    if (_disposed || !_loaded || _saveInFlight != null) return;
+    final bool stored = (await _repository.load()).clipboardOnly;
+    if (_disposed || _saveInFlight != null) return;
+    if (stored == _settings.clipboardOnly) return;
+    _settings = _settings.copyWith(clipboardOnly: stored);
+    notifyListeners();
+  }
+
   Future<void> setClipboardOnly(bool enabled) async {
     _saveClipboardMode = true;
     _settings = _settings.copyWith(clipboardOnly: enabled);

@@ -69,6 +69,14 @@ class MainActivity : FlutterActivity() {
             "notificationsEnabled" -> result.success(
                 getSystemService(NotificationManager::class.java).areNotificationsEnabled(),
             )
+            "notificationChannels" -> result.success(CompanionChannels.states(this))
+            "openChannelSettings" -> result.success(
+                start(
+                    Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
+                        .putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+                        .putExtra(Settings.EXTRA_CHANNEL_ID, call.argument<String>("channel")),
+                ),
+            )
             "isIgnoringBatteryOptimizations" -> result.success(
                 getSystemService(PowerManager::class.java).isIgnoringBatteryOptimizations(packageName),
             )

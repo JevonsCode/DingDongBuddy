@@ -27,9 +27,23 @@ abstract interface class LinkSocket {
 typedef LinkSocketConnector = Future<LinkSocket> Function(Uri uri);
 
 Future<LinkSocket> connectIoSocket(Uri uri) async {
-  final WebSocket socket = await WebSocket.connect(
-    uri.toString(),
-  ).timeout(const Duration(seconds: 15));
+  final Future<WebSocket> connecting = WebSocket.connect(uri.toString());
+  final WebSocket socket;
+  try {
+    socket = await connecting.timeout(const Duration(seconds: 15));
+  } on TimeoutException {
+    // Future.timeout does not cancel the handshake. A socket that opens
+    // after the timeout would join the room as the newest peer and make the
+    // relay close the retry that replaced it ("Replaced by a newer
+    // connection"), so close it as soon as it appears.
+    unawaited(
+      connecting.then(
+        (WebSocket late) => late.close(1000, 'Connect timed out'),
+        onError: (Object _) {},
+      ),
+    );
+    rethrow;
+  }
   // Keeps NAT and Cloudflare idle timers from silently dropping the socket
   // and makes a dead connection fail within roughly two intervals.
   socket.pingInterval = const Duration(seconds: 25);
@@ -90,12 +104,19 @@ final class RelayPeer {
   Future<void> _inbound = Future<void>.value();
   LinkState _state = LinkState.offline;
 
+  DateTime? _nextRetryAt;
+  DateTime? _lastInboundAt;
+
   LinkState get state => _state;
   bool get isConnected => _state == LinkState.connected;
+
+  /// Last frame from the relay or the computer on the current connection.
+  DateTime? get lastInboundAt => _lastInboundAt;
 
   void connect() {
     if (_closed || _socket != null || _state == LinkState.connecting) return;
     _retryTimer?.cancel();
+    _nextRetryAt = null;
     unawaited(_open());
   }
 
@@ -117,6 +138,42 @@ final class RelayPeer {
     _retry = _initialRetry;
     _retryTimer?.cancel();
     connect();
+  }
+
+  /// The phone moved to another network (Wi-Fi ↔ mobile data, another
+  /// access point). A socket bound to the old route can stay "open" for
+  /// minutes without delivering anything, so reconnect at once.
+  void networkChanged() {
+    if (_closed || _state == LinkState.replaced) return;
+    if (_state == LinkState.offline) {
+      networkAvailable();
+      return;
+    }
+    if (_state == LinkState.connecting) return;
+    final LinkSocket? socket = _socket;
+    if (socket == null) return;
+    _log('network changed; reconnecting');
+    _retry = _initialRetry;
+    _generation += 1;
+    unawaited(_subscription?.cancel());
+    _subscription = null;
+    _socket = null;
+    _helloSent = false;
+    unawaited(socket.close(1000, 'Network changed'));
+    _setState(LinkState.offline);
+    connect();
+  }
+
+  /// Periodic watchdog from the foreground service. Android can hold timers
+  /// while the CPU sleeps; a retry that is overdue runs now.
+  void tick([DateTime? now]) {
+    if (_closed || _state != LinkState.offline || _socket != null) return;
+    final DateTime? due = _nextRetryAt;
+    if (due != null && (now ?? DateTime.now()).isAfter(due)) {
+      _log('retry overdue; reconnecting');
+      _retryTimer?.cancel();
+      connect();
+    }
   }
 
   Future<void> close({LinkState finalState = LinkState.disconnected}) async {
@@ -192,6 +249,7 @@ final class RelayPeer {
   void _scheduleRetry() {
     _setState(LinkState.offline);
     final Duration delay = _retry;
+    _nextRetryAt = DateTime.now().add(delay + const Duration(seconds: 5));
     _retry = Duration(
       milliseconds: min(
         _maximumRetry.inMilliseconds,
@@ -205,6 +263,7 @@ final class RelayPeer {
 
   Future<void> _handleFrame(String raw, int generation) async {
     if (generation != _generation) return;
+    _lastInboundAt = DateTime.now();
     if (utf8.encode(raw).length > deviceLinkMaximumRelayFrameBytes) return;
     final Object? decoded;
     try {

@@ -52,6 +52,11 @@ typedef AgentStateProvider =
     Function();
 typedef AgentSeenCallback = void Function(List<String> activityIds);
 
+/// Which reminder kinds this computer currently pushes to phones, so a phone
+/// can show "the computer does not send this kind" next to its own switch.
+typedef AgentDeliveryProvider =
+    ({bool completion, bool attention, bool clipboardOnly}) Function();
+
 final class DeviceLinkTextTooLargeException implements Exception {
   const DeviceLinkTextTooLargeException({
     required this.actualBytes,
@@ -113,6 +118,7 @@ final class DeviceLinkController extends ChangeNotifier
     bool Function()? clipboardOnly,
     AgentStateProvider? agentStateProvider,
     AgentSeenCallback? onAgentSeen,
+    AgentDeliveryProvider? agentDelivery,
     DingDongLocalizations Function()? localizations,
   }) => DeviceLinkController._(
     store: store,
@@ -130,6 +136,7 @@ final class DeviceLinkController extends ChangeNotifier
     clipboardOnly: clipboardOnly,
     agentStateProvider: agentStateProvider,
     onAgentSeen: onAgentSeen,
+    agentDelivery: agentDelivery,
     localizations: localizations,
   );
 
@@ -149,6 +156,7 @@ final class DeviceLinkController extends ChangeNotifier
     this._clipboardOnly,
     this._agentStateProvider,
     this._onAgentSeen,
+    this._agentDelivery,
     DingDongLocalizations Function()? localizations,
   }) : _computerLink =
            computerLink ?? LanComputerLink(discoveryBaseUrl: _relayBaseUrl),
@@ -173,6 +181,19 @@ final class DeviceLinkController extends ChangeNotifier
   @override
   bool get clipboardOnly => _clipboardOnly?.call() == true;
   final AgentStateProvider? _agentStateProvider;
+  final AgentDeliveryProvider? _agentDelivery;
+
+  /// The `agentDelivery` block of `welcome` for phones.
+  Map<String, Object?> agentDelivery() {
+    final delivery = _agentDelivery?.call();
+    final bool silenced = clipboardOnly || delivery?.clipboardOnly == true;
+    return <String, Object?>{
+      'completion': !silenced && (delivery?.completion ?? true),
+      'attention': !silenced && (delivery?.attention ?? true),
+      if (silenced) 'clipboardOnly': true,
+    };
+  }
+
   final AgentSeenCallback? _onAgentSeen;
   final DingDongLocalizations Function() _localizations;
   final Map<String, _ManagedDeviceSession> _sessionsByRoom =
@@ -574,6 +595,11 @@ final class DeviceLinkController extends ChangeNotifier
     for (final LinkedDevice device in _devices) {
       if (clipboardOnly) return;
       if (device.kind == LinkedDeviceKind.computer) continue;
+      // A kind the phone turned off still updates its list, silently.
+      final bool kindWanted = device.agentNotificationKinds.contains(
+        request.notificationKind,
+      );
+      final bool alert = request.alertPhone && kindWanted;
       final Map<String, Object?> message = <String, Object?>{
         'type': 'agent.completed',
         'id': notificationId,
@@ -591,9 +617,12 @@ final class DeviceLinkController extends ChangeNotifier
         if (activity.startedAt != null)
           'startedAt': activity.startedAt!.toUtc().toIso8601String(),
         'completedAt': activity.completedAt.toUtc().toIso8601String(),
+        // When this computer handed the reminder to the connection. Phones
+        // compare it with their own receive time to report delivery delay.
+        'sentAt': DateTime.now().toUtc().toIso8601String(),
         'vibrate': device.vibrationEnabled,
         // The phone keeps its list current but raises no system notification.
-        if (!request.alertPhone) 'silent': true,
+        if (!alert) 'silent': true,
         if (activity.conversationTarget?.workspacePath != null)
           'workspacePath': activity.conversationTarget!.workspacePath,
         if (activity.conversationTarget?.conversationId != null)
@@ -601,15 +630,17 @@ final class DeviceLinkController extends ChangeNotifier
       };
       if (isConnected(device.id)) {
         try {
-          await _sessionForDevice(device.id).handle.send(message);
+          await _sessionForDevice(
+            device.id,
+          ).handle.send(message).timeout(const Duration(seconds: 10));
         } on Object {
           // The encrypted Web Push below is the background fallback.
         }
       }
       if (clipboardOnly) return;
-      if (!device.receiveAgentNotifications || !request.alertPhone) continue;
+      if (!device.receiveAgentNotifications || !alert) continue;
       try {
-        await _sendPush(device, message);
+        await _sendPushWithRetry(device, message);
       } on Object catch (error, stackTrace) {
         debugPrint('DingDong Web Push failed for ${device.id}: $error');
         debugPrintStack(stackTrace: stackTrace);
@@ -617,6 +648,29 @@ final class DeviceLinkController extends ChangeNotifier
         // configured yet or the phone revoked its subscription.
       }
     }
+  }
+
+  /// Tells connected phones that no Agent activity is shared, so they stop
+  /// showing running tasks and unseen badges while only the clipboard is.
+  Future<void> clearAgentState() {
+    final Future<void> next = _agentSyncTail.then((_) async {
+      for (final LinkedDevice device in _devices) {
+        if (device.kind == LinkedDeviceKind.computer) continue;
+        if (!isConnected(device.id)) continue;
+        try {
+          await _sessionForDevice(device.id).handle.send(<String, Object?>{
+            'type': 'agent.state',
+            'generatedAt': DateTime.now().toUtc().toIso8601String(),
+            'running': const <Object?>[],
+            'completed': const <Object?>[],
+          });
+        } on Object {
+          // A phone that reconnects later receives no Agent state at all.
+        }
+      }
+    });
+    _agentSyncTail = next.catchError((Object _) {});
+    return next;
   }
 
   /// Broadcasts the authoritative in-app Agent state immediately. This does

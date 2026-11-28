@@ -94,7 +94,9 @@ final class ReminderSettingsService {
         throw const FormatException('Unknown reminder action.');
     }
     if (action != 'list' && (action != 'consume' || consumed == true)) {
-      await repository.save(settings);
+      // The snapshot predates the awaits above; it must not write back a
+      // clipboard-only switch the user changed meanwhile.
+      await repository.save(settings, includeClipboardMode: false);
       await onChanged?.call();
     }
     return {

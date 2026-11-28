@@ -1,9 +1,12 @@
 import {
   relayConnectionWasReplaced,
   shouldReconnectRelay,
-} from "./connection-policy.js?shell=77";
-import { pairingsMatch } from "./pairing-state.js?shell=77";
-import { wantsAgentNotifications } from "./notification-policy.js?shell=77";
+} from "./connection-policy.js?shell=78";
+import { pairingsMatch } from "./pairing-state.js?shell=78";
+import {
+  agentNotificationKinds,
+  wantsAgentNotifications,
+} from "./notification-policy.js?shell=78";
 import {
   encodedEnvelopeByteLength,
   encodeRelayFrame,
@@ -12,13 +15,17 @@ import {
   openEnvelope,
   relayFrameByteLength,
   sealEnvelope,
-} from "./app-codecs.js?shell=77";
+} from "./app-codecs.js?shell=78";
 
 // Encrypted relay/WebRTC lifecycle and ordered inbound message dispatch.
 export const maximumQueuedInboundEntries = 256;
 export const maximumQueuedInboundBytes = maximumRelayFrameBytes * 32;
 export const maximumPendingRemoteCandidates = 256;
 export const maximumPendingRemoteCandidateBytes = maximumRelayFrameBytes * 4;
+
+const relayHeartbeatRequest = "ping";
+const relayHeartbeatResponse = "pong";
+const relayHeartbeatTimeoutMs = 6000;
 
 export function createConnectionController({
   state,
@@ -84,6 +91,8 @@ export function createConnectionController({
       socket.addEventListener("close", (event) => {
         if (!relayContextIsCurrent(context)) return;
         session.socket = null;
+        clearTimeout(session.heartbeatTimer);
+        session.heartbeatTimer = null;
         resetRelayQueue(session);
         session.relayHostPresent = false;
         session.connecting = false;
@@ -109,6 +118,59 @@ export function createConnectionController({
     } catch (error) {
       connectionErrorForContext(error, attempt);
     }
+  }
+
+  // A socket can look open for minutes after the phone slept, changed
+  // network or lost the route. When the page becomes visible or comes back
+  // online, ask the relay for a pong and reconnect at once if none arrives.
+  async function probeConnection(session) {
+    const socket = session?.socket;
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      if (
+        session &&
+        !session.pair.manualDisconnect &&
+        !session.connectionSuperseded &&
+        !session.connecting
+      ) {
+        clearTimeout(session.reconnectTimer);
+        session.reconnectDelayMs = initialReconnectDelayMs;
+        connect(session);
+      }
+      return;
+    }
+    if (session.heartbeatTimer) return;
+    if (!(await relaySupportsHeartbeat(session.pair.relay))) return;
+    if (session.socket !== socket || socket.readyState !== WebSocket.OPEN) return;
+    try {
+      socket.send(relayHeartbeatRequest);
+    } catch {
+      return;
+    }
+    session.heartbeatTimer = setTimeout(() => {
+      session.heartbeatTimer = null;
+      if (session.socket !== socket) return;
+      session.reconnectDelayMs = initialReconnectDelayMs;
+      // The close handler reconnects with the first backoff step.
+      socket.close(4000, "Heartbeat timeout");
+    }, relayHeartbeatTimeoutMs);
+  }
+
+  const heartbeatSupport = new Map();
+  function relaySupportsHeartbeat(relay) {
+    if (!heartbeatSupport.has(relay)) {
+      const url = new URL("v1/config", relay.endsWith("/") ? relay : `${relay}/`);
+      heartbeatSupport.set(
+        relay,
+        fetch(url, { cache: "no-store" })
+          .then((response) => (response.ok ? response.json() : null))
+          .then((config) => config?.heartbeat?.request === relayHeartbeatRequest)
+          .catch(() => {
+            heartbeatSupport.delete(relay);
+            return false;
+          }),
+      );
+    }
+    return heartbeatSupport.get(relay);
   }
 
   function sessionContextIsCurrent(context) {
@@ -227,6 +289,12 @@ export function createConnectionController({
 
   function queueRelayFrame(raw, context) {
     if (!relayContextIsCurrent(context)) return;
+    // The relay answers "ping" itself; nothing else is ever this frame.
+    if (raw === relayHeartbeatResponse) {
+      clearTimeout(context.session.heartbeatTimer);
+      context.session.heartbeatTimer = null;
+      return;
+    }
     let bytes;
     try {
       bytes = relayFrameByteLength(raw);
@@ -475,6 +543,7 @@ export function createConnectionController({
           },
           vibrationEnabled: session.pair.vibrationEnabled !== false,
           agentNotificationsEnabled: wantsAgentNotifications(session.pair),
+          agentNotificationKinds: agentNotificationKinds(session.pair),
         },
         context,
       );
@@ -643,6 +712,7 @@ export function createConnectionController({
     switch (message.type) {
       case "welcome":
         session.fileProtocol = message.fileTransferVersion === 2 ? 2 : 1;
+        readAgentDelivery(message, session);
         if (message.host?.name) {
           session.pair.hostName = message.host.name;
           // Computers report Dart's Platform.operatingSystem, e.g. "windows".
@@ -675,6 +745,7 @@ export function createConnectionController({
         receiveAgentEvent(message, { session });
         break;
       case "agent.state":
+        readAgentDelivery(message, session);
         receiveAgentState(message, session);
         break;
       case "file.start":
@@ -699,6 +770,8 @@ export function createConnectionController({
     session.reconnectDelayMs = initialReconnectDelayMs;
     session.socket?.close();
     session.socket = null;
+    clearTimeout(session.heartbeatTimer);
+    session.heartbeatTimer = null;
     closePeer(session);
     session.signalKey = null;
     resetRelayQueue(session);
@@ -708,6 +781,17 @@ export function createConnectionController({
     session.relayHostPresent = false;
     session.helloSent = false;
     clearDisconnectedContent(session);
+  }
+
+  // Which reminder kinds the computer pushes to phones (newer desktops).
+  function readAgentDelivery(message, session) {
+    const delivery = message?.agentDelivery;
+    if (!delivery || typeof delivery !== "object") return;
+    session.agentDelivery = {
+      completion: delivery.completion !== false,
+      attention: delivery.attention !== false,
+      clipboardOnly: delivery.clipboardOnly === true,
+    };
   }
 
   function clearDisconnectedContent(session) {
@@ -758,6 +842,7 @@ export function createConnectionController({
       closeConnection,
       connect,
       currentSessionContext,
+      probeConnection,
       sendMessage,
     };
 }

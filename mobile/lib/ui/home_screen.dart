@@ -202,7 +202,12 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       ),
                 onSettings: computer == null
                     ? null
-                    : () => showSettingsDialog(context, controller, computer),
+                    : () {
+                        // Channel, permission and service state can change
+                        // in system settings; show the current values.
+                        unawaited(controller.refreshPermissions());
+                        showSettingsDialog(context, controller, computer);
+                      },
               ),
               Expanded(
                 child: controller.booting

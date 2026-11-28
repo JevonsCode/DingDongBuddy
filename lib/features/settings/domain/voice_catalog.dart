@@ -3,8 +3,7 @@ import 'dart:convert';
 /// Public catalog rules are deliberately separate from local custom audio.
 const voiceCatalogRepository = 'JevonsCode/dingdong-voices';
 const voiceCatalogMaxBytes = 5 * 1024 * 1024;
-const voiceCatalogWebsite =
-    'https://xn--8ovp9s.xn--m8txu.com/dingdong-voices/';
+const voiceCatalogWebsite = 'https://xn--8ovp9s.xn--m8txu.com/dingdong-voices/';
 
 Uri voiceCatalogWebsiteUri({bool development = false}) {
   final uri = Uri.parse(voiceCatalogWebsite);
