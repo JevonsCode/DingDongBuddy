@@ -125,8 +125,17 @@ final class CompanionTaskHandler extends TaskHandler {
     );
   }
 
+  int _ticks = 0;
+
   @override
-  void onRepeatEvent(DateTime timestamp) => _engine?.tick();
+  void onRepeatEvent(DateTime timestamp) {
+    _ticks += 1;
+    // Sparse evidence of whether Android lets the watchdog run.
+    if (_ticks % 5 == 1) {
+      debugPrint('DingDongWatchdog tick $_ticks at $timestamp');
+    }
+    _engine?.tick();
+  }
 
   @override
   void onReceiveData(Object data) {

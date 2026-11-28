@@ -4,7 +4,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:dingdong_link_protocol/dingdong_link_protocol.dart';
-import 'package:flutter/foundation.dart' show debugPrint;
+import 'package:flutter/foundation.dart' show debugPrint, visibleForTesting;
 
 enum LinkState {
   connecting,
@@ -50,6 +50,10 @@ Future<LinkSocket> connectIoSocket(Uri uri) async {
   return _IoLinkSocket(socket);
 }
 
+/// Text frames the relay answers itself (see /v1/config `heartbeat`).
+const String relayHeartbeatRequest = 'ping';
+const String relayHeartbeatResponse = 'pong';
+
 final class _IoLinkSocket implements LinkSocket {
   _IoLinkSocket(this._socket);
   final WebSocket _socket;
@@ -80,6 +84,7 @@ final class RelayPeer {
     this._connector = connectIoSocket,
     Duration initialRetry = const Duration(seconds: 1),
     this._maximumRetry = const Duration(seconds: 30),
+    this._clock = DateTime.now,
   }) : _initialRetry = initialRetry,
        _retry = initialRetry,
        _codec = SecureMessageCodec.fromBase64Url(pairing.secret);
@@ -93,6 +98,7 @@ final class RelayPeer {
   final Duration _initialRetry;
   final Duration _maximumRetry;
   final SecureMessageCodec _codec;
+  final DateTime Function() _clock;
 
   LinkSocket? _socket;
   StreamSubscription<dynamic>? _subscription;
@@ -167,12 +173,63 @@ final class RelayPeer {
   /// Periodic watchdog from the foreground service. Android can hold timers
   /// while the CPU sleeps; a retry that is overdue runs now.
   void tick([DateTime? now]) {
-    if (_closed || _state != LinkState.offline || _socket != null) return;
+    final DateTime current = now ?? _clock();
+    if (_closed) return;
+    if (_state == LinkState.connected && _socket != null) {
+      _checkLiveness(current);
+      return;
+    }
+    if (_state != LinkState.offline || _socket != null) return;
     final DateTime? due = _nextRetryAt;
-    if (due != null && (now ?? DateTime.now()).isAfter(due)) {
+    if (due != null && current.isAfter(due)) {
       _log('retry overdue; reconnecting');
       _retryTimer?.cancel();
       connect();
+    }
+  }
+
+  /// Puts the peer in the connected state without a computer, for tests of
+  /// the liveness watchdog.
+  @visibleForTesting
+  void debugMarkConnectedForTest() => _state = LinkState.connected;
+
+  /// Whether the relay answers the text frame "ping" itself (newer relays
+  /// advertise it in /v1/config). Older relays would forward it to the
+  /// computer, so it is only sent once the relay said so.
+  bool relayHeartbeat = false;
+  DateTime? _pingSentAt;
+
+  static const Duration _quietBeforePing = Duration(seconds: 60);
+  static const Duration _pongTimeout = Duration(seconds: 20);
+
+  /// A screen-off phone can keep a socket that died without a close: the
+  /// 25 s protocol ping does not run while Android holds the CPU. On each
+  /// watchdog tick a quiet connection is asked for a pong; no answer means
+  /// it is gone, and the peer reconnects at once.
+  void _checkLiveness(DateTime now) {
+    if (!relayHeartbeat) return;
+    final DateTime? pingSentAt = _pingSentAt;
+    final DateTime lastInbound = _lastInboundAt ?? now;
+    if (pingSentAt != null) {
+      if (lastInbound.isAfter(pingSentAt)) {
+        _pingSentAt = null;
+      } else if (now.difference(pingSentAt) > _pongTimeout) {
+        _pingSentAt = null;
+        _log(
+          'no pong in ${now.difference(pingSentAt).inSeconds} s; reconnecting',
+        );
+        networkChanged();
+        return;
+      } else {
+        return;
+      }
+    }
+    if (now.difference(lastInbound) < _quietBeforePing) return;
+    try {
+      _socket?.add(relayHeartbeatRequest);
+      _pingSentAt = now;
+    } on Object {
+      networkChanged();
     }
   }
 
@@ -263,7 +320,8 @@ final class RelayPeer {
 
   Future<void> _handleFrame(String raw, int generation) async {
     if (generation != _generation) return;
-    _lastInboundAt = DateTime.now();
+    _lastInboundAt = _clock();
+    if (raw == relayHeartbeatResponse) return;
     if (utf8.encode(raw).length > deviceLinkMaximumRelayFrameBytes) return;
     final Object? decoded;
     try {

@@ -192,6 +192,41 @@ final class CompanionEngine {
     );
     session.peer = peer;
     peer.connect();
+    unawaited(_probeRelayHeartbeat(peer, record.payload.relayUrl));
+  }
+
+  static final Map<String, Future<bool>> _heartbeatSupport =
+      <String, Future<bool>>{};
+
+  /// Newer relays answer "ping" themselves and say so in /v1/config.
+  Future<void> _probeRelayHeartbeat(RelayPeer peer, Uri relay) async {
+    final String key = relay.toString();
+    final Future<bool> support = _heartbeatSupport[key] ??= () async {
+      final HttpClient client = HttpClient()
+        ..connectionTimeout = const Duration(seconds: 8);
+      try {
+        final HttpClientRequest request = await client.getUrl(
+          relay.resolve('v1/config'),
+        );
+        final HttpClientResponse response = await request.close().timeout(
+          const Duration(seconds: 8),
+        );
+        if (response.statusCode != 200) return false;
+        final Object? config = jsonDecode(
+          await utf8.decoder.bind(response).join(),
+        );
+        return config is Map &&
+            config['heartbeat'] is Map &&
+            (config['heartbeat'] as Map)['request'] == relayHeartbeatRequest;
+      } on Object {
+        return false;
+      } finally {
+        client.close(force: true);
+      }
+    }();
+    final bool supported = await support;
+    if (!supported) _heartbeatSupport.removeWhere((String k, _) => k == key);
+    peer.relayHeartbeat = supported;
   }
 
   void _stateChanged(_ComputerSession session, LinkState state) {
