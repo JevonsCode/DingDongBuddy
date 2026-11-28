@@ -14,7 +14,13 @@ import 'relay_peer.dart';
 /// the service isolate and with a recorder in tests.
 abstract interface class AgentNotifier {
   Future<void> show(AgentEvent event, {required String hostName});
+
+  /// One quiet summary for reminders missed while this phone was offline.
+  Future<void> showMissed(List<AgentEvent> events, {required String hostName});
 }
+
+/// Missed reminders older than this are left in the list without a summary.
+const Duration missedReminderWindow = Duration(hours: 24);
 
 /// Limits shared with the PWA and the desktop (`docs/app/app.js`,
 /// `device_link_controller.dart`).
@@ -39,6 +45,19 @@ final class _ComputerSession {
   /// The desktop answers a request it cannot serve with nothing at all, so a
   /// request that never starts is cleared after [fileRequestTimeout].
   final Map<String, Timer> fileRequestTimers = <String, Timer>{};
+
+  /// Reminder kinds the computer says it pushes to phones (`agentDelivery`
+  /// in `welcome` and `agent.state`); null until a newer desktop says.
+  Map<String, Object?>? agentDelivery;
+
+  /// Set on `welcome`: the first `agent.state` after it is checked for
+  /// reminders missed since [catchUpSince].
+  bool awaitingCatchUp = false;
+  DateTime? catchUpSince;
+
+  /// Delay of the last live reminder, for the status line.
+  Duration? lastReminderDelay;
+  DateTime? lastReminderAt;
 }
 
 final class _Download {
@@ -125,6 +144,20 @@ final class CompanionEngine {
     }
   }
 
+  /// Called when Android reports a different network than before.
+  void networkChanged() {
+    for (final _ComputerSession session in _sessions.values) {
+      session.peer?.networkChanged();
+    }
+  }
+
+  /// Watchdog from the foreground service's repeat event.
+  void tick() {
+    for (final _ComputerSession session in _sessions.values) {
+      session.peer?.tick();
+    }
+  }
+
   void _attach(PairingRecord record) {
     final _ComputerSession session = _ComputerSession(record);
     _sessions[record.room] = session;
@@ -146,10 +179,12 @@ final class CompanionEngine {
         },
         'vibrationEnabled': record.vibrationEnabled,
         'agentNotificationsEnabled': record.agentNotificationsEnabled,
+        'agentNotificationKinds': store.agentNotificationKinds(),
       },
       settings: () => <String, Object?>{
         'vibrationEnabled': record.vibrationEnabled,
         'agentNotificationsEnabled': record.agentNotificationsEnabled,
+        'agentNotificationKinds': store.agentNotificationKinds(),
       },
       onState: (LinkState state) => _stateChanged(session, state),
       onMessage: (Map<String, Object?> message) =>
@@ -180,8 +215,13 @@ final class CompanionEngine {
     _ComputerSession session,
     Map<String, Object?> message,
   ) async {
+    final DateTime? previousSync = session.record.lastSyncedAt;
+    session.record.lastSyncedAt = DateTime.now().toUtc();
     switch (message['type']) {
       case 'welcome':
+        session.awaitingCatchUp = true;
+        session.catchUpSince = previousSync;
+        _readAgentDelivery(session, message);
         final Object? host = message['host'];
         if (host is Map) {
           bool changed = false;
@@ -205,6 +245,7 @@ final class CompanionEngine {
           }
           if (changed) await store.save();
         }
+        unawaited(store.save());
       case 'clipboard.snapshot':
         session.items.clear();
         for (final Object? value
@@ -232,7 +273,8 @@ final class CompanionEngine {
       case 'agent.completed':
         await _receiveAgentEvent(session, message);
       case 'agent.state':
-        _receiveAgentState(session, message);
+        _readAgentDelivery(session, message);
+        await _receiveAgentState(session, message);
       case 'file.start':
         await _beginDownload(session, message);
       case 'file.chunk':
@@ -243,12 +285,28 @@ final class CompanionEngine {
     _publish();
   }
 
+  void _readAgentDelivery(
+    _ComputerSession session,
+    Map<String, Object?> message,
+  ) {
+    final Object? delivery = message['agentDelivery'];
+    if (delivery is Map) {
+      session.agentDelivery = <String, Object?>{
+        'completion': delivery['completion'] != false,
+        'attention': delivery['attention'] != false,
+        'clipboardOnly': delivery['clipboardOnly'] == true,
+      };
+    }
+  }
+
   Future<void> _receiveAgentEvent(
     _ComputerSession session,
     Map<String, Object?> message,
   ) async {
-    final AgentEvent? event = AgentEvent.parse(message);
+    final AgentEvent? event = AgentEvent.parse(message)?.receivedNow();
     if (event == null) return;
+    session.lastReminderAt = event.receivedAt;
+    session.lastReminderDelay = event.deliveryDelay;
     final List<AgentEvent> events = store.agentEvents.putIfAbsent(
       session.record.room,
       () => <AgentEvent>[],
@@ -256,7 +314,10 @@ final class CompanionEngine {
     events.removeWhere((AgentEvent e) => e.seenKey == event.seenKey);
     events.insert(0, event);
     _trimEvents(events);
-    final bool firstTime = store.markNotified(event.id);
+    // A catch-up summary may already have covered this occurrence.
+    final bool coveredByCatchUp = store.wasNotified(event.occurrenceKey);
+    final bool firstTime = store.markNotified(event.id) && !coveredByCatchUp;
+    store.markNotified(event.occurrenceKey);
     await store.save();
     if (firstTime &&
         !event.silent &&
@@ -266,10 +327,10 @@ final class CompanionEngine {
     }
   }
 
-  void _receiveAgentState(
+  Future<void> _receiveAgentState(
     _ComputerSession session,
     Map<String, Object?> message,
-  ) {
+  ) async {
     session.runs = <AgentRun>[
       for (final Object? value
           in message['running'] as List? ?? const <Object?>[])
@@ -293,7 +354,43 @@ final class CompanionEngine {
     // Don't mark these as notified: the desktop broadcasts agent.state
     // (already listing a new activity) just before agent.completed with the
     // same id, and that reminder must still alert.
+    if (session.awaitingCatchUp) {
+      session.awaitingCatchUp = false;
+      await _notifyMissed(session, history);
+    }
     unawaited(store.save());
+  }
+
+  /// Reminders that completed while this phone was offline (killed by the
+  /// system, no network, or the computer could not reach it) get one quiet
+  /// summary when the connection returns, instead of silently appearing in
+  /// the list hours later. History from before the last connection, seen
+  /// items and kinds the user turned off are left alone.
+  Future<void> _notifyMissed(
+    _ComputerSession session,
+    List<AgentEvent> history,
+  ) async {
+    final DateTime? since = session.catchUpSince;
+    if (since == null || !session.record.agentNotificationsEnabled) return;
+    final DateTime now = DateTime.now();
+    final List<AgentEvent> missed = <AgentEvent>[
+      for (final AgentEvent event in history)
+        if (event.unseen &&
+            event.completedAt != null &&
+            event.completedAt!.isAfter(since) &&
+            now.difference(event.completedAt!) < missedReminderWindow &&
+            // Live reminders for very recent work arrive right after this.
+            now.difference(event.completedAt!) > const Duration(seconds: 60) &&
+            store.alertsFor(event.kind) &&
+            !store.wasNotified(event.occurrenceKey))
+          event,
+    ];
+    if (missed.isEmpty) return;
+    for (final AgentEvent event in missed) {
+      store.markNotified(event.occurrenceKey);
+    }
+    await store.save();
+    await notifier.showMissed(missed, hostName: session.record.hostName);
   }
 
   void _trimEvents(List<AgentEvent> events) {
@@ -450,6 +547,7 @@ final class CompanionEngine {
         'type': 'settings.update',
         'agentNotificationsEnabled': session.record.agentNotificationsEnabled,
         'vibrationEnabled': session.record.vibrationEnabled,
+        'agentNotificationKinds': store.agentNotificationKinds(),
         'transportPreference': 'serviceRelay',
       });
     }
@@ -463,6 +561,23 @@ final class CompanionEngine {
     if (completion is bool) store.completionAlertsEnabled = completion;
     if (attention is bool) store.attentionAlertsEnabled = attention;
     await store.save();
+    // Computers stop pushing kinds this phone turned off, so a PWA-style
+    // background push never rings for them either.
+    for (final _ComputerSession session in _sessions.values) {
+      final RelayPeer? peer = session.peer;
+      if (peer == null || !peer.isConnected) continue;
+      try {
+        await peer.send(<String, Object?>{
+          'type': 'settings.update',
+          'agentNotificationsEnabled': session.record.agentNotificationsEnabled,
+          'vibrationEnabled': session.record.vibrationEnabled,
+          'agentNotificationKinds': store.agentNotificationKinds(),
+          'transportPreference': 'serviceRelay',
+        });
+      } on Object {
+        // The next hello carries the same choice.
+      }
+    }
   }
 
   RelayPeer _connectedPeer(_ComputerSession session) {
@@ -776,6 +891,12 @@ final class CompanionEngine {
             'vibrationEnabled': record.vibrationEnabled,
             'sending': session.sending,
             'lastSyncAt': session.lastSyncAt?.toUtc().toIso8601String(),
+            'lastMessageAt': session.peer?.lastInboundAt
+                ?.toUtc()
+                .toIso8601String(),
+            'agentDelivery': session.agentDelivery,
+            'lastReminderAt': session.lastReminderAt?.toUtc().toIso8601String(),
+            'lastReminderDelayMs': session.lastReminderDelay?.inMilliseconds,
             'pendingFiles': session.pendingFileRequests.toList(),
             'items': <Object?>[
               for (final ClipboardItem item in session.items) item.toSnapshot(),

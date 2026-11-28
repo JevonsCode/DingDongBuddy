@@ -679,6 +679,27 @@ void main() {
     semantics.dispose();
   });
 
+  testWidgets('clipboard-only mode hides phone Agent controls on reload', (
+    tester,
+  ) async {
+    final controller = _FakeManagement(
+      connectionStatus: DeviceConnectionStatus.connected,
+    );
+    await _pumpManager(tester, controller: controller);
+    final agent = find.byKey(const Key('device-agent-notifications-phone-one'));
+    expect(agent, findsOneWidget);
+    controller.clipboardOnly = true;
+    controller.notifyListeners();
+    await tester.pump();
+    expect(encodeDeviceLinkManagerSnapshot(controller)['clipboardOnly'], true);
+    expect(agent, findsNothing);
+    expect(find.byKey(const Key('device-auto-send-phone-one')), findsOneWidget);
+    controller.clipboardOnly = false;
+    controller.notifyListeners();
+    await tester.pump();
+    expect(agent, findsOneWidget);
+  });
+
   testWidgets('device setting rows support keyboard activation', (
     WidgetTester tester,
   ) async {
@@ -842,6 +863,8 @@ final class _FakeManagement extends ChangeNotifier
          pairedAt: DateTime.utc(2026, 8, 8),
        );
 
+  @override
+  bool clipboardOnly = false;
   @override
   List<NearbyComputer> nearbyComputers = const [
     NearbyComputer(id: 'nearby', name: '另一台电脑', pairing: true),

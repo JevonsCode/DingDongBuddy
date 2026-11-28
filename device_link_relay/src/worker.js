@@ -7,7 +7,7 @@ import {
 } from "./discovery.js";
 import webPush from "web-push";
 
-const serviceVersion = "1.11.19";
+const serviceVersion = "1.12.0-beta.1";
 const rateLimitsPerMinute = new Map([
   ["invite-host", 8],
   ["invite-peer", 15],
@@ -23,6 +23,9 @@ const maximumLifecycleTelemetryBytes = 4 * 1024;
 const maximumPushEnvelopeBytes = 3500;
 const maximumWebPushBytes = 4096;
 const pushTtlSeconds = 24 * 60 * 60;
+const minimumPushTtlSeconds = 60;
+const relayHeartbeatRequest = "ping";
+const relayHeartbeatResponse = "pong";
 const pushProviderTimeoutMs = 8000;
 const allowedPushProviders = new Set([
   "fcm.googleapis.com",
@@ -67,6 +70,9 @@ export default {
         ),
         vapidPublicKey: env.VAPID_PUBLIC_KEY || null,
         lifecycleTelemetryAvailable: hasLifecycleTelemetryConfiguration(env),
+        // Clients may send the text frame "ping"; the relay answers "pong"
+        // without waking the room or forwarding it to the other side.
+        heartbeat: { request: relayHeartbeatRequest, response: relayHeartbeatResponse },
       });
     }
     if (url.pathname === "/v1/telemetry/lifecycle") {
@@ -127,6 +133,17 @@ export class RelayRoom {
   constructor(ctx, env) {
     this.ctx = ctx;
     this.env = env;
+    if (
+      typeof ctx.setWebSocketAutoResponse === "function" &&
+      typeof WebSocketRequestResponsePair === "function"
+    ) {
+      ctx.setWebSocketAutoResponse(
+        new WebSocketRequestResponsePair(
+          relayHeartbeatRequest,
+          relayHeartbeatResponse,
+        ),
+      );
+    }
   }
 
   async fetch(request) {
@@ -361,6 +378,10 @@ export class RelayRoom {
             this.env.VAPID_SUBJECT || "https://xn--8ovp9s.xn--m8txu.com/",
           publicKey: this.env.VAPID_PUBLIC_KEY,
           privateKey: this.env.VAPID_PRIVATE_KEY,
+        },
+        {
+          ttlSeconds: pushTtl(body.ttlSeconds),
+          topic: await pushTopic(body.topic),
         },
       );
       response = await fetch(payload.endpoint, payload.request);
@@ -601,15 +622,48 @@ function pushRoomFromRequest(value) {
   }
 }
 
-export function createWebPushRequest(subscription, data, vapidDetails) {
+/// Senders may shorten the provider lifetime; older desktops send nothing
+/// and keep the previous 24 hours.
+export function pushTtl(value) {
+  if (!Number.isInteger(value)) return pushTtlSeconds;
+  return Math.min(pushTtlSeconds, Math.max(minimumPushTtlSeconds, value));
+}
+
+/// A Web Push Topic replaces an undelivered message with the same topic at
+/// the provider. The opaque activity key is hashed so the provider never
+/// sees it; the header allows at most 32 URL-safe characters.
+export async function pushTopic(value) {
+  if (typeof value !== "string" || value.length === 0 || value.length > 200) {
+    return null;
+  }
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(`dingdong-topic-v1:${value}`),
+  );
+  return base64UrlEncode(new Uint8Array(digest)).slice(0, 32);
+}
+
+function base64UrlEncode(bytes) {
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+export function createWebPushRequest(
+  subscription,
+  data,
+  vapidDetails,
+  { ttlSeconds = pushTtlSeconds, topic = null } = {},
+) {
   const details = webPush.generateRequestDetails(
     subscription,
     JSON.stringify(data),
     {
-      TTL: pushTtlSeconds,
+      TTL: ttlSeconds,
       urgency: "high",
       contentEncoding: "aes128gcm",
       vapidDetails,
+      ...(topic ? { topic } : {}),
     },
   );
   const headers = new Headers(details.headers);

@@ -255,6 +255,13 @@ class _DingDongAppState extends State<DingDongApp> {
     return AnimatedBuilder(
       animation: _settingsViewModel,
       builder: (BuildContext context, Widget? child) {
+        // Only an injected settings source can contain a saved workspace mode.
+        final hasSavedSettings =
+            widget.settingsRepository != null ||
+            widget.settingsViewModel != null;
+        if (hasSavedSettings && !_settingsViewModel.isLoaded) {
+          return const SizedBox.shrink();
+        }
         return MaterialApp(
           title: 'DingDong',
           debugShowCheckedModeBanner: false,

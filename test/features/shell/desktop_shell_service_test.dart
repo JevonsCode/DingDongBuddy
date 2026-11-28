@@ -242,6 +242,31 @@ void main() {
     },
   );
 
+  test(
+    'clipboard-only tray keeps old reminders unread and refreshes clipboard',
+    () async {
+      final gateway = _FakeDesktopShellGateway();
+      final controller = ShellController()..setClipboardOnly(true);
+      final activity = ActivityController()
+        ..record(source: 'Codex', message: 'Finished');
+      final service = DesktopShellService(
+        gateway: gateway,
+        controller: controller,
+        activityController: activity,
+        defaultWorkspaceIndex: () => 0,
+      );
+      await service.start();
+      gateway.emit(DesktopShellCommand.openTray);
+      await Future<void>.delayed(Duration.zero);
+      expect(controller.selectedIndex, 2);
+      expect(controller.clipboardRefreshRevision, 1);
+      expect(controller.libraryRefreshRevision, 0);
+      expect(activity.revealRevision, 0);
+      expect(gateway.lastToggleAcknowledgesUnread, isFalse);
+      await service.stop();
+    },
+  );
+
   test('tray click opens Dynamic when a completion is unseen', () async {
     final _FakeDesktopShellGateway gateway = _FakeDesktopShellGateway();
     final ShellController controller = ShellController(initialIndex: 2);

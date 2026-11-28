@@ -5,6 +5,17 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test('clipboard-only native menus keep archiving, paste and sharing', () {
+    final strings = lookupDingDongLocalizations(const Locale('en'));
+    final menu = clipboardContextMenuItems(
+      strings: strings,
+      includePaste: true,
+      includeSaveAsPrompt: false,
+    ).map((item) => item.id);
+    expect(menu, isNot(contains('saveAsPrompt')));
+    expect(menu, containsAll(['paste', 'archiveTo', 'share']));
+  });
+
   test('archive context menu changes title and pin labels by state', () {
     final DingDongLocalizations english = lookupDingDongLocalizations(
       const Locale('en'),

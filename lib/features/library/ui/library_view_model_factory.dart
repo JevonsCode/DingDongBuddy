@@ -28,9 +28,11 @@ LibraryViewModel createDesktopLibraryViewModel(
     triggerGroupStore: triggerGroupStore,
     importHistoryStore:
         importHistoryStore ??
-        FileLibraryImportHistoryStore(
-          AppDataPaths.current().libraryImportHistoryFile,
-        ),
+        (repository is InMemoryResourceStore
+            ? InMemoryLibraryImportHistoryStore()
+            : FileLibraryImportHistoryStore(
+                AppDataPaths.current().libraryImportHistoryFile,
+              )),
     revisions: revisions,
   );
 }

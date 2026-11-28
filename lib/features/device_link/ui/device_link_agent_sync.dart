@@ -2,6 +2,22 @@ part of 'device_link_controller.dart';
 
 // Build bounded Agent snapshots and encrypted background push payloads.
 extension _DeviceLinkAgentSync on DeviceLinkController {
+  /// Retries once after a transient failure (timeout, network, 5xx). A
+  /// refusal such as a missing subscription is final.
+  Future<void> _sendPushWithRetry(
+    LinkedDevice device,
+    Map<String, Object?> message,
+  ) async {
+    try {
+      await _sendPush(device, message);
+    } on _PushRefused {
+      rethrow;
+    } on Object {
+      await Future<void>.delayed(const Duration(seconds: 3));
+      await _sendPush(device, message);
+    }
+  }
+
   Future<void> _sendPush(
     LinkedDevice device,
     Map<String, Object?> message,
@@ -34,6 +50,15 @@ extension _DeviceLinkAgentSync on DeviceLinkController {
         jsonEncode(<String, Object?>{
           'envelope': push.envelope,
           'messageId': push.message['id'],
+          // A reminder that waits for hours at the push provider is no longer
+          // useful as a ring; the phone list still has it after reconnecting.
+          'ttlSeconds': message['notificationKind'] == 'attention'
+              ? agentAttentionPushTtl.inSeconds
+              : agentCompletionPushTtl.inSeconds,
+          // Replaces an undelivered reminder of the same kind for the same
+          // activity at the provider; the relay hashes it.
+          if (message['activityId'] is String)
+            'topic': '${message['activityId']}:${message['notificationKind']}',
         }),
       );
       final HttpClientResponse response = await request.close().timeout(
@@ -54,10 +79,11 @@ extension _DeviceLinkAgentSync on DeviceLinkController {
         final Object? reason = decoded is Map<String, Object?>
             ? decoded['reason'] ?? decoded['error']
             : null;
-        throw HttpException(
-          'Push provider did not accept the message '
-          '(${response.statusCode}${reason == null ? '' : ', $reason'})',
-        );
+        final String text =
+            'Push provider did not accept the message '
+            '(${response.statusCode}${reason == null ? '' : ', $reason'})';
+        if (response.statusCode >= 500) throw HttpException(text);
+        throw _PushRefused(text);
       }
     } finally {
       client.close(force: true);
@@ -125,6 +151,7 @@ extension _DeviceLinkAgentSync on DeviceLinkController {
     'unseen': message['unseen'] != false,
     if (message['startedAt'] != null) 'startedAt': message['startedAt'],
     'completedAt': message['completedAt'],
+    if (message['sentAt'] != null) 'sentAt': message['sentAt'],
     'vibrate': message['vibrate'] != false,
   };
 
@@ -142,7 +169,7 @@ extension _DeviceLinkAgentSync on DeviceLinkController {
 
   Future<void> _sendAgentState(_ManagedDeviceSession managed) async {
     final AgentStateProvider? provider = _agentStateProvider;
-    if (provider == null) return;
+    if (clipboardOnly || provider == null) return;
     final snapshot = provider();
     await managed.handle.send(<String, Object?>{
       'type': 'agent.state',
@@ -155,6 +182,7 @@ extension _DeviceLinkAgentSync on DeviceLinkController {
           .take(deviceLinkAgentHistoryLimit)
           .map(_agentActivityPayload)
           .toList(growable: false),
+      'agentDelivery': agentDelivery(),
     });
   }
 
@@ -210,4 +238,16 @@ extension _DeviceLinkAgentSync on DeviceLinkController {
     }
     return '${result.toString()}$suffix';
   }
+}
+
+/// Web Push lifetimes at the provider (FCM, Mozilla, Apple).
+const Duration agentCompletionPushTtl = Duration(hours: 1);
+const Duration agentAttentionPushTtl = Duration(hours: 6);
+
+final class _PushRefused implements Exception {
+  const _PushRefused(this.message);
+  final String message;
+
+  @override
+  String toString() => message;
 }

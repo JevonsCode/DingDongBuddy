@@ -165,6 +165,67 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+  testWidgets(
+    'clipboard-only mode filters controls, directory and search, then restores them',
+    (tester) async {
+      final model = await pumpSettings(tester);
+      tester.view.physicalSize = const Size(1000, 700);
+      await tester.pumpAndSettle();
+      final mode = find.byKey(const Key('settings-clipboard-only'));
+      await tester.tap(mode);
+      await tester.pumpAndSettle();
+      expect(model.settings.clipboardOnly, isTrue);
+      expect(model.settings.clipboardMonitoring, isFalse);
+      for (final key in [
+        'settings-anchor-recentAgents',
+        'settings-anchor-notifications',
+        'settings-anchor-agentAPI',
+        'settings-anchor-footer',
+        'settings-agent-clipboard-content',
+        'settings-default-workspace',
+        'settings-usage-resource-library',
+        'settings-usage-agent-activity',
+        'settings-notch-hover',
+      ]) {
+        expect(find.byKey(Key(key)), findsNothing, reason: key);
+      }
+      expect(find.text('Open or hide clipboard'), findsOneWidget);
+      expect(
+        find.byKey(const Key('settings-clipboard-monitoring')),
+        findsOneWidget,
+      );
+      final search = find.byKey(const Key('settings-search'));
+      for (final term in [
+        'loopback',
+        'Library workspace',
+        'Default workspace',
+        'Allow Agents to read clipboard content',
+      ]) {
+        await tester.enterText(search, term);
+        await tester.pumpAndSettle();
+        expect(
+          find.text('No matching settings. Try another keyword.'),
+          findsOneWidget,
+          reason: term,
+        );
+      }
+      await tester.enterText(search, 'Clipboard-only mode');
+      await tester.pumpAndSettle();
+      await tester.tap(mode);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('settings-search-clear')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('settings-anchor-agentAPI')), findsOneWidget);
+      expect(
+        find.byKey(const Key('settings-default-workspace')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('settings-agent-clipboard-content')),
+        findsOneWidget,
+      );
+    },
+  );
   testWidgets('Chinese labels match and version navigation clears the filter', (
     tester,
   ) async {

@@ -213,6 +213,33 @@ void main() {
     },
   );
 
+  test(
+    'clipboard-only mode suspends selection without replacing its saved enablement',
+    () async {
+      final repository = SettingsRepository(
+        MemoryPreferencesBackend({
+          'dingdong.selection.enabled': true,
+          'dingdong.mode.clipboardOnly': true,
+        }),
+      );
+      final gateway = _SelectionGateway();
+      final model = SettingsViewModel(
+        repository,
+        selectionPluginGateway: gateway,
+      );
+      await model.load();
+      expect(gateway.configurations.single.enabled, isFalse);
+      await model.reload();
+      expect(model.settings.selectionPlugin.enabled, isTrue);
+      // The settings window saves the mode before the main window reloads
+      // and resumes its native plugin.
+      await repository.save(model.settings.copyWith(clipboardOnly: false));
+      await model.reload();
+      expect(model.settings.effectiveSelectionPlugin.enabled, isTrue);
+      model.dispose();
+    },
+  );
+
   test('saved enablement controls the native lifecycle on load', () async {
     final _SelectionGateway gateway = _SelectionGateway();
     final SettingsViewModel model = SettingsViewModel(

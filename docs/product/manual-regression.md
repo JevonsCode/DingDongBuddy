@@ -1,4 +1,33 @@
-# DingDong 1.11.19 Manual Regression Checklist
+# DingDong 1.12.0-beta.1 Manual Regression Checklist
+
+## Clipboard-only mode and reminder delivery (1.12.0-beta.1)
+
+- Fresh profile: the first-launch choice offers clipboard-only. Existing
+  profiles stay in the full mode. Toggle the mode in Settings with the popup,
+  Resource Manager and Devices windows open; each updates without a restart,
+  and the mode survives a restart.
+- In clipboard-only mode, use clipboard history, search, quick paste and
+  sharing with a paired computer and phone. Trigger Agent reminders: neither
+  the computer nor the phone rings, phones stop listing running tasks, and
+  Agents cannot read clipboard text. Switch back: reminder sounds, phone push
+  rules and the Agent list return unchanged.
+- Resource Manager with an unsaved edit: turning the mode on from Settings
+  asks before discarding the draft.
+- Phone (Android app and PWA): turn off one reminder kind. The computer still
+  lists it in the Agent tab without a notification or Web Push; the settings
+  row explains why each kind will or will not ring.
+- Expand a reminder notification on the phone and a reminder card on the
+  computer: the request to the user comes first and the full reply follows.
+- Suspend DingDong or sleep the computer, send a reminder, then resume: the
+  reminder shows its original time and plays no sound. Keep a phone offline,
+  send reminders, reconnect: one quiet summary lists them.
+- Switch the phone between Wi-Fi and mobile data: it reconnects within a few
+  seconds and keeps receiving reminders.
+- Mac with a notch: with the DingDong icon visible in the menu bar, hovering
+  the notch shows no bubble; with the icon hidden, the bubble appears.
+- Verify desktop version 1.12.0-beta.1, build 103, and PWA shell 78 in the
+  published prerelease, the beta block of the update metadata, and an
+  unchanged stable 1.11.19 latest release.
 
 ## Computer discovery and resource import rules (1.11.19)
 

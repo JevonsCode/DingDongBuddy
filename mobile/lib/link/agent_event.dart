@@ -27,6 +27,8 @@ final class AgentEvent {
     required this.startedAt,
     required this.completedAt,
     required this.workspacePath,
+    this.sentAt,
+    this.receivedAt,
   });
 
   final String id;
@@ -46,10 +48,43 @@ final class AgentEvent {
   final DateTime? completedAt;
   final String? workspacePath;
 
+  /// When the computer handed this reminder to the connection (newer
+  /// desktops only) and when this phone received it.
+  final DateTime? sentAt;
+  final DateTime? receivedAt;
+
+  /// Reminders that took longer than this to arrive are posted quietly and
+  /// labelled as late instead of ringing as if they were new.
+  static const Duration lateAfter = Duration(minutes: 10);
+
+  /// Time between the Agent stopping (or the computer sending, whichever is
+  /// earlier) and this phone receiving the reminder. A computer that was
+  /// suspended or asleep sends with the original completion time.
+  Duration? get deliveryDelay {
+    final DateTime? sent = sentAt;
+    final DateTime? completed = completedAt;
+    final DateTime? from = sent == null
+        ? completed
+        : completed == null || sent.isBefore(completed)
+        ? sent
+        : completed;
+    final DateTime? to = receivedAt;
+    if (from == null || to == null) return null;
+    final Duration delay = to.difference(from);
+    return delay.isNegative ? Duration.zero : delay;
+  }
+
+  bool get isLate => (deliveryDelay ?? Duration.zero) > lateAfter;
+
   bool get needsAttention => kind == AgentKind.attention;
 
   /// Key the desktop accepts in `agent.seen.activityIds`.
   String get seenKey => activityId ?? id;
+
+  /// One occurrence of an activity: live messages and `agent.state` items
+  /// use different ids for the same reminder, but agree on these fields.
+  String get occurrenceKey =>
+      'occurrence:$seenKey@${completedAt?.toUtc().toIso8601String() ?? ''}';
 
   static AgentEvent? parse(Map<String, Object?> message) {
     final String id = _string(message['id']);
@@ -82,8 +117,29 @@ final class AgentEvent {
       workspacePath: _string(message['workspacePath']).isEmpty
           ? null
           : _string(message['workspacePath']),
+      sentAt: DateTime.tryParse(_string(message['sentAt'])),
+      receivedAt: DateTime.tryParse(_string(message['receivedAt'])),
     );
   }
+
+  /// This event as received now, for delay accounting.
+  AgentEvent receivedNow([DateTime? now]) => AgentEvent(
+    id: id,
+    activityId: activityId,
+    kind: kind,
+    silent: silent,
+    title: title,
+    source: source,
+    summary: summary,
+    detail: detail,
+    task: task,
+    unseen: unseen,
+    startedAt: startedAt,
+    completedAt: completedAt,
+    workspacePath: workspacePath,
+    sentAt: sentAt,
+    receivedAt: (now ?? DateTime.now()).toUtc(),
+  );
 
   /// Notification title: "<source> · <title>" unless the title names it.
   String get notificationTitle {
@@ -104,23 +160,114 @@ final class AgentEvent {
     return '$base · $name';
   }
 
-  /// Notification body with the PWA's task/detail combination rules.
+  /// One line for the collapsed notification: what the Agent needs, or what
+  /// it finished. The task the user asked for comes second, in the expanded
+  /// text, because it is usually the longest and least actionable part.
   String get notificationBody {
-    final String detailText = _normalized(detail.isEmpty ? summary : detail);
-    final String fallback = needsAttention
-        ? '请打开 Agent 提醒查看并继续处理。'
-        : '本轮任务已经完成。';
-    final String body =
-        task.isNotEmpty && detailText.isNotEmpty && task != detailText
-        ? '$task：$detailText'
-        : detailText.isNotEmpty
-        ? detailText
-        : task.isNotEmpty
-        ? task
-        : fallback;
-    final List<int> runes = body.runes.toList();
-    if (runes.length <= 260) return body;
-    return '${String.fromCharCodes(runes.take(259))}…';
+    final String? ask = needsAttention ? _requestLine(detail) : null;
+    if (ask != null) return _clip(ask, 160);
+    final String first = _firstLine(summary.isNotEmpty ? summary : detail);
+    if (first.isNotEmpty) return _clip(first, 160);
+    if (task.isNotEmpty) return _clip(task, 160);
+    return needsAttention ? '请打开 Agent 提醒查看并继续处理。' : '本轮任务已经完成。';
+  }
+
+  /// The full reminder for the expanded notification: the Agent's whole
+  /// message with its line breaks, then the task, project and timing.
+  String notificationDetail({DateTime? now}) {
+    final List<String> parts = <String>[];
+    final String message = _paragraphs(detail.isNotEmpty ? detail : summary);
+    parts.add(message.isNotEmpty ? message : notificationBody);
+    if (task.isNotEmpty && _normalized(task) != _normalized(message)) {
+      parts.add('任务：${_clip(task, 600)}');
+    }
+    final String? project = workspaceName;
+    if (project != null) parts.add('项目 · $project');
+    final String timing = timingLine(now: now);
+    if (timing.isNotEmpty) parts.add(timing);
+    return _clip(parts.join('\n\n'), 3800);
+  }
+
+  /// "完成于 14:03 · 延迟 3 小时 12 分送达" when the reminder came late.
+  String timingLine({DateTime? now}) {
+    final DateTime? completed = completedAt?.toLocal();
+    final List<String> parts = <String>[
+      if (completed != null)
+        '${needsAttention ? '发出于' : '完成于'} ${_clock(completed, now: now)}',
+      if (isLate) '延迟 ${formatDelay(deliveryDelay!)}送达',
+    ];
+    return parts.join(' · ');
+  }
+
+  String? get workspaceName {
+    final String? path = workspacePath;
+    if (path == null) return null;
+    final List<String> segments = path
+        .split(RegExp(r'[\\/]'))
+        .where((String part) => part.isNotEmpty)
+        .toList();
+    return segments.isEmpty ? null : segments.last;
+  }
+
+  static String formatDelay(Duration delay) {
+    if (delay.inMinutes < 1) return '${delay.inSeconds} 秒';
+    if (delay.inHours < 1) return '${delay.inMinutes} 分钟';
+    final int minutes = delay.inMinutes % 60;
+    return minutes == 0
+        ? '${delay.inHours} 小时'
+        : '${delay.inHours} 小时 $minutes 分';
+  }
+
+  static String _clock(DateTime value, {DateTime? now}) {
+    final DateTime today = (now ?? DateTime.now()).toLocal();
+    final String time =
+        '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';
+    final bool sameDay =
+        value.year == today.year &&
+        value.month == today.month &&
+        value.day == today.day;
+    return sameDay ? time : '${value.month}月${value.day}日 $time';
+  }
+
+  /// The line of a waiting Agent's message that asks the user for
+  /// something, so the collapsed notification says what to do.
+  static String? _requestLine(String value) {
+    for (final String line in value.split('\n')) {
+      final String text = _normalized(line);
+      if (text.isEmpty) continue;
+      if (_request.hasMatch(text)) return text;
+    }
+    return null;
+  }
+
+  static final RegExp _request = RegExp(
+    r'(?:^|[，。；！？、,.;!?:：\s🟥])请(?![求假他她它])|需要你|需要您|等你|要你|[?？]$'
+    r'|please |need your|needs your|waiting for you',
+    caseSensitive: false,
+    unicode: true,
+  );
+
+  static String _firstLine(String value) {
+    for (final String line in value.split('\n')) {
+      final String text = _normalized(line);
+      if (text.isNotEmpty) return text;
+    }
+    return '';
+  }
+
+  /// Keeps paragraph breaks, collapses runs of spaces and blank lines.
+  static String _paragraphs(String value) => value
+      .replaceAll('\r', '')
+      .split('\n')
+      .map((String line) => line.replaceAll(RegExp(r'[ \t]+'), ' ').trim())
+      .join('\n')
+      .replaceAll(RegExp(r'\n{3,}'), '\n\n')
+      .trim();
+
+  static String _clip(String value, int maximum) {
+    final List<int> runes = value.runes.toList();
+    if (runes.length <= maximum) return value;
+    return '${String.fromCharCodes(runes.take(maximum - 1))}…';
   }
 
   AgentEvent copyWith({bool? unseen}) => AgentEvent(
@@ -137,6 +284,8 @@ final class AgentEvent {
     startedAt: startedAt,
     completedAt: completedAt,
     workspacePath: workspacePath,
+    sentAt: sentAt,
+    receivedAt: receivedAt,
   );
 
   Map<String, Object?> toJson() => <String, Object?>{
@@ -153,6 +302,8 @@ final class AgentEvent {
     'startedAt': startedAt?.toUtc().toIso8601String(),
     'completedAt': completedAt?.toUtc().toIso8601String(),
     'workspacePath': workspacePath,
+    if (sentAt != null) 'sentAt': sentAt!.toUtc().toIso8601String(),
+    if (receivedAt != null) 'receivedAt': receivedAt!.toUtc().toIso8601String(),
   };
 
   static String _string(Object? value) => value is String ? value : '';

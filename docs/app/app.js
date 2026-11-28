@@ -1,25 +1,27 @@
-import { computerDisplayName } from "./app-formatters.js?shell=77";
-import { renderTransferProgress } from './transfer-progress.js?shell=77';
-import { createFileActions, downloadHistoryKey } from "./app-file-actions.js?shell=77";
+import { computerDisplayName } from "./app-formatters.js?shell=78";
+import { renderTransferProgress } from './transfer-progress.js?shell=78';
+import { createFileActions, downloadHistoryKey } from "./app-file-actions.js?shell=78";
 import {
   defaultDeviceName,
   detectDeviceName,
   shouldUpgradeAutomaticDeviceName,
-} from "./device-name.js?shell=77";
+} from "./device-name.js?shell=78";
 import {
+  agentNotificationKindNames,
+  agentNotificationKinds,
   applyAgentNotificationDefault,
   wantsAgentNotifications,
-} from "./notification-policy.js?shell=77";
+} from "./notification-policy.js?shell=78";
 import {
   extractPairingFragment,
   normalizePairingRegistry,
   pairingRegistryVersion,
   pairingsMatch,
-} from "./pairing-state.js?shell=77";
+} from "./pairing-state.js?shell=78";
 import {
   createPairingScanner,
   pairingScannerSupported,
-} from "./pairing-scanner.js?shell=77";
+} from "./pairing-scanner.js?shell=78";
 import {
   adjacentContentTab,
   contentScrollIsSnapped,
@@ -27,21 +29,21 @@ import {
   contentTabs,
   isContentTab,
   parseContentTabLaunch,
-} from "./content-navigation.js?shell=77";
-import { idbDelete, idbGet, idbSetMany } from "./app-storage.js?shell=77";
-import { createInstallationController } from "./app-installation.js?shell=77";
-import { createAgentNotificationController } from "./app-notifications.js?shell=77";
-import { createAppRenderer } from "./app-rendering.js?shell=77";
-import { createConnectionController } from "./app-connection.js?shell=77";
-import { createDeviceSettingsController } from "./app-settings.js?shell=77";
-import { createPairingController } from "./app-pairing.js?shell=77";
-import { createContentTransferController } from "./app-content-transfer.js?shell=77";
+} from "./content-navigation.js?shell=78";
+import { idbDelete, idbGet, idbSetMany } from "./app-storage.js?shell=78";
+import { createInstallationController } from "./app-installation.js?shell=78";
+import { createAgentNotificationController } from "./app-notifications.js?shell=78";
+import { createAppRenderer } from "./app-rendering.js?shell=78";
+import { createConnectionController } from "./app-connection.js?shell=78";
+import { createDeviceSettingsController } from "./app-settings.js?shell=78";
+import { createPairingController } from "./app-pairing.js?shell=78";
+import { createContentTransferController } from "./app-content-transfer.js?shell=78";
 import {
   isAndroid,
   isIos,
   isMobileBrowser,
   isStandalone,
-} from "./app-platform.js?shell=77";
+} from "./app-platform.js?shell=78";
 
 const storageKeys = {
   identity: "dingdong.identity.v1",
@@ -61,7 +63,7 @@ const initialReconnectDelayMs = 2400;
 const maximumReconnectDelayMs = 30_000;
 const installVerificationIntervalMs = 3000;
 const installVerificationTimeoutMs = 60 * 1000;
-const currentPwaVersion = "1.11.19";
+const currentPwaVersion = "1.12.0-beta.1";
 // The shell version is the `?shell=` this module was loaded with, so it cannot
 // drift from index.html, the service worker cache, and version.json.
 const currentPwaShellVersion =
@@ -263,6 +265,10 @@ const elements = Object.fromEntries(
     "settings-device-name",
     "agent-notification-toggle",
     "agent-notification-status",
+    "completion-kind-toggle",
+    "completion-kind-status",
+    "attention-kind-toggle",
+    "attention-kind-status",
     "vibration-toggle",
     "vibration-support-label",
     "pwa-update-button",
@@ -427,7 +433,13 @@ const {
   currentSessionContext: (...args) => currentSessionContext(...args),
 });
 
-const { closeConnection, connect, currentSessionContext, sendMessage } =
+const {
+  closeConnection,
+  connect,
+  currentSessionContext,
+  probeConnection,
+  sendMessage,
+} =
   createConnectionController({
     state,
     initialReconnectDelayMs,
@@ -561,6 +573,12 @@ window.addEventListener("appinstalled", () => {
   refreshInstallState().catch(() => {});
 });
 document.addEventListener("visibilitychange", handleVisibilityChange);
+// Network changes and back/forward restores can leave a socket that looks
+// open but no longer delivers; probe every pairing.
+window.addEventListener("online", probeAllConnections);
+window.addEventListener("pageshow", (event) => {
+  if (event.persisted) probeAllConnections();
+});
 window.addEventListener("hashchange", handleRuntimePairingLaunch);
 
 const launchPair = capturePairingLaunch();
@@ -747,6 +765,21 @@ function wireInteractions() {
       render();
     },
   );
+  for (const kind of agentNotificationKindNames) {
+    elements[`${kind}-kind-toggle`].addEventListener("change", async (event) => {
+      const session = activeSession();
+      if (!session) return;
+      const kinds = new Set(agentNotificationKinds(session.pair));
+      if (event.target.checked) kinds.add(kind);
+      else kinds.delete(kind);
+      session.pair.agentNotificationKinds = agentNotificationKindNames.filter(
+        (name) => kinds.has(name),
+      );
+      savePairings();
+      renderAgentNotificationStatus();
+      await sendSettings(session);
+    });
+  }
   elements["vibration-toggle"].addEventListener("change", async (event) => {
     const session = activeSession();
     if (!session) return;
@@ -1280,8 +1313,15 @@ function showToast(message) {
   state.toastTimer = setTimeout(() => (elements.toast.hidden = true), 2200);
 }
 
+function probeAllConnections() {
+  for (const session of state.sessions.values()) {
+    probeConnection(session).catch(() => {});
+  }
+}
+
 async function handleVisibilityChange() {
   if (document.visibilityState !== "visible") return;
+  probeAllConnections();
   for (const connectedSession of state.sessions.values()) {
     if (connectedSession.connected) connectedSession.fileTransfers?.retryWaiting();
   }

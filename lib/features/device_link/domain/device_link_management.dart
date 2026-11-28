@@ -11,6 +11,7 @@ abstract interface class DeviceLinkManagement implements Listenable {
   PendingDevicePairing? get pendingPairing;
   DeviceConnectionStatus get pairingStatus;
   bool get canPair;
+  bool get clipboardOnly;
 
   DeviceConnectionStatus statusOf(String deviceId);
   DeviceLinkActiveTransport transportOf(String deviceId);

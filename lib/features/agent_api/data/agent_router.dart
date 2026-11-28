@@ -54,6 +54,7 @@ typedef ReminderSoundUpdater =
 
 final class AgentRouter {
   AgentRouter({
+    this.clipboardOnly,
     this.jevRoutes,
     this.reminderSettings,
     void Function(DingRequest request)? onDing,
@@ -197,6 +198,7 @@ final class AgentRouter {
   final TriggerGroupStore? _triggerGroupStore;
   final SkillDeploymentStore? _skillDeploymentStore;
   final String Function() _idGenerator;
+  final bool Function()? clipboardOnly;
   final DateTime Function() _now;
   final Future<bool> Function() _allowAgentClipboardContent;
   final Future<ConversationFooterSymbols> Function()
@@ -277,6 +279,11 @@ final class AgentRouter {
   }
 
   Future<HttpResponseData> route(HttpRequestData request) async {
+    final onlyClipboard = clipboardOnly?.call() == true;
+    if (onlyClipboard) {
+      final response = _clipboardOnlyResponse(request);
+      if (response != null) return response;
+    }
     final jevResponse = await jevRoutes?.route(request);
     if (jevResponse != null) return jevResponse;
     if (_requestsClipboardContent(request) &&
@@ -292,6 +299,7 @@ final class AgentRouter {
       );
     }
     final HttpResponseData? desktopResponse = _desktopControlRoutes.route(
+      clipboardOnly: onlyClipboard,
       method: request.method,
       path: request.parsedUri.path,
       query: request.parsedUri.queryParameters,
@@ -865,6 +873,52 @@ final class AgentRouter {
       return request;
     }
   }
+}
+
+/// Acknowledge installed hooks quietly while clipboard routes retain their
+/// normal content permissions and error handling.
+HttpResponseData? _clipboardOnlyResponse(HttpRequestData request) {
+  final uri = request.parsedUri;
+  if (uri.path == '/agent/bridge' &&
+      (request.method == 'POST' || request.method == 'GET')) {
+    // Replace previously delivered resources even for clients holding a hash.
+    return const HttpResponseData(
+      statusCode: 200,
+      json: {
+        'status': 'ok',
+        'hash': 'clipboard-only',
+        'active': {'prompts': [], 'skills': [], 'mcps': []},
+      },
+    );
+  }
+  if (request.method == 'POST' && uri.path == '/ding') {
+    return const HttpResponseData(
+      statusCode: 200,
+      json: {'status': 'suppressed'},
+    );
+  }
+  if (request.method == 'POST' && uri.path == '/agent/conversation/opened') {
+    return const HttpResponseData(
+      statusCode: 200,
+      json: {'status': 'unchanged', 'acknowledgedCount': 0},
+    );
+  }
+  final parts = uri.pathSegments;
+  final writesLibrary =
+      request.method == 'POST' &&
+      (uri.path == '/clipboard/collect' ||
+          (parts.length == 3 && parts[1] == 'promote'));
+  // Settings hides the Agent clipboard-content switch in this mode, so an
+  // earlier "allow" must not keep handing clipboard text to Agents.
+  if (request.method == 'GET' && _requestsClipboardContent(request)) {
+    return HttpResponseData.error(
+      403,
+      'Clipboard content access is unavailable in clipboard-only mode.',
+    );
+  }
+  if (parts.firstOrNull == 'clipboard' && !writesLibrary) return null;
+  if (uri.path == '/health' || uri.path == '/ui/show') return null;
+  return HttpResponseData.error(403, 'Unavailable in clipboard-only mode.');
 }
 
 Future<bool> _hideConversationTokenUsage() async => false;

@@ -3,6 +3,7 @@ part of 'clipboard_screen.dart';
 class _ClipboardPreview extends StatelessWidget {
   const _ClipboardPreview({
     required this.record,
+    required this.includeSaveAsPrompt,
     required this.onRestore,
     this.onTogglePinned,
     required this.onOpen,
@@ -10,6 +11,7 @@ class _ClipboardPreview extends StatelessWidget {
   });
 
   final ClipboardRecord? record;
+  final bool includeSaveAsPrompt;
   final Future<void> Function() onRestore;
   final VoidCallback? onTogglePinned;
   final Future<void> Function(ClipboardRecord record)? onOpen;
@@ -72,12 +74,14 @@ class _ClipboardPreview extends StatelessWidget {
                     label: context.l10n.archiveTo,
                     symbol: 'archive_to',
                   ),
-                  const DesktopMenuDivider<_ClipboardAction>(),
-                  DesktopMenuItem<_ClipboardAction>(
-                    value: _ClipboardAction.promotePrompt,
-                    label: context.l10n.saveAsPrompt,
-                    symbol: 'prompt',
-                  ),
+                  if (includeSaveAsPrompt) ...[
+                    const DesktopMenuDivider<_ClipboardAction>(),
+                    DesktopMenuItem<_ClipboardAction>(
+                      value: _ClipboardAction.promotePrompt,
+                      label: context.l10n.saveAsPrompt,
+                      symbol: 'prompt',
+                    ),
+                  ],
                   const DesktopMenuDivider<_ClipboardAction>(),
                   DesktopMenuItem<_ClipboardAction>(
                     value: _ClipboardAction.delete,

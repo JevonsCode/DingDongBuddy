@@ -10,9 +10,11 @@ class PopupFooter extends StatelessWidget {
   const PopupFooter({
     required this.agentBaseUri,
     required this.globalHotKey,
+    this.clipboardOnly = false,
     super.key,
   });
 
+  final bool clipboardOnly;
   final Uri? agentBaseUri;
   final GlobalHotKey globalHotKey;
 
@@ -36,7 +38,7 @@ class PopupFooter extends StatelessWidget {
         border: Border(top: BorderSide(color: PopupStyle.of(context).border)),
       ),
       child: Text(
-        '$apiStatus   ·   $shortcutStatus',
+        clipboardOnly ? shortcutStatus : '$apiStatus   ·   $shortcutStatus',
         maxLines: 1,
         style: TextStyle(
           color: PopupStyle.of(context).textSecondary,

@@ -7,6 +7,7 @@ import android.content.ContentResolver
 import android.content.Context
 import android.media.AudioAttributes
 import android.net.Uri
+import android.os.Build
 
 /**
  * Android notification channels, one per reminder kind, created natively so
@@ -20,6 +21,7 @@ object CompanionChannels {
     const val COMPLETION = "agent_completion_v2"
     const val ATTENTION = "agent_attention_v2"
     const val CONNECTION = "relay_connection_v1"
+    const val LATE = "agent_late_v1"
     private const val GROUP_AGENT = "agent"
     private val retiredChannels = listOf("agent_completion_v1", "agent_attention_v1")
 
@@ -64,8 +66,44 @@ object CompanionChannels {
             setShowBadge(false)
             setSound(null, null)
         }
-        manager.createNotificationChannels(listOf(completion, attention, connection))
+        // Reminders that arrive long after they were sent, or that were
+        // missed while offline: shown, but without ringing hours later.
+        val late = NotificationChannel(
+            LATE,
+            "延迟送达的提醒",
+            NotificationManager.IMPORTANCE_LOW,
+        ).apply {
+            description = "离线或被系统暂停期间错过、恢复连接后补发的 Agent 提醒，不响铃。"
+            group = GROUP_AGENT
+            setSound(null, null)
+            enableVibration(false)
+            setShowBadge(true)
+        }
+        manager.createNotificationChannels(listOf(completion, attention, connection, late))
         retiredChannels.forEach(manager::deleteNotificationChannel)
+    }
+
+    /** Importance of each Agent channel; NONE means the user blocked it. */
+    fun states(context: Context): Map<String, Any> {
+        val manager = context.getSystemService(NotificationManager::class.java)
+        fun state(id: String): Map<String, Any> {
+            val channel = manager.getNotificationChannel(id)
+            val groupBlocked = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P &&
+                channel?.group?.let { manager.getNotificationChannelGroup(it)?.isBlocked } == true
+            return mapOf(
+                "exists" to (channel != null),
+                "importance" to (channel?.importance ?: NotificationManager.IMPORTANCE_NONE),
+                "blocked" to (channel == null || groupBlocked ||
+                    channel.importance == NotificationManager.IMPORTANCE_NONE),
+                "sound" to (channel?.sound != null),
+            )
+        }
+        return mapOf(
+            "appEnabled" to manager.areNotificationsEnabled(),
+            COMPLETION to state(COMPLETION),
+            ATTENTION to state(ATTENTION),
+            LATE to state(LATE),
+        )
     }
 
     // Name-based, not R.raw ids: the channel stores this URI forever, and

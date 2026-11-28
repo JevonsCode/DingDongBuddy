@@ -21,13 +21,16 @@ final class MultiWindowResourceManagerLauncher
 
   Future<void> refreshActivity() => _refresh(agentActivityChangedMethod);
 
-  Future<void> _refresh(String method) async {
+  Future<void> setClipboardOnly(bool enabled) =>
+      _refresh('set_clipboard_only', enabled);
+
+  Future<void> _refresh(String method, [Object? argument]) async {
     try {
       final List<WindowController> windows = await WindowController.getAll();
       for (final WindowController controller in windows) {
         final Map<String, Object?> arguments = _decode(controller.arguments);
         if (arguments['kind'] == resourceManagerWindowKind) {
-          await controller.invokeMethod<void>(method);
+          await controller.invokeMethod<void>(method, argument);
           return;
         }
       }

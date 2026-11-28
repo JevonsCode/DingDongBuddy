@@ -393,6 +393,9 @@ final class LoopbackMcpToolExecutor implements McpToolExecutor {
     if ((body['workspacePath'] as String? ?? '').trim().isEmpty) {
       body['workspacePath'] = _currentDirectory();
     }
+    // Lets DingDong tell a reminder that waited (the app was suspended or the
+    // computer asleep) from a fresh one.
+    body['createdAt'] = DateTime.now().toUtc().toIso8601String();
     return _transport.request(method: 'POST', path: '/ding', body: body);
   }
 

@@ -15,6 +15,7 @@ final class PairingRecord {
     this.vibrationEnabled = true,
     this.manualDisconnect = false,
     this.hostPlatform = '',
+    this.lastSyncedAt,
   });
 
   final DevicePairingPayload payload;
@@ -26,6 +27,10 @@ final class PairingRecord {
   /// The computer's `Platform.operatingSystem` from `welcome`, e.g.
   /// "windows"; empty until the computer has said.
   String hostPlatform;
+
+  /// Last time this phone heard from the computer. Reminders completed after
+  /// it, while the phone was away, are summarised once on reconnect.
+  DateTime? lastSyncedAt;
 
   String get room => payload.room;
 
@@ -46,6 +51,7 @@ final class PairingRecord {
         hostPlatform: value['hostPlatform'] is String
             ? value['hostPlatform']! as String
             : '',
+        lastSyncedAt: DateTime.tryParse('${value['lastSyncedAt'] ?? ''}'),
       );
     } on Object {
       return null;
@@ -59,6 +65,8 @@ final class PairingRecord {
     'vibrationEnabled': vibrationEnabled,
     'manualDisconnect': manualDisconnect,
     'hostPlatform': hostPlatform,
+    if (lastSyncedAt != null)
+      'lastSyncedAt': lastSyncedAt!.toUtc().toIso8601String(),
   };
 }
 
@@ -97,7 +105,16 @@ final class CompanionStore {
       };
 
   static const int maximumEventsPerComputer = 50;
-  static const int maximumNotifiedIds = 300;
+  static const int maximumNotifiedIds = 600;
+
+  /// Kinds this phone rings for, sent to computers as
+  /// `agentNotificationKinds` so they skip background pushes for the rest.
+  List<String> agentNotificationKinds() => <String>[
+    if (alertsFor(AgentKind.completion)) 'completion',
+    if (alertsFor(AgentKind.attention)) 'attention',
+  ];
+
+  bool wasNotified(String id) => notifiedIds.contains(id);
 
   static Future<CompanionStore> load(File file) async {
     final CompanionStore store = CompanionStore(file);

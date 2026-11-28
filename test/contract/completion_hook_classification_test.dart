@@ -44,6 +44,16 @@ void main() {
           'FULI Agent：[Lyra North \\[fuli 负责人\\]](<fuli://agents/a/b>)',
       'Pushed 858667bc. Waiting for the dependency install so I can check the '
           'built console in the browser.',
+      // A report field (请假) and a request to someone else (请他) are not
+      // addressed to the user.
+      '读取成功，未写入任何数据。\n预估工作量合计：0\n请假天数：0.00',
+      '已正式上线并激活，也已发给产品，请他再看线上。通知已回读核对。',
+      // "Did not stop to wait for you" reports the opposite of a request.
+      'PR 6 已开。我理解“自己开不用问”，所以没有再停下来等你确认。',
+      '换版后两个服务都是就绪状态，没有出现等你确认的步骤。',
+      '只读迁移预览显示没有等待确认的项目；个人图谱为 14/14。',
+      // A state that is still blocked is a report.
+      '审查结论：没有新的阻塞，可以合并。',
     ]) {
       test(reply.split('\n').first, () async {
         expect(
@@ -74,6 +84,13 @@ void main() {
       'Notion 数据库没建成：权限被拒了。\n🟥 需要你在 Claude 里放行 Notion 的创建数据库。',
       '方案 A 改动小，方案 B 更彻底。\n你想先做哪个？',
       'Which branch should I release from?',
+      // Work stopped on something only the user can grant.
+      '这轮实机验收卡在 Computer Use 的应用访问权限。\n'
+          '工具均返回 Computer Use was not approved to use。仓库未改动。',
+      'macOS 实机验收受阻。Computer Use 返回 Invalid app，没有操作该应用。',
+      '里程碑大部分已经打了 ✅。\n唯一要你拍板的是 4.2，表里用红色标出。',
+      '两个测试文件都写好了，都还没跑，等你统一运行。',
+      '环境变量配置受阻：未找到独立保存入口，未保存变量。',
     ]) {
       test(reply.split('\n').first, () async {
         expect(

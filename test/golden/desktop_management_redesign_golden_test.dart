@@ -455,6 +455,8 @@ List<Resource> _resources() {
 final class _GoldenDeviceManagement extends ChangeNotifier
     implements DeviceLinkManagement, LanComputerManagement {
   _GoldenDeviceManagement({this.includeComputer = false});
+  @override
+  bool get clipboardOnly => false;
 
   @override
   String get localComputerName =>

@@ -1,4 +1,4 @@
-const cacheName = "dingdong-app-shell-v77";
+const cacheName = "dingdong-app-shell-v78";
 const notificationJobs = new Map();
 const notificationDedupeMs = 24 * 60 * 60 * 1000;
 const completionVibrationPattern = [180, 80, 280];
@@ -17,29 +17,29 @@ self.addEventListener("install", (event) => {
         cache.addAll([
           base,
           `${base}index.html`,
-          `${base}styles.css?shell=77`,
-          `${base}app.js?shell=77`,
-          `${base}app-codecs.js?shell=77`,
-          `${base}app-connection.js?shell=77`,
-          `${base}app-content-transfer.js?shell=77`,
-          `${base}app-formatters.js?shell=77`,
-          `${base}app-file-actions.js?shell=77`,
-          `${base}resumable-transfer.js?shell=77`,
-          `${base}file-transfer-storage.js?shell=77`,
-          `${base}transfer-progress.js?shell=77`,
-          `${base}app-installation.js?shell=77`,
-          `${base}app-notifications.js?shell=77`,
-          `${base}app-pairing.js?shell=77`,
-          `${base}app-platform.js?shell=77`,
-          `${base}app-rendering.js?shell=77`,
-          `${base}app-settings.js?shell=77`,
-          `${base}app-storage.js?shell=77`,
-          `${base}connection-policy.js?shell=77`,
-          `${base}notification-policy.js?shell=77`,
-          `${base}device-name.js?shell=77`,
-          `${base}pairing-state.js?shell=77`,
-          `${base}pairing-scanner.js?shell=77`,
-          `${base}content-navigation.js?shell=77`,
+          `${base}styles.css?shell=78`,
+          `${base}app.js?shell=78`,
+          `${base}app-codecs.js?shell=78`,
+          `${base}app-connection.js?shell=78`,
+          `${base}app-content-transfer.js?shell=78`,
+          `${base}app-formatters.js?shell=78`,
+          `${base}app-file-actions.js?shell=78`,
+          `${base}resumable-transfer.js?shell=78`,
+          `${base}file-transfer-storage.js?shell=78`,
+          `${base}transfer-progress.js?shell=78`,
+          `${base}app-installation.js?shell=78`,
+          `${base}app-notifications.js?shell=78`,
+          `${base}app-pairing.js?shell=78`,
+          `${base}app-platform.js?shell=78`,
+          `${base}app-rendering.js?shell=78`,
+          `${base}app-settings.js?shell=78`,
+          `${base}app-storage.js?shell=78`,
+          `${base}connection-policy.js?shell=78`,
+          `${base}notification-policy.js?shell=78`,
+          `${base}device-name.js?shell=78`,
+          `${base}pairing-state.js?shell=78`,
+          `${base}pairing-scanner.js?shell=78`,
+          `${base}content-navigation.js?shell=78`,
           `${base}manifest.webmanifest`,
           `${base}version.json`,
           `${assets}dingdong-icon.png`,
@@ -435,6 +435,15 @@ async function handleRealtimeAgentCompletion(context) {
       return;
     }
     if (!(await workerPairStillMatches(pair))) return;
+    // Realtime reminders of a kind this phone turned off only update the list.
+    if (
+      !workerWantsAgentKind(
+        pair,
+        agentMessageNeedsAttention(message) ? "attention" : "completion",
+      )
+    ) {
+      return;
+    }
     await showAgentCompletionNotification(message, pair);
   } catch {
     // The realtime list remains available even when the platform refuses a
@@ -454,23 +463,39 @@ async function showAgentCompletionNotification(message, pair) {
       return "duplicate";
     }
     const needsUserAttention = agentMessageNeedsAttention(message);
+    const kind = needsUserAttention ? "attention" : "completion";
+    // A kind this phone turned off: newer desktops do not push it at all;
+    // an older desktop's push must still show something (Web Push requires a
+    // visible notification), so it is shown without sound or vibration.
+    const kindMuted = !workerWantsAgentKind(pair, kind);
+    const delayMs = agentReminderDelay(message);
+    // A reminder that arrives long after it was sent says so and stays quiet
+    // instead of ringing as if it were new.
+    const late = delayMs !== null && delayMs > lateReminderMs;
+    const quiet = kindMuted || late;
     // With several paired computers the notification must say which one.
     const title = withComputerName(
       systemAgentNotificationTitle(message),
       pair.hostName,
     );
     const vibrate =
-      pair.vibrationEnabled !== false && message.vibrate !== false;
+      !quiet && pair.vibrationEnabled !== false && message.vibrate !== false;
     const notificationBrandIcon = new URL(
       "../assets/dingdong-pwa-192.png",
       self.registration.scope,
     ).href;
+    const body = systemAgentNotificationBody(message);
     const options = {
-      body: systemAgentNotificationBody(message),
+      body: late
+        ? `延迟 ${reminderDelayText(delayMs)}送达 · ${body}`
+        : kindMuted
+          ? `已按你的设置静音 · ${body}`
+          : body,
       icon: notificationBrandIcon,
       badge: notificationBrandIcon,
       tag: notificationKey,
-      renotify: true,
+      renotify: !quiet,
+      silent: quiet,
       timestamp: notificationTimestamp(message.completedAt),
       actions: [
         {
@@ -557,20 +582,88 @@ function withComputerName(title, hostName) {
   return `${title} · ${name}`;
 }
 
+// Same composition as notification-policy.js agentNotificationBody: what the
+// Agent needs first, then its whole message and the task. Android shows the
+// first line collapsed and the rest when the notification is expanded.
 function systemAgentNotificationBody(message) {
+  const attention = agentMessageNeedsAttention(message);
+  const text = paragraphNotificationText(message?.detail || message?.summary);
+  const lead =
+    (attention && requestNotificationLine(text)) ||
+    firstNotificationLine(message?.summary || text) ||
+    normalizedNotificationText(message?.task) ||
+    (attention ? "请打开 Agent 提醒查看并继续处理。" : "本轮任务已经完成。");
+  const parts = [lead];
+  if (text && normalizedNotificationText(text) !== lead) parts.push(text);
   const task = normalizedNotificationText(message?.task);
-  const detail = normalizedNotificationText(
-    message?.detail || message?.summary,
+  if (task && task !== normalizedNotificationText(text) && task !== lead) {
+    parts.push(`任务：${clipNotificationText(task, 400)}`);
+  }
+  return clipNotificationText(parts.join("\n\n"), 1500);
+}
+
+const requestNotificationPattern =
+  /(?:^|[，。；！？、,.;!?:：\s🟥])请(?![求假他她它])|需要你|需要您|等你|要你|[?？]$|please |need your|needs your|waiting for you/iu;
+
+function requestNotificationLine(text) {
+  for (const line of text.split("\n")) {
+    const value = normalizedNotificationText(line);
+    if (value && requestNotificationPattern.test(value)) return value;
+  }
+  return "";
+}
+
+function firstNotificationLine(text) {
+  for (const line of String(text || "").split("\n")) {
+    const value = normalizedNotificationText(line);
+    if (value) return value;
+  }
+  return "";
+}
+
+function paragraphNotificationText(value) {
+  return typeof value === "string"
+    ? value
+        .replace(/\r/g, "")
+        .split("\n")
+        .map((line) => line.replace(/[ \t]+/g, " ").trim())
+        .join("\n")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim()
+    : "";
+}
+
+function clipNotificationText(value, maximum) {
+  const characters = Array.from(value);
+  return characters.length > maximum
+    ? `${characters.slice(0, maximum - 1).join("")}…`
+    : value;
+}
+
+const lateReminderMs = 10 * 60 * 1000;
+
+function agentReminderDelay(message) {
+  const from = Math.min(
+    ...[message?.sentAt, message?.completedAt]
+      .map((value) => new Date(value || 0).getTime())
+      .filter((value) => Number.isFinite(value) && value > 0),
   );
-  const fallback = agentMessageNeedsAttention(message)
-    ? "请打开 Agent 提醒查看并继续处理。"
-    : "本轮任务已经完成。";
-  const body =
-    task && detail && task !== detail ? `${task}：${detail}` : detail || task || fallback;
-  const characters = Array.from(body);
-  return characters.length > 260
-    ? `${characters.slice(0, 259).join("")}…`
-    : body;
+  if (!Number.isFinite(from)) return null;
+  return Math.max(0, Date.now() - from);
+}
+
+function reminderDelayText(milliseconds) {
+  const minutes = Math.floor(milliseconds / 60000);
+  if (minutes < 60) return `${minutes} 分钟`;
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return rest === 0 ? `${hours} 小时` : `${hours} 小时 ${rest} 分`;
+}
+
+function workerWantsAgentKind(pair, kind) {
+  return Array.isArray(pair?.agentNotificationKinds)
+    ? pair.agentNotificationKinds.includes(kind)
+    : true;
 }
 
 function normalizedNotificationText(value) {

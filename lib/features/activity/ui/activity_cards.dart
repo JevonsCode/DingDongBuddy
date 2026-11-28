@@ -115,6 +115,14 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
     vsync: this,
     duration: const Duration(milliseconds: 340),
   );
+  bool _expanded = false;
+
+  /// The Agent's whole reply when the one-line summary leaves part of it out.
+  String? get _fullMessage {
+    final String? detail = widget.activity.detail?.trim();
+    if (detail == null || detail.isEmpty) return null;
+    return detail == widget.activity.message.trim() ? null : detail;
+  }
 
   @override
   void initState() {
@@ -269,16 +277,54 @@ class _AgentActivityCardState extends State<_AgentActivityCard>
                             ],
                           ),
                           const SizedBox(height: 3),
-                          Text(
-                            widget.activity.message,
-                            key: Key('activity-message-${widget.activity.id}'),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: PopupStyle.of(context).textSecondary,
-                              fontSize: 10,
-                            ),
+                          Row(
+                            children: <Widget>[
+                              Expanded(
+                                child: Text(
+                                  widget.activity.message,
+                                  key: Key(
+                                    'activity-message-${widget.activity.id}',
+                                  ),
+                                  maxLines: _expanded ? null : 1,
+                                  overflow: _expanded
+                                      ? TextOverflow.visible
+                                      : TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: PopupStyle.of(context).textSecondary,
+                                    fontSize: 10,
+                                  ),
+                                ),
+                              ),
+                              if (_fullMessage != null)
+                                _ActivityExpandButton(
+                                  key: Key(
+                                    'activity-expand-${widget.activity.id}',
+                                  ),
+                                  expanded: _expanded,
+                                  onPressed: () =>
+                                      setState(() => _expanded = !_expanded),
+                                ),
+                            ],
                           ),
+                          if (_expanded && _fullMessage != null) ...<Widget>[
+                            const SizedBox(height: 5),
+                            ConstrainedBox(
+                              constraints: const BoxConstraints(maxHeight: 180),
+                              child: SingleChildScrollView(
+                                child: SelectableText(
+                                  _fullMessage!,
+                                  key: Key(
+                                    'activity-full-message-${widget.activity.id}',
+                                  ),
+                                  style: TextStyle(
+                                    color: PopupStyle.of(context).textPrimary,
+                                    fontSize: 10,
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -561,4 +607,48 @@ class _MetricCardBadge {
   final String label;
   final String semanticLabel;
   final _MetricCardBadgeTone tone;
+}
+
+/// Expands an Agent reminder card to the whole reply, so a reminder that
+/// needs the user says what to do without opening the conversation.
+class _ActivityExpandButton extends StatelessWidget {
+  const _ActivityExpandButton({
+    required this.expanded,
+    required this.onPressed,
+    super.key,
+  });
+
+  final bool expanded;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final String label = expanded
+        ? context.l10n.activityHideFullMessage
+        : context.l10n.activityShowFullMessage;
+    return Tooltip(
+      message: label,
+      child: Semantics(
+        button: true,
+        label: label,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onPressed,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 4),
+              child: Icon(
+                expanded
+                    ? Icons.expand_less_rounded
+                    : Icons.expand_more_rounded,
+                size: 14,
+                color: PopupStyle.of(context).textTertiary,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

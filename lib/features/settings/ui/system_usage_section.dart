@@ -26,19 +26,21 @@ class SystemUsageSection extends StatelessWidget {
         SystemDataCategory.resourceLibrary,
         SystemDataCategory.configuration,
       ];
-  static const List<SystemDataCategory> _maintenanceCategories =
-      <SystemDataCategory>[
-        SystemDataCategory.agentActivity,
-        SystemDataCategory.adapterHistory,
-        SystemDataCategory.other,
-      ];
-
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: viewModel,
       builder: (BuildContext context, Widget? child) {
         final SystemUsageSnapshot? usage = viewModel.systemUsage;
+        final clipboardOnly = viewModel.settings.clipboardOnly;
+        final maintenanceCategories = [
+          if (!clipboardOnly) ...[
+            SystemDataCategory.agentActivity,
+            SystemDataCategory.adapterHistory,
+          ],
+          if ((usage?.bytesFor(SystemDataCategory.other) ?? 0) > 0)
+            SystemDataCategory.other,
+        ];
         return Padding(
           padding: const EdgeInsets.only(bottom: 32),
           child: Column(
@@ -88,13 +90,22 @@ class SystemUsageSection extends StatelessWidget {
               ),
               const SizedBox(height: 9),
               for (final SystemDataCategory category in _protectedCategories)
-                _StorageCategoryRow(category: category, usage: usage),
-              const SizedBox(height: 18),
-              _SectionTitle(title: context.l10n.maintenance),
-              const SizedBox(height: 9),
-              for (final SystemDataCategory category in _maintenanceCategories)
-                if (category != SystemDataCategory.other ||
-                    (usage?.bytesFor(category) ?? 0) > 0)
+                if (!clipboardOnly ||
+                    category != SystemDataCategory.resourceLibrary)
+                  _StorageCategoryRow(
+                    category: category,
+                    usage: usage,
+                    description:
+                        clipboardOnly &&
+                            category == SystemDataCategory.configuration
+                        ? context.l10n.clipboardOnlyConfigurationDescription
+                        : null,
+                  ),
+              if (maintenanceCategories.isNotEmpty) ...[
+                const SizedBox(height: 18),
+                _SectionTitle(title: context.l10n.maintenance),
+                const SizedBox(height: 9),
+                for (final SystemDataCategory category in maintenanceCategories)
                   _StorageCategoryRow(
                     category: category,
                     usage: usage,
@@ -106,6 +117,7 @@ class SystemUsageSection extends StatelessWidget {
                         ? () => _confirmAndClear(context, category)
                         : null,
                   ),
+              ],
             ],
           ),
         );
@@ -295,6 +307,7 @@ class _StorageCategoryRow extends StatelessWidget {
   const _StorageCategoryRow({
     required this.category,
     required this.usage,
+    this.description,
     this.enabled = false,
     this.onOpen,
     this.onClear,
@@ -302,6 +315,7 @@ class _StorageCategoryRow extends StatelessWidget {
 
   final SystemDataCategory category;
   final SystemUsageSnapshot? usage;
+  final String? description;
   final bool enabled;
   final VoidCallback? onOpen;
   final VoidCallback? onClear;
@@ -339,7 +353,8 @@ class _StorageCategoryRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  _descriptionWithCount(context, category, count),
+                  description ??
+                      _descriptionWithCount(context, category, count),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(

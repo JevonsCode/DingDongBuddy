@@ -12,6 +12,26 @@ void main() {
   group('Agent notification preferences', () {
     const DingRequest request = DingRequest(source: 'Codex');
 
+    test('clipboard-only mode skips all reminder side effects', () async {
+      var sideEffects = 0;
+      const settings = AppSettings(clipboardOnly: true);
+      for (final deduplicated in [false, true]) {
+        await deliverAgentNotification(
+          request: request,
+          settings: settings,
+          suppressNativeNotification: deduplicated,
+          isCodexVoiceNotification: (_) async {
+            sideEffects++;
+            return false;
+          },
+          nativeDelivery: (_) async => sideEffects++,
+          companionDelivery: (_) async => sideEffects++,
+          onFiltered: (_) async => sideEffects++,
+        );
+      }
+      expect(sideEffects, 0);
+    });
+
     test('suppresses a positively identified subagent by default', () async {
       expect(
         await shouldDeliverAgentNotification(
@@ -190,6 +210,36 @@ void main() {
       expect(filteredCalls, 1);
     });
 
+    test(
+      'a reminder that waited while DingDong was suspended arrives quietly',
+      () async {
+        final DingRequest waited = DingRequest.parse(
+          '{"source":"Codex","message":"需要你确认","notificationKind":"attention",'
+          '"createdAt":"2026-11-28T06:00:00Z"}',
+        ).copyWith(receivedAt: DateTime.utc(2026, 11, 28, 9, 12));
+        expect(waited.waitedFor, const Duration(hours: 3, minutes: 12));
+        expect(waited.isLate, isTrue);
+        expect(waited.occurredAt, DateTime.utc(2026, 11, 28, 6));
+        final List<DingSound> sounds = <DingSound>[];
+        DateTime? companionCreatedAt;
+        await deliverAgentNotification(
+          request: waited,
+          settings: const AppSettings(),
+          nativeDelivery: (DingRequest value) async => sounds.add(value.sound),
+          companionDelivery: (DingRequest value) async =>
+              companionCreatedAt = value.createdAt,
+        );
+        expect(sounds, <DingSound>[DingSound.muted]);
+        expect(companionCreatedAt, DateTime.utc(2026, 11, 28, 6));
+
+        final DingRequest fresh = DingRequest.parse(
+          '{"source":"Codex","createdAt":"2026-11-28T09:11:58Z"}',
+        ).copyWith(receivedAt: DateTime.utc(2026, 11, 28, 9, 12));
+        expect(fresh.isLate, isFalse);
+        expect(fresh.occurredAt, DateTime.utc(2026, 11, 28, 9, 12));
+      },
+    );
+
     test('opt-in resolves sound and reaches both delivery routes', () async {
       final List<DingSound> nativeSounds = <DingSound>[];
       final List<DingSound> companionSounds = <DingSound>[];
@@ -256,6 +306,16 @@ void main() {
       conversationId: 'subagent-thread',
       workspacePath: '/workspace/dingdong',
     );
+
+    test('clipboard-only mode ignores task starts', () async {
+      expect(
+        await shouldRecordAgentTaskStart(
+          start: start,
+          settings: const AppSettings(clipboardOnly: true),
+        ),
+        isFalse,
+      );
+    });
 
     test('suppresses an identified subagent run by default', () async {
       expect(

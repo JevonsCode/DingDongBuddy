@@ -74,6 +74,7 @@ enum DefaultWorkspace {
 /// User-editable settings with bounded, release-ready defaults.
 final class AppSettings {
   const AppSettings({
+    this.clipboardOnly = false,
     this.clipboardMonitoring = false,
     this.language = AppLanguagePreference.system,
     this.themeMode = AppThemePreference.light,
@@ -109,6 +110,7 @@ final class AppSettings {
     this.selectionPlugin = const SelectionPluginConfiguration(),
   });
 
+  final bool clipboardOnly;
   final bool clipboardMonitoring;
   final AppLanguagePreference language;
   final AppThemePreference themeMode;
@@ -144,6 +146,10 @@ final class AppSettings {
   final int agentSetupAcknowledgedRevision;
   final int apiPort;
   final SelectionPluginConfiguration selectionPlugin;
+
+  SelectionPluginConfiguration get effectiveSelectionPlugin => clipboardOnly
+      ? selectionPlugin.copyWith(enabled: false)
+      : selectionPlugin;
 
   /// Legacy settings stay authoritative for the two built-ins, so upgrades
   /// and older integrations preserve existing preferences without duplication.
@@ -273,6 +279,7 @@ final class AppSettings {
 
   AppSettings sanitized() {
     return AppSettings(
+      clipboardOnly: clipboardOnly,
       clipboardMonitoring: clipboardMonitoring,
       language: language,
       themeMode: themeMode,
@@ -314,6 +321,7 @@ final class AppSettings {
   }
 
   AppSettings copyWith({
+    bool? clipboardOnly,
     bool? clipboardMonitoring,
     AppLanguagePreference? language,
     AppThemePreference? themeMode,
@@ -349,6 +357,7 @@ final class AppSettings {
     SelectionPluginConfiguration? selectionPlugin,
   }) {
     return AppSettings(
+      clipboardOnly: clipboardOnly ?? this.clipboardOnly,
       clipboardMonitoring: clipboardMonitoring ?? this.clipboardMonitoring,
       language: language ?? this.language,
       themeMode: themeMode ?? this.themeMode,

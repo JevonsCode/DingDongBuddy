@@ -758,8 +758,8 @@
   "@choose": {
     "description": "DingDong built-in interface copy."
   },
-  "chooseHowDingDongBehavesWhenYouSignIn": "Choose how DingDong behaves when you sign in.",
-  "@chooseHowDingDongBehavesWhenYouSignIn": {
+  "generalSettingsDescription": "Choose how you use DingDong and whether it starts at sign-in.",
+  "@generalSettingsDescription": {
     "description": "DingDong built-in interface copy."
   },
   "chooseRules": "Choose rules",
@@ -4721,7 +4721,7 @@
   "resumeTransfer": "Resume",
   "cancelTransfer": "Cancel",
   "fileTransferStatus": "{state, select, preparing{Preparing} transferring{Transferring} verifying{Confirming file} waiting{Waiting to reconnect} paused{Paused} failed{Transfer incomplete} completed{Transfer complete} cancelled{Cancelled} sent{Sent} other{Preparing}}",
-  "fileTransferIssue": "{code, select, waiting_lan{Waiting for a local network connection. Progress is saved.} connection_lost{Connection lost. Resumes when reconnected.} source_changed{The source file changed. Select it again.} storage_error{Cannot write the file. Check available storage.} storage_unsupported{This browser cannot store large files locally.} checksum_failed{File verification failed. Try again.} too_many_transfers{Wait for another transfer to finish.} restart_required{The receiving device lost its progress. Send again.} invalid_offset{Transfer progress does not match. Send again.} other{Transfer incomplete. Try again.}}",
+  "fileTransferIssue": "{code, select, waiting_lan{Waiting for a local network connection. Progress is saved.} connection_lost{Connection lost. Resumes when reconnected.} source_changed{The source file changed. Select it again.} storage_error{Cannot write the file. Check available storage.} storage_unsupported{This browser cannot store large files locally.} checksum_failed{File verification failed. Try again.} too_many_transfers{Wait for another transfer to finish.} restart_required{The receiving device lost its progress. Send again.} invalid_offset{Transfer progress does not match. Send again.} item_unavailable{The other computer only shares the clipboard right now and cannot receive resources.} other{Transfer incomplete. Try again.}}",
   "@transferSendingTo": {
     "placeholders": {
       "device": {
@@ -6333,5 +6333,33 @@
   "libraryInstallOnlineSources": "Selected online resources are downloaded from the sources shown.",
   "@libraryInstallOnlineSources": {
     "description": "Resource Manager window and bundle sharing controls"
+  },
+  "clipboardOnlyMode": "Clipboard-only mode",
+  "@clipboardOnlyMode": {
+    "description": "Name of the clipboard-only application mode"
+  },
+  "clipboardOnlyModeDescription": "Pause AI notifications and keep clipboard history, quick paste, and device sharing. Turn this off to restore your AI settings.",
+  "@clipboardOnlyModeDescription": {
+    "description": "Description of the reversible clipboard-only mode"
+  },
+  "clipboardOnlyHistoryDescription": "Clipboard history stays on this device.",
+  "@clipboardOnlyHistoryDescription": {
+    "description": "Privacy description for local clipboard history"
+  },
+  "clipboardOnlyShortcutDescription": "Choose a system-wide shortcut to open the clipboard.",
+  "@clipboardOnlyShortcutDescription": {
+    "description": "Description of the global clipboard shortcut"
+  },
+  "clipboardOnlyConfigurationDescription": "Clipboard rules and application preferences",
+  "@clipboardOnlyConfigurationDescription": {
+    "description": "Description of protected settings storage in clipboard-only mode"
+  },
+  "activityShowFullMessage": "Show the full message",
+  "@activityShowFullMessage": {
+    "description": "Tooltip on the button that expands an Agent reminder card to its full text."
+  },
+  "activityHideFullMessage": "Hide the full message",
+  "@activityHideFullMessage": {
+    "description": "Tooltip on the button that collapses an expanded Agent reminder card."
   }
 }

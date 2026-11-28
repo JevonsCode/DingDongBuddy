@@ -626,8 +626,8 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   String get choose => 'Elegir';
 
   @override
-  String get chooseHowDingDongBehavesWhenYouSignIn =>
-      'Elija cómo se comporta DingDong cuando inicia sesión.';
+  String get generalSettingsDescription =>
+      'Elige cómo usar DingDong y si quieres que se abra al iniciar sesión.';
 
   @override
   String get chooseRules => 'Elige reglas';
@@ -3772,6 +3772,8 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
       'too_many_transfers': 'Espera a que termine otra transferencia.',
       'restart_required': 'Se perdió el progreso del receptor. Envía de nuevo.',
       'invalid_offset': 'El progreso no coincide. Envía de nuevo.',
+      'item_unavailable':
+          'El otro equipo solo comparte el portapapeles ahora y no puede recibir recursos.',
       'other': 'Transferencia incompleta. Inténtalo de nuevo.',
     });
     return '$_temp0';
@@ -5063,4 +5065,29 @@ class DingDongLocalizationsEs extends DingDongLocalizations {
   @override
   String get libraryInstallOnlineSources =>
       'Los recursos en línea seleccionados se descargan de las fuentes indicadas.';
+
+  @override
+  String get clipboardOnlyMode => 'Modo de solo portapapeles';
+
+  @override
+  String get clipboardOnlyModeDescription =>
+      'Pausa los avisos de IA y conserva el historial del portapapeles, el pegado rápido y el envío entre dispositivos. Desactiva este modo para recuperar tus ajustes de IA.';
+
+  @override
+  String get clipboardOnlyHistoryDescription =>
+      'El historial del portapapeles se guarda en este dispositivo.';
+
+  @override
+  String get clipboardOnlyShortcutDescription =>
+      'Elige un atajo global para abrir el portapapeles.';
+
+  @override
+  String get clipboardOnlyConfigurationDescription =>
+      'Reglas del portapapeles y preferencias de la aplicación';
+
+  @override
+  String get activityShowFullMessage => 'Mostrar el mensaje completo';
+
+  @override
+  String get activityHideFullMessage => 'Ocultar el mensaje completo';
 }

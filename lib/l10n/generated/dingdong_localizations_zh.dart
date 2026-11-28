@@ -579,7 +579,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
   String get choose => '选择';
 
   @override
-  String get chooseHowDingDongBehavesWhenYouSignIn => '选择登录系统后 DingDong 的运行方式。';
+  String get generalSettingsDescription => '选择使用模式，以及是否在登录时启动 DingDong。';
 
   @override
   String get chooseRules => '选择规则';
@@ -3588,6 +3588,7 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
       'too_many_transfers': '请等待其他文件完成',
       'restart_required': '接收端进度已清除，请重新发送',
       'invalid_offset': '传输进度不一致，请重新发送',
+      'item_unavailable': '对方电脑当前为仅剪贴板模式，无法接收资源',
       'other': '传输未完成，请重试',
     });
     return '$_temp0';
@@ -4794,4 +4795,26 @@ class DingDongLocalizationsZh extends DingDongLocalizations {
 
   @override
   String get libraryInstallOnlineSources => '选中的在线资源将从列表所示来源下载。';
+
+  @override
+  String get clipboardOnlyMode => '仅剪贴板模式';
+
+  @override
+  String get clipboardOnlyModeDescription =>
+      '暂停 AI 提醒，保留剪贴板历史、快捷粘贴和设备分享。关闭后恢复原有 AI 设置。';
+
+  @override
+  String get clipboardOnlyHistoryDescription => '剪贴板历史保存在此设备上。';
+
+  @override
+  String get clipboardOnlyShortcutDescription => '设置打开剪贴板的全局快捷键。';
+
+  @override
+  String get clipboardOnlyConfigurationDescription => '剪贴板规则与应用偏好设置';
+
+  @override
+  String get activityShowFullMessage => '展开全文';
+
+  @override
+  String get activityHideFullMessage => '收起全文';
 }

@@ -7,6 +7,8 @@ import webPush from "web-push";
 import {
   createWebPushRequest,
   isValidPushRegistration,
+  pushTopic,
+  pushTtl,
   isValidRoom,
   RelayRoom,
   secureAssetResponse,
@@ -16,7 +18,7 @@ import worker from "../src/worker.js";
 const workerSource = readFileSync(new URL("../src/worker.js", import.meta.url), "utf8");
 
 test("relay room ids are opaque and bounded", () => {
-  assert.match(workerSource, /const serviceVersion = "1.11.19"/);
+  assert.match(workerSource, /const serviceVersion = "1.12.0-beta.1"/);
   assert.match(workerSource, /releaseSha: env\.DINGDONG_RELEASE_SHA \|\| null/);
   assert.equal(isValidRoom("Abcd_1234-efgh5678-IJKL"), true);
   assert.equal(isValidRoom("short"), false);
@@ -174,6 +176,69 @@ test("background notifications use modern Web Push with high urgency", () => {
   assert.equal(request.request.headers.get("ttl"), "86400");
   assert.match(request.request.headers.get("authorization"), /^vapid t=/i);
   assert.ok(request.request.body.byteLength < 4096);
+});
+
+test("senders can shorten the push lifetime and collapse by topic", async () => {
+  assert.equal(pushTtl(undefined), 86400);
+  assert.equal(pushTtl(3600), 3600);
+  assert.equal(pushTtl(5), 60);
+  assert.equal(pushTtl(10 ** 9), 86400);
+  assert.equal(pushTtl("3600"), 86400);
+  assert.equal(await pushTopic(undefined), null);
+  assert.equal(await pushTopic("x".repeat(201)), null);
+  const topic = await pushTopic("activity-1:attention");
+  assert.match(topic, /^[A-Za-z0-9_-]{32}$/);
+  assert.equal(await pushTopic("activity-1:attention"), topic);
+  assert.notEqual(await pushTopic("activity-1:completion"), topic);
+  assert.doesNotMatch(topic, /activity/);
+
+  const subscriber = createECDH("prime256v1");
+  subscriber.generateKeys();
+  const vapid = webPush.generateVAPIDKeys();
+  const request = createWebPushRequest(
+    {
+      endpoint: "https://fcm.googleapis.com/fcm/send/dingdong-test",
+      keys: {
+        p256dh: subscriber.getPublicKey().toString("base64url"),
+        auth: randomBytes(16).toString("base64url"),
+      },
+    },
+    { envelope: "x", messageId: "m", room: "Abcd_1234-efgh5678-IJKL" },
+    {
+      subject: "mailto:dingdong@example.com",
+      publicKey: vapid.publicKey,
+      privateKey: vapid.privateKey,
+    },
+    { ttlSeconds: 3600, topic },
+  );
+  assert.equal(request.request.headers.get("ttl"), "3600");
+  assert.equal(request.request.headers.get("topic"), topic);
+});
+
+test("rooms answer heartbeat pings without forwarding them", async () => {
+  const pairs = [];
+  globalThis.WebSocketRequestResponsePair = class {
+    constructor(request, response) {
+      this.request = request;
+      this.response = response;
+    }
+  };
+  try {
+    new RelayRoom(
+      { setWebSocketAutoResponse: (pair) => pairs.push(pair) },
+      {},
+    );
+  } finally {
+    delete globalThis.WebSocketRequestResponsePair;
+  }
+  assert.deepEqual(
+    pairs.map((pair) => [pair.request, pair.response]),
+    [["ping", "pong"]],
+  );
+  const config = await worker.fetch(new Request("https://relay.example/v1/config"), {});
+  assert.deepEqual((await config.json()).heartbeat, { request: "ping", response: "pong" });
+  // A runtime without auto-response still constructs rooms.
+  new RelayRoom({}, {});
 });
 
 test("push status distinguishes provider acceptance from device display", () => {

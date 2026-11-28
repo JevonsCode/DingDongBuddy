@@ -109,6 +109,8 @@ class _Transfers extends ChangeNotifier
     implements DeviceLinkManagement, FileTransferManagement {
   String? lastControl;
   @override
+  bool get clipboardOnly => false;
+  @override
   List<LinkedDevice> get devices => [];
   @override
   final List<FileTransfer> fileTransfers = [

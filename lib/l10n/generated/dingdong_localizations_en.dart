@@ -617,8 +617,8 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   String get choose => 'Choose';
 
   @override
-  String get chooseHowDingDongBehavesWhenYouSignIn =>
-      'Choose how DingDong behaves when you sign in.';
+  String get generalSettingsDescription =>
+      'Choose how you use DingDong and whether it starts at sign-in.';
 
   @override
   String get chooseRules => 'Choose rules';
@@ -3726,6 +3726,8 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
       'too_many_transfers': 'Wait for another transfer to finish.',
       'restart_required': 'The receiving device lost its progress. Send again.',
       'invalid_offset': 'Transfer progress does not match. Send again.',
+      'item_unavailable':
+          'The other computer only shares the clipboard right now and cannot receive resources.',
       'other': 'Transfer incomplete. Try again.',
     });
     return '$_temp0';
@@ -5004,4 +5006,29 @@ class DingDongLocalizationsEn extends DingDongLocalizations {
   @override
   String get libraryInstallOnlineSources =>
       'Selected online resources are downloaded from the sources shown.';
+
+  @override
+  String get clipboardOnlyMode => 'Clipboard-only mode';
+
+  @override
+  String get clipboardOnlyModeDescription =>
+      'Pause AI notifications and keep clipboard history, quick paste, and device sharing. Turn this off to restore your AI settings.';
+
+  @override
+  String get clipboardOnlyHistoryDescription =>
+      'Clipboard history stays on this device.';
+
+  @override
+  String get clipboardOnlyShortcutDescription =>
+      'Choose a system-wide shortcut to open the clipboard.';
+
+  @override
+  String get clipboardOnlyConfigurationDescription =>
+      'Clipboard rules and application preferences';
+
+  @override
+  String get activityShowFullMessage => 'Show the full message';
+
+  @override
+  String get activityHideFullMessage => 'Hide the full message';
 }

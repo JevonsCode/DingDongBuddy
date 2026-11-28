@@ -66,6 +66,7 @@ final class SettingsRepository {
       _backend.read(_notificationRulesKey),
       _backend.read(_allowBetaUpdatesKey),
       _backend.read(_notchBubbleDirectionKey),
+      _backend.read(_clipboardOnlyKey),
     ]);
     final bool mcpAccessSeen = values[11] is bool ? values[11]! as bool : false;
     final int agentSetupAcknowledgedRevision =
@@ -91,6 +92,7 @@ final class SettingsRepository {
       ]);
     }
     return AppSettings(
+      clipboardOnly: values[39] == true,
       clipboardMonitoring: values[0] is bool ? values[0]! as bool : false,
       language: AppLanguagePreference.parse(values[1]),
       themeMode: AppThemePreference.parse(values[2]),
@@ -152,9 +154,14 @@ final class SettingsRepository {
     ).sanitized();
   }
 
-  Future<void> save(AppSettings value) async {
+  Future<void> save(
+    AppSettings value, {
+    bool includeClipboardMode = true,
+  }) async {
     final AppSettings settings = value.sanitized();
     await Future.wait(<Future<void>>[
+      if (includeClipboardMode)
+        _backend.write(_clipboardOnlyKey, settings.clipboardOnly),
       _backend.write(_monitoringKey, settings.clipboardMonitoring),
       settings.language.storageValue == null
           ? _backend.remove(_languageKey)
@@ -266,6 +273,7 @@ final class SettingsRepository {
   }
 }
 
+const String _clipboardOnlyKey = 'dingdong.mode.clipboardOnly';
 const String _monitoringKey = 'dingdong.clipboard.monitoring';
 const String _languageKey = 'dingdong.language';
 const String _themeKey = 'dingdong.panel.themeMode';

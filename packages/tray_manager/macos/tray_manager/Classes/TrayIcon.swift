@@ -765,8 +765,13 @@ public class TrayIcon: NSView {
               !(notchPreview.isPreview && notchPreview.isVisible) else { return }
         if pointerIsOverNotchOrBubble(point) {
             cancelNotchClose()
-            if !notchPreview.isVisible { showNotchBubble() }
-            else { notchPreview.keepOpen() }
+            if !notchPreview.isVisible {
+                // The bubble stands in for a menu bar icon the notch hides.
+                // While the icon is visible in the menu bar, hovering the
+                // notch must not open a second DingDong.
+                guard obscuredNotch() != nil else { return }
+                showNotchBubble()
+            } else { notchPreview.keepOpen() }
         } else if !notchReminderPinned && notchPreview.isVisible {
             scheduleNotchClose()
         }

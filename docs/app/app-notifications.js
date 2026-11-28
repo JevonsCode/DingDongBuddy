@@ -1,12 +1,14 @@
 import {
+  agentNotificationKindNames,
   agentNotificationsAreActive,
+  wantsAgentKind,
   wantsAgentNotifications,
-} from "./notification-policy.js?shell=77";
+} from "./notification-policy.js?shell=78";
 import {
   pairingForRoom,
   pairingsMatch,
   shouldSkipPairingCleanup,
-} from "./pairing-state.js?shell=77";
+} from "./pairing-state.js?shell=78";
 import {
   apiUrl,
   base64UrlDecode,
@@ -15,8 +17,8 @@ import {
   pushToken,
   sealEnvelope,
   withTimeout,
-} from "./app-codecs.js?shell=77";
-import { idbDelete } from "./app-storage.js?shell=77";
+} from "./app-codecs.js?shell=78";
+import { idbDelete } from "./app-storage.js?shell=78";
 
 // Notification permission, Web Push registration, delivery checks, and help UI.
 export function createAgentNotificationController({
@@ -177,6 +179,33 @@ export function createAgentNotificationController({
               ? "未生效 · 系统已阻止通知"
               : "未生效 · 点“开启”并允许通知"
           : "已关闭";
+    for (const kind of agentNotificationKindNames) {
+      const toggle = elements[`${kind}-kind-toggle`];
+      const status = elements[`${kind}-kind-status`];
+      if (!toggle || !status) continue;
+      const wanted = wantsAgentKind(session.pair, kind);
+      toggle.checked = wanted;
+      toggle.disabled = !desired || permissionChecking;
+      status.textContent = agentKindStatus(session, kind, wanted, desired);
+    }
+  }
+
+  // One line per reminder kind that says whether it will actually ring here.
+  function agentKindStatus(session, kind, wanted, desired) {
+    const hostName = session.pair.hostName || "这台电脑";
+    if (!desired) return "Agent 状态提醒已关闭";
+    if (!wanted) return "已关闭 · 列表照常更新，不弹通知";
+    const delivery = session.agentDelivery;
+    if (delivery?.clipboardOnly) {
+      return `${hostName} 处于仅剪贴板模式，不发送 Agent 提醒`;
+    }
+    if (delivery && delivery[kind] === false) {
+      return `${hostName} 未推送此类提醒，可在电脑端提醒设置中打开`;
+    }
+    if (!agentNotificationsActive(session)) return "等待通知开启";
+    return kind === "attention"
+      ? "开启 · Agent 等你确认或回答时提醒"
+      : "开启 · Agent 完成一轮任务时提醒";
   }
 
 

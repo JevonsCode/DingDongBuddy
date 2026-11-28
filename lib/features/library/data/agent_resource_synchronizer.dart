@@ -126,6 +126,7 @@ final class AgentResourceSynchronizer {
     String? homeDirectory,
     CodexProjectHookInventory? projectHookInventory,
     bool sandbox = false,
+    bool preloadAdapterTargets = true,
   }) async {
     if (sandbox) {
       final Directory stateRoot = Directory(
@@ -165,6 +166,7 @@ final class AgentResourceSynchronizer {
             ),
           ),
     );
+    if (!preloadAdapterTargets) return synchronizer;
     try {
       await synchronizer._reloadAdapterTargets();
     } on FormatException {

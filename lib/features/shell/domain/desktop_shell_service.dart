@@ -57,12 +57,17 @@ final class DesktopShellService {
       case DesktopShellCommand.openApplication:
         _refreshLibrary();
         _selectPrimaryWorkspace();
-        await gateway.showAndFocus(acknowledgeUnread: true);
+        await gateway.showAndFocus(
+          acknowledgeUnread: !controller.clipboardOnly,
+        );
       case DesktopShellCommand.openTray:
         _refreshLibrary();
         _selectPrimaryWorkspace();
-        await gateway.toggleAndFocus(acknowledgeUnread: true);
+        await gateway.toggleAndFocus(
+          acknowledgeUnread: !controller.clipboardOnly,
+        );
       case DesktopShellCommand.showToday:
+        if (controller.clipboardOnly) return;
         _refreshLibrary();
         controller.open(0);
         await gateway.showAndFocus();
@@ -114,12 +119,14 @@ final class DesktopShellService {
   }
 
   void _selectPrimaryWorkspace() {
-    if (activityController.unseenCount > 0) {
+    if (!controller.clipboardOnly && activityController.unseenCount > 0) {
       controller.open(0);
       activityController.requestReveal();
       return;
     }
-    final int workspace = defaultWorkspaceIndex();
+    final int workspace = controller.clipboardOnly
+        ? 2
+        : defaultWorkspaceIndex();
     controller.open(workspace);
     if (workspace == 2) {
       _refreshClipboard();
@@ -131,6 +138,6 @@ final class DesktopShellService {
   }
 
   void _refreshLibrary() {
-    controller.requestLibraryRefresh();
+    if (!controller.clipboardOnly) controller.requestLibraryRefresh();
   }
 }

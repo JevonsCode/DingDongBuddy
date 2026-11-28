@@ -57,6 +57,44 @@ final class ComputerView {
   List<Map<String, Object?>> get events => _list('events');
   int get unseenCount =>
       events.where((Map<String, Object?> e) => e['unseen'] != false).length;
+
+  DateTime? get lastMessageAt =>
+      DateTime.tryParse(json['lastMessageAt'] as String? ?? '')?.toLocal();
+  DateTime? get lastReminderAt =>
+      DateTime.tryParse(json['lastReminderAt'] as String? ?? '')?.toLocal();
+  Duration? get lastReminderDelay => json['lastReminderDelayMs'] is int
+      ? Duration(milliseconds: json['lastReminderDelayMs']! as int)
+      : null;
+
+  /// Whether this computer pushes [kind] ("completion" / "attention") to
+  /// phones, or null when an older desktop did not say.
+  bool? computerSends(String kind) {
+    final Object? delivery = json['agentDelivery'];
+    if (delivery is! Map) return null;
+    return delivery[kind] != false;
+  }
+
+  bool get computerClipboardOnly {
+    final Object? delivery = json['agentDelivery'];
+    return delivery is Map && delivery['clipboardOnly'] == true;
+  }
+}
+
+/// Android's state for one reminder channel.
+final class ChannelState {
+  const ChannelState({required this.blocked, required this.sound});
+
+  static const ChannelState unknown = ChannelState(blocked: false, sound: true);
+
+  final bool blocked;
+  final bool sound;
+
+  static ChannelState parse(Object? value) => value is Map
+      ? ChannelState(
+          blocked: value['blocked'] == true,
+          sound: value['sound'] != false,
+        )
+      : unknown;
 }
 
 /// UI-side half of the companion. The service isolate owns all state; this
@@ -80,6 +118,9 @@ final class CompanionController extends ChangeNotifier {
   bool notificationsGranted = true;
   bool batteryUnrestricted = true;
   bool isXiaomi = false;
+  bool serviceRunning = false;
+  ChannelState completionChannel = ChannelState.unknown;
+  ChannelState attentionChannel = ChannelState.unknown;
 
   final StreamController<String> _toasts = StreamController<String>.broadcast();
   final StreamController<void> _sent = StreamController<void>.broadcast();
@@ -140,6 +181,15 @@ final class CompanionController extends ChangeNotifier {
     batteryUnrestricted =
         await native.invokeMethod<bool>('isIgnoringBatteryOptimizations') ??
         true;
+    try {
+      final Map<Object?, Object?>? channels = await native
+          .invokeMethod<Map<Object?, Object?>>('notificationChannels');
+      completionChannel = ChannelState.parse(channels?['agent_completion_v2']);
+      attentionChannel = ChannelState.parse(channels?['agent_attention_v2']);
+    } on PlatformException {
+      // Older native side: treat channels as usable.
+    }
+    serviceRunning = await FlutterForegroundTask.isRunningService;
     notifyListeners();
   }
 

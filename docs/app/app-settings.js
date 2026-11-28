@@ -1,4 +1,7 @@
-import { wantsAgentNotifications } from "./notification-policy.js?shell=77";
+import {
+  agentNotificationKinds,
+  wantsAgentNotifications,
+} from "./notification-policy.js?shell=78";
 
 // Connected-device settings, capability diagnostics, and destructive actions.
 export function createDeviceSettingsController({
@@ -49,6 +52,7 @@ export function createDeviceSettingsController({
       {
         type: "settings.update",
         agentNotificationsEnabled: wantsAgentNotifications(session.pair),
+        agentNotificationKinds: agentNotificationKinds(session.pair),
         vibrationEnabled: session.pair.vibrationEnabled !== false,
       },
       currentSessionContext(session),
