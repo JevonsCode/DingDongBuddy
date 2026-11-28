@@ -7,6 +7,8 @@
 - Telling "needs you" apart from "finished" is more accurate, including blocked work and requests for a decision.
 - Phones reconnect right after a network change and replace connections that look open but no longer deliver.
 - On Macs with a notch, the DingDong bubble appears only when the menu bar hides the DingDong icon.
+- Reminder cards on phones use the colors chosen on the computer. In the Android app, each computer can have its own name, and the settings sheet keeps its close and action buttons in view.
+- The running list no longer keeps tasks whose turn ended without a stop signal.
 
 ---
 
@@ -19,6 +21,8 @@
 - 更准确地区分「需要你处理」和「已完成」，包括卡在权限、等你拍板等情况。
 - 手机切换网络后会立即重连，也会替换看起来在线、实际已收不到消息的连接。
 - 有刘海的 Mac 上，只有菜单栏放不下 DingDong 图标时才显示 DingDong 气泡。
+- 手机上的提醒卡片沿用电脑上设置的提醒颜色；Android App 可以给每台电脑设置备注，设置弹窗的关闭和底部按钮始终可见。
+- 「正在运行」不再长期显示已经结束、但没有收到结束信号的任务。
 
 ---
 
@@ -31,3 +35,5 @@
 - Distingue con más precisión «te necesita» de «terminado», incluido el trabajo bloqueado y las peticiones de decisión.
 - Los teléfonos se reconectan justo después de un cambio de red y sustituyen conexiones que parecen abiertas pero ya no entregan mensajes.
 - En los Mac con muesca, la burbuja de DingDong aparece solo cuando la barra de menús oculta el icono de DingDong.
+- Las tarjetas de aviso en el teléfono usan los colores elegidos en el equipo. En la app de Android, cada equipo puede tener su propio nombre y la hoja de ajustes mantiene visibles sus botones.
+- La lista de tareas en curso ya no conserva tareas cuyo turno terminó sin señal de fin.

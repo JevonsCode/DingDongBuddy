@@ -313,12 +313,15 @@ Future<T?> showDingDialog<T>(
   required String title,
   String? summary,
   required List<Widget> Function(BuildContext context) children,
+  List<Widget> Function(BuildContext context)? footer,
 }) {
   return showDialog<T>(
     context: context,
     barrierColor: const Color(0x611A1E21),
     builder: (BuildContext context) {
       final DingTokens t = DingTokens.of(context);
+      // The header (with its close button) and the footer actions stay in
+      // place; only the content between them scrolls.
       return Dialog(
         backgroundColor: t.surface,
         surfaceTintColor: Colors.transparent,
@@ -328,63 +331,87 @@ Future<T?> showDingDialog<T>(
         ),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 440),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(18),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                Container(
-                  padding: const EdgeInsets.only(bottom: 14),
-                  decoration: BoxDecoration(
-                    border: Border(bottom: BorderSide(color: t.border)),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            if (eyebrow != null) Eyebrow(eyebrow),
-                            const SizedBox(height: 3),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Container(
+                margin: const EdgeInsets.fromLTRB(18, 18, 18, 0),
+                padding: const EdgeInsets.only(bottom: 14),
+                decoration: BoxDecoration(
+                  border: Border(bottom: BorderSide(color: t.border)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          if (eyebrow != null) Eyebrow(eyebrow),
+                          const SizedBox(height: 3),
+                          Text(
+                            title,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 19,
+                              height: 1.25,
+                              letterSpacing: -0.35,
+                              fontWeight: FontWeight.w700,
+                              color: t.text,
+                            ),
+                          ),
+                          if (summary != null) ...<Widget>[
+                            const SizedBox(height: 5),
                             Text(
-                              title,
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
+                              summary,
                               style: TextStyle(
-                                fontSize: 19,
-                                height: 1.25,
-                                letterSpacing: -0.35,
-                                fontWeight: FontWeight.w700,
-                                color: t.text,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: t.textSecondary,
                               ),
                             ),
-                            if (summary != null) ...<Widget>[
-                              const SizedBox(height: 5),
-                              Text(
-                                summary,
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: t.textSecondary,
-                                ),
-                              ),
-                            ],
                           ],
-                        ),
+                        ],
                       ),
-                      DingIconButton(
-                        semanticLabel: '关闭',
-                        glyph: '×',
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                    ],
+                    ),
+                    DingIconButton(
+                      semanticLabel: '关闭',
+                      glyph: '×',
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+              ),
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.fromLTRB(
+                    18,
+                    0,
+                    18,
+                    footer == null ? 18 : 6,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: children(context),
                   ),
                 ),
-                ...children(context),
-              ],
-            ),
+              ),
+              if (footer != null)
+                Container(
+                  padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
+                  decoration: BoxDecoration(
+                    border: Border(top: BorderSide(color: t.border)),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: footer(context),
+                  ),
+                ),
+            ],
           ),
         ),
       );

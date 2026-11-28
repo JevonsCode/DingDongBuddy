@@ -25,7 +25,13 @@
   seconds and keeps receiving reminders.
 - Mac with a notch: with the DingDong icon visible in the menu bar, hovering
   the notch shows no bubble; with the icon hidden, the bubble appears.
-- Verify desktop version 1.12.0-beta.1, build 103, and PWA shell 78 in the
+- Android app: set a remark for a computer; the header, switcher and
+  notification titles use it. Open settings on a small screen: the close
+  button and the bottom actions stay in place while the rows scroll.
+- Reminder cards on the phone use the reminder colors shown on the desktop.
+- Interrupt an Agent turn (no Stop hook): its running entry disappears when
+  the session restarts or resumes, and after 12 hours at the latest.
+- Verify desktop version 1.12.0-beta.1, build 103, and PWA shell 79 in the
   published prerelease, the beta block of the update metadata, and an
   unchanged stable 1.11.19 latest release.
 

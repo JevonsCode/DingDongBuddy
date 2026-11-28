@@ -248,7 +248,7 @@ class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 DingBanner(
                   title: computer.replaced
                       ? '连接已转移到另一个设备'
-                      : '已断开“${computer.hostName}”',
+                      : '已断开“${computer.label}”',
                   body: computer.replaced
                       ? '同一次配对只能在一台手机或一个页面上使用。'
                       : '需要时点“重新连接”。',
@@ -431,14 +431,14 @@ class _Header extends StatelessWidget {
         : computer == null
         ? '未连接电脑'
         : computer.replaced
-        ? '${computer.hostName} · 已在其他地方连接'
+        ? '${computer.label} · 已在其他地方连接'
         : computer.connected
-        ? '${computer.hostName} · 在线'
+        ? '${computer.label} · 在线'
         : computer.manualDisconnect
-        ? '${computer.hostName} · 已断开'
+        ? '${computer.label} · 已断开'
         : computer.waitingForComputer
-        ? '${computer.hostName} · 等待电脑上线'
-        : '${computer.hostName} · 连接中';
+        ? '${computer.label} · 等待电脑上线'
+        : '${computer.label} · 连接中';
     final bool reconnecting =
         !controller.booting && computer != null && computer.reconnecting;
     return Container(
@@ -806,8 +806,8 @@ class _Composer extends StatelessWidget {
           const SizedBox(height: 7),
           Text(
             computer.connected
-                ? '发送到 ${computer.hostName}'
-                : '${computer.hostName} 未连接，连上后才能发送',
+                ? '发送到 ${computer.label}'
+                : '${computer.label} 未连接，连上后才能发送',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(

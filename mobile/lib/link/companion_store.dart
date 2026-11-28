@@ -16,6 +16,7 @@ final class PairingRecord {
     this.manualDisconnect = false,
     this.hostPlatform = '',
     this.lastSyncedAt,
+    this.remark = '',
   });
 
   final DevicePairingPayload payload;
@@ -27,6 +28,13 @@ final class PairingRecord {
   /// The computer's `Platform.operatingSystem` from `welcome`, e.g.
   /// "windows"; empty until the computer has said.
   String hostPlatform;
+
+  /// The user's own name for this computer on this phone ("家里的 Mac");
+  /// empty means the computer's own name is shown.
+  String remark;
+
+  /// What this phone calls the computer.
+  String get label => remark.isNotEmpty ? remark : hostName;
 
   /// Last time this phone heard from the computer. Reminders completed after
   /// it, while the phone was away, are summarised once on reconnect.
@@ -52,6 +60,7 @@ final class PairingRecord {
             ? value['hostPlatform']! as String
             : '',
         lastSyncedAt: DateTime.tryParse('${value['lastSyncedAt'] ?? ''}'),
+        remark: value['remark'] is String ? value['remark']! as String : '',
       );
     } on Object {
       return null;
@@ -67,6 +76,7 @@ final class PairingRecord {
     'hostPlatform': hostPlatform,
     if (lastSyncedAt != null)
       'lastSyncedAt': lastSyncedAt!.toUtc().toIso8601String(),
+    if (remark.isNotEmpty) 'remark': remark,
   };
 }
 

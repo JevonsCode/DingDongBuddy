@@ -19,10 +19,20 @@ final class ComputerView {
   String get hostName => json['hostName'] as String? ?? 'DingDong 电脑';
   String get hostPlatform => json['hostPlatform'] as String? ?? '';
 
-  /// "JARVIS · Windows", or just the name while the OS is unknown.
+  /// The user's name for this computer on this phone, or empty.
+  String get remark => json['remark'] as String? ?? '';
+
+  /// The remark when set, otherwise the computer's own name.
+  String get label => remark.isNotEmpty ? remark : hostName;
+
+  /// "JARVIS · Windows", or just the name while the OS is unknown. With a
+  /// remark: "家里的 Mac · JARVIS · Windows".
   String get displayName {
     final String platform = computerPlatformLabel(hostPlatform);
-    return platform.isEmpty ? hostName : '$hostName · $platform';
+    final String name = remark.isNotEmpty && remark != hostName
+        ? '$remark · $hostName'
+        : hostName;
+    return platform.isEmpty ? name : '$name · $platform';
   }
 
   String get state => json['state'] as String? ?? 'offline';

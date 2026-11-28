@@ -621,6 +621,8 @@ final class DeviceLinkController extends ChangeNotifier
         // compare it with their own receive time to report delivery delay.
         'sentAt': DateTime.now().toUtc().toIso8601String(),
         'vibrate': device.vibrationEnabled,
+        // The user's reminder colors, so phone cards match the desktop.
+        'reminderColors': agentReminderColorHexes(activity),
         // The phone keeps its list current but raises no system notification.
         if (!alert) 'silent': true,
         if (activity.conversationTarget?.workspacePath != null)

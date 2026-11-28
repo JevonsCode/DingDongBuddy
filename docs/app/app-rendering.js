@@ -1,8 +1,8 @@
-import { imageMimeType } from "./app-file-actions.js?shell=78";
+import { imageMimeType } from "./app-file-actions.js?shell=79";
 import {
   agentEventNeedsAttention,
   agentNotificationTitle,
-} from "./notification-policy.js?shell=78";
+} from "./notification-policy.js?shell=79";
 import {
   computerPlatformLabel,
   formatBytes,
@@ -12,7 +12,7 @@ import {
   iconForKind,
   kindLabel,
   validDate,
-} from "./app-formatters.js?shell=78";
+} from "./app-formatters.js?shell=79";
 
 // Feed rendering and direct UI interactions. Network and persistence stay injected.
 export function createAppRenderer({
@@ -463,18 +463,29 @@ export function createAppRenderer({
     const card = document.createElement("article");
     const needsUserAttention = agentEventNeedsAttention(event);
     card.className = `agent-card${event.unseen === false ? "" : " is-unseen"}${needsUserAttention ? " needs-attention" : ""}`;
+    // The reminder colors chosen on the computer outline the card, as on the
+    // desktop; several colors blend left to right.
+    const reminderColors = (Array.isArray(event.reminderColors) ? event.reminderColors : [])
+      .filter((value) => typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value))
+      .slice(0, 4);
+    if (reminderColors.length > 0) {
+      card.classList.add("has-reminder-color");
+      card.style.setProperty(
+        "--reminder-color",
+        reminderColors.length === 1
+          ? reminderColors[0]
+          : `linear-gradient(180deg, ${reminderColors.join(", ")})`,
+      );
+    }
     const header = document.createElement("div");
     header.className = "agent-card-header";
-    const mascot = document.createElement("img");
-    mascot.src = "../assets/dingdong-mobile-alert-icon-2.png";
-    mascot.alt = needsUserAttention ? "DingDong 等待你处理" : "DingDong 提醒";
     const heading = document.createElement("div");
     const title = document.createElement("strong");
     title.textContent = agentNotificationTitle(event);
     const meta = document.createElement("span");
     meta.textContent = `${event.source || "Agent"} · ${needsUserAttention ? "需要你处理" : "已完成"}`;
     heading.append(title, meta);
-    header.append(mascot, heading);
+    header.append(heading);
 
     const summary = document.createElement("p");
     summary.className = "agent-summary";

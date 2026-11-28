@@ -256,6 +256,7 @@ Future<void> main(List<String> arguments) async {
       );
     },
     onAgentConversationOpened: (AgentConversationTarget target) async {
+      activityController.clearRunForConversation(target);
       final int acknowledged = activityController.markConversationSeen(target);
       await shellGateway.acknowledgeUnreadCount(acknowledged);
       return acknowledged;

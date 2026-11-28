@@ -211,6 +211,7 @@ extension _DeviceLinkAgentSync on DeviceLinkController {
         'notificationKind': activity.notificationKind.apiValue,
         'needsUserAttention': activity.needsUserAttention,
         'unseen': activity.unseen,
+        'reminderColors': agentReminderColorHexes(activity),
         if (activity.task != null) 'task': _truncateUtf8(activity.task, 480),
         if (activity.startedAt != null)
           'startedAt': activity.startedAt!.toUtc().toIso8601String(),
@@ -239,6 +240,12 @@ extension _DeviceLinkAgentSync on DeviceLinkController {
     return '${result.toString()}$suffix';
   }
 }
+
+/// `#rrggbb` reminder colors of an activity, in arrival order, at most 4.
+List<String> agentReminderColorHexes(AgentActivity activity) => <String>[
+  for (final color in activity.reminderColors.take(4))
+    '#${color.rgbValue.toRadixString(16).padLeft(6, '0')}',
+];
 
 /// Web Push lifetimes at the provider (FCM, Mozilla, Apple).
 const Duration agentCompletionPushTtl = Duration(hours: 1);

@@ -784,6 +784,20 @@ main {
   background: var(--attention-soft);
 }
 
+/* The reminder colors chosen on the computer mark the card's edge, as the
+   desktop outlines its reminder cards. */
+.agent-card.has-reminder-color {
+  position: relative;
+}
+
+.agent-card.has-reminder-color::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: var(--reminder-color);
+}
+
 .agent-card.needs-attention .agent-summary {
   background: rgb(255 254 252 / 72%);
   color: #6f421b;
