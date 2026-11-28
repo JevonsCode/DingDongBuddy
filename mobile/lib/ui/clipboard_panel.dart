@@ -49,7 +49,7 @@ class ClipboardPanel extends StatelessWidget {
           for (final Map<String, Object?> item in items) ...<Widget>[
             _ClipboardCard(
               item: item,
-              hostName: computer.hostName,
+              hostName: computer.label,
               showHostName: controller.computers.length > 1,
               connected: computer.connected,
               pending: pending.contains(item['id']),

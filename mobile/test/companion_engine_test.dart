@@ -570,6 +570,16 @@ void main() {
       'running': <Object?>[],
       'completed': <Object?>[
         missed,
+        // Sent while the phone was offline seconds before it reconnected.
+        <String, Object?>{
+          'id': 'just-missed',
+          'notificationKind': 'attention',
+          'unseen': true,
+          'completedAt': DateTime.now()
+              .toUtc()
+              .subtract(const Duration(seconds: 10))
+              .toIso8601String(),
+        },
         <String, Object?>{
           'id': 'seen-activity',
           'notificationKind': 'completion',
@@ -588,6 +598,7 @@ void main() {
     });
     await _settleUntil(() => notifier.missed.isNotEmpty);
     expect(notifier.missed.single.map((AgentEvent e) => e.id), <String>[
+      'just-missed',
       'missed-activity',
     ]);
     // A later live copy of the same occurrence does not ring again.
@@ -610,5 +621,23 @@ void main() {
     await _settle();
     expect(sockets.length, 2);
     expect(identical(sockets.last, first), isFalse);
+  });
+
+  test('reminder colors from the computer reach the card', () async {
+    final FakeSocket socket = await pairAndWelcome();
+    await socket.host(<String, Object?>{
+      'type': 'agent.completed',
+      'id': 'colored',
+      'notificationKind': 'completion',
+      'reminderColors': <Object?>['#8e5cf6', 'red', '#3b82f6'],
+    });
+    await _settleUntil(() => notifier.shown.isNotEmpty);
+    final Map<String, Object?> computer =
+        (engine.snapshot()['computers']! as List).single
+            as Map<String, Object?>;
+    expect(
+      ((computer['events']! as List).single as Map)['reminderColors'],
+      <String>['#8e5cf6', '#3b82f6'],
+    );
   });
 }

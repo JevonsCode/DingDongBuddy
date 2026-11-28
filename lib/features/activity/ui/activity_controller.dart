@@ -81,8 +81,42 @@ final class ActivityController extends ChangeNotifier {
   List<AgentActivity> get activities =>
       List<AgentActivity>.unmodifiable(_activities);
 
-  List<AgentTaskRun> get activeRuns =>
-      List<AgentTaskRun>.unmodifiable(_activeRuns);
+  /// Tasks still believed to be running. A turn the user interrupted, or a
+  /// session that was closed, never sends its Stop hook; such entries stop
+  /// counting as running after [maximumActiveRunAge].
+  List<AgentTaskRun> get activeRuns {
+    final DateTime cutoff = _now().toUtc().subtract(maximumActiveRunAge);
+    return List<AgentTaskRun>.unmodifiable(
+      _activeRuns.where(
+        (AgentTaskRun run) => _runRecordedAt[run.id]?.isAfter(cutoff) ?? true,
+      ),
+    );
+  }
+
+  /// When DingDong saw each run start, on its own clock.
+  final Map<String, DateTime> _runRecordedAt = <String, DateTime>{};
+
+  static const Duration maximumActiveRunAge = Duration(hours: 12);
+
+  /// A session that starts or resumes is no longer in an earlier turn; its
+  /// old running entry was left by a turn that ended without a Stop hook.
+  bool clearRunForConversation(AgentConversationTarget target) {
+    final String? conversationId = _trimmed(target.conversationId);
+    if (conversationId == null) return false;
+    final int before = _activeRuns.length;
+    _activeRuns = _activeRuns
+        .where(
+          (AgentTaskRun run) =>
+              _trimmed(run.conversationTarget?.conversationId) !=
+                  conversationId ||
+              (target.client != AgentClient.unknown &&
+                  run.conversationTarget?.client != target.client),
+        )
+        .toList(growable: false);
+    if (_activeRuns.length == before) return false;
+    notifyListeners();
+    return true;
+  }
 
   int get unseenCount =>
       _activities.where((AgentActivity item) => item.unseen).length;
@@ -200,6 +234,10 @@ final class ActivityController extends ChangeNotifier {
             !_sameRunningConversation(existing.conversationTarget, target),
       ),
     ].take(50).toList(growable: false);
+    _runRecordedAt[run.id] = _now().toUtc();
+    _runRecordedAt.removeWhere(
+      (String id, _) => !_activeRuns.any((AgentTaskRun run) => run.id == id),
+    );
     notifyListeners();
     return run;
   }

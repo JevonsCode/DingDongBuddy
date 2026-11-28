@@ -192,6 +192,41 @@ final class CompanionEngine {
     );
     session.peer = peer;
     peer.connect();
+    unawaited(_probeRelayHeartbeat(peer, record.payload.relayUrl));
+  }
+
+  static final Map<String, Future<bool>> _heartbeatSupport =
+      <String, Future<bool>>{};
+
+  /// Newer relays answer "ping" themselves and say so in /v1/config.
+  Future<void> _probeRelayHeartbeat(RelayPeer peer, Uri relay) async {
+    final String key = relay.toString();
+    final Future<bool> support = _heartbeatSupport[key] ??= () async {
+      final HttpClient client = HttpClient()
+        ..connectionTimeout = const Duration(seconds: 8);
+      try {
+        final HttpClientRequest request = await client.getUrl(
+          relay.resolve('v1/config'),
+        );
+        final HttpClientResponse response = await request.close().timeout(
+          const Duration(seconds: 8),
+        );
+        if (response.statusCode != 200) return false;
+        final Object? config = jsonDecode(
+          await utf8.decoder.bind(response).join(),
+        );
+        return config is Map &&
+            config['heartbeat'] is Map &&
+            (config['heartbeat'] as Map)['request'] == relayHeartbeatRequest;
+      } on Object {
+        return false;
+      } finally {
+        client.close(force: true);
+      }
+    }();
+    final bool supported = await support;
+    if (!supported) _heartbeatSupport.removeWhere((String k, _) => k == key);
+    peer.relayHeartbeat = supported;
   }
 
   void _stateChanged(_ComputerSession session, LinkState state) {
@@ -262,7 +297,7 @@ final class CompanionEngine {
         if (session.items.length > 50) session.items.removeLast();
         session.lastSyncAt = DateTime.now();
         if (message['manual'] == true && message['snapshot'] != true) {
-          _toast('收到“${session.record.hostName}”发来的内容');
+          _toast('收到“${session.record.label}”发来的内容');
         }
       case 'request.rejected':
         _toast(
@@ -323,7 +358,7 @@ final class CompanionEngine {
         !event.silent &&
         session.record.agentNotificationsEnabled &&
         store.alertsFor(event.kind)) {
-      await notifier.show(event, hostName: session.record.hostName);
+      await notifier.show(event, hostName: session.record.label);
     }
   }
 
@@ -379,8 +414,9 @@ final class CompanionEngine {
             event.completedAt != null &&
             event.completedAt!.isAfter(since) &&
             now.difference(event.completedAt!) < missedReminderWindow &&
-            // Live reminders for very recent work arrive right after this.
-            now.difference(event.completedAt!) > const Duration(seconds: 60) &&
+            // The desktop sends a live reminder only once; one completing in
+            // the same moment as the reconnect may still follow this state.
+            now.difference(event.completedAt!) > const Duration(seconds: 5) &&
             store.alertsFor(event.kind) &&
             !store.wasNotified(event.occurrenceKey))
           event,
@@ -390,7 +426,7 @@ final class CompanionEngine {
       store.markNotified(event.occurrenceKey);
     }
     await store.save();
-    await notifier.showMissed(missed, hostName: session.record.hostName);
+    await notifier.showMissed(missed, hostName: session.record.label);
   }
 
   void _trimEvents(List<AgentEvent> events) {
@@ -446,6 +482,14 @@ final class CompanionEngine {
           if (session != null) await _updateSettings(session, command);
         case 'alerts':
           await _updateAlerts(command);
+        case 'remark':
+          if (session != null) {
+            final String remark = (command['remark'] as String? ?? '').trim();
+            session.record.remark = remark.length > 40
+                ? remark.substring(0, 40)
+                : remark;
+            await store.save();
+          }
         case 'sendText':
           if (session != null) {
             await _sendText(session, command['text']! as String);
@@ -603,7 +647,7 @@ final class CompanionEngine {
         'content': text,
       });
       _emit(<String, Object?>{'kind': 'sent', 'room': session.record.room});
-      _toast('内容已发送到 ${session.record.hostName}');
+      _toast('内容已发送到 ${session.record.label}');
     } finally {
       session.sending = false;
     }
@@ -662,7 +706,7 @@ final class CompanionEngine {
         'transferId': transferId,
       });
       _emit(<String, Object?>{'kind': 'sent', 'room': session.record.room});
-      _toast('文件已发送到 ${session.record.hostName}');
+      _toast('文件已发送到 ${session.record.label}');
     } finally {
       session.sending = false;
       _emit(<String, Object?>{'kind': 'progress', 'room': session.record.room});
@@ -866,7 +910,7 @@ final class CompanionEngine {
     if (total == 0) return '未连接电脑';
     if (online == total) {
       return total == 1
-          ? '已连接“${_sessions.values.first.record.hostName}”，Agent 提醒实时送达'
+          ? '已连接“${_sessions.values.first.record.label}”，Agent 提醒实时送达'
           : '已连接 $online 台电脑，Agent 提醒实时送达';
     }
     if (online > 0) return '已连接 $online / $total 台电脑';
@@ -884,6 +928,7 @@ final class CompanionEngine {
           <String, Object?>{
             'room': record.room,
             'hostName': record.hostName,
+            'remark': record.remark,
             'hostPlatform': record.hostPlatform,
             'state': session.state.name,
             'manualDisconnect': record.manualDisconnect,

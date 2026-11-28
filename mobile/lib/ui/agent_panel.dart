@@ -4,7 +4,6 @@ import 'clipboard_panel.dart' show ListEmpty, SectionHeading;
 import 'companion_controller.dart';
 import 'formatters.dart';
 import 'tokens.dart';
-import 'widgets.dart';
 
 /// "正在运行" and "完成记录" (`#agent-panel`).
 class AgentPanel extends StatelessWidget {
@@ -62,7 +61,7 @@ class AgentPanel extends StatelessWidget {
           for (final Map<String, Object?> event in events) ...<Widget>[
             _EventCard(
               event: event,
-              computerName: showComputerName ? computer.hostName : null,
+              computerName: showComputerName ? computer.label : null,
             ),
             const SizedBox(height: 9),
           ],
@@ -196,16 +195,31 @@ class _EventCard extends StatelessWidget {
     final DateTime? started = parseDate(event['startedAt']);
     final DateTime? completed = parseDate(event['completedAt']);
     final String? workspace = workspaceName(event['workspacePath'] as String?);
-    final Color border = attention
+    // The reminder colors the user chose on the computer outline the card,
+    // as on the desktop; several colors blend left to right.
+    final List<Color> reminderColors = <Color>[
+      for (final Object? value
+          in event['reminderColors'] as List? ?? const <Object?>[])
+        if (value is String && _hexColor.hasMatch(value))
+          Color(0xFF000000 | int.parse(value.substring(1), radix: 16)),
+    ];
+    final Color border = reminderColors.isNotEmpty
+        ? reminderColors.first.withValues(alpha: unseen ? 1 : 0.5)
+        : attention
         ? t.attention.withValues(alpha: 0.38)
         : unseen
         ? t.unseenBorder
         : t.border;
-    return Container(
+    final Widget card = Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: attention ? t.attentionSoft : t.surface,
-        border: Border.all(color: border),
+        border: reminderColors.length > 1
+            ? null
+            : Border.all(
+                color: border,
+                width: reminderColors.isEmpty ? 1 : 1.5,
+              ),
         borderRadius: BorderRadius.circular(DingRadius.card),
       ),
       child: Column(
@@ -213,11 +227,6 @@ class _EventCard extends StatelessWidget {
         children: <Widget>[
           Row(
             children: <Widget>[
-              const DingMascot(
-                'assets/dingdong-mobile-alert-icon-2.png',
-                size: 44,
-              ),
-              const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -312,8 +321,24 @@ class _EventCard extends StatelessWidget {
         ],
       ),
     );
+    if (reminderColors.length < 2) return card;
+    return Container(
+      padding: const EdgeInsets.all(1.5),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: <Color>[
+            for (final Color color in reminderColors)
+              color.withValues(alpha: unseen ? 1 : 0.5),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(DingRadius.card + 1.5),
+      ),
+      child: card,
+    );
   }
 }
+
+final RegExp _hexColor = RegExp(r'^#[0-9a-fA-F]{6}$');
 
 class _TimeItem extends StatelessWidget {
   const _TimeItem({

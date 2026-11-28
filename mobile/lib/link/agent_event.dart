@@ -29,6 +29,7 @@ final class AgentEvent {
     required this.workspacePath,
     this.sentAt,
     this.receivedAt,
+    this.reminderColors = const <String>[],
   });
 
   final String id;
@@ -52,6 +53,9 @@ final class AgentEvent {
   /// desktops only) and when this phone received it.
   final DateTime? sentAt;
   final DateTime? receivedAt;
+
+  /// The user's reminder colors on the computer (`#rrggbb`), so cards match.
+  final List<String> reminderColors;
 
   /// Reminders that took longer than this to arrive are posted quietly and
   /// labelled as late instead of ringing as if they were new.
@@ -119,8 +123,15 @@ final class AgentEvent {
           : _string(message['workspacePath']),
       sentAt: DateTime.tryParse(_string(message['sentAt'])),
       receivedAt: DateTime.tryParse(_string(message['receivedAt'])),
+      reminderColors: <String>[
+        for (final Object? value
+            in message['reminderColors'] as List? ?? const <Object?>[])
+          if (value is String && _hexColor.hasMatch(value)) value,
+      ].take(4).toList(growable: false),
     );
   }
+
+  static final RegExp _hexColor = RegExp(r'^#[0-9a-fA-F]{6}$');
 
   /// This event as received now, for delay accounting.
   AgentEvent receivedNow([DateTime? now]) => AgentEvent(
@@ -139,6 +150,7 @@ final class AgentEvent {
     workspacePath: workspacePath,
     sentAt: sentAt,
     receivedAt: (now ?? DateTime.now()).toUtc(),
+    reminderColors: reminderColors,
   );
 
   /// Notification title: "<source> · <title>" unless the title names it.
@@ -286,6 +298,7 @@ final class AgentEvent {
     workspacePath: workspacePath,
     sentAt: sentAt,
     receivedAt: receivedAt,
+    reminderColors: reminderColors,
   );
 
   Map<String, Object?> toJson() => <String, Object?>{
@@ -304,6 +317,7 @@ final class AgentEvent {
     'workspacePath': workspacePath,
     if (sentAt != null) 'sentAt': sentAt!.toUtc().toIso8601String(),
     if (receivedAt != null) 'receivedAt': receivedAt!.toUtc().toIso8601String(),
+    if (reminderColors.isNotEmpty) 'reminderColors': reminderColors,
   };
 
   static String _string(Object? value) => value is String ? value : '';

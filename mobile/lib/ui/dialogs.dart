@@ -291,10 +291,10 @@ Future<void> showSettingsDialog(
             if (!enabled) return '已关闭 · 列表照常更新，不响铃';
             if (channel.blocked) return '系统已关闭“$label”渠道，点下方“铃声与振动”打开';
             if (computer.computerClipboardOnly) {
-              return '${computer.hostName} 处于仅剪贴板模式，不发送 Agent 提醒';
+              return '${computer.label} 处于仅剪贴板模式，不发送 Agent 提醒';
             }
             if (computer.computerSends(kind) == false) {
-              return '${computer.hostName} 未推送此类提醒，可在电脑端提醒设置中打开';
+              return '${computer.label} 未推送此类提醒，可在电脑端提醒设置中打开';
             }
             return channel.sound ? '开启 · 响铃' : '开启 · 系统渠道为静音';
           }
@@ -350,6 +350,18 @@ Future<void> showSettingsDialog(
                 ),
               ),
               const _SectionLabel('这台电脑'),
+              SettingRow(
+                title: '备注',
+                subtitle: computer.remark.isEmpty
+                    ? '未设置 · 显示电脑名“${computer.hostName}”'
+                    : '${computer.remark} · 电脑名“${computer.hostName}”',
+                trailing: DingButton(
+                  label: '编辑',
+                  style: DingButtonStyle.small,
+                  onPressed: () =>
+                      showRemarkDialog(context, controller, computer),
+                ),
+              ),
               SettingRow(
                 title: '连接状态',
                 subtitle: connectionStatus(computer, controller),
@@ -433,39 +445,48 @@ Future<void> showSettingsDialog(
                 subtitle: 'DingDong Android 0.3.0 · 原生通知',
                 trailing: SizedBox.shrink(),
               ),
-              DialogActions(
-                children: <Widget>[
-                  DingButton(
-                    label: computer.manualDisconnect ? '重新连接' : '断开连接',
-                    style: DingButtonStyle.quiet,
-                    expand: true,
-                    onPressed: () => controller.send(<String, Object?>{
-                      'cmd': computer.manualDisconnect
-                          ? 'reconnect'
-                          : 'disconnect',
-                      'room': computer.room,
-                    }),
-                  ),
-                  DingButton(
-                    label: '删除设备',
-                    style: DingButtonStyle.danger,
-                    expand: true,
-                    onPressed: () async {
-                      final bool confirmed = await _confirmDelete(
-                        context,
-                        computer.hostName,
-                      );
-                      if (!confirmed) return;
-                      controller.send(<String, Object?>{
-                        'cmd': 'remove',
-                        'room': computer.room,
-                      });
-                      if (dialogContext.mounted) {
-                        Navigator.of(dialogContext).pop();
-                      }
-                    },
-                  ),
-                ],
+            ],
+          );
+        },
+      ),
+    ],
+    footer: (BuildContext dialogContext) => <Widget>[
+      ListenableBuilder(
+        listenable: controller,
+        builder: (BuildContext context, _) {
+          final ComputerView computer = controller.computers.firstWhere(
+            (ComputerView c) => c.room == initial.room,
+            orElse: () => initial,
+          );
+          return DialogActions(
+            children: <Widget>[
+              DingButton(
+                label: computer.manualDisconnect ? '重新连接' : '断开连接',
+                style: DingButtonStyle.quiet,
+                expand: true,
+                onPressed: () => controller.send(<String, Object?>{
+                  'cmd': computer.manualDisconnect ? 'reconnect' : 'disconnect',
+                  'room': computer.room,
+                }),
+              ),
+              DingButton(
+                label: '删除设备',
+                style: DingButtonStyle.danger,
+                expand: true,
+                onPressed: () async {
+                  final bool confirmed = await _confirmDelete(
+                    context,
+                    computer.label,
+                  );
+                  if (!confirmed) return;
+                  controller.send(<String, Object?>{
+                    'cmd': 'remove',
+                    'room': computer.room,
+                  });
+                  if (dialogContext.mounted) {
+                    Navigator.of(dialogContext).pop();
+                  }
+                },
               ),
             ],
           );
@@ -645,4 +666,56 @@ String connectionStatus(ComputerView computer, CompanionController controller) {
     if (!controller.serviceRunning) '后台服务未运行',
   ];
   return parts.join(' · ');
+}
+
+/// Lets the user name a computer on this phone; the name stays on the phone.
+Future<void> showRemarkDialog(
+  BuildContext context,
+  CompanionController controller,
+  ComputerView computer,
+) {
+  final TextEditingController input = TextEditingController(
+    text: computer.remark,
+  );
+  void save(BuildContext dialogContext, String value) {
+    controller.send(<String, Object?>{
+      'cmd': 'remark',
+      'room': computer.room,
+      'remark': value,
+    });
+    Navigator.of(dialogContext).pop();
+  }
+
+  return showDingDialog<void>(
+    context,
+    eyebrow: '备注',
+    title: computer.hostName,
+    summary: '只在这台手机上显示，不会改动电脑的名称。留空则显示电脑名。',
+    children: (BuildContext dialogContext) => <Widget>[
+      const SizedBox(height: 14),
+      DingTextField(
+        controller: input,
+        hint: '例如：家里的 Mac',
+        maxLength: 40,
+        autofocus: true,
+      ),
+    ],
+    footer: (BuildContext dialogContext) => <Widget>[
+      DialogActions(
+        children: <Widget>[
+          DingButton(
+            label: '清除',
+            style: DingButtonStyle.quiet,
+            expand: true,
+            onPressed: () => save(dialogContext, ''),
+          ),
+          DingButton(
+            label: '保存',
+            expand: true,
+            onPressed: () => save(dialogContext, input.text),
+          ),
+        ],
+      ),
+    ],
+  ).whenComplete(input.dispose);
 }

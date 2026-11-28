@@ -45,6 +45,42 @@ void main() {
     );
   });
 
+  test('a turn that never stopped leaves the running list', () {
+    DateTime now = DateTime.utc(2026, 11, 28, 9);
+    var id = 0;
+    final ActivityController controller = ActivityController(
+      idGenerator: () => 'run-${++id}',
+      now: () => now,
+    );
+    controller.recordTaskStarted(
+      source: 'Claude Code',
+      task: '被中断的任务',
+      startedAt: now,
+      conversationId: 'session-a',
+    );
+    now = now.add(const Duration(hours: 11));
+    controller.recordTaskStarted(
+      source: 'Codex',
+      task: '仍在进行',
+      startedAt: now,
+      conversationId: 'thread-b',
+    );
+    now = now.add(const Duration(hours: 1, minutes: 1));
+    expect(controller.activeRuns.map((run) => run.task), <String>['仍在进行']);
+
+    // Starting or resuming the session clears its stale entry at once.
+    expect(
+      controller.clearRunForConversation(
+        const AgentConversationTarget(
+          client: AgentClient.codex,
+          conversationId: 'thread-b',
+        ),
+      ),
+      isTrue,
+    );
+    expect(controller.activeRuns, isEmpty);
+  });
+
   test('observed task lifecycle keeps the real start and completion times', () {
     final DateTime startedAt = DateTime.utc(2026, 8, 11, 9, 30, 4);
     final DateTime completedAt = DateTime.utc(2026, 8, 11, 9, 42, 19);

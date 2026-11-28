@@ -1,7 +1,7 @@
 import {
   agentNotificationKinds,
   wantsAgentNotifications,
-} from "./notification-policy.js?shell=78";
+} from "./notification-policy.js?shell=79";
 
 // Connected-device settings, capability diagnostics, and destructive actions.
 export function createDeviceSettingsController({
